@@ -66,6 +66,10 @@ export function quizTests(bank = "src/quiz.json"): void {
   const quiz = JSON.parse(readFileSync(bank, "utf8")) as Quiz;
 
   test.describe("quiz", () => {
+    // The runtime scrolls smoothly unless the learner asks for less motion (quiz.css) and moves the focus after every
+    // answer: with motion, every click would wait for a scroll to settle, the run through a quiz grow with its size.
+    test.use({ reducedMotion: "reduce" });
+
     for (const item of quiz.questions) {
       test(`${item.id} (${item.type}): its link opens it and the right answer counts`, async ({ page }) => {
         await page.goto(`./#frage-${item.id}`);
