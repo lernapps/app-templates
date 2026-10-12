@@ -3,7 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare": "vp config --no-agent --hooks-dir node_modules/@lernapps/tooling/archetypes/shared/hooks",
     "dev": "vp dev",
     "build": "vp build --outDir _site",
     "check": "lernapps check"
