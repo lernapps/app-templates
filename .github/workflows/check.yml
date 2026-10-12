@@ -46,5 +46,8 @@ jobs:
       - run: npm ci # the runtime's build tools, for file:..
       - run: npm install --no-audit --no-fund
         working-directory: ${{ matrix.template }}
+      # a template installs no git hooks: they would point this whole repo at the template's hooks
+      - name: npm install left the repo's hooks alone
+        run: test -z "$(git config core.hooksPath)" || { echo "core.hooksPath is $(git config core.hooksPath)"; exit 1; }
       - run: npx lernapps check
         working-directory: ${{ matrix.template }}
