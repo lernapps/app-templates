@@ -188,7 +188,9 @@ export function startQuiz(root: Document = document): void {
       }
       check.hidden = true;
       next.hidden = false;
-      moveFocus(next);
+      // the focus on the feedback, not on the button below the background: the feedback stays in view, a screen
+      // reader reads it, and the next tab stops are the links of the background, then the button
+      moveFocus(feedback);
     });
     next.addEventListener("click", () => {
       if (isLast) finish();

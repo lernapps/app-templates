@@ -6,6 +6,7 @@
 //
 // For each question: its deep link opens it, the right answer counts and a wrong one does not; after either, the
 // background of every option, the explanation and the links for further reading show, the learner's choice marked.
+// The feedback then has the focus and its top is in view, and the button to the next question comes after it.
 // After the answer the reveal also says what is right: the right options marked, or the right answer for the other
 // types. The seed in the address gives the order of the questions, and the address gets one when it has none. All
 // right answers give the full score and show the solutions; nothing is stored on the device before, and afterwards
@@ -61,6 +62,16 @@ export async function expectBackground(where: Locator, item: Question): Promise<
   }
 }
 
+/** After an answer, the learner sees the feedback without scrolling back; it has the focus, the next button follows. */
+export async function expectFeedbackInView(page: Page, item: Question): Promise<void> {
+  const feedback = question(page, item).locator(".quiz-feedback");
+  const top = await feedback.evaluate((element) => element.getBoundingClientRect().top);
+  const height = await page.evaluate(() => innerHeight);
+  expect(top, "the top of the feedback is in the viewport").toBeGreaterThanOrEqual(0);
+  expect(top, "the top of the feedback is in the viewport").toBeLessThan(height);
+  await expect(feedback).toBeFocused();
+}
+
 /** The quiz's tests, for the question bank in `bank` (relative to the app's root). */
 export function quizTests(bank = "src/quiz.json"): void {
   const quiz = JSON.parse(readFileSync(bank, "utf8")) as Quiz;
@@ -77,6 +88,13 @@ export function quizTests(bank = "src/quiz.json"): void {
         await expect(page.locator(".quiz-question:visible")).toHaveCount(1);
         await answerQuestion(page, item, rightAnswer(item));
         await expect(question(page, item).locator(".quiz-feedback")).toContainText(de.right);
+        await expectFeedbackInView(page, item);
+        // from the feedback, the keyboard reaches the next question (past the links of the background)
+        const next = question(page, item).locator(".quiz-next");
+        for (let tab = 0; tab < 30 && !(await next.evaluate((button) => button === document.activeElement)); tab++) {
+          await page.keyboard.press("Tab");
+        }
+        await expect(next).toBeFocused();
         const reveal = question(page, item).locator(".quiz-reveal");
         await expectBackground(reveal, item);
         if (item.type === "single-choice" || item.type === "multiple-choice") {
@@ -92,6 +110,7 @@ export function quizTests(bank = "src/quiz.json"): void {
         await page.goto(`./#frage-${item.id}`);
         await answerQuestion(page, item, wrongAnswer(item));
         await expect(question(page, item).locator(".quiz-feedback")).toContainText(de.wrong);
+        await expectFeedbackInView(page, item);
         await expectBackground(question(page, item).locator(".quiz-reveal"), item);
         if (item.type === "single-choice" || item.type === "multiple-choice") {
           await expect(question(page, item).locator(".quiz-badge-chosen").first()).toHaveText(de.yourChoice);
