@@ -21,7 +21,8 @@ depend on the runtime of the same commit, so template and runtime always match. 
 
 A template holds only thin files: `vite.config.ts` composes the shared preset of `@lernapps/tooling` with the
 archetype's build step, `src/main.ts` starts the runtime, `e2e/` runs the runtime's generic tests on the app's own
-content.
+content. A template installs no git hooks, so `npm install` in its folder leaves this repo's hooks alone; the
+generator gives the app the prepare script that installs them in the app's own repository.
 
 ## The runtime package
 
