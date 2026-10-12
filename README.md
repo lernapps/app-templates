@@ -23,6 +23,8 @@ with which a creator and their AI assistant build a learning app.
 - Which commit of this repo a new app gets and what the generator adds to the template:
   `npx --yes github:lernapps/tooling#main create --help`.
 - What an archetype is and how the parts fit: the [architecture of the tooling](https://lernapps.net/tooling/architecture/).
+- A template has no `prepare` script of its own, so `npm install` in its folder leaves this repo's git hooks alone;
+  the generator gives the app the one that installs them.
 
 ## Contributing
 
