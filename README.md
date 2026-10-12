@@ -1,62 +1,36 @@
 # app-templates
 
-The archetypes of lernapps.net apps: one template folder per archetype, and at the root the package
-`@lernapps/app-templates` with the runtime of each archetype that apps depend on.
+The archetypes of [lernapps.net](https://lernapps.net/) apps: one template folder per archetype, and at the root the
+package `@lernapps/app-templates` with the runtime of each archetype that apps depend on. It is part of the tooling
+with which a creator and their AI assistant build a learning app.
 
-## The templates
+## Who it is for
 
-The generator of [lernapps/tooling](https://github.com/lernapps/tooling) copies a folder into a new app:
+- **Creators and their assistants** never open this repo: the generator of
+  [lernapps/tooling](https://github.com/lernapps/tooling) copies a template folder into a new app. Start at
+  [lernapps.net/apps/eintragen/](https://lernapps.net/apps/eintragen/), or, as an assistant, at
+  [lernapps.net/tooling/llms.txt](https://lernapps.net/tooling/llms.txt).
+- **Maintainers of an archetype** change its template and its runtime here.
 
-```bash
-npx --package github:lernapps/tooling lernapps create --archetype quiz
-```
-
-It reads this repo at the commit pinned in `@lernapps/tooling` (`appTemplates` in its `package.json`) and makes the app
-depend on the runtime of the same commit, so template and runtime always match. It adds what every app has:
-`AGENTS.md`, the plan file, the workflows, LICENSE and an issue form for content errors.
+## What is in it
 
 | Folder | Archetype | What the app supplies |
 |---|---|---|
-| [`quiz/`](quiz/) | a quiz about things to know: questions with options, background knowledge on every option, links for further reading, score and solutions, readable without JavaScript | the question bank `src/quiz.json` |
+| [`quiz/`](quiz/) | a quiz about things to know: questions with options, feedback on every option, score and solutions | the question bank `src/quiz.json` ([schema](https://lernapps.net/tooling/schemas/quiz.v1.schema.json)) |
 
-A template holds only thin files: `vite.config.ts` composes the shared preset of `@lernapps/tooling` with the
-archetype's build step, `src/main.ts` starts the runtime, `e2e/` runs the runtime's generic tests on the app's own
-content. A template installs no git hooks, so `npm install` in its folder leaves this repo's hooks alone; the
-generator gives the app the prepare script that installs them in the app's own repository.
+- [`runtime/`](runtime/): the runtime of each archetype, published from git as `@lernapps/app-templates`; its exports
+  are in [`package.json`](package.json), what each does in the comments of its source.
+- Which commit of this repo a new app gets and what the generator adds to the template:
+  `npx --yes github:lernapps/tooling#main create --help`.
+- What an archetype is and how the parts fit: the [architecture of the tooling](https://lernapps.net/tooling/architecture/).
+- A template has no `prepare` script of its own, so `npm install` in its folder leaves this repo's git hooks alone;
+  the generator gives the app the one that installs them.
 
-## The runtime package
+## Contributing
 
-The repo root is the npm package `@lernapps/app-templates`, installed from git at a commit, like `@lernapps/tooling`
-(`github:lernapps/app-templates#<commit>`); its `prepare` builds `dist/`. It ships only `dist/` and `runtime/`, not
-the template folders. A new feature of an archetype reaches an app with a bump of this dependency.
-
-| Export | What it is |
-|---|---|
-| `@lernapps/app-templates/quiz` | `startQuiz()`, the engine in the browser: one question at a time in the order of the seed in the address (`?seed=<n>`), deep links `#frage-<id>`; after each answer the background of every option, the right ones and the learner's choice marked, the explanation and further reading; score and solutions at the end. Also the scoring (`isCorrect`, `score`) and the types of the bank |
-| `@lernapps/app-templates/quiz/plugin` | `quiz()`, the Vite build step: validates `src/quiz.json` against the schema and renders every question into `index.html` at `<!-- quiz -->` |
-| `@lernapps/app-templates/quiz/e2e` | `quizTests()`: the Playwright tests of every quiz, for its own bank |
-| `@lernapps/app-templates/quiz/style.css` | the quiz's look |
-| `@lernapps/app-templates/quiz/quiz.v1.schema.json` | the JSON Schema of the question bank, also published at <https://lernapps.net/tooling/schemas/quiz.v1.schema.json> |
-
-`@lernapps/tooling` (the shared preset and its helpers: texts, storage, accessibility) and Playwright are peer
-dependencies: every app has them.
-
-## Development
-
-```bash
-npm ci                                              # the runtime's build tools; builds dist/
-npm install --no-save "$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"
-npx vp check && npx vp test run                     # the runtime: format, lint, types, unit tests
-
-cd quiz
-npm install       # the template with the runtime of this checkout (file:.., installed as a copy: .npmrc)
-npm run dev       # the app at http://localhost:5173/
-npx lernapps check
-```
-
-After a change to the runtime, reinstall it in the template (`rm -rf node_modules/@lernapps/app-templates && npm
-install`). The workflow `check.yml` runs both on every pull request. A change reaches new apps once the pin in
-lernapps/tooling moves to its commit on `main`; Renovate (preset `github>lernapps/tooling`) moves existing apps.
+`npm ci`, then the steps of the workflow [`check.yml`](.github/workflows/check.yml): the runtime's checks at the root
+and `lernapps check` in every template folder. A change reaches new apps once the pin in lernapps/tooling moves to its
+commit on `main`; Renovate moves existing apps.
 
 ## License
 
