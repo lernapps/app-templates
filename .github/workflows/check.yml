@@ -69,3 +69,22 @@ jobs:
         working-directory: quiz
       - run: npx lernapps check --pre-push
         working-directory: quiz
+
+  # A page of another archetype, as the explainer will be, that embeds one question of each type through the quiz
+  # runtime's per-question exports (test/fixtures/question-page): `lernapps check` with its end-to-end tests, with and
+  # without JavaScript. It runs on the @lernapps/tooling version the quiz pins, which Renovate keeps current.
+  question-page:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci # the runtime's build tools, for file:../../..
+      - run: npm pkg set "devDependencies.@lernapps/tooling=$(node -p 'require("../../../quiz/package.json").devDependencies["@lernapps/tooling"]')"
+        working-directory: test/fixtures/question-page
+      - run: npm install --no-audit --no-fund
+        working-directory: test/fixtures/question-page
+      - run: npx lernapps check
+        working-directory: test/fixtures/question-page
