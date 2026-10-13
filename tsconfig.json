@@ -24,5 +24,6 @@
     "skipLibCheck": true,
     "isolatedModules": true
   },
-  "include": ["runtime", "test", "vite.config.ts"]
+  "include": ["runtime", "test", "vite.config.ts"],
+  "exclude": ["test/fixtures/question-page"]
 }

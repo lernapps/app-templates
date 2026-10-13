@@ -19,7 +19,10 @@ with which a creator and their AI assistant build a learning app.
 | [`quiz/`](quiz/) | a quiz about things to know: questions with options, feedback on every option, score and solutions | the question bank `src/quiz.json` ([schema](https://lernapps.net/tooling/schemas/quiz.v1.schema.json)) |
 
 - [`runtime/`](runtime/): the runtime of each archetype, published from git as `@lernapps/app-templates`; its exports
-  are in [`package.json`](package.json), what each does in the comments of its source.
+  are in [`package.json`](package.json), what each does in the comments of its source. The quiz's questions also work
+  one by one, for other archetypes that embed them as exercises: `@lernapps/app-templates/quiz/question` (schema,
+  validation, rendering, checker, messages), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of
+  `@lernapps/app-templates/quiz/e2e`; [`test/fixtures/question-page/`](test/fixtures/question-page/) is a page built so.
 - Which commit of this repo a new app gets and what the generator adds to the template:
   `npx --yes github:lernapps/tooling#main create --help`.
 - What an archetype is and how the parts fit: the [architecture of the tooling](https://lernapps.net/tooling/architecture/).
@@ -29,7 +32,7 @@ with which a creator and their AI assistant build a learning app.
 ## Contributing
 
 `npm ci`, then the steps of the workflow [`check.yml`](.github/workflows/check.yml): the runtime's checks at the root
-and `lernapps check` in every template folder. A change reaches new apps once the pin in lernapps/tooling moves to its
+and `lernapps check` in every template folder and in `test/fixtures/question-page/`. A change reaches new apps once the pin in lernapps/tooling moves to its
 commit on `main`; Renovate moves existing apps.
 
 ## License
