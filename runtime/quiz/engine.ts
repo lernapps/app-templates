@@ -8,11 +8,14 @@
 //   import "@lernapps/app-templates/quiz/style.css";
 //   import { startQuiz } from "@lernapps/app-templates/quiz";
 //   startQuiz();
+//
+// One question on its own, as another archetype embeds it: startQuestion on the element that renderQuestion of
+// @lernapps/app-templates/quiz/question rendered. The quiz runs each of its questions so.
 import { announce, moveFocus } from "@lernapps/tooling/a11y";
 import { translator } from "@lernapps/tooling/i18n";
 import { createStorage } from "@lernapps/tooling/storage";
 import de from "./messages/de.json" with { type: "json" };
-import { hash, isComplete, isCorrect, shuffled, type Answer, type Question } from "./quiz.ts";
+import { hash, isComplete, isCorrect, questionId, shuffled, type Answer, type Question } from "./quiz.ts";
 import type { QuizData } from "./render.ts";
 
 export * from "./quiz.ts";
@@ -75,6 +78,79 @@ function chosenOptions(question: Question, answer: Answer): number[] {
   return typeof answer === "number" ? [answer] : typeof answer === "object" ? [...answer] : [];
 }
 
+/** What a page that runs one question may set. */
+export interface StartQuestionOptions {
+  /** Shows the options of a choice in an order given by this seed and the question; as rendered without one. */
+  seed?: number;
+  /** Called once, when the learner has answered completely, right or wrong. */
+  onAnswer?: (answer: Answer, right: boolean) => void;
+}
+
+/**
+ * Makes one rendered question (`item`, the element of renderQuestion) live: the button to check it shows; a complete
+ * answer, right or wrong, gets its feedback, then the background of every option with the right ones and the
+ * learner's choice marked, the explanation and further reading; the controls are locked, the button to the next
+ * question shows if there is one, and the focus moves to the feedback. An incomplete answer is asked to be completed.
+ */
+export function startQuestion(item: HTMLElement, question: Question, options: StartQuestionOptions = {}): void {
+  const form = item.querySelector("form");
+  const feedback = item.querySelector<HTMLElement>(".quiz-feedback");
+  const check = item.querySelector<HTMLButtonElement>(".quiz-check");
+  const next = item.querySelector<HTMLButtonElement>(".quiz-next");
+  if (!form || !feedback || !check) return;
+  // the options of a choice in an order of their own, from the seed and the question
+  const fieldset = item.querySelector("fieldset");
+  if (
+    options.seed !== undefined &&
+    fieldset &&
+    (question.type === "single-choice" || question.type === "multiple-choice")
+  ) {
+    const labels = [...fieldset.querySelectorAll(".quiz-option")];
+    for (const index of shuffled(labels.length, options.seed ^ hash(question.id))) {
+      const label = labels[index];
+      if (label) fieldset.append(label);
+    }
+  }
+  const actions = item.querySelector<HTMLElement>(".quiz-actions");
+  if (actions) actions.hidden = false;
+  let answered = false;
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (answered) return;
+    const answer = readAnswer(question, form);
+    if (!isComplete(question, answer)) {
+      feedback.textContent = t("incomplete");
+      feedback.className = "quiz-feedback";
+      return;
+    }
+    answered = true;
+    const right = isCorrect(question, answer);
+    feedback.className = `quiz-feedback ${right ? "quiz-right" : "quiz-wrong"}`;
+    feedback.textContent = t(right ? "right" : "wrong");
+    // every option's background, the right ones marked, the learner's choice marked too
+    const reveal = item.querySelector<HTMLElement>(".quiz-reveal");
+    for (const index of chosenOptions(question, answer)) {
+      const option = reveal?.querySelector<HTMLElement>(`[data-option="${index}"]`);
+      if (!option) continue;
+      option.classList.add("quiz-info-chosen");
+      const badge = item.ownerDocument.createElement("span");
+      badge.className = "quiz-badge quiz-badge-chosen";
+      badge.textContent = t("yourChoice");
+      option.querySelector(".quiz-info-head")?.append(" ", badge);
+    }
+    if (reveal) reveal.hidden = false;
+    for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")) {
+      control.disabled = true;
+    }
+    check.hidden = true;
+    if (next) next.hidden = false;
+    options.onAnswer?.(answer, right);
+    // the focus on the feedback, not on the button below the background: the feedback stays in view, a screen
+    // reader reads it, and the next tab stops are the links of the background, then the button
+    moveFocus(feedback);
+  });
+}
+
 /** Starts the quiz on the page the build rendered; does nothing on a page without one. */
 export function startQuiz(root: Document = document): void {
   const dataElement = root.getElementById("quiz-data");
@@ -96,21 +172,11 @@ export function startQuiz(root: Document = document): void {
   progress.hidden = false;
   const items = new Map<string, HTMLElement>();
   for (const question of order) {
-    const item = root.getElementById(`frage-${question.id}`);
+    const item = root.getElementById(questionId(question));
     if (!item) continue;
     items.set(question.id, item);
     list.append(item); // in the order of the seed
-    // the options of a choice in an order of their own, from the seed and the question
-    const fieldset = item.querySelector("fieldset");
-    if (fieldset && (question.type === "single-choice" || question.type === "multiple-choice")) {
-      const labels = [...fieldset.querySelectorAll(".quiz-option")];
-      for (const index of shuffled(labels.length, seed ^ hash(question.id))) {
-        const label = labels[index];
-        if (label) fieldset.append(label);
-      }
-    }
-    const actions = item.querySelector<HTMLElement>(".quiz-actions");
-    if (actions) actions.hidden = false;
+    startQuestion(item, question, { seed, onAnswer: (answer) => answers.set(question.id, answer) });
   }
 
   const show = (index: number, focus: boolean) => {
@@ -150,48 +216,10 @@ export function startQuiz(root: Document = document): void {
   };
 
   order.forEach((question, index) => {
-    const item = items.get(question.id);
-    const form = item?.querySelector("form");
-    const feedback = item?.querySelector<HTMLElement>(".quiz-feedback");
-    const check = item?.querySelector<HTMLButtonElement>(".quiz-check");
-    const next = item?.querySelector<HTMLButtonElement>(".quiz-next");
-    if (!form || !feedback || !check || !next) return;
+    const next = items.get(question.id)?.querySelector<HTMLButtonElement>(".quiz-next");
+    if (!next) return;
     const isLast = index === order.length - 1;
     if (isLast) next.textContent = t("toResult");
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      if (answers.has(question.id)) return;
-      const answer = readAnswer(question, form);
-      if (!isComplete(question, answer)) {
-        feedback.textContent = t("incomplete");
-        feedback.className = "quiz-feedback";
-        return;
-      }
-      answers.set(question.id, answer);
-      const right = isCorrect(question, answer);
-      feedback.className = `quiz-feedback ${right ? "quiz-right" : "quiz-wrong"}`;
-      feedback.textContent = t(right ? "right" : "wrong");
-      // every option's background, the right ones marked, the learner's choice marked too
-      const reveal = item?.querySelector<HTMLElement>(".quiz-reveal");
-      for (const index of chosenOptions(question, answer)) {
-        const option = reveal?.querySelector<HTMLElement>(`[data-option="${index}"]`);
-        if (!option) continue;
-        option.classList.add("quiz-info-chosen");
-        const badge = root.createElement("span");
-        badge.className = "quiz-badge quiz-badge-chosen";
-        badge.textContent = t("yourChoice");
-        option.querySelector(".quiz-info-head")?.append(" ", badge);
-      }
-      if (reveal) reveal.hidden = false;
-      for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")) {
-        control.disabled = true;
-      }
-      check.hidden = true;
-      next.hidden = false;
-      // the focus on the feedback, not on the button below the background: the feedback stays in view, a screen
-      // reader reads it, and the next tab stops are the links of the background, then the button
-      moveFocus(feedback);
-    });
     next.addEventListener("click", () => {
       if (isLast) finish();
       else show(index + 1, true);
@@ -200,7 +228,7 @@ export function startQuiz(root: Document = document): void {
 
   const fromAddress = (focus: boolean) => {
     const hashId = decodeURIComponent(root.location.hash.slice(1));
-    const index = order.findIndex((question) => `frage-${question.id}` === hashId);
+    const index = order.findIndex((question) => questionId(question) === hashId);
     show(index >= 0 ? index : 0, focus || index >= 0);
   };
   globalThis.addEventListener("hashchange", () => fromAddress(true));

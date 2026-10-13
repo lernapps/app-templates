@@ -2,11 +2,13 @@
 // the background of every option, the explanation and further reading; the solutions with the same at the end; the
 // sources; and the data the engine needs. Without JavaScript the page reads as a worksheet with its answer key; with
 // JavaScript the engine (engine.ts) turns it into a quiz, one question at a time. The engine and the end-to-end tests
-// rely on the ids, classes and data attributes written here. Links to other sites are plain links with
-// rel="noopener", as in the site frame: nothing is loaded from another server before a click.
+// rely on the ids, classes and data attributes written here. One question's controls (renderQuestion) and its
+// solution (renderSolution) render on their own too, for another archetype that embeds the quiz's questions; the
+// quiz is built from the same two. Links to other sites are plain links with rel="noopener", as in the site frame:
+// nothing is loaded from another server before a click.
 import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
-import { mixed, type Link, type Question, type Quiz } from "./quiz.ts";
+import { mixed, questionId, type Link, type Question, type Quiz } from "./quiz.ts";
 
 const t = translator(de);
 const numbers = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 10 });
@@ -21,7 +23,6 @@ export interface QuizData {
 const escape = (text: string) =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export const questionId = (question: Question) => `frage-${question.id}`;
 export const solutionId = (question: Question) => `loesung-${question.id}`;
 
 function controls(question: Question): string {
@@ -82,10 +83,25 @@ function controls(question: Question): string {
   }
 }
 
-function renderQuestion(question: Question): string {
+/** How one question renders: in a `div` on its own or an `li` of a list, with or without a button to the next one. */
+export interface RenderQuestionOptions {
+  element?: "div" | "li";
+  next?: boolean;
+}
+
+/**
+ * One question with its controls, the button to check it, the place of its feedback and, hidden until it is answered,
+ * what the learner learns about it (the same as its solution). The engine's startQuestion makes it live; without
+ * JavaScript the button stays hidden.
+ */
+export function renderQuestion(
+  question: Question,
+  { element = "div", next = false }: RenderQuestionOptions = {},
+): string {
   const id = questionId(question);
+  const nextButton = next ? ` <button type="button" class="quiz-next" hidden>${t("next")}</button>` : "";
   return [
-    `<li class="quiz-question" id="${id}" data-id="${question.id}" data-type="${question.type}">`,
+    `<${element} class="quiz-question" id="${id}" data-id="${question.id}" data-type="${question.type}">`,
     `<form class="quiz-form" novalidate>`,
     `<fieldset>`,
     `<legend class="quiz-text">${escape(question.text)}</legend>`,
@@ -93,11 +109,11 @@ function renderQuestion(question: Question): string {
     `</fieldset>`,
     `<div class="quiz-feedback" role="status"></div>`,
     `<div class="quiz-reveal" hidden>`,
-    reveal(question),
+    renderSolution(question),
     `</div>`,
-    `<p class="quiz-actions" hidden><button type="submit" class="quiz-check">${t("check")}</button> <button type="button" class="quiz-next" hidden>${t("next")}</button></p>`,
+    `<p class="quiz-actions" hidden><button type="submit" class="quiz-check">${t("check")}</button>${nextButton}</p>`,
     `</form>`,
-    `</li>`,
+    `</${element}>`,
   ].join("\n");
 }
 
@@ -149,8 +165,11 @@ function optionInfo(question: Question): string {
   ].join("\n");
 }
 
-/** What the learner learns about a question: each option's background, the explanation, further reading. */
-function reveal(question: Question): string {
+/**
+ * What the learner learns about a question, its solution: the right answer (the right options marked), each option's
+ * background, the explanation, further reading. A fragment without ids, e.g. for a <details>.
+ */
+export function renderSolution(question: Question): string {
   return [
     optionInfo(question),
     `<p class="quiz-explanation">${escape(question.explanation)}</p>`,
@@ -161,11 +180,11 @@ function reveal(question: Question): string {
   ].join("\n");
 }
 
-function renderSolution(question: Question): string {
+function solutionItem(question: Question): string {
   return [
     `<li class="quiz-solution" id="${solutionId(question)}">`,
     `<h3>${escape(question.text)}</h3>`,
-    reveal(question),
+    renderSolution(question),
     `<p><a href="#${questionId(question)}">${t("toQuestion")}</a></p>`,
     `</li>`,
   ].join("\n");
@@ -200,7 +219,7 @@ export function renderQuiz(data: QuizData): { title: string; description: string
     `<h2 class="quiz-heading">${t("questions")}</h2>`,
     `<p class="quiz-progress" hidden></p>`,
     `<ol class="quiz-questions">`,
-    ...quiz.questions.map(renderQuestion),
+    ...quiz.questions.map((question) => renderQuestion(question, { element: "li", next: true })),
     `</ol>`,
     `<section class="quiz-result" id="ergebnis" hidden tabindex="-1">`,
     `<h2>${t("result")}</h2>`,
@@ -211,7 +230,7 @@ export function renderQuiz(data: QuizData): { title: string; description: string
     `<section class="quiz-solutions" id="loesungen">`,
     `<h2>${t("solutions")}</h2>`,
     `<ol>`,
-    ...quiz.questions.map(renderSolution),
+    ...quiz.questions.map(solutionItem),
     `</ol>`,
     `</section>`,
     ...renderSources(quiz),
