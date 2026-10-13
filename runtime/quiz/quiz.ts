@@ -1,6 +1,6 @@
 // The question bank of a quiz about things to know (src/quiz.json, schema quiz.v1.schema.json) and what counts as
 // a right answer. Used at build time (validation, rendering), in the browser (the engine) and by the end-to-end
-// tests, so all three agree.
+// tests, so all three agree; per question also by other archetypes that embed the quiz's questions (question.ts).
 
 /** A link for further reading. */
 export interface Link {
@@ -59,6 +59,9 @@ export interface Matching extends Base {
 }
 
 export type Question = SingleChoice | MultipleChoice | TrueFalse | NumberQuestion | Ordering | Matching;
+
+/** The id of a question's element on the page, and its address (#frage-<id>). */
+export const questionId = (question: Pick<Question, "id">): string => `frage-${question.id}`;
 
 export interface Quiz {
   title: string;
