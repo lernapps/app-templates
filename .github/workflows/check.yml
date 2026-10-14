@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        template: [quiz]
+        template: [quiz, explainer]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -69,6 +69,32 @@ jobs:
         working-directory: quiz
       - run: npx lernapps check --pre-push
         working-directory: quiz
+
+  # The explainer template as an app with the content of a fixture in place of its own: 60 pages in four chapters, in
+  # German and English, with two section levels and every block type (test/fixtures/explainer-many-pages); and a short
+  # history app with one chapter, which the navigation hides (test/fixtures/explainer-history: timeline, quote,
+  # definition, a data file). The build, the checks of the built app and the end-to-end tests of every explainer pass
+  # on both, within the default timeouts.
+  explainer-fixtures:
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [explainer-many-pages, explainer-history]
+    name: ${{ matrix.fixture }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci # the runtime's build tools, for file:..
+      - run: npm install --no-audit --no-fund
+        working-directory: explainer
+      - run: rm -r src/app.yaml src/prozent && cp -r "../test/fixtures/${{ matrix.fixture }}/." src/
+        working-directory: explainer
+      - run: npx lernapps check --pre-push
+        working-directory: explainer
 
   # A page of another archetype, as the explainer will be, that embeds one question of each type through the quiz
   # runtime's per-question exports (test/fixtures/question-page): `lernapps check` with its end-to-end tests, with and
