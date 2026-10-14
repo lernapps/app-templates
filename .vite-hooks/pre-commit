@@ -1,0 +1,18 @@
+# The pre-commit hook of this repo: formats and fixes the staged files (vp staged, with the staged section of
+# vite.config.ts), nothing more, so a commit stays fast; the pre-push hook and CI run the checks. Quiet, like the
+# pre-commit hook of every app (archetypes/shared/hooks/pre-commit of @lernapps/tooling): the step prints into the log
+# below; on a failure the hook prints one line with the step, its exit code and the log. npm ci installs both hooks
+# (the prepare script: vp config).
+log=node_modules/.cache/lernapps/pre-commit.log
+mkdir -p "$(dirname "$log")"
+: >"$log"
+step() {
+  name=$1
+  shift
+  echo "\$ $*" >>"$log"
+  "$@" >>"$log" 2>&1 && return 0
+  code=$?
+  echo "lernapps pre-commit: $name failed (exit $code); the full output is in $log" >&2
+  exit "$code"
+}
+step "format and fix the staged files (vp staged)" vp staged
