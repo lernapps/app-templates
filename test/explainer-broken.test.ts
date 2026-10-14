@@ -135,8 +135,23 @@ const cases: [string, (root: string) => void, string][] = [
   ],
   [
     "a placeholder left in the task",
-    (root) => edit(root, "kapitel/eins.yaml", `de: "Was ist {a} + {b}?"`, `de: "Was ist {a} + {q}?"`),
-    "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): for seed 1 the task still has the placeholder {q}; declare q in given, or remove the braces",
+    (root) => edit(root, "kapitel/eins.yaml", `de: "Was ist {{a}} + {{b}}?"`, `de: "Was ist {{a}} + {{b.x}}?"`),
+    "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): for seed 1 the task still has the placeholder {{b.x}}: it has no value there; name a field the records have",
+  ],
+  [
+    "an unknown placeholder",
+    (root) => edit(root, "kapitel/eins.yaml", `de: "Was ist {{a}} + {{b}}?"`, `de: "Was ist {{a}} + {{q}}?"`),
+    "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): {{q}} is an unknown placeholder: q is not declared in given; declare it, or use one of {{a}}, {{b}}, {{answer}}",
+  ],
+  [
+    "a placeholder with one brace",
+    (root) => edit(root, "kapitel/eins.yaml", `de: "Was ist {{a}} + {{b}}?"`, `de: "Was ist {{a}} + {b}?"`),
+    "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): {b} has one pair of braces; a placeholder is written with two: {{b}}",
+  ],
+  [
+    "an unused variable",
+    (root) => edit(root, "kapitel/eins.yaml", "b: { int: [1, 9] }", "b: { int: [1, 9] }\n          c: { int: [1, 9] }"),
+    "src/kapitel/eins.yaml:26: blocks[1].blocks[0].given.c: c is never used: no placeholder {{c}} in the task, figure, steps, hint or mistakes, and no expression of the figure, answer or mistakes names it; use it, or remove it from given",
   ],
   [
     "a missing translation in an embedded question",

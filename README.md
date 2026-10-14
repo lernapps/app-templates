@@ -24,6 +24,14 @@ with which a creator and their AI assistant build a learning app.
   one by one, for other archetypes that embed them as exercises: `@lernapps/app-templates/quiz/question` (schema,
   validation, rendering, checker, messages; a question's texts may be maps by language), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of
   `@lernapps/app-templates/quiz/e2e`; [`test/fixtures/question-page/`](test/fixtures/question-page/) is a page built so.
+- The placeholders of the explainer's `generated` exercises are always two braces around a declared name or its
+  field, nothing else inside: `{{G}}`, `{{e.name}}`, `{{answer}}`, in prose and in formulas alike
+  (`$\frac{{{W}}}{{{G}}} \cdot 100 = {{answer}}$`). One brace is never a placeholder, so in a formula `G`, `{G}` and
+  `\frac{W}{G}` are letters; the only LaTeX form this reserves, a double group around a lone name, means the same as
+  the name alone. The build fails on a placeholder whose name `given` does not declare, on one brace or spaces where a
+  placeholder was meant in prose (`{G}`, `{{ G }}`), on a variable of `given` that nothing uses (no placeholder, and
+  no expression of the figure, answer or mistakes; `where` does not count), and on a placeholder left after filling in
+  ([`generated.ts`](runtime/explainer/generated.ts)).
 - Which commit of this repo a new app gets and what the generator adds to the template:
   `npx --yes github:lernapps/tooling#main create --help`.
 - What an archetype is and how the parts fit: the [architecture of the tooling](https://lernapps.net/tooling/architecture/).

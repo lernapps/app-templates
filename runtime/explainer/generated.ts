@@ -6,9 +6,16 @@
 // choice, order, set and pairs become the quiz's number, single-choice, ordering, multiple-choice and matching
 // questions, so controls, checker and feedback come from the quiz runtime.
 //
-// Templates are rendered by the build (restricted Markdown, formulas as MathML) with each placeholder {name} as a token
-// ⟦name⟧ (inside a formula \text{⟦name⟧}); fill() puts in the values of a task, so the browser needs no Markdown or
-// formula renderer. No Node and no DOM here.
+// Templates are rendered by the build (restricted Markdown, formulas as MathML) with each placeholder {{name}} as a
+// token ⟦name⟧ (inside a formula \text{⟦name⟧}); fill() puts in the values of a task, so the browser needs no Markdown
+// or formula renderer. No Node and no DOM here.
+//
+// A placeholder is always written with two braces and nothing else inside: {{G}}, {{e.name}}, {{answer}}, in prose
+// and in formulas alike. One brace is never a placeholder: in prose {G} is an error, in a formula it is a LaTeX group,
+// so a bare letter (G, {G}, \frac{W}{G}) is always the letter. The one LaTeX form this takes away, a double group
+// around a lone name ({{G}}), means the same as the letter alone, so nothing is lost; any other group ({{G}^2},
+// {{G} + 1}) stays a group. To fill in a value where the formula needs a group, keep the group: \frac{{{W}}}{{{G}}}.
+// Two braces with spaces inside ({{ G }}) are an error everywhere, as they were most likely meant as a placeholder.
 import {
   ExpressionError,
   evaluate,
@@ -18,6 +25,7 @@ import {
   type Expression,
   type Rec,
   type Value,
+  variables,
 } from "./expression.ts";
 import { bar, hundredGrid } from "./figures.ts";
 import { Fraction } from "./fraction.ts";
@@ -114,7 +122,14 @@ export interface Task {
 /** How many draws a seed may take until `where` holds. */
 const ATTEMPTS = 100;
 export const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
-const PLACEHOLDER = /\{([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\}/g;
+const PATH = String.raw`[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*`;
+/** A placeholder: two braces around a name or a name's field, nothing else inside. */
+const PLACEHOLDER = new RegExp(String.raw`\{\{(${PATH})\}\}`, "g");
+/** What looks meant as a placeholder but is not one: one brace in prose, or spaces inside two braces. */
+const ONE_BRACE = new RegExp(String.raw`(?<!\{)\{(${PATH})\}(?!\})`, "g");
+const SPACED = new RegExp(String.raw`\{\{\s*(${PATH})\s*\}\}`, "g");
+/** A formula ($…$) or a run of prose, in a template. */
+const SEGMENT = /\$((?:\\.|[^\\$\n])+?)\$|([^$]+)/g;
 
 // ---------------------------------------------------------------------------------------------- the comparator
 
@@ -305,7 +320,7 @@ export function label(value: Value, lang: string): string {
   if (typeof value === "string") return value;
   if (typeof value === "boolean") return String(value);
   if (Array.isArray(value)) return (value as readonly Value[]).map((item) => label(item, lang)).join(", ");
-  throw new ExpressionError("a record cannot be shown; name one of its fields, e.g. {e.name}");
+  throw new ExpressionError("a record cannot be shown; name one of its fields, e.g. {{e.name}}");
 }
 
 /** The answer as the learner reads it: a sum of money with two decimals when it has any. */
@@ -317,25 +332,115 @@ function answerLabel(spec: Generated, task: Task, lang: string): string {
   return label(task.answer, lang);
 }
 
-/**
- * A template's placeholders as tokens: {G} becomes ⟦G⟧, inside a formula ($…$) {\text{⟦G⟧}}. Inside a formula only
- * the names in `names` (and answer) are placeholders, so that a LaTeX group like x^{n} stays as it is; to keep a
- * declared name as a letter in a group, write it with spaces: \frac{W}{ p }.
- */
-export function tokenize(text: string, names?: ReadonlySet<string>): string {
-  return text.replace(
-    /\$((?:\\.|[^\\$\n])+?)\$|([^$]+)/g,
-    (whole, math: string | undefined, prose: string | undefined) => {
-      if (math !== undefined) {
-        const inner = math.replace(PLACEHOLDER, (placeholder, path: string) => {
-          const root = path.split(".")[0] ?? "";
-          return names === undefined || names.has(root) || root === "answer" ? `{\\text{⟦${path}⟧}}` : placeholder;
-        });
-        return `$${inner}$`;
-      }
-      return (prose ?? whole).replace(PLACEHOLDER, (_placeholder, path: string) => `⟦${path}⟧`);
-    },
+/** A template's placeholders as tokens: {{G}} becomes ⟦G⟧, inside a formula ($…$) {\text{⟦G⟧}}. */
+export function tokenize(text: string): string {
+  return text.replace(SEGMENT, (whole, math: string | undefined, prose: string | undefined) =>
+    math !== undefined
+      ? `$${math.replace(PLACEHOLDER, (_placeholder, path: string) => `{\\text{⟦${path}⟧}}`)}$`
+      : (prose ?? whole).replace(PLACEHOLDER, (_placeholder, path: string) => `⟦${path}⟧`),
   );
+}
+
+/** The placeholders of a template, by their path (G, e.name, answer). */
+export function placeholdersIn(text: string): string[] {
+  return [...text.matchAll(PLACEHOLDER)].map((match) => match[1] ?? "");
+}
+
+/** The problems of the placeholders of one template: unknown roots, one brace in prose, spaces inside. */
+export function placeholderProblems(text: string, known: ReadonlySet<string>): string[] {
+  const problems: string[] = [];
+  const list = [...known].map((name) => `{{${name}}}`).join(", ");
+  for (const path of placeholdersIn(text)) {
+    const root = path.split(".")[0] ?? "";
+    if (!known.has(root)) {
+      problems.push(
+        `{{${path}}} is an unknown placeholder: ${root} is not declared in given; declare it, or use one of ${list}`,
+      );
+    }
+  }
+  for (const match of text.matchAll(SPACED)) {
+    if (match[0] !== `{{${match[1]}}}`) {
+      problems.push(`${match[0]} has spaces inside; a placeholder is written {{${match[1]}}}, without spaces`);
+    }
+  }
+  for (const match of text.matchAll(SEGMENT)) {
+    if (match[2] === undefined) continue;
+    for (const one of match[2].matchAll(ONE_BRACE)) {
+      const root = (one[1] ?? "").split(".")[0] ?? "";
+      if (known.has(root)) {
+        problems.push(`{${one[1]}} has one pair of braces; a placeholder is written with two: {{${one[1]}}}`);
+      }
+    }
+  }
+  return problems;
+}
+
+/** One template of an exercise as written, in one language: where it is, and its text. */
+export interface Written {
+  /** The path in the exercise; for a text by language it ends with the language. */
+  path: (string | number)[];
+  lang?: string;
+  text: string;
+}
+
+/** The templates of an exercise as written: the task, the figure's alt, the steps, the hint and the messages. */
+export function writtenTemplates(spec: Generated): Written[] {
+  const written: Written[] = [];
+  const add = (path: (string | number)[], text: Text | undefined) => {
+    if (text === undefined) return;
+    if (typeof text === "string") written.push({ path, text });
+    else for (const [lang, each] of Object.entries(text)) written.push({ path: [...path, lang], lang, text: each });
+  };
+  add(["task", "text"], spec.task.text);
+  add(["task", "figure", "alt"], spec.task.figure?.alt);
+  (spec.steps ?? []).forEach((step, index) => add(["steps", index], step));
+  add(["hint"], spec.hint);
+  (spec.mistakes ?? []).forEach((mistake, index) => add(["mistakes", index, "message"], mistake.message));
+  return written;
+}
+
+/** The problems of the placeholders of an exercise's templates, each at its path; the figure's alt also has {{figure.…}}. */
+export function templateProblems(spec: Generated): { path: (string | number)[]; lang?: string; message: string }[] {
+  const declared = [...Object.keys(spec.given), "answer"];
+  return writtenTemplates(spec).flatMap(({ path, lang, text }) => {
+    const known = new Set(path[1] === "figure" ? [...declared, "figure"] : declared);
+    return placeholderProblems(text, known).map((message) => ({
+      path,
+      ...(lang === undefined ? {} : { lang }),
+      message,
+    }));
+  });
+}
+
+/**
+ * The variables of `given` that the exercise never uses: in no placeholder of its templates, and in none of the
+ * expressions of the figure, the answer (with the options of a choice or set) and the mistakes. `where` does not
+ * count: a value drawn only to be filtered is never seen.
+ */
+export function unusedVariables(spec: Generated): string[] {
+  const used = new Set<string>();
+  for (const { text } of writtenTemplates(spec))
+    for (const path of placeholdersIn(text)) used.add(path.split(".")[0] ?? "");
+  const expressions = [spec.answer.value, ...(spec.mistakes ?? []).map((mistake) => mistake.value)];
+  const figure = spec.task.figure;
+  for (const key of ["filled", "part", "whole"] as const) {
+    if (typeof figure?.[key] === "string") expressions.push(figure[key]);
+  }
+  const compare = spec.answer.compare;
+  if (typeof compare === "object") {
+    for (const key of ["choice", "set"] as const) {
+      const options = (compare as Record<string, unknown>)[key];
+      if (typeof options === "string") expressions.push(options);
+    }
+  }
+  for (const source of expressions) {
+    try {
+      variables(parse(source), used);
+    } catch {
+      // an expression that does not parse is reported on its own
+    }
+  }
+  return Object.keys(spec.given).filter((name) => !used.has(name));
 }
 
 /** The value of a placeholder's path in a task, or undefined when it has none. */
@@ -368,7 +473,7 @@ export function fill(
     mode === "html"
       ? template.replace(/<mtext>⟦([^⟧]+)⟧<\/mtext>/g, (_whole, path: string) => {
           const value = placeholderValue(spec, task, path, lang);
-          if (value === undefined) return `<mtext>{${escape(path)}}</mtext>`;
+          if (value === undefined) return `<mtext>{{${escape(path)}}}</mtext>`;
           if (value.number === undefined) return `<mtext>${escape(value.text)}</mtext>`;
           const negative = value.number.compare(Fraction.of(0)) < 0;
           const digits = escape(negative ? value.text.replace(/^[-−]/, "") : value.text);
@@ -377,7 +482,7 @@ export function fill(
       : template;
   return withMath.replace(/⟦([^⟧]+)⟧/g, (_whole, path: string) => {
     const value = placeholderValue(spec, task, path, lang);
-    if (value === undefined) return `{${path}}`;
+    if (value === undefined) return `{{${path}}}`;
     return mode === "html" ? escape(value.text) : value.text;
   });
 }
@@ -449,21 +554,41 @@ function figureProblem(
   return undefined;
 }
 
-/** The figure of a task, unsolved, as inline SVG with its alternative text; undefined without a figure. */
-export function figureOf(spec: Generated, task: Task, lang: string, templates: Templates): string | undefined {
-  const figure = spec.task.figure;
-  if (figure === undefined) return undefined;
-  const values = figureValues(spec, task);
-  if (figureProblem(spec, values) !== undefined) return undefined;
+/** The figure's alternative text for a task, plain text, with its own values as {{figure.filled}} and so on. */
+function altOf(
+  spec: Generated,
+  task: Task,
+  lang: string,
+  templates: Templates,
+  values: Readonly<Record<string, Value | undefined>> = figureValues(spec, task),
+): string {
   const env: Task = { ...task, values: { ...task.values } };
   for (const [key, value] of Object.entries(values)) env.values[`figure_${key}`] = value as Value;
-  const alt = fill(
+  return fill(
     (templatesIn(templates, lang).alt ?? "").replace(/⟦figure\.(\w+)⟧/g, "⟦figure_$1⟧"),
     spec,
     env,
     lang,
     "text",
   );
+}
+
+/** The alternative text, or none when the figure's values are not defined (reported on their own). */
+function safeAlt(spec: Generated, task: Task, lang: string, templates: Templates): string {
+  try {
+    return altOf(spec, task, lang, templates);
+  } catch {
+    return "";
+  }
+}
+
+/** The figure of a task, unsolved, as inline SVG with its alternative text; undefined without a figure. */
+export function figureOf(spec: Generated, task: Task, lang: string, templates: Templates): string | undefined {
+  const figure = spec.task.figure;
+  if (figure === undefined) return undefined;
+  const values = figureValues(spec, task);
+  if (figureProblem(spec, values) !== undefined) return undefined;
+  const alt = altOf(spec, task, lang, templates, values);
   const n = (value: Value | undefined) => (value instanceof Fraction ? value.toNumber() : 0);
   return figure.kind === "hundred-grid"
     ? hundredGrid(n(values.filled), alt)
@@ -793,9 +918,18 @@ function seedProblems(
         "the message",
         fill(templatesIn(templates, each).messages[index] ?? "", spec, task, each, "text"),
       ]),
+      ...(spec.task.figure === undefined
+        ? []
+        : [
+            [["task", "figure", "alt"], "the figure's alt", safeAlt(spec, task, each, templates)] as [
+              (string | number)[],
+              string,
+              string,
+            ],
+          ]),
     ];
     for (const [path, what, text] of texts) {
-      const left = /\{([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\}/.exec(text);
+      const left = /\{\{?([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\}\}?/.exec(text);
       if (left === null) continue;
       const source = path.reduce<unknown>((at, part) => (at as Record<string, unknown> | undefined)?.[part], spec);
       const keyed = typeof source === "object" && source !== null;
@@ -805,8 +939,8 @@ function seedProblems(
         ...(keyed ? { lang: each } : {}),
         message:
           root in spec.given || root === "answer"
-            ? `for seed ${seed} ${what} still has the placeholder {${left[1]}}: it has no value there; name a field the records have`
-            : `for seed ${seed} ${what} still has the placeholder {${left[1]}}; declare ${root} in given, or remove the braces`,
+            ? `for seed ${seed} ${what} still has the placeholder ${left[0]}: it has no value there; name a field the records have`
+            : `for seed ${seed} ${what} still has the placeholder ${left[0]}; declare ${root} in given, or remove the braces`,
       });
     }
   }
