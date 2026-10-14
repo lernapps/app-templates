@@ -115,3 +115,47 @@ blocks:
             licence: CC0-1.0
           - type: timeline
             data: ereignisse
+  - type: section
+    id: uebung
+    title: { de: "Übung", en: "Exercise" }
+    blocks:
+      - type: number
+        id: ecken
+        text: { de: "Wie viele Ecken hat ein Sechseck?", en: "How many corners does a hexagon have?" }
+        answer: 6
+        tolerance: 0
+        unit: { de: "Ecken", en: "corners" }
+        explanation: { de: "Sechs Ecken und sechs Seiten.", en: "Six corners and six sides." }
+        links:
+          - title: { de: "Sechseck (Wikipedia)", en: "Hexagon (Wikipedia, German)" }
+            url: https://de.wikipedia.org/wiki/Sechseck
+      - type: ordering
+        id: formen-ordnen
+        text:
+          {
+            de: "Ordne nach der Zahl der Ecken, die wenigsten zuerst.",
+            en: "Order by the number of corners, fewest first.",
+          }
+        items:
+          - { de: "Dreieck", en: "Triangle" }
+          - { de: "Quadrat", en: "Square" }
+          - { de: "Fünfeck", en: "Pentagon" }
+        explanation: { de: "Drei, vier, fünf Ecken.", en: "Three, four, five corners." }
+        links:
+          - title: { de: "Vieleck (Wikipedia)", en: "Polygon (Wikipedia, German)" }
+            url: https://de.wikipedia.org/wiki/Polygon
+      - type: generated
+        id: erfindungen-ordnen
+        given:
+          events: { pick: 2, distinct: true, from: { data: ereignisse } }
+        task:
+          text:
+            {
+              de: "Bringe die Ereignisse in ihre Reihenfolge, das früheste zuerst.",
+              en: "Put the events in order, the earliest first.",
+            }
+        answer: { value: "map(sortBy(events, date), title)", compare: order }
+        mistakes:
+          - value: "map(reverse(sortBy(events, date)), title)"
+            message:
+              { de: "Umgekehrt: Das früheste kommt zuerst.", en: "The other way round: the earliest comes first." }

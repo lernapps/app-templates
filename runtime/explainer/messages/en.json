@@ -21,5 +21,11 @@
   "code": "Code in {language}",
   "footer": "An explainer on lernapps.net",
   "imprint": "Imprint",
-  "privacy": "Privacy"
+  "privacy": "Privacy",
+  "workedTasks": "Three worked tasks, each with its solution:",
+  "practice": "Practise yourself, with new numbers each time:",
+  "newTask": "New task",
+  "hint": "Hint",
+  "gridAlt": "A hundred grid with {figure.filled} squares shaded.",
+  "barAlt": "A strip for {figure.whole}, {figure.part} of it shaded."
 }

@@ -1,8 +1,13 @@
 // What the pages of an explainer must show, from its content in src/ (not from the rendered pages), for its end-to-end
 // tests: per language, the content pages in order with their headings by nesting (page h1, section h2, subsection h3,
 // a box one level below the heading it is under), their sections with their anchors, the number of formulas and the
-// name of every figure; and the other pages (start, chapters, glossary) with their titles.
+// name of every figure, and its exercises with what each must accept; and the other pages (start, chapters, glossary)
+// with their titles.
+import { questionIn, type Question } from "../quiz/quiz.ts";
+import { answerText } from "../quiz/render.ts";
 import { inLanguage, timelineEvents, type Block, type Site, type Text } from "./content.ts";
+import { dataOf, templatesOf, workedTasks } from "./exercises.ts";
+import { kindOf, plainText, type Data, type Generated, type Templates } from "./generated.ts";
 import { loadSite } from "./load.ts";
 import { inspect } from "./markdown.ts";
 import { routes } from "./routes.ts";
@@ -16,7 +21,31 @@ export interface PageOutline {
   sections: { id: string; title: string }[];
   formulas: number;
   figures: string[];
+  exercises: ExerciseOutline[];
 }
+
+/** An exercise of a page, in the page's language: what it shows and what it accepts. */
+export type ExerciseOutline =
+  | {
+      kind: "question";
+      id: string;
+      /** The exercise's type, one per kind of controls: the quiz's question type. */
+      type: string;
+      question: Question;
+      /** The right answer as its "Lösung" states it: each right option, or the answer. */
+      answers: string[];
+    }
+  | {
+      kind: "generated";
+      id: string;
+      /** generated, with the comparator's kind: generated:number, generated:order, … */
+      type: string;
+      spec: Generated;
+      data: Data;
+      templates: Templates;
+      /** The worked tasks without JavaScript: the task's text and the right answer as its "Lösung" states it. */
+      worked: { task: string; answer: string }[];
+    };
 
 export interface Outline {
   languages: readonly string[];
@@ -81,13 +110,46 @@ function walk(
         break;
       case "code":
         break;
+      case "generated": {
+        const data = dataOf(block, site.data);
+        const templates = templatesOf(block, [lang]);
+        const worked = workedTasks(block, data, templates, lang);
+        for (const item of worked) {
+          for (const html of [item.task, item.hint ?? "", ...item.steps])
+            into.formulas += html.split("<math").length - 1;
+        }
+        into.exercises.push({
+          kind: "generated",
+          id: block.id,
+          type: `generated:${kindOf(block.answer.compare).kind}`,
+          spec: block,
+          data,
+          templates,
+          worked: worked.map((item) => ({ task: plainText(item.task), answer: plainText(item.answer) })),
+        });
+        break;
+      }
+      default: {
+        const question = questionIn(block, lang);
+        into.exercises.push({
+          kind: "question",
+          id: block.id,
+          type: block.type,
+          question,
+          answers:
+            question.type === "single-choice" || question.type === "multiple-choice"
+              ? question.options.filter((option) => option.correct).map((option) => option.text)
+              : [plainText(answerText(question, lang))],
+        });
+      }
     }
   }
 }
 
 /** The outline of the explainer whose content is in `root`/src. */
 export function outline(root = "."): Outline {
-  const site = loadSite(root);
+  // the build has run the property tests of the generated exercises
+  const site = loadSite(root, 0);
   const pages: Record<string, PageOutline[]> = {};
   const others: Record<string, PageOutline[]> = {};
   for (const route of routes(site)) {
@@ -99,6 +161,7 @@ export function outline(root = "."): Outline {
       sections: [],
       formulas: 0,
       figures: [],
+      exercises: [],
     };
     if (route.page === undefined) (others[route.lang] ??= []).push(item);
     else {

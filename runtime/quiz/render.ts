@@ -8,10 +8,36 @@
 // nothing is loaded from another server before a click.
 import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
+import en from "./messages/en.json" with { type: "json" };
 import { mixed, questionId, type Link, type Question, type Quiz } from "./quiz.ts";
 
-const t = translator(de);
-const numbers = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 10 });
+export type QuizMessages = typeof de;
+/** The quiz's texts for learners in each language it has them; the quiz itself is German. */
+export const QUIZ_MESSAGES: Readonly<Record<string, QuizMessages>> = { de, en };
+const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
+
+/** The quiz's texts in `lang`; German for a language it does not have. */
+export const messagesIn = (lang: string): QuizMessages => QUIZ_MESSAGES[lang] ?? de;
+
+/** What rendering in one language needs: its texts and its numbers. */
+interface Language {
+  t: (key: keyof QuizMessages, params?: Readonly<Record<string, string | number>>) => string;
+  numbers: Intl.NumberFormat;
+}
+const languages = new Map<string, Language>();
+function language(lang = "de"): Language {
+  let found = languages.get(lang);
+  if (found === undefined) {
+    const locale = LOCALES[lang] ?? "de-DE";
+    found = {
+      t: translator(messagesIn(lang), locale),
+      numbers: new Intl.NumberFormat(locale, { maximumFractionDigits: 10 }),
+    };
+    languages.set(lang, found);
+  }
+  return found;
+}
+const { t } = language("de");
 
 /** What the engine reads from the page (script#quiz-data). */
 export interface QuizData {
@@ -25,7 +51,7 @@ const escape = (text: string) =>
 
 export const solutionId = (question: Question) => `loesung-${question.id}`;
 
-function controls(question: Question): string {
+function controls(question: Question, { t }: Language): string {
   const name = questionId(question);
   switch (question.type) {
     case "single-choice":
@@ -83,10 +109,23 @@ function controls(question: Question): string {
   }
 }
 
-/** How one question renders: in a `div` on its own or an `li` of a list, with or without a button to the next one. */
+/**
+ * How one question renders: in a `div` on its own or an `li` of a list, with or without a button to the next one;
+ * in which language (the question already in it, see questionIn); and, for a page that renders the question's text
+ * itself (with formulas), its text as HTML.
+ */
 export interface RenderQuestionOptions {
   element?: "div" | "li";
   next?: boolean;
+  lang?: string;
+  textHtml?: string;
+  explanationHtml?: string;
+}
+
+/** How a solution renders: in which language, and, for a page that renders it itself, the explanation as HTML. */
+export interface RenderSolutionOptions {
+  lang?: string;
+  explanationHtml?: string;
 }
 
 /**
@@ -96,20 +135,22 @@ export interface RenderQuestionOptions {
  */
 export function renderQuestion(
   question: Question,
-  { element = "div", next = false }: RenderQuestionOptions = {},
+  { element = "div", next = false, lang = "de", textHtml, explanationHtml }: RenderQuestionOptions = {},
 ): string {
+  const words = language(lang);
+  const { t } = words;
   const id = questionId(question);
   const nextButton = next ? ` <button type="button" class="quiz-next" hidden>${t("next")}</button>` : "";
   return [
     `<${element} class="quiz-question" id="${id}" data-id="${question.id}" data-type="${question.type}">`,
     `<form class="quiz-form" novalidate>`,
     `<fieldset>`,
-    `<legend class="quiz-text">${escape(question.text)}</legend>`,
-    controls(question),
+    `<legend class="quiz-text">${textHtml ?? escape(question.text)}</legend>`,
+    controls(question, words),
     `</fieldset>`,
     `<div class="quiz-feedback" role="status"></div>`,
     `<div class="quiz-reveal" hidden>`,
-    renderSolution(question),
+    renderSolution(question, explanationHtml === undefined ? { lang } : { lang, explanationHtml }),
     `</div>`,
     `<p class="quiz-actions" hidden><button type="submit" class="quiz-check">${t("check")}</button>${nextButton}</p>`,
     `</form>`,
@@ -117,7 +158,12 @@ export function renderQuestion(
   ].join("\n");
 }
 
-function rightAnswerText(question: Question): string {
+/** The right answer as the solution states it, in `lang`: the right options, the number, the order, the pairs. */
+export function answerText(question: Question, lang = "de"): string {
+  return rightAnswerText(question, language(lang));
+}
+
+function rightAnswerText(question: Question, { t, numbers }: Language): string {
   switch (question.type) {
     case "single-choice":
     case "multiple-choice":
@@ -146,9 +192,10 @@ function rightAnswerText(question: Question): string {
 const external = (link: Link) => `<a href="${escape(link.url)}" rel="noopener">${escape(link.title)}</a>`;
 
 /** Every option with its background, the right ones marked; the engine marks the learner's choice. */
-function optionInfo(question: Question): string {
+function optionInfo(question: Question, words: Language): string {
+  const { t } = words;
   if (question.type !== "single-choice" && question.type !== "multiple-choice") {
-    return `<p><strong>${t("rightAnswer")}</strong> ${rightAnswerText(question)}</p>`;
+    return `<p><strong>${t("rightAnswer")}</strong> ${rightAnswerText(question, words)}</p>`;
   }
   return [
     `<ul class="quiz-infos">`,
@@ -156,7 +203,7 @@ function optionInfo(question: Question): string {
       [
         `<li class="quiz-info${option.correct ? " quiz-info-right" : ""}" data-option="${index}">`,
         `<p class="quiz-info-head"><strong>${escape(option.text)}</strong>${option.correct ? ` <span class="quiz-badge quiz-badge-right">${t("rightOption")}</span>` : ""}</p>`,
-        `<p>${escape(option.info)}</p>`,
+        option.info === "" ? "" : `<p>${escape(option.info)}</p>`,
         option.link === undefined ? "" : `<p>${external(option.link)}</p>`,
         `</li>`,
       ].join(""),
@@ -169,15 +216,24 @@ function optionInfo(question: Question): string {
  * What the learner learns about a question, its solution: the right answer (the right options marked), each option's
  * background, the explanation, further reading. A fragment without ids, e.g. for a <details>.
  */
-export function renderSolution(question: Question): string {
-  return [
-    optionInfo(question),
-    `<p class="quiz-explanation">${escape(question.explanation)}</p>`,
-    `<p class="quiz-more">${t("moreReading")}</p>`,
-    `<ul class="quiz-links">`,
-    ...question.links.map((link) => `<li>${external(link)}</li>`),
-    `</ul>`,
-  ].join("\n");
+export function renderSolution(
+  question: Question,
+  { lang = "de", explanationHtml }: RenderSolutionOptions = {},
+): string {
+  const words = language(lang);
+  const links =
+    question.links.length === 0
+      ? []
+      : [
+          `<p class="quiz-more">${words.t("moreReading")}</p>`,
+          `<ul class="quiz-links">`,
+          ...question.links.map((link) => `<li>${external(link)}</li>`),
+          `</ul>`,
+        ];
+  const explanation =
+    explanationHtml ??
+    (question.explanation === "" ? "" : `<p class="quiz-explanation">${escape(question.explanation)}</p>`);
+  return [optionInfo(question, words), explanation, ...links].filter((part) => part !== "").join("\n");
 }
 
 function solutionItem(question: Question): string {

@@ -21,5 +21,11 @@
   "code": "Code in {language}",
   "footer": "Eine Erklär-App auf lernapps.net",
   "imprint": "Impressum",
-  "privacy": "Datenschutz"
+  "privacy": "Datenschutz",
+  "workedTasks": "Drei Beispielaufgaben, jede mit ihrer Lösung:",
+  "practice": "Übe selbst, mit immer neuen Zahlen:",
+  "newTask": "Neue Aufgabe",
+  "hint": "Tipp",
+  "gridAlt": "Ein Hunderterfeld, {figure.filled} Kästchen sind gefärbt.",
+  "barAlt": "Ein Streifen für {figure.whole}, davon {figure.part} gefärbt."
 }

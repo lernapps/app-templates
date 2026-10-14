@@ -9,10 +9,136 @@
 // below its place), every section heading is visible, the number of <math> elements is the number of formulas in the
 // content, every figure is visible with its accessible name, every link to an anchor finds it, and the page has its
 // language, its alternates in the other languages, a language switch and the archetype marker. Previous and next
-// form one chain over all pages, in the order of the lists. With JavaScript, no page stores anything on the device.
-// The preset runs them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
+// form one chain over all pages, in the order of the lists. Every exercise shows its text in the page's language, and
+// every "Lösung" opens and shows the answer the checker accepts. With JavaScript, in German, one exercise of each type
+// per page: a question of the quiz's types accepts its right answer and rejects a wrong one, the feedback in view with
+// the focus; a generated exercise shows, at its deep link ?seed=<n>#<id>, the task the notation gives for that seed,
+// accepts its right answer, rejects a wrong one (a mistake, with its message), and "Neue Aufgabe" changes the
+// task. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
+// them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type Page } from "playwright/test";
-import { outline, type PageOutline } from "./outline.ts";
+import { questionId, rightAnswer, wrongAnswer } from "../quiz/quiz.ts";
+import { answerQuestion, expectFeedbackInView } from "../quiz/e2e.ts";
+import { messagesIn } from "../quiz/render.ts";
+import { answerFor, fill, generate, plainText, questionFor, taskKey, taskText } from "./generated.ts";
+import { outline, type ExerciseOutline, type PageOutline } from "./outline.ts";
+
+/** The seed of the deep link the tests open a generated exercise with. */
+const SEED = 7;
+
+/**
+ * Every exercise of the page shows its text, and each "Lösung" opens and shows the accepted answer: read in one go,
+ * before and after a click on each "Lösung".
+ */
+async function expectExercises(page: Page, item: PageOutline): Promise<void> {
+  if (item.exercises.length === 0) return;
+  const main = page.locator("main");
+  const expected = item.exercises.map((exercise) =>
+    exercise.kind === "question"
+      ? { id: exercise.id, texts: [exercise.question.text], answers: [exercise.answers] }
+      : {
+          id: exercise.id,
+          texts: exercise.worked.map((worked) => worked.task),
+          answers: exercise.worked.map((worked) => [worked.answer]),
+        },
+  );
+  const read = () =>
+    main.locator(".explainer-exercise").evaluateAll((elements) =>
+      elements.map((element) => {
+        const fold = (text: string | null) => (text ?? "").replace(/\s+/g, " ").trim();
+        const own = element.classList.contains("explainer-question")
+          ? [...element.querySelectorAll("legend")]
+          : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
+        const solutions = [...element.querySelectorAll<HTMLDetailsElement>("details.explainer-solution")];
+        return {
+          id: element.id,
+          texts: own.map((text) => fold(text.textContent)),
+          // what a learner sees of each "Lösung": nothing while it is closed
+          shown: solutions.map((details) => (details.open ? fold((details as HTMLElement).innerText) : "")),
+        };
+      }),
+    );
+  const before = await read();
+  expect(
+    before.map(({ id, texts }) => ({ id, texts })),
+    `${item.url}: each exercise with its text`,
+  ).toEqual(expected.map(({ id, texts }) => ({ id, texts })));
+  // a click on each summary, as a learner opens a <details> (its own behaviour, no script of the page)
+  await main
+    .locator("details.explainer-solution > summary")
+    .evaluateAll((summaries) => summaries.forEach((summary) => (summary as HTMLElement).click()));
+  const after = await read();
+  for (const [index, exercise] of expected.entries()) {
+    exercise.answers.forEach((answers, at) => {
+      for (const answer of answers) {
+        expect(
+          after[index]?.shown[at] ?? "",
+          `${item.url}: ${exercise.id}, Lösung ${at + 1} shows ${answer}`,
+        ).toContain(answer);
+      }
+    });
+  }
+}
+
+/** The feedback of the question `id` says `text`. */
+const feedback = (page: Page, id: string) => page.locator(`[id="${id}"] .quiz-feedback`);
+
+/** With JavaScript: a question of the quiz's types accepts its right answer and rejects a wrong one. */
+async function checkQuestion(
+  page: Page,
+  url: string,
+  exercise: Extract<ExerciseOutline, { kind: "question" }>,
+): Promise<void> {
+  const { question } = exercise;
+  await page.goto(`./${url}#${exercise.id}`);
+  await answerQuestion(page, question, rightAnswer(question));
+  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").right);
+  await expectFeedbackInView(page, question);
+  await page.reload();
+  await answerQuestion(page, question, wrongAnswer(question));
+  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").wrong);
+  await expectFeedbackInView(page, question);
+}
+
+/** With JavaScript: a generated exercise at its deep link, its answers, a mistake, and "Neue Aufgabe". */
+async function checkGenerated(
+  page: Page,
+  url: string,
+  exercise: Extract<ExerciseOutline, { kind: "generated" }>,
+): Promise<void> {
+  const { spec, data, templates } = exercise;
+  const task = generate(spec, SEED, data);
+  const question = questionFor(spec, task, "de", templates);
+  const address = `./${url}?seed=${SEED}#${exercise.id}`;
+  const legend = page.locator(`[id="${questionId(question)}"] legend`);
+  await page.goto(address);
+  await expect(legend, "the deep link shows the task of its seed").toHaveText(
+    plainText(taskText(spec, task, "de", templates)),
+  );
+  // a wrong answer: the first mistake, with its message; the comparator's wrong answer without mistakes
+  if (task.mistakes.length > 0) {
+    await answerQuestion(page, question, answerFor(spec, task, question, 0));
+    const message = fill(templates["de"]?.messages[0] ?? "", spec, task, "de", "text");
+    await expect(feedback(page, questionId(question)).locator(".quiz-diagnosis"), "the mistake's message").toHaveText(
+      message,
+    );
+  } else await answerQuestion(page, question, wrongAnswer(question));
+  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").wrong);
+  await expectFeedbackInView(page, question);
+  // "Neue Aufgabe": another task, its seed in the address; its right answer counts
+  await page.locator(`[id="${exercise.id}"] .explainer-new-task`).click();
+  const seed = Number(new URL(page.url()).searchParams.get("seed"));
+  expect(seed, "the new task's seed in the address").not.toBe(SEED);
+  const next = generate(spec, seed, data);
+  const nextQuestion = questionFor(spec, next, "de", templates);
+  const nextLegend = page.locator(`[id="${questionId(nextQuestion)}"] legend`);
+  await expect(nextLegend).toHaveText(plainText(taskText(spec, next, "de", templates)));
+  expect(taskKey(spec, next, "de", templates), "a new task").not.toBe(taskKey(spec, task, "de", templates));
+  await expect(nextLegend).toBeFocused();
+  await answerQuestion(page, nextQuestion, rightAnswer(nextQuestion));
+  await expect(feedback(page, questionId(nextQuestion))).toContainText(messagesIn("de").right);
+  await expectFeedbackInView(page, nextQuestion);
+}
 
 /** Whether the page at `url` (absolute) has an element with the id `id`, fetched once per page. */
 const known = new Map<string, Promise<string>>();
@@ -63,6 +189,9 @@ export function explainerTests(root = "."): void {
   const app = outline(root);
 
   test.describe("explainer", () => {
+    test.describe.configure({ mode: "parallel" });
+    test.use({ reducedMotion: "reduce" });
+
     test.describe("without JavaScript", () => {
       test.use({ javaScriptEnabled: false });
 
@@ -91,6 +220,7 @@ export function explainerTests(root = "."): void {
             }
             await expectAnchors(page);
             await expectLanguages(page, item, app.languages);
+            await expectExercises(page, item);
           });
         }
 
@@ -129,6 +259,27 @@ export function explainerTests(root = "."): void {
             await previous.click();
           }
           expect(backward, "previous leads back through every page").toEqual([...order].reverse());
+        });
+      }
+    });
+
+    // with JavaScript in German, one exercise of each type per page; the other languages render the same code
+    test.describe("with JavaScript", () => {
+      // at the narrowest width only, where the feedback is hardest to keep in view: the exercises' logic is the same
+      // at every width, and the hooks stay fast
+      test.skip(({ viewport }) => (viewport?.width ?? 0) > 400, "the exercises run at 360 px");
+      for (const item of app.pages["de"] ?? []) {
+        const types = new Map<string, ExerciseOutline>();
+        for (const exercise of item.exercises) if (!types.has(exercise.type)) types.set(exercise.type, exercise);
+        if (types.size === 0) continue;
+        test(`${item.url}: one exercise of each type checks its answers (${[...types.keys()].join(", ")})`, async ({
+          page,
+        }) => {
+          for (const exercise of types.values()) {
+            if (exercise.kind === "question") await checkQuestion(page, item.url, exercise);
+            else await checkGenerated(page, item.url, exercise);
+          }
+          expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual([]);
         });
       }
     });

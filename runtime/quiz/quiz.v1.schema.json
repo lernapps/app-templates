@@ -47,6 +47,24 @@
       "minLength": 1,
       "pattern": "\\S"
     },
+    "learnerText": {
+      "description": "A text of a question for learners: a string, or a map of texts by language ({ de: …, en: … }) on a page in several languages. German is required; a page checks that every language it declares is there, and that no other is.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z]{2}$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/text"
+          }
+        }
+      ]
+    },
     "question": {
       "type": "object",
       "required": ["id", "type", "text", "explanation", "links"],
@@ -62,11 +80,11 @@
         },
         "text": {
           "description": "The question, complete in itself.",
-          "$ref": "#/$defs/text"
+          "$ref": "#/$defs/learnerText"
         },
         "explanation": {
           "description": "Why the right answer is right, in one to three sentences. For number, ordering and matching questions also the background knowledge, as their options carry none.",
-          "$ref": "#/$defs/text"
+          "$ref": "#/$defs/learnerText"
         },
         "links": {
           "description": "Further reading on the question, at least one link, e.g. to the article in the German Wikipedia.",
@@ -181,7 +199,7 @@
             "properties": {
               "text": {
                 "description": "The option as the learner reads it.",
-                "$ref": "#/$defs/text"
+                "$ref": "#/$defs/learnerText"
               },
               "correct": {
                 "description": "Whether this option is correct.",
@@ -189,7 +207,7 @@
               },
               "info": {
                 "description": "One to three sentences of background on this option itself, true whether or not it is the right answer, e.g. \"Der Uluru ist ein Inselberg in der Wüste Zentralaustraliens ...\". Shown for every option after the answer.",
-                "$ref": "#/$defs/text"
+                "$ref": "#/$defs/learnerText"
               },
               "link": {
                 "description": "Further reading on this option.",
@@ -227,7 +245,7 @@
         },
         "unit": {
           "description": "The unit, shown next to the input, e.g. \"cm\"; the learner does not type it.",
-          "$ref": "#/$defs/text"
+          "$ref": "#/$defs/learnerText"
         }
       }
     },
@@ -241,7 +259,7 @@
           "minItems": 2,
           "maxItems": 8,
           "items": {
-            "$ref": "#/$defs/text"
+            "$ref": "#/$defs/learnerText"
           }
         }
       }
@@ -261,10 +279,10 @@
             "required": ["left", "right"],
             "properties": {
               "left": {
-                "$ref": "#/$defs/text"
+                "$ref": "#/$defs/learnerText"
               },
               "right": {
-                "$ref": "#/$defs/text"
+                "$ref": "#/$defs/learnerText"
               }
             }
           }
@@ -278,7 +296,7 @@
       "properties": {
         "title": {
           "description": "The link's text: what the learner finds there, e.g. \"Uluru (Wikipedia)\".",
-          "$ref": "#/$defs/text"
+          "$ref": "#/$defs/learnerText"
         },
         "url": {
           "description": "The address, https only. Check that it opens the page you mean.",
