@@ -48,3 +48,23 @@ blocks:
           en: |
             The declaration of 26 August 1789 at first applied only to men. In 1791 Olympe de Gouges demanded the same
             rights for women in a declaration of her own.
+  - type: section
+    id: uebung
+    title:
+      de: Übung
+      en: Exercise
+    blocks:
+      - type: true-false
+        id: fuer-alle
+        text:
+          de: Die Erklärung von 1789 galt von Anfang an für Männer und Frauen.
+          en: From the start, the declaration of 1789 applied to men and women.
+        answer: false
+        explanation:
+          de: Sie galt zunächst nur für Männer. Olympe de Gouges forderte 1791 dieselben Rechte für Frauen.
+          en: At first it applied only to men. In 1791 Olympe de Gouges demanded the same rights for women.
+        links:
+          - title:
+              de: Olympe de Gouges (Wikipedia)
+              en: Olympe de Gouges (Wikipedia, German)
+            url: https://de.wikipedia.org/wiki/Olympe_de_Gouges

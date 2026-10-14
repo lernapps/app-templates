@@ -118,6 +118,40 @@ const cases: [string, (root: string) => void, string][] = [
     (root) => edit(root, "kapitel/eins.yaml", "title: { de: Eins, en: One }", "title: { de: Eins, en: One, fr: Un }"),
     "src/kapitel/eins.yaml:1: title (fr): fr is not a language of the app; declare it in languages in src/app.yaml, or remove it",
   ],
+  [
+    "a mistake equal to the answer",
+    (root) => edit(root, "kapitel/eins.yaml", `value: "a * b"`, `value: "b + a"`),
+    "src/kapitel/eins.yaml:31: blocks[1].blocks[0].mistakes[0].value: for seed 1 the mistake equals the answer (12); a mistake is a wrong answer, so change its value or remove it",
+  ],
+  [
+    "a where that starves",
+    (root) => edit(root, "kapitel/eins.yaml", `where: ["a != b"]`, `where: ["a == 1 and b == 2"]`),
+    "src/kapitel/eins.yaml:26: blocks[1].blocks[0].where: where holds in 5 of 200 draws; it must hold in at least 1 of 10, so loosen it or narrow given",
+  ],
+  [
+    "an undeclared variable",
+    (root) => edit(root, "kapitel/eins.yaml", `value: "a + b"`, `value: "a + c"`),
+    "src/kapitel/eins.yaml:29: blocks[1].blocks[0].answer.value: c is not declared; declare it in given, or use one of a, b",
+  ],
+  [
+    "a placeholder left in the task",
+    (root) => edit(root, "kapitel/eins.yaml", `de: "Was ist {a} + {b}?"`, `de: "Was ist {a} + {q}?"`),
+    "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): for seed 1 the task still has the placeholder {q}; declare q in given, or remove the braces",
+  ],
+  [
+    "a missing translation in an embedded question",
+    (root) => edit(root, "kapitel/zwei.yaml", ", en: What does the picture show? }", " }"),
+    "src/kapitel/zwei.yaml:16: blocks[2].text (en): the translation is missing",
+  ],
+  [
+    "a page without an exercise",
+    (root) => {
+      const file = join(root, "src/kapitel/zwei.yaml");
+      const text = readFileSync(file, "utf8");
+      writeFileSync(file, text.slice(0, text.indexOf("  - type: single-choice")));
+    },
+    "src/kapitel/zwei.yaml:3: blocks: the page has no exercise; give it a section with an exercise: one of the quiz's question types, or generated",
+  ],
 ];
 
 describe("a broken explainer fails the build with its one line", () => {

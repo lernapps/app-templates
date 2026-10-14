@@ -117,3 +117,51 @@ blocks:
             licence: CC0-1.0
           - type: timeline
             data: ereignisse
+  - type: section
+    id: uebung
+    title: { de: "Übung", en: "Exercise" }
+    blocks:
+      - type: multiple-choice
+        id: gerade-prozente
+        text: { de: "Welche Anteile sind genau die Hälfte?", en: "Which shares are exactly one half?" }
+        explanation: { de: "Die Hälfte sind 50 % oder 1/2.", en: "One half is 50 % or 1/2." }
+        links:
+          - title: { de: "Bruchrechnung (Wikipedia)", en: "Fractions (Wikipedia, German)" }
+            url: https://de.wikipedia.org/wiki/Bruchrechnung
+        options:
+          - text: { de: "50 %", en: "50 %" }
+            correct: true
+            info: { de: "50 von 100.", en: "50 of 100." }
+          - text: { de: "1/2", en: "1/2" }
+            correct: true
+            info: { de: "Eins von zwei.", en: "One of two." }
+          - text: { de: "25 %", en: "25 %" }
+            correct: false
+            info: { de: "Ein Viertel.", en: "One quarter." }
+      - type: true-false
+        id: hundert-prozent
+        text: { de: "100 % sind das Ganze.", en: "100 % is the whole." }
+        answer: true
+        explanation: { de: "Der Grundwert ist 100 %.", en: "The base value is 100 %." }
+        links:
+          - title: { de: "Prozent (Wikipedia)", en: "Percent (Wikipedia, German)" }
+            url: https://de.wikipedia.org/wiki/Prozent
+      - type: generated
+        id: hauptgruppe
+        given:
+          e: { pick: 1, from: { data: elemente } }
+        where: ["e.group != e.period"]
+        task:
+          text:
+            {
+              de: "In welcher Hauptgruppe steht {e.name} ({e.symbol})?",
+              en: "In which main group is {e.name} ({e.symbol})?",
+            }
+        answer: { value: "e.group", compare: { choice: [1, 2, 3, 4, 5, 6, 7, 8] } }
+        mistakes:
+          - value: "e.period"
+            message:
+              {
+                de: "Das ist die Periode, also die Zeile. Die Hauptgruppe ist die Spalte.",
+                en: "That is the period, the row. The main group is the column.",
+              }

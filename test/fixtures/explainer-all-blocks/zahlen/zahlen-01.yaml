@@ -117,3 +117,38 @@ blocks:
             licence: CC0-1.0
           - type: timeline
             data: ereignisse
+  - type: section
+    id: uebung
+    title: { de: "Übung", en: "Exercise" }
+    blocks:
+      - type: single-choice
+        id: prozent-von-200
+        text: { de: "Wie viel sind 1 % von 200?", en: "How much is 1 % of 200?" }
+        explanation: { de: "1 % ist ein Hundertstel: 200 : 100 = 2.", en: "1 % is one hundredth: 200 : 100 = 2." }
+        links:
+          - title: { de: "Prozentrechnung (Wikipedia)", en: "Percentage (Wikipedia, German)" }
+            url: https://de.wikipedia.org/wiki/Prozentrechnung
+        options:
+          - text: { de: "2", en: "2" }
+            correct: true
+            info: { de: "200 geteilt durch 100.", en: "200 divided by 100." }
+          - text: { de: "20", en: "20" }
+            correct: false
+            info: { de: "Das sind 10 % von 200.", en: "That is 10 % of 200." }
+          - text: { de: "1", en: "1" }
+            correct: false
+            info: { de: "Das ist 1 % von 100.", en: "That is 1 % of 100." }
+      - type: generated
+        id: prozent-rechnen
+        given:
+          G: { int: [100, 900], step: 100 }
+          p: { oneOf: [1, 2, 5, 10] }
+        task:
+          text: { de: "Wie viel sind {p} % von {G}?", en: "How much is {p} % of {G}?" }
+          figure: { kind: hundred-grid, filled: p }
+        answer: { value: "G * p / 100", compare: { number: { format: integer } } }
+        mistakes:
+          - { value: "G * p", message: { de: "Du hast nicht durch 100 geteilt.", en: "You did not divide by 100." } }
+        hint: { de: "1 % von {G} ist $\\frac{{G}}{100}$.", en: "1 % of {G} is $\\frac{{G}}{100}$." }
+        steps:
+          - { de: "$\\frac{{G} \\cdot {p}}{100} = {answer}$", en: "$\\frac{{G} \\cdot {p}}{100} = {answer}$" }

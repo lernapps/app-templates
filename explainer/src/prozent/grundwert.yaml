@@ -1,6 +1,4 @@
 # yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
-# Each page of an explainer will end with an exercise (section Übung). Exercises come with the next version of the
-# explainer runtime; its schema will then require one on every page.
 title: Grundwert
 description: "Den Grundwert berechnen: G = W · 100 : p, mit einem Beispiel und dem Hunderterfeld."
 blocks:
@@ -56,3 +54,24 @@ blocks:
             caption: Die 12 gefärbten Kästchen sind der bekannte Teil, 30 €. Alle 100 Kästchen stehen für den Grundwert, 250 €.
           - type: text
             text: "Über 1 %: 30 € : 12 = 2,50 € sind 1 %. Dann 2,50 € · 100 = 250 €."
+  - type: section
+    id: uebung
+    title: Übung
+    blocks:
+      - type: generated
+        id: grundwert-ueben
+        given:
+          W: { int: [5, 150] }
+          p: { oneOf: [5, 10, 12, 15, 20, 25, 30, 40, 50] }
+        where: ["decimals(W * 100 / p) == 0", "W * 100 / p >= 50", "W * 100 / p <= 500"]
+        task:
+          text: "Beim Kauf eines Rollers sparst du {W} €. Das sind {p} % Rabatt. Wie viel hat der Roller vorher gekostet?"
+          figure: { kind: hundred-grid, filled: p }
+        answer: { value: "W * 100 / p", compare: { number: { format: money } } }
+        mistakes:
+          - { value: "W * p / 100", message: "Du hast {p} % von {W} € berechnet. Gesucht ist aber das Ganze, von dem die {W} € ein Teil sind." }
+          - { value: "W / p", message: "Das ist erst 1 %. Nimm es noch mal 100, dann hast du das Ganze." }
+        hint: "Gesucht ist das Ganze, 100 %. Rechne erst aus, was 1 % ist: {W} € geteilt durch {p}. Dann mal 100."
+        steps:
+          - '$G = \frac{W \cdot 100}{ p }$'
+          - '$G = \frac{{W} \cdot 100}{{p}} = {answer}$, also {answer} €.'

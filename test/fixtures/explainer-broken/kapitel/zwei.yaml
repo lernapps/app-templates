@@ -11,3 +11,11 @@ blocks:
     origin: { author: René Descartes, work: Discours de la méthode, year: 1637 }
     source: René Descartes, Discours de la méthode, 1637
     licence: gemeinfrei
+  - type: single-choice
+    id: punkt
+    text: { de: Was zeigt das Bild?, en: What does the picture show? }
+    explanation: { de: Einen Punkt., en: A dot. }
+    links: [{ title: { de: Punkt (Wikipedia), en: Dot (Wikipedia) }, url: "https://de.wikipedia.org/wiki/Punkt" }]
+    options:
+      - { text: { de: Einen Punkt, en: A dot }, correct: true, info: { de: Ein kleiner Kreis., en: A small circle. } }
+      - { text: { de: Eine Linie, en: A line }, correct: false, info: { de: Etwas Langes., en: Something long. } }

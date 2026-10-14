@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
-- date: 1642
+- date: "1642"
   title: { de: "Pascal baut eine Rechenmaschine", en: "Pascal builds a calculating machine" }
-- date: 1843
+- date: "1843"
   title: { de: "Ada Lovelace beschreibt ein Programm", en: "Ada Lovelace describes a program" }
 - date: "1969-07-20"
   title: { de: "Menschen landen auf dem Mond", en: "People land on the Moon" }
