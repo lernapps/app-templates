@@ -52,7 +52,7 @@
     "./explainer/explainer.v1.schema.json": "./runtime/explainer/explainer.v1.schema.json"
   },
   "scripts": {
-    "prepare": "vp pack",
+    "prepare": "vp pack && vp config --no-agent",
     "test": "vp test",
     "check:vue": "vue-tsc --noEmit -p tsconfig.vue.json"
   },
@@ -93,5 +93,10 @@
   },
   "engines": {
     "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
+  },
+  "lernapps": {
+    "changes": {
+      "kind": "app"
+    }
   }
 }

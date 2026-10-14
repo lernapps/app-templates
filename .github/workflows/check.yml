@@ -3,6 +3,13 @@ name: Check
 # The runtime package at the root (format, lint, type check, unit tests, build) and every template folder as an app:
 # `lernapps check` (format, lint, type check, unit tests, build, the checks of the built app, the end-to-end tests)
 # passes in each, with the runtime of this commit (file:..) and the @lernapps/tooling version the folder pins.
+#
+# The change scope (the reusable workflow changes.yml of lernapps/tooling, with "kind": "app" in package.json) gates
+# every job: a change of only the plan (.vibe/**) or only docs (docs/**/*.md; this repo has no site) checks nothing.
+# The pre-push hook (scripts/pre-push.ts) runs a subset; CI runs every job on every other change, and so catches what
+# the hook's positive list misses. The job `check` always runs and reports the overall result: it is the check to
+# require, and it never stays "Pending" (a skipped matrix job reports under its unexpanded name, so the gated jobs'
+# names stay but are no longer a reliable required check).
 on:
   push:
     branches: [main]
@@ -17,7 +24,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    uses: lernapps/tooling/.github/workflows/changes.yml@9b9a34c25af4fa397b64f5e01b1640245a1d3726 # main
+    with:
+      tooling-ref: 9b9a34c25af4fa397b64f5e01b1640245a1d3726 # the classifier the pre-push hook runs (TOOLING_REF)
+
   runtime:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -34,6 +48,8 @@ jobs:
       - run: npx vp test run
 
   template:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -46,17 +62,24 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci # the runtime's build tools, for file:..
+      # no hooks before the template's install, so that any hooks it installs set core.hooksPath for the step below
+      - run: git config --unset core.hooksPath || true
       - run: npm install --no-audit --no-fund
         working-directory: ${{ matrix.template }}
-      # a template installs no git hooks: they would point this whole repo at the template's hooks
+      # a template installs no git hooks: they would point this whole repo at the template's hooks. The root's own
+      # (.vite-hooks/, which the root's prepare installs, also when the template's install builds file:..) are fine.
       - name: npm install left the repo's hooks alone
-        run: test -z "$(git config core.hooksPath)" || { echo "core.hooksPath is $(git config core.hooksPath)"; exit 1; }
+        run: |
+          hooks=$(git config core.hooksPath || true)
+          case "$hooks" in "" | .vite-hooks/_) ;; *) echo "core.hooksPath is $hooks"; exit 1 ;; esac
       - run: npx lernapps check
         working-directory: ${{ matrix.template }}
 
   # The quiz template as an app with a large question bank (test/fixtures/quiz-many-questions.json, 64 questions of
   # every type) in place of its own: the end-to-end tests of every quiz must pass however many questions an app has.
   quiz-many-questions:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,6 +99,8 @@ jobs:
   # its own: a page per language, German at the root and English below en/, each with its language, its alternates and
   # a language switch; the end-to-end tests of every quiz run in full in German and briefly in English.
   quiz-bilingual:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -98,6 +123,8 @@ jobs:
   # data file, and a component, a figure whose levels the learner labels, with its logic module and its test). The
   # build, the checks of the built app, the unit tests and the end-to-end tests of every explainer pass on both.
   explainer-fixtures:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -122,6 +149,8 @@ jobs:
   # runtime's per-question exports (test/fixtures/question-page): `lernapps check` with its end-to-end tests, with and
   # without JavaScript. It runs on the @lernapps/tooling version the quiz pins, which Renovate keeps current.
   question-page:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -136,3 +165,24 @@ jobs:
         working-directory: test/fixtures/question-page
       - run: npx lernapps check
         working-directory: test/fixtures/question-page
+
+  # The workflows; shellcheck (on the runner) checks their scripts.
+  actionlint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7 -color
+
+  check: # the required status check: always runs, fails when a job above failed or was cancelled
+    needs:
+      [changes, runtime, template, quiz-many-questions, quiz-bilingual, explainer-fixtures, question-page, actionlint]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "the jobs ended: $RESULTS"
+          case " $RESULTS " in *" failure "* | *" cancelled "*) exit 1 ;; esac
