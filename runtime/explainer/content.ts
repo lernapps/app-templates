@@ -1,0 +1,103 @@
+// The content of an explainer, as the YAML files in src/ give it (explainer.v1.schema.json) and the build reads it
+// (load.ts): the app, its chapters in order, their pages in order, the data files and the bundled images.
+
+import { inLanguage, type Text } from "../shared/languages.ts";
+
+export { inLanguage, type Text };
+
+export interface Source {
+  title: Text;
+  url?: string;
+}
+
+export interface App {
+  title: Text;
+  intro: Text;
+  languages: readonly string[];
+  chapters: readonly string[];
+  sources?: readonly Source[];
+}
+
+export interface Credit {
+  source?: string;
+  licence?: string;
+}
+
+export type Drawing = { kind: "hundred-grid"; filled: number } | { kind: "bar"; part: number; whole: number };
+
+export interface Event {
+  date: number | string;
+  label?: Text;
+  title: Text;
+  text?: Text;
+}
+
+export type Block =
+  | { type: "text"; text: Text }
+  | { type: "formula"; formula: Text }
+  | ({ type: "figure"; draw?: Drawing; image?: string; alt: Text; caption: Text } & Credit)
+  | ({
+      type: "labelled-figure";
+      image: string;
+      alt: Text;
+      caption?: Text;
+      labels: readonly { x: number; y: number; text: Text }[];
+    } & Credit)
+  | { type: "table"; caption: Text; header?: readonly Text[]; rowHeaders?: boolean; rows: readonly (readonly Text[])[] }
+  | { type: "timeline"; events?: readonly Event[]; data?: string }
+  | { type: "definition"; term: Text; explanation: Text }
+  | ({ type: "quote"; text: Text; origin: { author: Text; work?: Text; year?: number | Text } } & Credit)
+  | { type: "code"; language: string; code: string; caption?: Text }
+  | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
+  | { type: "section"; id: string; title: Text; blocks: readonly Block[] };
+
+export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;
+
+export interface Page {
+  id: string;
+  chapter: string;
+  /** The source file, from the app's root: src/<chapter>/<page>.yaml. */
+  file: string;
+  title: Text;
+  description?: Text;
+  blocks: readonly Block[];
+}
+
+export interface Chapter {
+  id: string;
+  title: Text;
+  summary?: Text;
+  pages: readonly Page[];
+}
+
+/** A record of a data file: numbers, booleans, and texts or language-neutral strings. */
+export type DataRecord = Readonly<Record<string, number | boolean | Text>>;
+
+export interface Site {
+  app: App;
+  chapters: readonly Chapter[];
+  /** The records of each data file src/data/<name>.yaml, by name. */
+  data: Readonly<Record<string, readonly DataRecord[]>>;
+  /** The bundled images that blocks use, by their path from src/ (images/<name>), with the file's absolute path. */
+  images: ReadonlyMap<string, string>;
+}
+
+/** The events of a timeline: its own, or the records of its data file. */
+export function timelineEvents(site: Site, block: BlockOf<"timeline">): readonly Event[] {
+  if (block.events !== undefined) return block.events;
+  return (site.data[block.data ?? ""] ?? []) as unknown as readonly Event[];
+}
+
+/** The anchor of a term in the glossary: the German term in lower case, umlauts spelled out, hyphens for the rest. */
+export function termId(term: Text): string {
+  return inLanguage(term, "de")
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}

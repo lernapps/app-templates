@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title: { de: "Programme", en: "Programs" }
+summary: { de: "Fünfzehn Seiten über Programme.", en: "Fifteen pages about programs." }
+pages:
+  - programme-01
+  - programme-02
+  - programme-03
+  - programme-04
+  - programme-05
+  - programme-06
+  - programme-07
+  - programme-08
+  - programme-09
+  - programme-10
+  - programme-11
+  - programme-12
+  - programme-13
+  - programme-14
+  - programme-15

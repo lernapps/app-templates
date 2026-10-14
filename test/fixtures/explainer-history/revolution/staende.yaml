@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title:
+  de: Die drei Stände
+  en: The three estates
+blocks:
+  - type: section
+    id: einordnung
+    title:
+      de: Einordnung
+      en: Context
+    blocks:
+      - type: text
+        text:
+          de: |
+            Vor 1789 war die Gesellschaft Frankreichs in drei Stände geteilt: die Geistlichen, den Adel und alle
+            anderen. Die ersten beiden Stände zahlten kaum Steuern.
+          en: |
+            Before 1789, French society was divided into three estates: the clergy, the nobility and everyone else.
+            The first two estates paid hardly any taxes.
+      - type: definition
+        term:
+          de: Dritter Stand
+          en: Third Estate
+        explanation:
+          de: Alle, die weder Geistliche noch Adlige waren, also Bauern, Handwerker und Bürger, die große Mehrheit des Volkes.
+          en: Everyone who was neither clergy nor nobility, that is peasants, craftsmen and townspeople, the great majority of the people.
+      - type: table
+        caption:
+          de: Die drei Stände
+          en: The three estates
+        header:
+          - de: Stand
+            en: Estate
+          - de: Wer
+            en: Who
+        rowHeaders: true
+        rows:
+          - - de: Erster Stand
+              en: First Estate
+            - de: die Geistlichen
+              en: the clergy
+          - - de: Zweiter Stand
+              en: Second Estate
+            - de: der Adel
+              en: the nobility
+          - - de: Dritter Stand
+              en: Third Estate
+            - de: alle anderen
+              en: everyone else
+  - type: section
+    id: generalstaende
+    title:
+      de: Die Generalstände
+      en: The Estates-General
+    blocks:
+      - type: definition
+        term:
+          de: Generalstände
+          en: Estates-General
+        explanation:
+          de: Die Versammlung der Vertreter aller drei Stände. Der König rief sie 1789 zum ersten Mal seit 1614 zusammen, weil der Staat kein Geld mehr hatte.
+          en: The assembly of representatives of all three estates. In 1789 the king called it for the first time since 1614, because the state had run out of money.
+      - type: note
+        title:
+          de: Merke
+          en: Remember
+        blocks:
+          - type: text
+            text:
+              de: In den Generalständen hatte jeder Stand **eine** Stimme. So konnten Klerus und Adel den Dritten Stand immer überstimmen.
+              en: In the Estates-General each estate had **one** vote. So the clergy and the nobility could always outvote the Third Estate.

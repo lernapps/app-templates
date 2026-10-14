@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+# A fixture of 60 pages in four chapters, in German and English, with two section levels and every block type.
+title: { de: "Viele Seiten", en: "Many pages" }
+intro:
+  {
+    de: "Eine App mit 60 Seiten in vier Kapiteln, auf Deutsch und Englisch. Jede Seite hat jede Art von Block.",
+    en: "An app of 60 pages in four chapters, in German and English. Every page has every kind of block.",
+  }
+languages: [de, en]
+chapters: [zahlen, formen, stoffe, programme]
+sources:
+  - title: { de: "Prozentrechnung (Wikipedia)", en: "Percentage (Wikipedia, German)" }
+    url: https://de.wikipedia.org/wiki/Prozentrechnung

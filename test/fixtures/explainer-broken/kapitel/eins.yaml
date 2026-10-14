@@ -1,0 +1,16 @@
+title: { de: Eins, en: One }
+blocks:
+  - type: section
+    id: abschnitt
+    title: { de: Abschnitt, en: Section }
+    blocks:
+      - type: text
+        text: { de: Ein Text mit $a + b$., en: A text with $a + b$. }
+      - type: formula
+        formula: "a^2 + b^2 = c^2"
+      - type: section
+        id: unterabschnitt
+        title: { de: Unterabschnitt, en: Subsection }
+        blocks:
+          - type: text
+            text: { de: Noch ein Text., en: Another text. }
