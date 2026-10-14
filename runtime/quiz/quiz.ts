@@ -2,15 +2,16 @@
 // a right answer. Used at build time (validation, rendering), in the browser (the engine) and by the end-to-end
 // tests, so all three agree; per question also by other archetypes that embed the quiz's questions (question.ts).
 // A learner text is a string; a quiz or page in several languages writes each as a map of texts by language,
-// { de: …, en: … } (Quiz<Text>, Question<Text>), and quizIn and questionIn give it in the page's language.
+// { de: …, en: … } (Quiz<Text>, Question<Text>), and quizIn and questionIn give it in the page's language. The address
+// of a link is one for every language, or a map of addresses by language where the page to read differs.
 import { inLanguage, type Text } from "../shared/languages.ts";
 
 export type { Text };
 
-/** A link for further reading. */
+/** A link for further reading; in a quiz or page in several languages, its address may be a map by language too. */
 export interface Link<T extends Text = string> {
   title: T;
-  url: string;
+  url: T;
 }
 
 /** An option of a choice: `info` is background on the option itself, true whether or not it is the right answer. */
@@ -115,10 +116,21 @@ export function questionTexts(question: Question<Text>): { path: (string | numbe
   return texts;
 }
 
-/** The question in `lang`: each text from its map, a plain string as it is. */
+/** Each link's address of a question with its place in it: ["links", 0, "url"]. */
+export function questionAddresses(question: Question<Text>): { path: (string | number)[]; text: Text }[] {
+  const options = question.type === "single-choice" || question.type === "multiple-choice" ? question.options : [];
+  return [
+    ...question.links.map((link, index) => ({ path: ["links", index, "url"], text: link.url })),
+    ...options.flatMap((option, index) =>
+      option.link === undefined ? [] : [{ path: ["options", index, "link", "url"], text: option.link.url }],
+    ),
+  ];
+}
+
+/** The question in `lang`: each text and address from its map, a plain string as it is. */
 export function questionIn(question: Question<Text>, lang: string): Question {
   const t = (text: Text) => inLanguage(text, lang);
-  const link = (value: Link<Text>): Link => ({ title: t(value.title), url: value.url });
+  const link = (value: Link<Text>): Link => ({ title: t(value.title), url: t(value.url) });
   const base = {
     id: question.id,
     text: t(question.text),

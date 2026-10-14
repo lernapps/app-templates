@@ -1,5 +1,5 @@
 // The quiz in several languages: a bank declares its languages (German first) and writes each learner text as a map
-// { de: …, en: … }; the build fails on a missing translation and on a language it does not declare, with the
+// { de: …, en: … }, and a link's address as one for every language or as a map by language; the build fails on a missing translation and on a language it does not declare, with the
 // messages of the explainer's language check; it writes one page per language, German at the root and every other
 // below /<language>/, each with its language, its alternates and a language switch of plain links. A bank in German
 // only builds as before: one page, no switch, no alternates. The fixture bank (test/fixtures/quiz-bilingual.json) is
@@ -40,6 +40,8 @@ describe("a bank in several languages", () => {
     const broken = bank();
     const question = broken.questions[1] as { explanation: Record<string, string> };
     delete question.explanation["en"];
+    const option = (broken.questions[0] as { options: { link: { url: Record<string, string> } }[] }).options[0];
+    delete option?.link.url["en"];
     broken["title"] = "Naturwunder der Welt";
     const sources = broken["sources"] as { title: Record<string, string> }[];
     delete sources[0]?.title["en"];
@@ -48,6 +50,9 @@ describe("a bank in several languages", () => {
     expect(message).toContain('questions[1].explanation (en) (question "totes-meer"): the translation is missing');
     expect(message).toContain("title (en): the translation is missing; write the text as a map: { de: …, en: … }");
     expect(message).toContain("sources[0].title (en): the translation is missing");
+    expect(message).toContain(
+      'questions[0].options[0].link.url (en) (question "grand-canyon"): the translation is missing',
+    );
   });
 
   test("a language the bank does not declare fails, and says where to declare it", () => {
@@ -78,6 +83,11 @@ describe("a bank in several languages", () => {
     const en = quizIn(all, "en");
     expect(en.title).toBe("Natural wonders of the world");
     expect(en.questions[0]?.text).toBe("Which river shaped the Grand Canyon in the USA?");
+    // a link's address by language, and one address for every language
+    const colorado = (quiz: Quiz) => (quiz.questions[0]?.type === "single-choice" ? quiz.questions[0].options : [])[0];
+    expect(colorado(en)?.link?.url).toBe("https://en.wikipedia.org/wiki/Colorado_River");
+    expect(colorado(quizIn(all, "de"))?.link?.url).toBe("https://de.wikipedia.org/wiki/Colorado_River");
+    expect(en.questions[0]?.links[0]?.url).toBe("https://de.wikipedia.org/wiki/Grand_Canyon");
     expect(quizIn(all, "de").title).toBe("Naturwunder der Welt");
     // the German quiz of the build step, as before
     expect(parseBank(bilingual, "src/quiz.json").questions[2]?.text).toContain("Wie hoch ist der Mount Everest?");
@@ -151,6 +161,7 @@ describe("one build writes a page per language", () => {
     const en = readFileSync(join(root, "dist/en/index.html"), "utf8");
     expect(en).toContain("<title>Natural wonders of the world</title>");
     expect(en).toContain("Which river shaped the Grand Canyon in the USA?");
+    expect(en).toContain('href="https://en.wikipedia.org/wiki/Colorado_River"');
     // the quiz's own links stay relative to its page: again, in English
     expect(en).toContain('<a class="quiz-restart" href="./">');
   }, 60_000);

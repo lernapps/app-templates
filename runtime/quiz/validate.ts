@@ -3,11 +3,20 @@
 // change, for the assistant that wrote the bank. One question validates on its own too (validateQuestion), with the
 // same messages, for another archetype that embeds the quiz's questions; the bank validates each of its questions so.
 // A bank in several languages declares them (languages, German first): each of its learner texts must then be a map
-// with each of them and no other, with the messages of the explainer's language check.
+// with each of them and no other, with the messages of the explainer's language check; so must a link's address that
+// is a map by language (a single address is the same in every language).
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import { languageListProblems, textLanguages, type Text } from "../shared/languages.ts";
 import schema from "./quiz.v1.schema.json" with { type: "json" };
-import { questionIn, questionTexts, quizIn, quizLanguages, type Question, type Quiz } from "./quiz.ts";
+import {
+  questionAddresses,
+  questionIn,
+  questionTexts,
+  quizIn,
+  quizLanguages,
+  type Question,
+  type Quiz,
+} from "./quiz.ts";
 import { QUIZ_MESSAGES } from "./render.ts";
 
 export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/quiz.v1.schema.json";
@@ -86,6 +95,24 @@ function textMessage(value: unknown, at: string): string {
   return `${at}: must be a text, or a map of texts by language: { de: …, en: … }`;
 }
 
+/**
+ * What is wrong with a link's address that is neither an https address nor a map of them by language: in which
+ * language, when it is one of a map. Also for the explainer, which embeds the quiz's question types.
+ */
+export function addressProblem(value: unknown): { lang?: string; message: string } {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    for (const [lang, address] of Object.entries(value)) {
+      if (!/^[a-z]{2}$/.test(lang)) return { message: `${lang} is not a language code; use two letters, e.g. de, en` };
+      if (typeof address !== "string" || !/^https:\/\/\S+$/.test(address)) {
+        return { lang, message: "must be an https address" };
+      }
+    }
+  }
+  return {
+    message: "must be an https address, or a map of https addresses by language: { de: https://…, en: https://… }",
+  };
+}
+
 function schemaMessage(error: ErrorObject, at: string): string | undefined {
   switch (error.keyword) {
     // reported by the branch of the question's type, which says more
@@ -110,7 +137,7 @@ function schemaMessage(error: ErrorObject, at: string): string | undefined {
 
 /** The messages of the schema's errors, each at the place `where` names for its path. */
 function schemaMessages(errors: readonly ErrorObject[], where: (path: string) => string, root: unknown): string[] {
-  // a learner text (a text or a map of texts by language): one message, not one per branch
+  // a learner text or an address (each also a map by language): one message, not one per branch
   const texts = new Set(errors.filter((error) => error.keyword === "anyOf").map((error) => error.instancePath));
   const underText = (path: string) => [...texts].some((text) => path === text || path.startsWith(`${text}/`));
   // a question of an unknown type: say that, not every property its type would not allow
@@ -122,11 +149,13 @@ function schemaMessages(errors: readonly ErrorObject[], where: (path: string) =>
   return errors
     .filter((error) => !(error.keyword === "unevaluatedProperties" && unknownType.has(error.instancePath)))
     .filter((error) => error.keyword === "anyOf" || !underText(error.instancePath))
-    .flatMap((error) =>
-      error.keyword === "anyOf"
-        ? textMessage(valueAt(root, error.instancePath), where(error.instancePath))
-        : (schemaMessage(error, where(error.instancePath)) ?? []),
-    );
+    .flatMap((error) => {
+      if (error.keyword !== "anyOf") return schemaMessage(error, where(error.instancePath)) ?? [];
+      const value = valueAt(root, error.instancePath);
+      if (!error.instancePath.endsWith("/url")) return textMessage(value, where(error.instancePath));
+      const { lang, message } = addressProblem(value);
+      return `${where(error.instancePath)}${lang === undefined ? "" : ` (${lang})`}: ${message}`;
+    });
 }
 
 function duplicates(values: readonly string[]): string[] {
@@ -200,8 +229,9 @@ function questionProblems(question: Question): QuestionProblem[] {
 
 /**
  * The problems of a question that matches the schema, with their place in it: its texts complete in each of
- * `languages` and in no other (German first, with the messages of the explainer's language check), then what the
- * schema cannot say. A plain string is German, complete only while German is the only language.
+ * `languages` and in no other (German first, with the messages of the explainer's language check), so its addresses
+ * given as maps, then what the schema cannot say. A plain string is German, complete only while German is the only
+ * language; a plain address is the same in every language.
  */
 export function questionDetails(
   question: Question<Text>,
@@ -211,6 +241,11 @@ export function questionDetails(
   const problems: QuestionProblem[] = [];
   for (const { path, text } of questionTexts(question)) {
     for (const problem of textLanguages(text, languages, false, declaredIn).problems) {
+      problems.push({ path, lang: problem.lang, message: problem.message });
+    }
+  }
+  for (const { path, text } of questionAddresses(question)) {
+    for (const problem of textLanguages(text, languages, true, declaredIn).problems) {
       problems.push({ path, lang: problem.lang, message: problem.message });
     }
   }
