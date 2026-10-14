@@ -135,7 +135,7 @@ blocks:
         given:
           xs: { shuffle: [1, 2, 3, 4, 5, 6, 7, 8] }
         task:
-          text: { de: "Welche dieser Zahlen sind gerade: {xs}?", en: "Which of these numbers are even: {xs}?" }
+          text: { de: "Welche dieser Zahlen sind gerade: {{xs}}?", en: "Which of these numbers are even: {{xs}}?" }
         answer: { value: "[2, 4, 6, 8]", compare: { set: "xs" } }
         mistakes:
           - value: "[2, 4, 6]"

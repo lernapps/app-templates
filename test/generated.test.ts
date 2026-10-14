@@ -29,7 +29,7 @@ function templates(spec: Generated, languages: readonly string[] = ["de"]): Temp
         steps: (spec.steps ?? []).map((step) => tokenize(pick(step, lang))),
         hint: spec.hint === undefined ? undefined : tokenize(pick(spec.hint, lang)),
         messages: (spec.mistakes ?? []).map((mistake) => tokenize(pick(mistake.message, lang))),
-        alt: tokenize("Ein Hunderterfeld, {figure.filled} Kästchen sind gefärbt."),
+        alt: tokenize("Ein Hunderterfeld, {{figure.filled}} Kästchen sind gefärbt."),
       },
     ]),
   ) as Templates;
@@ -41,7 +41,7 @@ const prozentwert: Generated = {
   given: { G: { int: [150, 1500], step: 5 }, p: { oneOf: [5, 10, 12, 15, 20, 25, 30, 40] } },
   where: ["decimals(G * p / 100) <= 2"],
   task: {
-    text: "Ein Fahrrad kostet {G} €. Im Angebot gibt es {p} % Rabatt. Wie viel Euro sparst du?",
+    text: "Ein Fahrrad kostet {{G}} €. Im Angebot gibt es {{p}} % Rabatt. Wie viel Euro sparst du?",
     figure: { kind: "hundred-grid", filled: "p" },
   },
   answer: { value: "G * p / 100", compare: { number: { format: "money" } } },
@@ -49,8 +49,8 @@ const prozentwert: Generated = {
     { value: "G * p", message: "Du hast vergessen, durch 100 zu teilen." },
     { value: "G - G * p / 100", message: "Das ist der neue Preis, nicht der Rabatt." },
   ],
-  hint: "Rechne erst 1 % aus: {G} geteilt durch 100.",
-  steps: ["$W = {G} \\cdot {p} : 100 = {answer}$"],
+  hint: "Rechne erst 1 % aus: {{G}} geteilt durch 100.",
+  steps: ["$W = {{G}} \\cdot {{p}} : 100 = {{answer}}$"],
 };
 
 const ereignisse: DataRecord[] = [
@@ -149,7 +149,7 @@ describe("a task from a seed", () => {
       ...base,
       id: "hauptgruppe",
       where: ["e.group != e.period"],
-      task: { text: "In welcher Hauptgruppe steht {e.name} ({e.symbol})?" },
+      task: { text: "In welcher Hauptgruppe steht {{e.name}} ({{e.symbol}})?" },
       answer: { value: "e.group", compare: { choice: [1, 2, 3, 4, 5, 6, 7, 8] } },
       mistakes: [{ value: "e.period", message: "Das ist die Periode." }],
     };
@@ -212,11 +212,11 @@ describe("the property test over fixed seeds", () => {
   });
 
   test("a placeholder left in the task", () => {
-    const spec = { ...prozentwert, task: { text: "Ein Rad kostet {Q} €. Wie viel sparst du bei {p} %?" } };
+    const spec = { ...prozentwert, task: { text: "Ein Rad kostet {{Q}} €. Wie viel sparst du bei {{p}} %?" } };
     expect(soundness(spec, {}, templates(spec), ["de"])).toEqual([
       {
         path: ["task", "text"],
-        message: "for seed 1 the task still has the placeholder {Q}; declare Q in given, or remove the braces",
+        message: "for seed 1 the task still has the placeholder {{Q}}; declare Q in given, or remove the braces",
       },
     ]);
   });

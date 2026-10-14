@@ -43,10 +43,9 @@ export function templatesOf(
   languages: readonly string[],
   resolve: (href: string) => string = (href) => href,
 ): Templates {
-  const names = new Set(Object.keys(spec.given));
   const templates: Record<string, LanguageTemplates> = {};
   for (const lang of languages) {
-    const inline = (text: Text) => renderInline(tokenize(inLanguage(text, lang), names), resolve);
+    const inline = (text: Text) => renderInline(tokenize(inLanguage(text, lang)), resolve);
     const figure = spec.task.figure;
     const alt =
       figure === undefined
