@@ -8,12 +8,33 @@
 //   renderQuestion(question) +
 //   `<details><summary>${messages.solution}</summary>${renderSolution(question)}</details>`
 //
-// and fails its build when validateQuestion(question, "<where it is>") finds problems.
+// and fails its build when validateQuestion(question, "<where it is>") finds problems. A page in several languages
+// writes each learner text of a question as a map, { de: …, en: … }: validateQuestion(question, at, languages) checks
+// that each declared language is there (German always), questionIn(question, lang) gives the question in the page's
+// language for the checker, and renderQuestion and renderSolution take the page's `lang` for their own texts.
 import de from "./messages/de.json" with { type: "json" };
 
 export * from "./quiz.ts";
-export { renderQuestion, renderSolution, type RenderQuestionOptions } from "./render.ts";
-export { QUESTION_SCHEMA_URL, quizSchema, RULE_URL, SCHEMA_URL, validateQuestion } from "./validate.ts";
+export {
+  answerText,
+  messagesIn,
+  QUIZ_MESSAGES,
+  renderQuestion,
+  renderSolution,
+  type QuizMessages,
+  type RenderQuestionOptions,
+  type RenderSolutionOptions,
+} from "./render.ts";
+export {
+  QUESTION_SCHEMA_URL,
+  questionDetails,
+  questionSchemaProblems,
+  quizSchema,
+  RULE_URL,
+  SCHEMA_URL,
+  validateQuestion,
+  type QuestionProblem,
+} from "./validate.ts";
 
-/** The quiz's texts for learners, by their key (messages/de.json). */
+/** The quiz's texts for learners in German, by their key (messages/de.json); messagesIn(lang) for another language. */
 export const messages = de;

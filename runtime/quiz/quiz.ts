@@ -1,64 +1,163 @@
 // The question bank of a quiz about things to know (src/quiz.json, schema quiz.v1.schema.json) and what counts as
 // a right answer. Used at build time (validation, rendering), in the browser (the engine) and by the end-to-end
 // tests, so all three agree; per question also by other archetypes that embed the quiz's questions (question.ts).
+// A question's learner texts are strings; a page in several languages (the explainer) writes each as a map of texts
+// by language, { de: …, en: … } (Question<Text>), and questionIn gives the question in the page's language.
+import { inLanguage, type Text } from "../shared/languages.ts";
+
+export type { Text };
 
 /** A link for further reading. */
-export interface Link {
-  title: string;
+export interface Link<T extends Text = string> {
+  title: T;
   url: string;
 }
 
 /** An option of a choice: `info` is background on the option itself, true whether or not it is the right answer. */
-export interface Option {
-  text: string;
+export interface Option<T extends Text = string> {
+  text: T;
   correct: boolean;
-  info: string;
-  link?: Link;
+  info: T;
+  link?: Link<T>;
 }
 
-interface Base {
+interface Base<T extends Text> {
   id: string;
-  text: string;
+  text: T;
   /** Why the right answer is right; for types without options also their background. */
-  explanation: string;
-  links: Link[];
+  explanation: T;
+  links: Link<T>[];
 }
 
-export interface SingleChoice extends Base {
+export interface SingleChoice<T extends Text = string> extends Base<T> {
   type: "single-choice";
-  options: Option[];
+  options: Option<T>[];
 }
 
-export interface MultipleChoice extends Base {
+export interface MultipleChoice<T extends Text = string> extends Base<T> {
   type: "multiple-choice";
-  options: Option[];
+  options: Option<T>[];
 }
 
-export interface TrueFalse extends Base {
+export interface TrueFalse<T extends Text = string> extends Base<T> {
   type: "true-false";
   answer: boolean;
 }
 
-export interface NumberQuestion extends Base {
+export interface NumberQuestion<T extends Text = string> extends Base<T> {
   type: "number";
   answer: number;
   tolerance: number;
-  unit?: string;
+  unit?: T;
 }
 
 /** `items` in the right order. */
-export interface Ordering extends Base {
+export interface Ordering<T extends Text = string> extends Base<T> {
   type: "ordering";
-  items: string[];
+  items: T[];
 }
 
 /** `pairs` as they belong together. */
-export interface Matching extends Base {
+export interface Matching<T extends Text = string> extends Base<T> {
   type: "matching";
-  pairs: { left: string; right: string }[];
+  pairs: { left: T; right: T }[];
 }
 
-export type Question = SingleChoice | MultipleChoice | TrueFalse | NumberQuestion | Ordering | Matching;
+export type Question<T extends Text = string> =
+  | SingleChoice<T>
+  | MultipleChoice<T>
+  | TrueFalse<T>
+  | NumberQuestion<T>
+  | Ordering<T>
+  | Matching<T>;
+
+/** The question types. */
+export const QUESTION_TYPES: readonly Question["type"][] = [
+  "single-choice",
+  "multiple-choice",
+  "true-false",
+  "number",
+  "ordering",
+  "matching",
+];
+
+/** Each learner text of a question with its place in it: ["options", 1, "info"]. */
+export function questionTexts(question: Question<Text>): { path: (string | number)[]; text: Text }[] {
+  const texts: { path: (string | number)[]; text: Text }[] = [
+    { path: ["text"], text: question.text },
+    { path: ["explanation"], text: question.explanation },
+    ...question.links.map((link, index) => ({ path: ["links", index, "title"], text: link.title })),
+  ];
+  switch (question.type) {
+    case "single-choice":
+    case "multiple-choice":
+      question.options.forEach((option, index) => {
+        texts.push({ path: ["options", index, "text"], text: option.text });
+        texts.push({ path: ["options", index, "info"], text: option.info });
+        if (option.link) texts.push({ path: ["options", index, "link", "title"], text: option.link.title });
+      });
+      break;
+    case "number":
+      if (question.unit !== undefined) texts.push({ path: ["unit"], text: question.unit });
+      break;
+    case "ordering":
+      question.items.forEach((item, index) => texts.push({ path: ["items", index], text: item }));
+      break;
+    case "matching":
+      question.pairs.forEach((pair, index) => {
+        texts.push({ path: ["pairs", index, "left"], text: pair.left });
+        texts.push({ path: ["pairs", index, "right"], text: pair.right });
+      });
+      break;
+    case "true-false":
+      break;
+  }
+  return texts;
+}
+
+/** The question in `lang`: each text from its map, a plain string as it is. */
+export function questionIn(question: Question<Text>, lang: string): Question {
+  const t = (text: Text) => inLanguage(text, lang);
+  const link = (value: Link<Text>): Link => ({ title: t(value.title), url: value.url });
+  const base = {
+    id: question.id,
+    text: t(question.text),
+    explanation: t(question.explanation),
+    links: question.links.map(link),
+  };
+  switch (question.type) {
+    case "single-choice":
+    case "multiple-choice":
+      return {
+        ...base,
+        type: question.type,
+        options: question.options.map((option) => ({
+          text: t(option.text),
+          correct: option.correct,
+          info: t(option.info),
+          ...(option.link === undefined ? {} : { link: link(option.link) }),
+        })),
+      };
+    case "true-false":
+      return { ...base, type: question.type, answer: question.answer };
+    case "number":
+      return {
+        ...base,
+        type: question.type,
+        answer: question.answer,
+        tolerance: question.tolerance,
+        ...(question.unit === undefined ? {} : { unit: t(question.unit) }),
+      };
+    case "ordering":
+      return { ...base, type: question.type, items: question.items.map(t) };
+    case "matching":
+      return {
+        ...base,
+        type: question.type,
+        pairs: question.pairs.map((pair) => ({ left: t(pair.left), right: t(pair.right) })),
+      };
+  }
+}
 
 /** The id of a question's element on the page, and its address (#frage-<id>). */
 export const questionId = (question: Pick<Question, "id">): string => `frage-${question.id}`;
@@ -185,7 +284,7 @@ export function wrongAnswer(question: Question): Answer {
 }
 
 /** A small seeded random generator (mulberry32): the same seed gives the same order everywhere. */
-function random(seed: number): () => number {
+export function random(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
     state = (state + 0x6d2b79f5) >>> 0;

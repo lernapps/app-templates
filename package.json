@@ -1,7 +1,7 @@
 {
   "name": "@lernapps/app-templates",
   "version": "0.0.0",
-  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and each question on its own for other archetypes; the explainer: build step, client module, styles, end-to-end tests, the schema of its content)",
+  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and each question on its own for other archetypes; the explainer: build step, client module with its exercises, styles, end-to-end tests, the schema of its content)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -33,6 +33,7 @@
     "./quiz/style.css": "./runtime/quiz/quiz.css",
     "./quiz/quiz.v1.schema.json": "./runtime/quiz/quiz.v1.schema.json",
     "./quiz/messages/de.json": "./runtime/quiz/messages/de.json",
+    "./quiz/messages/en.json": "./runtime/quiz/messages/en.json",
     "./explainer": {
       "types": "./runtime/explainer/explainer.ts",
       "default": "./dist/explainer.mjs"

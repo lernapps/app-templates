@@ -3,8 +3,9 @@
 // change, for the assistant that wrote the bank. One question validates on its own too (validateQuestion), with the
 // same messages, for another archetype that embeds the quiz's questions; the bank validates each of its questions so.
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
+import { textLanguages, type Text } from "../shared/languages.ts";
 import schema from "./quiz.v1.schema.json" with { type: "json" };
-import type { Question, Quiz } from "./quiz.ts";
+import { questionIn, questionTexts, type Question, type Quiz } from "./quiz.ts";
 
 export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/quiz.v1.schema.json";
 /** The schema of one question, for a `$ref` from another schema (with the quiz's schema added to its validator). */
@@ -52,6 +53,33 @@ function inBank(path: string, value: unknown): string {
   return at === "" ? "the bank" : at.slice(1);
 }
 
+/** The value at a JSON pointer of `root`. */
+function valueAt(root: unknown, pointer: string): unknown {
+  return pointer
+    .split("/")
+    .slice(1)
+    .reduce<unknown>(
+      (at, part) => (typeof at === "object" && at !== null ? (at as Record<string, unknown>)[part] : undefined),
+      root,
+    );
+}
+
+/** A learner text that is neither a text nor a map of texts. */
+function textMessage(value: unknown, at: string): string {
+  if (typeof value === "string") return `${at}: must not be empty`;
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    const bad = Object.entries(value).find(
+      ([lang, text]) => !/^[a-z]{2}$/.test(lang) || typeof text !== "string" || text.trim() === "",
+    );
+    if (bad !== undefined) {
+      return /^[a-z]{2}$/.test(bad[0])
+        ? `${at} (${bad[0]}): must not be empty`
+        : `${at}: ${bad[0]} is not a language code; use two letters, e.g. de, en`;
+    }
+  }
+  return `${at}: must be a text, or a map of texts by language: { de: …, en: … }`;
+}
+
 function schemaMessage(error: ErrorObject, at: string): string | undefined {
   switch (error.keyword) {
     // reported by the branch of the question's type, which says more
@@ -75,7 +103,10 @@ function schemaMessage(error: ErrorObject, at: string): string | undefined {
 }
 
 /** The messages of the schema's errors, each at the place `where` names for its path. */
-function schemaMessages(errors: readonly ErrorObject[], where: (path: string) => string): string[] {
+function schemaMessages(errors: readonly ErrorObject[], where: (path: string) => string, root: unknown): string[] {
+  // a learner text (a text or a map of texts by language): one message, not one per branch
+  const texts = new Set(errors.filter((error) => error.keyword === "anyOf").map((error) => error.instancePath));
+  const underText = (path: string) => [...texts].some((text) => path === text || path.startsWith(`${text}/`));
   // a question of an unknown type: say that, not every property its type would not allow
   const unknownType = new Set(
     errors
@@ -84,52 +115,73 @@ function schemaMessages(errors: readonly ErrorObject[], where: (path: string) =>
   );
   return errors
     .filter((error) => !(error.keyword === "unevaluatedProperties" && unknownType.has(error.instancePath)))
-    .flatMap((error) => schemaMessage(error, where(error.instancePath)) ?? []);
+    .filter((error) => error.keyword === "anyOf" || !underText(error.instancePath))
+    .flatMap((error) =>
+      error.keyword === "anyOf"
+        ? textMessage(valueAt(root, error.instancePath), where(error.instancePath))
+        : (schemaMessage(error, where(error.instancePath)) ?? []),
+    );
 }
 
 function duplicates(values: readonly string[]): string[] {
   return [...new Set(values.filter((value, index) => values.indexOf(value) !== index))];
 }
 
-/** What the schema cannot say about one question. */
-function questionProblems(question: Question, at: string): string[] {
-  const problems: string[] = [];
-  const twice = (what: string, values: readonly string[]) => {
-    for (const value of duplicates(values)) problems.push(`${at}: the ${what} "${value}" appears twice`);
+/** A problem of one question: where in it (its path; [] for the whole question), in which language, and what. */
+export interface QuestionProblem {
+  path: (string | number)[];
+  lang?: string;
+  message: string;
+}
+
+/** What the schema cannot say about one question, its texts in German. */
+function questionProblems(question: Question): QuestionProblem[] {
+  const problems: QuestionProblem[] = [];
+  const twice = (what: string, path: string, values: readonly string[]) => {
+    for (const value of duplicates(values))
+      problems.push({ path: [path], message: `the ${what} "${value}" appears twice` });
   };
   switch (question.type) {
     case "single-choice": {
       const correct = question.options.filter((option) => option.correct).length;
       if (correct !== 1) {
-        problems.push(
-          `${at}: a single-choice question needs exactly one correct option; it has ${correct}. Mark one option "correct": true, or make it "multiple-choice"`,
-        );
+        problems.push({
+          path: ["options"],
+          message: `a single-choice question needs exactly one correct option; it has ${correct}. Mark one option "correct": true, or make it "multiple-choice"`,
+        });
       }
       twice(
         "option",
+        "options",
         question.options.map((option) => option.text),
       );
       break;
     }
     case "multiple-choice":
       if (!question.options.some((option) => option.correct)) {
-        problems.push(`${at}: a multiple-choice question needs at least one correct option; it has none`);
+        problems.push({
+          path: ["options"],
+          message: "a multiple-choice question needs at least one correct option; it has none",
+        });
       }
       twice(
         "option",
+        "options",
         question.options.map((option) => option.text),
       );
       break;
     case "ordering":
-      twice("item", question.items);
+      twice("item", "items", question.items);
       break;
     case "matching":
       twice(
         "left entry",
+        "pairs",
         question.pairs.map((pair) => pair.left),
       );
       twice(
         "right entry",
+        "pairs",
         question.pairs.map((pair) => pair.right),
       );
       break;
@@ -141,19 +193,44 @@ function questionProblems(question: Question, at: string): string[] {
 }
 
 /**
+ * The problems of a question that matches the schema, with their place in it: its texts complete in each of
+ * `languages` and in no other (German first, with the messages of the explainer's language check), then what the
+ * schema cannot say. A plain string is German, complete only while German is the only language.
+ */
+export function questionDetails(question: Question<Text>, languages: readonly string[] = ["de"]): QuestionProblem[] {
+  const problems: QuestionProblem[] = [];
+  for (const { path, text } of questionTexts(question)) {
+    for (const problem of textLanguages(text, languages).problems) {
+      problems.push({ path, lang: problem.lang, message: problem.message });
+    }
+  }
+  return [...problems, ...questionProblems(questionIn(question, "de"))];
+}
+
+/** Whether `value` matches the schema of one question; its errors as messages at `at` otherwise. */
+export function questionSchemaProblems(value: unknown, at: string): string[] {
+  if (validateOne(value)) return [];
+  return schemaMessages(validateOne.errors ?? [], (path) => inQuestion(at, path.split("/").slice(1), value), value);
+}
+
+/**
  * The problems of one question; none when it is valid. `at` is where the question is, e.g. `questions[2]` in a bank
  * or `blocks[3]` on a page; each problem starts with it, the path below it and the question's id.
  */
-export function validateQuestion(value: unknown, at: string): string[] {
-  if (!validateOne(value)) {
-    return schemaMessages(validateOne.errors ?? [], (path) => inQuestion(at, path.split("/").slice(1), value));
-  }
-  return questionProblems(value, `${at} (question "${value.id}")`);
+export function validateQuestion(value: unknown, at: string, languages: readonly string[] = ["de"]): string[] {
+  const schemaProblems = questionSchemaProblems(value, at);
+  if (schemaProblems.length > 0) return schemaProblems;
+  const question = value as Question<Text>;
+  return questionDetails(question, languages).map((problem) =>
+    problem.lang === undefined
+      ? `${at} (question "${question.id}"): ${problem.message}`
+      : `${at}${readable(problem.path.map(String))} (${problem.lang}) (question "${question.id}"): ${problem.message}`,
+  );
 }
 
 /** The problems of a question bank; none when it is valid. */
 export function problems(value: unknown): string[] {
-  if (!validateBank(value)) return schemaMessages(validateBank.errors ?? [], (path) => inBank(path, value));
+  if (!validateBank(value)) return schemaMessages(validateBank.errors ?? [], (path) => inBank(path, value), value);
   const ids = value.questions.map((question) => question.id);
   return [
     ...duplicates(ids).map((id) => `questions: the id "${id}" appears twice; each question needs its own id`),
@@ -179,5 +256,7 @@ export function parseBank(text: string, file: string): Quiz {
       ].join("\n"),
     );
   }
-  return value as Quiz;
+  // a question may write its texts as maps by language; the quiz is German
+  const quiz = value as Quiz;
+  return { ...quiz, questions: quiz.questions.map((question) => questionIn(question, "de")) };
 }

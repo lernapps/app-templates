@@ -15,6 +15,7 @@ import { announce, moveFocus } from "@lernapps/tooling/a11y";
 import { translator } from "@lernapps/tooling/i18n";
 import { createStorage } from "@lernapps/tooling/storage";
 import de from "./messages/de.json" with { type: "json" };
+import en from "./messages/en.json" with { type: "json" };
 import { hash, isComplete, isCorrect, questionId, shuffled, type Answer, type Question } from "./quiz.ts";
 import type { QuizData } from "./render.ts";
 
@@ -22,6 +23,8 @@ export * from "./quiz.ts";
 export type { QuizData } from "./render.ts";
 
 const t = translator(de);
+/** The texts of a question on its own, by the page's language. */
+const BY_LANGUAGE: Readonly<Record<string, typeof de>> = { de, en };
 const SEED = "seed";
 
 interface LastResult {
@@ -82,6 +85,10 @@ function chosenOptions(question: Question, answer: Answer): number[] {
 export interface StartQuestionOptions {
   /** Shows the options of a choice in an order given by this seed and the question; as rendered without one. */
   seed?: number;
+  /** The page's language, for the feedback (German by default; the question is already in it). */
+  lang?: string;
+  /** What went wrong in a wrong answer, e.g. a typical mistake; shown under the feedback. */
+  diagnose?: (answer: Answer) => string | undefined;
   /** Called once, when the learner has answered completely, right or wrong. */
   onAnswer?: (answer: Answer, right: boolean) => void;
 }
@@ -93,6 +100,7 @@ export interface StartQuestionOptions {
  * question shows if there is one, and the focus moves to the feedback. An incomplete answer is asked to be completed.
  */
 export function startQuestion(item: HTMLElement, question: Question, options: StartQuestionOptions = {}): void {
+  const t = translator(BY_LANGUAGE[options.lang ?? "de"] ?? de);
   const form = item.querySelector("form");
   const feedback = item.querySelector<HTMLElement>(".quiz-feedback");
   const check = item.querySelector<HTMLButtonElement>(".quiz-check");
@@ -127,6 +135,13 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     const right = isCorrect(question, answer);
     feedback.className = `quiz-feedback ${right ? "quiz-right" : "quiz-wrong"}`;
     feedback.textContent = t(right ? "right" : "wrong");
+    const diagnosis = right ? undefined : options.diagnose?.(answer);
+    if (diagnosis !== undefined) {
+      const why = item.ownerDocument.createElement("p");
+      why.className = "quiz-diagnosis";
+      why.textContent = diagnosis;
+      feedback.append(why);
+    }
     // every option's background, the right ones marked, the learner's choice marked too
     const reveal = item.querySelector<HTMLElement>(".quiz-reveal");
     for (const index of chosenOptions(question, answer)) {
