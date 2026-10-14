@@ -1,5 +1,6 @@
-// The runtime package @lernapps/app-templates: format, lint with type check, unit tests, and the build of the
-// runtime into dist/ (vp pack, run by `prepare` when an app installs the package from git). The template folders
+// The runtime package @lernapps/app-templates: format, lint with type check, unit tests, the staged files of the
+// pre-commit hook, and the build of the runtime into dist/ (vp pack, run by `prepare` when an app installs the package
+// from git). The template folders
 // (quiz/, explainer/) are apps of their own and checked in their own folder with `lernapps check`, as is the page that
 // embeds the quiz's questions one by one (test/fixtures/question-page/).
 import { defineConfig } from "vite-plus";
@@ -41,5 +42,10 @@ export default defineConfig({
     format: "esm",
     platform: "node",
     dts: false,
+  },
+  staged: {
+    // The pre-commit hook (.vite-hooks/pre-commit) formats and fixes the staged files of the runtime package. A
+    // template folder's files are on the ignore list above: `lernapps check --pre-push` in that folder checks them.
+    "*.{ts,json,vue}": "vp check --fix --no-error-on-unmatched-pattern",
   },
 });
