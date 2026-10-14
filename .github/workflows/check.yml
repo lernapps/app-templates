@@ -40,13 +40,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # @lernapps/tooling is an optional peer (apps have it); the type check runs against the version the quiz pins, in
-      # place of the one this repo's hooks use (a devDependency, for `lernapps changes`).
+      # the unit tests with this repo's own @lernapps/tooling (a devDependency: the hooks' `lernapps changes`)
+      - run: npx vp test run
+      # @lernapps/tooling is an optional peer (apps have it); the type check runs against the version the quiz pins,
+      # in place of this repo's own.
       - run: npm install --no-save --no-audit --no-fund "$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"
       - run: npx vp check
       # the .vue files of the fixtures, which the type check of vp check does not read
       - run: npm run check:vue
-      - run: npx vp test run
 
   template:
     needs: changes
@@ -63,13 +64,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci # the runtime's build tools, for file:..
-        env:
-          VP_GIT_HOOKS: 0 # without the root's own hooks, so that the step below sees what the template's install does
+      # no hooks before the template's install, so that any hooks it installs set core.hooksPath for the step below
+      - run: git config --unset core.hooksPath || true
       - run: npm install --no-audit --no-fund
         working-directory: ${{ matrix.template }}
-      # a template installs no git hooks: they would point this whole repo at the template's hooks
+      # a template installs no git hooks: they would point this whole repo at the template's hooks. The root's own
+      # (.vite-hooks/, which the root's prepare installs, also when the template's install builds file:..) are fine.
       - name: npm install left the repo's hooks alone
-        run: test -z "$(git config core.hooksPath)" || { echo "core.hooksPath is $(git config core.hooksPath)"; exit 1; }
+        run: |
+          hooks=$(git config core.hooksPath || true)
+          case "$hooks" in "" | .vite-hooks/_) ;; *) echo "core.hooksPath is $hooks"; exit 1 ;; esac
       - run: npx lernapps check
         working-directory: ${{ matrix.template }}
 
