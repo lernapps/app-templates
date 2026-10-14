@@ -144,11 +144,14 @@ blocks:
           G: { int: [100, 900], step: 100 }
           p: { oneOf: [1, 2, 5, 10] }
         task:
-          text: { de: "Wie viel sind {p} % von {G}?", en: "How much is {p} % of {G}?" }
+          text: { de: "Wie viel sind {{p}} % von {{G}}?", en: "How much is {{p}} % of {{G}}?" }
           figure: { kind: hundred-grid, filled: p }
         answer: { value: "G * p / 100", compare: { number: { format: integer } } }
         mistakes:
           - { value: "G * p", message: { de: "Du hast nicht durch 100 geteilt.", en: "You did not divide by 100." } }
-        hint: { de: "1 % von {G} ist $\\frac{{G}}{100}$.", en: "1 % of {G} is $\\frac{{G}}{100}$." }
+        hint: { de: "1 % von {{G}} ist $\\frac{{{G}}}{100}$.", en: "1 % of {{G}} is $\\frac{{{G}}}{100}$." }
         steps:
-          - { de: "$\\frac{{G} \\cdot {p}}{100} = {answer}$", en: "$\\frac{{G} \\cdot {p}}{100} = {answer}$" }
+          - {
+              de: "$\\frac{{{G}} \\cdot {{p}}}{100} = {{answer}}$",
+              en: "$\\frac{{{G}} \\cdot {{p}}}{100} = {{answer}}$",
+            }
