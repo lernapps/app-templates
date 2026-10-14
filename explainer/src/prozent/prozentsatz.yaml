@@ -81,8 +81,14 @@ blocks:
           figure: { kind: bar, part: W, whole: G }
         answer: { value: "W * 100 / G", compare: { number: { format: percent, decimals: 0 } } }
         mistakes:
-          - { value: "W / G", message: "Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz." }
-          - { value: "G * 100 / W", message: "Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G." }
+          - {
+              value: "W / G",
+              message: "Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.",
+            }
+          - {
+              value: "G * 100 / W",
+              message: "Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.",
+            }
         hint: "Teile den Teil ({W} Schüler) durch das Ganze ({G} Schüler) und nimm das Ergebnis mal 100."
         steps:
           - '$p = \frac{ W }{ G } \cdot 100$'

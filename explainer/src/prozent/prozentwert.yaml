@@ -69,7 +69,10 @@ blocks:
         answer: { value: "G * p / 100", compare: { number: { format: money } } }
         mistakes:
           - { value: "G * p", message: "Du hast vergessen, durch 100 zu teilen: {p} % sind {p} Hundertstel." }
-          - { value: "G - G * p / 100", message: "Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst." }
+          - {
+              value: "G - G * p / 100",
+              message: "Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.",
+            }
         hint: "Rechne erst 1 % aus: {G} € geteilt durch 100. Dann nimm das mal {p}."
         steps:
           - '$W = \frac{G \cdot p}{100}$'
