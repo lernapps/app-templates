@@ -1,51 +1,48 @@
 # yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
 
-title: { de: "Programme 9", en: "Programs 9" }
-description: { de: "Seite 54 der Fixture mit vielen Seiten.", en: "Page 54 of the fixture with many pages." }
+title: { de: "Formen 1", en: "Shapes 1" }
+description: { de: "Seite 3 der Fixture mit allen Blöcken.", en: "Page 3 of the fixture with all blocks." }
 blocks:
   - type: text
     text:
       de: |
-        Diese Seite ist Seite **54** von 60. Auf ihr steht $n = 54$, und *jede* Art von Block.
+        Diese Seite ist Seite **3** von 4. Auf ihr steht $n = 3$, und *jede* Art von Block.
 
-        - Weiter geht es mit [der nächsten Seite](/programme/programme-10/#grundlagen).
+        - Weiter geht es mit [der nächsten Seite](/formen/formen-02/#grundlagen).
         - Mehr steht in der [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
       en: |
-        This page is page **54** of 60. It says $n = 54$, and has *every* kind of block.
+        This page is page **3** of 4. It says $n = 3$, and has *every* kind of block.
 
-        - Go on with [the next page](/programme/programme-10/#grundlagen).
+        - Go on with [the next page](/formen/formen-02/#grundlagen).
         - Read more in [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
   - type: section
     id: grundlagen
     title: { de: "Grundlagen", en: "Basics" }
     blocks:
       - type: formula
-        formula: '\frac{54}{100} \cdot 200 = 108'
+        formula: '\frac{3}{100} \cdot 200 = 6'
       - type: definition
-        term: { de: "Begriff 54", en: "Term 54" }
+        term: { de: "Begriff 3", en: "Term 3" }
         explanation:
-          {
-            de: "Ein Begriff, den Seite 54 erklärt, mit $54\\,\\%$.",
-            en: "A term that page 54 explains, with $54\\,\\%$.",
-          }
+          { de: "Ein Begriff, den Seite 3 erklärt, mit $3\\,\\%$.", en: "A term that page 3 explains, with $3\\,\\%$." }
       - type: figure
-        draw: { kind: hundred-grid, filled: 54 }
-        alt: { de: "Ein Hunderterfeld, 54 von 100 Kästchen gefärbt", en: "A hundred grid, 54 of 100 squares shaded" }
-        caption: { de: "54 % des Ganzen.", en: "54 % of the whole." }
+        draw: { kind: hundred-grid, filled: 3 }
+        alt: { de: "Ein Hunderterfeld, 3 von 100 Kästchen gefärbt", en: "A hundred grid, 3 of 100 squares shaded" }
+        caption: { de: "3 % des Ganzen.", en: "3 % of the whole." }
       - type: section
         id: tabelle
         title: { de: "Tabelle", en: "Table" }
         blocks:
           - type: table
-            caption: { de: "Werte der Seite 54", en: "Values of page 54" }
+            caption: { de: "Werte der Seite 3", en: "Values of page 3" }
             header: [{ de: "Größe", en: "Quantity" }, { de: "Wert", en: "Value" }, { de: "Formel", en: "Formula" }]
             rowHeaders: true
             rows:
-              - [{ de: "Prozentsatz", en: "Percentage" }, { de: "54", en: "54" }, { de: "$p = 54$", en: "$p = 54$" }]
+              - [{ de: "Prozentsatz", en: "Percentage" }, { de: "3", en: "3" }, { de: "$p = 3$", en: "$p = 3$" }]
               - [{ de: "Grundwert", en: "Base value" }, { de: "200", en: "200" }, { de: "$G = 200$", en: "$G = 200$" }]
           - type: figure
-            draw: { kind: bar, part: 54, whole: 60 }
-            alt: { de: "Ein Streifen, 54 von 60 Teilen gefärbt", en: "A strip, 54 of 60 parts shaded" }
+            draw: { kind: bar, part: 3, whole: 4 }
+            alt: { de: "Ein Streifen, 3 von 4 Teilen gefärbt", en: "A strip, 3 of 4 parts shaded" }
             caption: { de: "Wie weit du in der App bist.", en: "How far you are in the app." }
       - type: section
         id: geschichte
@@ -75,16 +72,13 @@ blocks:
     title: { de: "Anwendung", en: "Application" }
     blocks:
       - type: code
-        language: java
+        language: javascript
         caption: { de: "Ein kleines Programm", en: "A small program" }
         code: |
-          class Doppelt {
-            static int doppelt(int n) {
-              return 2 * n;
-            }
-          }
+          const doppelt = (n) => 2 * n;
+          console.log(doppelt(21));
       - type: example
-        title: { de: "Beispiel 54", en: "Example 54" }
+        title: { de: "Beispiel 3", en: "Example 3" }
         blocks:
           - type: text
             text: { de: "Knallgas reagiert zu Wasser:", en: "Oxyhydrogen reacts to water:" }
