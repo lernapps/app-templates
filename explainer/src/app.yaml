@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title: Prozentrechnung
+intro: |
+  Prozentwert, Prozentsatz und Grundwert: Was sie bedeuten, wie du sie ausrechnest, und je ein Beispiel dazu.
+  Für die Klassen 7 und 8.
+languages: [de]
+chapters: [prozent]
+sources:
+  - title: Prozentrechnung mittels Formeln (Serlo)
+    url: https://de.serlo.org/mathe/2193/prozentrechnung-mittels-formeln

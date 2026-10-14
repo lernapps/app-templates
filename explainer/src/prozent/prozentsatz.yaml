@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+# Each page of an explainer will end with an exercise (section Übung). Exercises come with the next version of the
+# explainer runtime; its schema will then require one on every page.
+title: Prozentsatz
+description: "Den Prozentsatz berechnen: p = W : G · 100, mit einem Beispiel und dem Prozentstreifen."
+blocks:
+  - type: section
+    id: warum
+    title: Warum
+    blocks:
+      - type: text
+        text: |
+          „18 von 24 Schülern haben ein Haustier“: Ist das viel? Erst der Prozentsatz macht solche Angaben
+          vergleichbar. 75 % sagen sofort, wie groß der Anteil ist, egal ob die Klasse 24 oder 30 Schüler hat.
+  - type: section
+    id: regel
+    title: Regel
+    blocks:
+      - type: formula
+        formula: 'p = \frac{W}{G} \cdot 100'
+      - type: definition
+        term: Prozentsatz
+        explanation: |
+          Der Prozentsatz $p\,\%$ ist der Anteil des Prozentwerts $W$ (der Teil) am Grundwert $G$ (das Ganze), in
+          Hundertsteln geschrieben.
+      - type: note
+        title: Merkhilfe
+        blocks:
+          - type: text
+            text: Teil durch Ganzes, also immer durch das Ganze teilen, nie umgekehrt. Dann mal 100.
+  - type: section
+    id: beispiel
+    title: Beispiel
+    blocks:
+      - type: example
+        title: Haustiere in der Klasse
+        blocks:
+          - type: text
+            text: In einer Klasse sind 24 Schüler. 18 davon haben ein Haustier. Wie viel Prozent der Klasse sind das?
+          - type: table
+            caption: Der Prozentsatz der Klasse
+            rowHeaders: true
+            rows:
+              - [Grundwert $G$, 24 Schüler (die ganze Klasse)]
+              - [Prozentwert $W$, 18 Schüler (der Teil)]
+              - [Rechnung, '$p = 18 : 24 \cdot 100 = 0{,}75 \cdot 100 = 75$']
+              - [Prozentsatz, "**75 %**"]
+          - type: figure
+            draw: { kind: bar, part: 18, whole: 24 }
+            alt: Ein Streifen für 24 Schüler, drei Viertel davon sind gefärbt, 75 %.
+            caption: Der ganze Streifen ist der Grundwert, 24 Schüler sind 100 %. Der gefärbte Teil ist der Prozentwert, 18 Schüler sind 75 %.
+          - type: text
+            text: "Probe: 75 % von 24 sind 24 · 0,75 = 18. Passt."
