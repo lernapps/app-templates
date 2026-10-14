@@ -1,7 +1,7 @@
 {
   "name": "@lernapps/app-templates",
   "version": "0.0.0",
-  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and each question on its own for other archetypes; the explainer: build step, client module with its exercises, styles, end-to-end tests, the schema of its content)",
+  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and each question on its own for other archetypes; the explainer: build step, client module with its exercises, the islands of its Vue components, styles, end-to-end tests, the schema of its content)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -53,18 +53,24 @@
   },
   "scripts": {
     "prepare": "vp pack",
-    "test": "vp test"
+    "test": "vp test",
+    "check:vue": "vue-tsc --noEmit -p tsconfig.vue.json"
   },
   "dependencies": {
+    "@vitejs/plugin-vue": "6.0.9",
     "ajv": "8.20.0",
     "highlight.js": "11.12.0",
     "marked": "18.0.14",
+    "source-map-js": "1.2.2",
     "temml": "0.14.0",
+    "vue": "3.5.43",
     "yaml": "2.9.1"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
-    "vite-plus": "1.0.0"
+    "typescript": "6.0.3",
+    "vite-plus": "1.0.0",
+    "vue-tsc": "3.3.11"
   },
   "peerDependencies": {
     "@lernapps/tooling": "*",

@@ -29,6 +29,8 @@ jobs:
       # @lernapps/tooling is an optional peer (apps have it); the type check needs it: the version the quiz pins.
       - run: npm install --no-save --no-audit --no-fund "$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"
       - run: npx vp check
+      # the .vue files of the fixtures, which the type check of vp check does not read
+      - run: npm run check:vue
       - run: npx vp test run
 
   template:
@@ -93,7 +95,8 @@ jobs:
   # two pages in German and English with two section levels, every block type on every page and every exercise type
   # (test/fixtures/explainer-all-blocks); and a short history app with one chapter, which the navigation hides
   # (test/fixtures/explainer-history: timeline, quote, definition, an ordering exercise, a generated exercise from a
-  # data file). The build, the checks of the built app and the end-to-end tests of every explainer pass on both.
+  # data file, and a component, a figure whose levels the learner labels, with its logic module and its test). The
+  # build, the checks of the built app, the unit tests and the end-to-end tests of every explainer pass on both.
   explainer-fixtures:
     strategy:
       fail-fast: false
