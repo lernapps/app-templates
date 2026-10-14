@@ -1,15 +1,15 @@
 // What the pages of an explainer must show, from its content in src/ (not from the rendered pages), for its end-to-end
 // tests: per language, the content pages in order with their headings by nesting (page h1, section h2, subsection h3,
 // a box one level below the heading it is under), their sections with their anchors, the number of formulas and the
-// name of every figure, and its exercises with what each must accept; and the other pages (start, chapters, glossary)
-// with their titles.
+// name of every figure, its exercises with what each must accept, and its components with their nojs text; and the
+// other pages (start, chapters, glossary) with their titles.
 import { questionIn, type Question } from "../quiz/quiz.ts";
 import { answerText } from "../quiz/render.ts";
 import { inLanguage, timelineEvents, type Block, type Site, type Text } from "./content.ts";
 import { dataOf, templatesOf, workedTasks } from "./exercises.ts";
 import { kindOf, plainText, type Data, type Generated, type Templates } from "./generated.ts";
 import { loadSite } from "./load.ts";
-import { inspect } from "./markdown.ts";
+import { inspect, renderMarkdown } from "./markdown.ts";
 import { routes } from "./routes.ts";
 
 export interface PageOutline {
@@ -22,6 +22,19 @@ export interface PageOutline {
   formulas: number;
   figures: string[];
   exercises: ExerciseOutline[];
+  /** The vue-component blocks, in order. */
+  components: ComponentOutline[];
+}
+
+/** A vue-component block of a page, in the page's language. */
+export interface ComponentOutline {
+  name: string;
+  /** Its nojs text, as plain text. */
+  nojs: string;
+  /** Whether it emits answered, an exercise. */
+  exercise: boolean;
+  /** Whether it keeps its nojs text as a caption once it runs. */
+  caption: boolean;
 }
 
 /** An exercise of a page, in the page's language: what it shows and what it accepts. */
@@ -110,6 +123,17 @@ function walk(
         break;
       case "code":
         break;
+      case "vue-component": {
+        const use = site.components.find((candidate) => candidate.block === block);
+        into.formulas += inspect(text(block.nojs)).formulas.length;
+        into.components.push({
+          name: block.component,
+          nojs: plainText(renderMarkdown(text(block.nojs), (href) => href)),
+          exercise: use?.component.exercise ?? false,
+          caption: use?.component.caption ?? false,
+        });
+        break;
+      }
       case "generated": {
         const data = dataOf(block, site.data);
         const templates = templatesOf(block, [lang]);
@@ -162,6 +186,7 @@ export function outline(root = "."): Outline {
       formulas: 0,
       figures: [],
       exercises: [],
+      components: [],
     };
     if (route.page === undefined) (others[route.lang] ??= []).push(item);
     else {

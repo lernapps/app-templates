@@ -47,6 +47,33 @@ blocks:
               en: Third Estate
             - de: alle anderen
               en: everyone else
+      - type: vue-component
+        component: AssignLabels
+        props:
+          alt:
+            de: Eine Pyramide aus drei Stufen, von oben nach unten nummeriert
+            en: A pyramid of three levels, numbered from the top down
+          question:
+            de: Welcher Stand gehört auf welche Stufe der Pyramide?
+            en: Which estate belongs on which level of the pyramid?
+          level: { de: Stufe, en: Level }
+          button: { de: Prüfen, en: Check }
+          parts:
+            - de: Erster Stand, die Geistlichen
+              en: First Estate, the clergy
+            - de: Zweiter Stand, der Adel
+              en: Second Estate, the nobility
+            - de: Dritter Stand, alle anderen
+              en: Third Estate, everyone else
+        nojs:
+          de: |
+            Die Ständepyramide hat drei Stufen. Oben steht der Erste Stand, die Geistlichen, in der Mitte der Zweite
+            Stand, der Adel. Die breite Stufe unten ist der Dritte Stand, alle anderen: Er trägt die Pyramide. Mit
+            JavaScript ordnest du hier selbst jeder Stufe ihren Stand zu.
+          en: |
+            The pyramid of the estates has three levels. At the top is the First Estate, the clergy, in the middle the
+            Second Estate, the nobility. The wide level at the bottom is the Third Estate, everyone else: it carries
+            the pyramid. With JavaScript you assign each level its estate here yourself.
   - type: section
     id: generalstaende
     title:

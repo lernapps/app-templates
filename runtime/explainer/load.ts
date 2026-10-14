@@ -4,9 +4,10 @@
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
 // list, bundled images and quotes name source and licence, links to pages of the app find their page and section,
 // every page has an exercise, a question of the quiz's types passes the quiz's validation in every declared language,
-// a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), and src/
-// holds nothing else. Each problem is one line: the file, its line, the place in the file, the language where it
-// matters, and what to do.
+// a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), a
+// vue-component block names a component of src/components/ that passes its checks (components.ts), its props match the
+// component's prop types and it has its nojs text, and src/ holds nothing else. Each problem is one line: the file,
+// its line, the place in the file, the language where it matters, and what to do.
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
@@ -22,12 +23,14 @@ import {
   type Block,
   type BlockOf,
   type Chapter,
+  type ComponentUse,
   type DataRecord,
   type Event,
   type Page,
   type Site,
   type Text,
 } from "./content.ts";
+import { propsProblems, readComponents, textPaths } from "./components.ts";
 import { ExpressionError, parse, variables } from "./expression.ts";
 import { dataOf, templatesOf } from "./exercises.ts";
 import { formulaProblem } from "./formula.ts";
@@ -41,7 +44,7 @@ export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/explainer.v1.sch
 export const RULE_URL = "https://lernapps.net/tooling/rules/#explainer-content-valid";
 
 /** What src/ may hold besides the chapter folders. */
-const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/ and main.ts";
+const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, components/ and main.ts";
 /** Chapter ids that would collide with other addresses: data files, images, the glossary, language trees. */
 const RESERVED = new Set(["data", "images", "glossar", "components", "assets"]);
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -123,6 +126,7 @@ const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
   note: "box",
   section: "section",
   generated: "generated",
+  "vue-component": "vueComponent",
 };
 
 /** The fields of each of the quiz's question types, from the quiz's schema. */
@@ -197,6 +201,9 @@ function readYaml(root: string, file: string, problems: Problems): YamlFile | un
 function missing(property: string, object: unknown): string {
   const type = isObject(object) ? object["type"] : undefined;
   if (property === "origin") return "origin is missing; a quote names who said or wrote it, where and when";
+  if (property === "nojs") {
+    return "nojs is missing; a vue-component says in nojs, for readers without JavaScript, what it shows, and gives its content (vue-component-nojs)";
+  }
   if ((property === "licence" || property === "source") && type === "quote") {
     return `${property} is missing; a quote names its source and its licence`;
   }
@@ -387,6 +394,10 @@ interface PageCheck {
   exercises: Map<string, Path>;
   /** How many seeds the property test of a generated exercise draws. */
   seeds: number;
+  /** The components of src/components/, when it exists. */
+  components: ReturnType<typeof readComponents> | undefined;
+  /** The vue-component blocks so far. */
+  uses: ComponentUse[];
 }
 
 function checkEvents(check: PageCheck, yaml: YamlFile, path: Path, events: readonly Event[]): void {
@@ -560,6 +571,9 @@ function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Path, dep
         checkExerciseId(check, block.id, at);
         checkGenerated(check, block, at);
         break;
+      case "vue-component":
+        checkComponent(check, block, at);
+        break;
       default:
         checkExerciseId(check, block.id, at);
         for (const problem of questionDetails(block, texts.languages)) {
@@ -568,6 +582,32 @@ function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Path, dep
         }
     }
   });
+}
+
+/** A vue-component block: its component exists and passes its checks, its props match, its texts are complete. */
+function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: Path): void {
+  const { yaml, texts, problems } = check;
+  texts.check(yaml, [...at, "nojs"], "markdown");
+  const component = check.components?.components.get(block.component);
+  if (component === undefined) {
+    // a component with problems of its own has them reported already
+    if (check.components?.names.has(block.component) === true) return;
+    const others = [...(check.components?.names ?? [])];
+    problems.at(
+      yaml,
+      [...at, "component"],
+      `src/components/${block.component}.vue does not exist; ${others.length === 0 ? "put the component there" : `the components are ${others.join(", ")}`}`,
+    );
+    return;
+  }
+  const found = propsProblems(block.props, component);
+  for (const problem of found) problems.at(yaml, [...at, "props", ...problem.path], problem.message);
+  if (found.length > 0) return;
+  for (const [name, field] of Object.entries(component.props)) {
+    const value = block.props?.[name];
+    for (const path of textPaths(value, field.type)) texts.check(yaml, [...at, "props", name, ...path], "plain");
+  }
+  check.uses.push({ block, component, place: `${yaml.file}:${lineOf(yaml, at, 0) ?? 1}: ${pathText(at)}` });
 }
 
 /** An exercise's id is an anchor of its page: once on the page. */
@@ -778,6 +818,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   for (const name of entries(src)) {
     const path = join(src, name);
     if (name === "app.yaml" || name === "main.ts") continue;
+    if (name === "components" && isDirectory(path)) continue;
     if (!isDirectory(path)) {
       problems.file(`src/${name}`, `not part of an explainer; ${SRC}`);
     } else if (name === "images") {
@@ -815,6 +856,10 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
     } else chapterIds.push(name);
   }
 
+  // the components, read with Vue's SFC compiler only when there are any
+  const components = existsSync(join(src, "components")) ? readComponents(root) : undefined;
+  for (const problem of components?.problems ?? []) problems.add(problem);
+
   // the app
   const appYaml = readYaml(root, "src/app.yaml", problems);
   if (appYaml === undefined || !validate(appYaml, "app", problems)) return { problems: problems.lines };
@@ -848,6 +893,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   const terms = new Map<string, string>();
   const images = new Map<string, string>();
   const anchors = new Map<string, Set<string>>();
+  const uses: ComponentUse[] = [];
   const chapters: Chapter[] = [];
   for (const chapterId of chaptersOk ? app.chapters : chapterIds) {
     const folder = join(src, chapterId);
@@ -900,7 +946,20 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       const pageAnchors = new Set<string>();
       const exercises = new Map<string, Path>();
       checkBlocks(
-        { yaml, texts, problems, root, dataFiles, terms, images, anchors: pageAnchors, exercises, seeds },
+        {
+          yaml,
+          texts,
+          problems,
+          root,
+          dataFiles,
+          terms,
+          images,
+          anchors: pageAnchors,
+          exercises,
+          seeds,
+          components,
+          uses,
+        },
         page.blocks,
         ["blocks"],
         0,
@@ -957,7 +1016,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   if (problems.lines.length > 0) return { problems: problems.lines };
   const data: Record<string, DataRecord[]> = {};
   for (const [id, yaml] of dataFiles) data[id] = yaml.value as DataRecord[];
-  return { site: { app, chapters, data, images }, problems: [] };
+  return { site: { app, chapters, data, images, components: uses }, problems: [] };
 }
 
 /**
