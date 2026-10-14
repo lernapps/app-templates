@@ -266,7 +266,8 @@
             "number",
             "ordering",
             "matching",
-            "generated"
+            "generated",
+            "vue-component"
           ]
         }
       },
@@ -535,6 +536,20 @@
           },
           "then": {
             "$ref": "#/$defs/generated"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "vue-component"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/vueComponent"
           }
         }
       ],
@@ -1140,6 +1155,26 @@
           "items": {
             "$ref": "#/$defs/markdown"
           }
+        }
+      },
+      "type": "object"
+    },
+    "vueComponent": {
+      "description": "A Vue single-file component of the app, src/components/<component>.vue, for what no built-in block or generated exercise can express. The build renders it into the page and checks it (what it may do, its test file, and for an exercise, one that emits answered, its logic module <component>.ts); in the browser it hydrates in place. Without JavaScript the page shows its nojs text instead.",
+      "required": ["component", "nojs"],
+      "properties": {
+        "component": {
+          "description": "The component's name, in PascalCase: src/components/<component>.vue.",
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "props": {
+          "description": "The component's props, checked against its prop types (defineProps<…>()). A prop of type string is a learner text: a string, or a map by language.",
+          "type": "object"
+        },
+        "nojs": {
+          "description": "What the component shows and does, for readers without JavaScript, with its content: the labelled diagram described, or the task with its solution. Restricted Markdown, rendered in place; once the component runs, it replaces this text, or keeps it as its caption.",
+          "$ref": "#/$defs/markdown"
         }
       },
       "type": "object"

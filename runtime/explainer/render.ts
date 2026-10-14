@@ -2,15 +2,20 @@
 // as inline SVG or an image, tables, timelines, definitions, quotes, highlighted code, the exercises (exercises.ts:
 // each with its solution in a <details>, a generated one with three worked tasks), and the navigation (contents,
 // breadcrumbs, previous and next, the contents of a page with three or more sections, the glossary, the language
-// switch). Without JavaScript the page is complete; the client module only adds. Links to other sites are plain
-// links with rel="noopener": nothing is loaded from another server before a click. The end-to-end tests rely on the
-// classes, ids and rel attributes written here.
+// switch). Without JavaScript the page is complete; the client module only adds. A vue-component block is its island:
+// the component's markup as the build rendered it (`hidden` until it hydrates), its nojs text, its props in the page's
+// language, and for an exercise the place of its feedback. Links to other sites are plain links with rel="noopener":
+// nothing is loaded from another server before a click. The end-to-end tests rely on the classes, ids and rel
+// attributes written here.
+import { messagesIn } from "../quiz/render.ts";
 import { highlight, type CodeLanguage } from "./code.ts";
+import { propsIn } from "./components.ts";
 import {
   inLanguage,
   termId as termIdOf,
   timelineEvents,
   type Block,
+  type BlockOf,
   type Credit,
   type Event,
   type Site,
@@ -29,7 +34,12 @@ export interface RenderedPage {
   route: Route;
   head: string;
   body: string;
+  /** Whether it has a component, which the islands module hydrates. */
+  islands: boolean;
 }
+
+/** The markup of each vue-component block in each language, as the build rendered it (plugin.ts). */
+export type Islands = ReadonlyMap<Block, ReadonlyMap<string, string>>;
 
 const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
 
@@ -38,9 +48,13 @@ class Context {
   readonly locale: string;
   readonly site: Site;
   readonly route: Route;
-  constructor(site: Site, route: Route) {
+  readonly islands: Islands;
+  /** Whether a component was rendered. */
+  hasIslands = false;
+  constructor(site: Site, route: Route, islands: Islands) {
     this.site = site;
     this.route = route;
+    this.islands = islands;
     this.locale = LOCALES[route.lang] ?? route.lang;
   }
   get lang(): string {
@@ -212,9 +226,36 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
       const caption = block.caption === undefined ? "" : `<figcaption>${context.text(block.caption)}</figcaption>`;
       return `<figure class="explainer-code"><pre role="region" aria-label="${plain(context.t("code", { language }))}" tabindex="0"><code class="hljs language-${language}">${highlight(block.code, language)}</code></pre>${caption}</figure>`;
     }
+    case "vue-component":
+      return renderComponent(context, block);
     default:
       return renderExercise(block, context.lang, context.site.data, context.resolve);
   }
+}
+
+const json = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
+
+/** A vue-component block: its island, hidden until it hydrates, its nojs text, its props and its feedback. */
+function renderComponent(context: Context, block: BlockOf<"vue-component">): string {
+  const use = context.site.components.find((candidate) => candidate.block === block);
+  if (use === undefined) return "";
+  context.hasIslands = true;
+  const { component } = use;
+  const markup = context.islands.get(block)?.get(context.lang) ?? "";
+  const messages = messagesIn(context.lang);
+  const feedback = component.exercise
+    ? `<p class="quiz-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
+    : "";
+  return [
+    `<div class="explainer-component" data-component="${component.name}"${component.caption ? ' data-nojs="caption"' : ""}>`,
+    `<div class="explainer-island" hidden>${markup}</div>`,
+    `<div class="explainer-nojs">${context.markdown(block.nojs)}</div>`,
+    feedback,
+    `<script type="application/json" class="explainer-component-props">${json(propsIn(block.props, component, context.lang))}</script>`,
+    `</div>`,
+  ]
+    .filter((part) => part !== "")
+    .join("\n");
 }
 
 /** The contents of a page with three or more sections: the sections and their subsections. */
@@ -373,9 +414,9 @@ function footer(context: Context): string {
   return `<footer class="explainer-footer"><p>${plain(context.t("footer"))} · <a href="https://lernapps.net/imprint/">${plain(context.t("imprint"))}</a> · <a href="https://lernapps.net/privacy/">${plain(context.t("privacy"))}</a></p></footer>`;
 }
 
-/** One page of the app. */
-export function renderPage(site: Site, route: Route): RenderedPage {
-  const context = new Context(site, route);
+/** One page of the app, with the markup of its components as the build rendered them. */
+export function renderPage(site: Site, route: Route, islands: Islands = new Map()): RenderedPage {
+  const context = new Context(site, route, islands);
   const body = [
     header(context),
     breadcrumbs(context),
@@ -387,12 +428,12 @@ export function renderPage(site: Site, route: Route): RenderedPage {
   ]
     .filter((part) => part !== "")
     .join("\n");
-  return { route, head: head(context), body };
+  return { route, head: head(context), body, islands: context.hasIslands };
 }
 
 /** Every page of the app, in every language. */
-export function renderSite(site: Site): RenderedPage[] {
-  return routes(site).map((route) => renderPage(site, route));
+export function renderSite(site: Site, islands: Islands = new Map()): RenderedPage[] {
+  return routes(site).map((route) => renderPage(site, route, islands));
 }
 
 /** llms.txt of a language tree: the app, its pages with their sections as deep links, from that tree's root. */

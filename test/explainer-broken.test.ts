@@ -106,7 +106,7 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "an extra file in src/",
     (root) => writeFileSync(join(root, "src/notizen.txt"), "Ideen\n"),
-    "src/notizen.txt: not part of an explainer; src/ holds only app.yaml, the chapter folders, data/, images/ and main.ts",
+    "src/notizen.txt: not part of an explainer; src/ holds only app.yaml, the chapter folders, data/, images/, components/ and main.ts",
   ],
   [
     "a missing translation",

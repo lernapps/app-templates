@@ -17,7 +17,7 @@ with which a creator and their AI assistant build a learning app.
 | Folder | Archetype | What the app supplies |
 |---|---|---|
 | [`quiz/`](quiz/) | a quiz about things to know: questions with options, feedback on every option, score and solutions, in one or more languages (a page per language) | the question bank `src/quiz.json` ([schema](https://lernapps.net/tooling/schemas/quiz.v1.schema.json)) |
-| [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes and code, and an exercise on every page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/` ([schema](https://lernapps.net/tooling/schemas/explainer.v1.schema.json)) |
+| [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes and code, and an exercise on every page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages; Vue components for what no block can express | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/`, and `components/` ([schema](https://lernapps.net/tooling/schemas/explainer.v1.schema.json)) |
 
 - [`runtime/`](runtime/): the runtime of each archetype, published from git as `@lernapps/app-templates`; its exports
   are in [`package.json`](package.json), what each does in the comments of its source. The quiz's questions also work
@@ -32,6 +32,15 @@ with which a creator and their AI assistant build a learning app.
   placeholder was meant in prose (`{G}`, `{{ G }}`), on a variable of `given` that nothing uses (no placeholder, and
   no expression of the figure, answer or mistakes; `where` does not count), and on a placeholder left after filling in
   ([`generated.ts`](runtime/explainer/generated.ts)).
+- An explainer's components are Vue single-file components in `src/components/<Name>.vue`, each with
+  `<script setup lang="ts">`, typed props and its test `<Name>.test.ts`, used by a `vue-component` block with its
+  `props` and a `nojs` text. The build renders each with Vue's server renderer into its island, `hidden` until it
+  hydrates; only a page with a component loads Vue. It checks each block's props against the component's prop types,
+  and on the SFC compiler's output: no network, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from
+  `vue`, this runtime, `@lernapps/tooling/storage`, `i18n` and `a11y` and the folder itself, browser globals only in
+  `onMounted`, and 20 kB gzip of the component's own code. A component that emits `answered { correct }` is an
+  exercise: its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
+  `wrong(task)`, which the build tests over 50 fixed seeds per block ([`components.ts`](runtime/explainer/components.ts)).
 - Which commit of this repo a new app gets and what the generator adds to the template:
   `npx --yes github:lernapps/tooling#main create --help`.
 - What an archetype is and how the parts fit: the [architecture of the tooling](https://lernapps.net/tooling/architecture/).
@@ -41,7 +50,8 @@ with which a creator and their AI assistant build a learning app.
 ## Contributing
 
 `npm ci`, then the steps of the workflow [`check.yml`](.github/workflows/check.yml): the runtime's checks at the root
-and `lernapps check` in every template folder and in `test/fixtures/question-page/`. A change reaches new apps once the pin in lernapps/tooling moves to its
+(with `npm run check:vue`, the type check of the fixtures' `.vue` files) and `lernapps check` in every template folder
+and in `test/fixtures/question-page/`. A change reaches new apps once the pin in lernapps/tooling moves to its
 commit on `main`; Renovate moves existing apps.
 
 ## License

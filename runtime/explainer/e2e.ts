@@ -14,7 +14,9 @@
 // per page: a question of the quiz's types accepts its right answer and rejects a wrong one, the feedback in view with
 // the focus; a generated exercise shows, at its deep link ?seed=<n>#<id>, the task the notation gives for that seed,
 // accepts its right answer, rejects a wrong one (a mistake, with its message), and "Neue Aufgabe" changes the
-// task. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
+// task; each component hydrates without a console error, and an exercise component's answered gives the feedback,
+// once for each answer, in view with the focus. Without JavaScript, each component's nojs text is visible and not
+// empty, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type Page } from "playwright/test";
 import { questionId, rightAnswer, wrongAnswer } from "../quiz/quiz.ts";
@@ -78,6 +80,57 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
       }
     });
   }
+}
+
+/** Without JavaScript: each component's nojs text is visible, not empty and as in the content; its island is hidden. */
+async function expectNojs(page: Page, item: PageOutline): Promise<void> {
+  if (item.components.length === 0) return;
+  const components = page.locator("main .explainer-component");
+  await expect(components, `${item.url}: one island per component`).toHaveCount(item.components.length);
+  for (const [index, component] of item.components.entries()) {
+    const element = components.nth(index);
+    const nojs = element.locator(":scope > .explainer-nojs");
+    await expect(nojs, `${item.url}: the nojs text of ${component.name}`).toBeVisible();
+    expect((await nojs.innerText()).trim(), `${item.url}: the nojs text of ${component.name}`).not.toBe("");
+    await expect(nojs).toHaveText(component.nojs);
+    await expect(element.locator(":scope > .explainer-island")).toBeHidden();
+  }
+}
+
+/** With JavaScript: each component hydrates without a console error; an exercise's answered gives the feedback. */
+async function checkComponents(page: Page, item: PageOutline): Promise<void> {
+  const errors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(`./${item.url}`);
+  const components = page.locator("main .explainer-component");
+  for (const [index, component] of item.components.entries()) {
+    const element = components.nth(index);
+    await expect(element, `${item.url}: ${component.name} hydrates`).toHaveAttribute("data-hydrated", "");
+    await expect(element.locator(":scope > .explainer-island")).toBeVisible();
+    const nojs = element.locator(":scope > .explainer-nojs");
+    if (component.caption) await expect(nojs, "the nojs text stays as the caption").toBeVisible();
+    else await expect(nojs, "the component replaces its nojs text").toBeHidden();
+    if (!component.exercise) continue;
+    // the component's own answered, as it emits it, with each result: one feedback, in view with the focus
+    const feedback = element.locator(":scope > .quiz-feedback");
+    for (const correct of [true, false]) {
+      await element.evaluate((node, value) => {
+        type Instance = { emit(event: string, payload: unknown): void };
+        const island = node.querySelector(".explainer-island") as unknown as { _vnode?: { component?: Instance } };
+        island._vnode?.component?.emit("answered", { correct: value });
+      }, correct);
+      await expect(feedback, `${component.name}: the feedback on answered`).toHaveText(
+        messagesIn("de")[correct ? "right" : "wrong"],
+      );
+      await expect(feedback).toBeFocused();
+      await expect(feedback).toBeInViewport();
+    }
+    await expect(element.locator(".quiz-feedback"), "one feedback").toHaveCount(1);
+  }
+  expect(errors, `${item.url}: no console error`).toEqual([]);
 }
 
 /** The feedback of the question `id` says `text`. */
@@ -221,6 +274,7 @@ export function explainerTests(root = "."): void {
             await expectAnchors(page);
             await expectLanguages(page, item, app.languages);
             await expectExercises(page, item);
+            await expectNojs(page, item);
           });
         }
 
@@ -279,6 +333,15 @@ export function explainerTests(root = "."): void {
             if (exercise.kind === "question") await checkQuestion(page, item.url, exercise);
             else await checkGenerated(page, item.url, exercise);
           }
+          expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual([]);
+        });
+      }
+      for (const item of app.pages["de"] ?? []) {
+        if (item.components.length === 0) continue;
+        test(`${item.url}: each component hydrates without a console error (${item.components.map((component) => component.name).join(", ")})`, async ({
+          page,
+        }) => {
+          await checkComponents(page, item);
           expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual([]);
         });
       }

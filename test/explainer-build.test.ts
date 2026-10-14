@@ -1,7 +1,8 @@
 // The explainer's build, end to end through Vite, on the template's content and on the fixtures: one build writes
 // every page in every language, each linking the one hashed client module and stylesheet that Vite builds from
 // index.html at its own depth, with its language and the archetype marker, and an exercise on every content page (a
-// generated one with three worked tasks); and llms.txt for each language tree.
+// generated one with three worked tasks); and llms.txt for each language tree. A page with a component also loads the
+// islands module, which brings Vue; a page without one ships no Vue at all.
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -24,23 +25,53 @@ function app(src: string): string {
   return root;
 }
 
-const contents: [string, string, number][] = [
-  ["the template", join(import.meta.dirname, "../explainer/src"), 3],
-  ["the all-blocks fixture", join(import.meta.dirname, "fixtures/explainer-all-blocks"), 4],
-  ["the history fixture", join(import.meta.dirname, "fixtures/explainer-history"), 3],
+/** A string of Vue's runtime, in every build of it. */
+const VUE = "Hydration completed but contains mismatches";
+
+/** The scripts the page `file` loads, with every module they import statically, as paths. */
+function shipped(file: string): string[] {
+  const html = readFileSync(file, "utf8");
+  const found = new Set<string>();
+  const add = (path: string) => {
+    if (found.has(path)) return;
+    found.add(path);
+    for (const [, url = ""] of readFileSync(path, "utf8").matchAll(/(?:import|from)\s*["'](\.\/[^"']+\.js)["']/g)) {
+      add(join(dirname(path), url));
+    }
+  };
+  for (const [, src = ""] of html.matchAll(/<script type="module" crossorigin src="([^"]+)"/g))
+    add(join(dirname(file), src));
+  for (const [, href = ""] of html.matchAll(/<link rel="modulepreload" crossorigin href="([^"]+)"/g)) {
+    add(join(dirname(file), href));
+  }
+  return [...found];
+}
+
+// the content, the number of its pages in German, and the pages with a component
+const contents: [string, string, number, string[]][] = [
+  ["the template", join(import.meta.dirname, "../explainer/src"), 3, []],
+  ["the all-blocks fixture", join(import.meta.dirname, "fixtures/explainer-all-blocks"), 4, []],
+  [
+    "the history fixture",
+    join(import.meta.dirname, "fixtures/explainer-history"),
+    3,
+    ["revolution/staende/", "en/revolution/staende/"],
+  ],
 ];
 
 describe("one build writes every page", () => {
   test.each(contents)(
     "%s",
-    async (_name, src, count) => {
+    async (_name, src, count, withComponents) => {
       const root = app(src);
       await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [explainer()] });
       const assets = readdirSync(join(root, "dist/assets"));
       const scripts = assets.filter((file) => file.endsWith(".js"));
-      expect(scripts).toHaveLength(1);
-      expect(scripts[0]).toMatch(/^index-[\w-]{8}\.js$/);
-      expect(assets.filter((file) => file.endsWith(".css"))).toHaveLength(1);
+      if (withComponents.length === 0) {
+        expect(scripts).toHaveLength(1);
+        expect(scripts[0]).toMatch(/^index-[\w-]{8}\.js$/);
+      }
+      expect(assets.filter((file) => file.endsWith(".css") && file.startsWith("index-"))).toHaveLength(1);
       const all = routes(loadSite(root));
       expect(all.filter((route) => route.kind === "page" && route.lang === "de")).toHaveLength(count);
       for (const route of all) {
@@ -52,6 +83,12 @@ describe("one build writes every page", () => {
         expect(existsSync(join(dirname(file), src)), `${route.path}: ${src}`).toBe(true);
         const href = /<link rel="stylesheet" crossorigin href="([^"]+)"/.exec(html)?.[1] ?? "";
         expect(existsSync(join(dirname(file), href)), `${route.path}: ${href}`).toBe(true);
+        // Vue only where there is a component: its markup rendered at build, hidden until it hydrates
+        const vue = shipped(file).some((script) => readFileSync(script, "utf8").includes(VUE));
+        expect(vue, `${route.path}: ships Vue`).toBe(withComponents.includes(route.path));
+        if (withComponents.includes(route.path)) {
+          expect(html).toMatch(/<div class="explainer-island" hidden><div class="assign-labels"[^>]*><svg /);
+        }
         // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
         if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
         for (const generated of html.split('class="explainer-exercise explainer-generated"').slice(1)) {
