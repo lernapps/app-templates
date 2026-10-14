@@ -35,6 +35,8 @@ export default defineConfig({
       explainer: "runtime/explainer/explainer.ts",
       "explainer-plugin": "runtime/explainer/plugin.ts",
       "explainer-e2e": "runtime/explainer/e2e.ts",
+      // the hydration of an explainer's components, which the build step points the islands module of a page to
+      "explainer-islands": "runtime/explainer/islands.ts",
     },
     format: "esm",
     platform: "node",

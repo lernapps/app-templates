@@ -1,7 +1,9 @@
 // The content of an explainer, as the YAML files in src/ give it (explainer.v1.schema.json) and the build reads it
-// (load.ts): the app, its chapters in order, their pages in order, the data files and the bundled images.
+// (load.ts): the app, its chapters in order, their pages in order, the data files, the bundled images and the
+// components (src/components/, components.ts) with the blocks that use them.
 
 import type { Question } from "../quiz/quiz.ts";
+import type { ComponentInfo } from "./components.ts";
 import type { Generated } from "./generated.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 
@@ -57,6 +59,7 @@ export type Block =
   | { type: "code"; language: string; code: string; caption?: Text }
   | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
   | { type: "section"; id: string; title: Text; blocks: readonly Block[] }
+  | { type: "vue-component"; component: string; props?: Readonly<Record<string, unknown>>; nojs: Text }
   | Exercise;
 
 export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;
@@ -88,6 +91,16 @@ export interface Site {
   data: Readonly<Record<string, readonly DataRecord[]>>;
   /** The bundled images that blocks use, by their path from src/ (images/<name>), with the file's absolute path. */
   images: ReadonlyMap<string, string>;
+  /** Each vue-component block, with its component and where it is. */
+  components: readonly ComponentUse[];
+}
+
+/** A vue-component block of a page, with the component it uses. */
+export interface ComponentUse {
+  block: BlockOf<"vue-component">;
+  component: ComponentInfo;
+  /** Where the block is, as a problem line starts: src/<chapter>/<page>.yaml:<line>: blocks[0].blocks[3] */
+  place: string;
 }
 
 /** The events of a timeline: its own, or the records of its data file. */

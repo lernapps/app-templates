@@ -375,7 +375,8 @@ figcaption p {
 
 /* Exercises: the quiz's question types and generated exercises, the quiz's controls and feedback in the explainer's
    colours. Without JavaScript the worked tasks and every "Lösung" show; the live part shows with JavaScript. */
-.explainer-exercise {
+.explainer-exercise,
+.explainer-component {
   --explainer-right: #14532d;
   --explainer-right-background: #dcfce7;
   --explainer-wrong: #7f1d1d;
@@ -466,7 +467,8 @@ figcaption p {
   outline-offset: 2px;
 }
 
-.explainer-exercise .quiz-feedback:not(:empty) {
+.explainer-exercise .quiz-feedback:not(:empty),
+.explainer-component .quiz-feedback:not(:empty) {
   margin: 0.75rem 0;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
@@ -477,12 +479,14 @@ figcaption p {
   margin: 0.25rem 0 0;
 }
 
-.explainer-exercise .quiz-right {
+.explainer-exercise .quiz-right,
+.explainer-component .quiz-right {
   background: var(--explainer-right-background);
   color: var(--explainer-right);
 }
 
-.explainer-exercise .quiz-wrong {
+.explainer-exercise .quiz-wrong,
+.explainer-component .quiz-wrong {
   background: var(--explainer-wrong-background);
   color: var(--explainer-wrong);
 }
@@ -561,4 +565,11 @@ figcaption p {
   margin-top: 1rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--explainer-border);
+}
+
+/* A component: its island, hidden until it hydrates, and its nojs text, which it replaces or keeps as its caption */
+.explainer-nojs.explainer-caption {
+  margin-top: 0.5rem;
+  color: var(--explainer-muted);
+  font-size: 0.9375rem;
 }
