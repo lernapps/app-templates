@@ -1,7 +1,7 @@
 {
   "name": "@lernapps/app-templates",
   "version": "0.0.0",
-  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank)",
+  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and each question on its own for other archetypes)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -22,12 +22,17 @@
       "types": "./runtime/quiz/plugin.ts",
       "default": "./dist/quiz-plugin.mjs"
     },
+    "./quiz/question": {
+      "types": "./runtime/quiz/question.ts",
+      "default": "./dist/quiz-question.mjs"
+    },
     "./quiz/e2e": {
       "types": "./runtime/quiz/e2e.ts",
       "default": "./dist/quiz-e2e.mjs"
     },
     "./quiz/style.css": "./runtime/quiz/quiz.css",
-    "./quiz/quiz.v1.schema.json": "./runtime/quiz/quiz.v1.schema.json"
+    "./quiz/quiz.v1.schema.json": "./runtime/quiz/quiz.v1.schema.json",
+    "./quiz/messages/de.json": "./runtime/quiz/messages/de.json"
   },
   "scripts": {
     "prepare": "vp pack",

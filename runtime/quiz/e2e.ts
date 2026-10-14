@@ -12,12 +12,14 @@
 // right answers give the full score and show the solutions; nothing is stored on the device before, and afterwards
 // only the last result when the bank asks for it. Without JavaScript every question and its solution, with the same
 // background and links, can be read. Each test opens its own page; none depends on another, so they run in parallel.
+// The helpers answerQuestion, expectBackground and expectFeedbackInView work per question, on any page with a question
+// that renderQuestion of @lernapps/app-templates/quiz/question rendered and startQuestion made live.
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "playwright/test";
 import de from "./messages/de.json" with { type: "json" };
-import { rightAnswer, wrongAnswer, type Answer, type Question, type Quiz } from "./quiz.ts";
+import { questionId, rightAnswer, wrongAnswer, type Answer, type Question, type Quiz } from "./quiz.ts";
 
-const question = (page: Page, item: Question) => page.locator(`#frage-${item.id}`);
+const question = (page: Page, item: Question) => page.locator(`#${questionId(item)}`);
 
 /** Gives `answer` to the question through its controls, as a learner does. */
 export async function answerQuestion(page: Page, item: Question, answer: Answer): Promise<void> {
@@ -83,7 +85,7 @@ export function quizTests(bank = "src/quiz.json"): void {
 
     for (const item of quiz.questions) {
       test(`${item.id} (${item.type}): its link opens it and the right answer counts`, async ({ page }) => {
-        await page.goto(`./#frage-${item.id}`);
+        await page.goto(`./#${questionId(item)}`);
         await expect(question(page, item)).toBeVisible();
         await expect(page.locator(".quiz-question:visible")).toHaveCount(1);
         await answerQuestion(page, item, rightAnswer(item));
@@ -107,7 +109,7 @@ export function quizTests(bank = "src/quiz.json"): void {
       });
 
       test(`${item.id} (${item.type}): a wrong answer does not count`, async ({ page }) => {
-        await page.goto(`./#frage-${item.id}`);
+        await page.goto(`./#${questionId(item)}`);
         await answerQuestion(page, item, wrongAnswer(item));
         await expect(question(page, item).locator(".quiz-feedback")).toContainText(de.wrong);
         await expectFeedbackInView(page, item);

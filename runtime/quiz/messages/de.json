@@ -21,6 +21,7 @@
   "last": "Beim letzten Mal waren es {score} von {total}.",
   "restart": "Noch einmal, in neuer Reihenfolge",
   "solutions": "Lösungen",
+  "solution": "Lösung",
   "rightAnswer": "Richtige Antwort:",
   "statementTrue": "Die Aussage stimmt.",
   "statementFalse": "Die Aussage stimmt nicht.",
