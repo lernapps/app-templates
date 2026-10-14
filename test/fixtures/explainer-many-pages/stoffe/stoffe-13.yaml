@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+
+title: { de: "Stoffe 13", en: "Substances 13" }
+description: { de: "Seite 43 der Fixture mit vielen Seiten.", en: "Page 43 of the fixture with many pages." }
+blocks:
+  - type: text
+    text:
+      de: |
+        Diese Seite ist Seite **43** von 60. Auf ihr steht $n = 43$, und *jede* Art von Block.
+
+        - Weiter geht es mit [der nächsten Seite](/stoffe/stoffe-14/#grundlagen).
+        - Mehr steht in der [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
+      en: |
+        This page is page **43** of 60. It says $n = 43$, and has *every* kind of block.
+
+        - Go on with [the next page](/stoffe/stoffe-14/#grundlagen).
+        - Read more in [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
+  - type: section
+    id: grundlagen
+    title: { de: "Grundlagen", en: "Basics" }
+    blocks:
+      - type: formula
+        formula: '\frac{43}{100} \cdot 200 = 86'
+      - type: definition
+        term: { de: "Begriff 43", en: "Term 43" }
+        explanation:
+          {
+            de: "Ein Begriff, den Seite 43 erklärt, mit $43\\,\\%$.",
+            en: "A term that page 43 explains, with $43\\,\\%$.",
+          }
+      - type: figure
+        draw: { kind: hundred-grid, filled: 43 }
+        alt: { de: "Ein Hunderterfeld, 43 von 100 Kästchen gefärbt", en: "A hundred grid, 43 of 100 squares shaded" }
+        caption: { de: "43 % des Ganzen.", en: "43 % of the whole." }
+      - type: section
+        id: tabelle
+        title: { de: "Tabelle", en: "Table" }
+        blocks:
+          - type: table
+            caption: { de: "Werte der Seite 43", en: "Values of page 43" }
+            header: [{ de: "Größe", en: "Quantity" }, { de: "Wert", en: "Value" }, { de: "Formel", en: "Formula" }]
+            rowHeaders: true
+            rows:
+              - [{ de: "Prozentsatz", en: "Percentage" }, { de: "43", en: "43" }, { de: "$p = 43$", en: "$p = 43$" }]
+              - [{ de: "Grundwert", en: "Base value" }, { de: "200", en: "200" }, { de: "$G = 200$", en: "$G = 200$" }]
+          - type: figure
+            draw: { kind: bar, part: 43, whole: 60 }
+            alt: { de: "Ein Streifen, 43 von 60 Teilen gefärbt", en: "A strip, 43 of 60 parts shaded" }
+            caption: { de: "Wie weit du in der App bist.", en: "How far you are in the app." }
+      - type: section
+        id: geschichte
+        title: { de: "Geschichte", en: "History" }
+        blocks:
+          - type: timeline
+            events:
+              - date: -300
+                title: { de: "Euklid schreibt die Elemente", en: "Euclid writes the Elements" }
+              - date: 1202
+                label: { de: "im Jahr 1202", en: "in 1202" }
+                title: { de: "Fibonacci schreibt das Liber Abaci", en: "Fibonacci writes the Liber Abaci" }
+                text:
+                  {
+                    de: "Damit kommen die **arabischen Ziffern** nach Europa.",
+                    en: "With it, the **Arabic numerals** come to Europe.",
+                  }
+          - type: quote
+            text: { de: "Πάντα ῥεῖ", en: "Πάντα ῥεῖ" }
+            origin:
+              author: { de: "Heraklit", en: "Heraclitus" }
+              year: { de: "um 500 v. Chr.", en: "around 500 BC" }
+            source: Heraklit, Fragmente, überliefert bei Simplikios
+            licence: gemeinfrei
+  - type: section
+    id: anwendung
+    title: { de: "Anwendung", en: "Application" }
+    blocks:
+      - type: code
+        language: sql
+        caption: { de: "Ein kleines Programm", en: "A small program" }
+        code: |
+          SELECT name, jahr
+          FROM ereignisse
+          WHERE jahr > 1800
+          ORDER BY jahr;
+      - type: example
+        title: { de: "Beispiel 43", en: "Example 43" }
+        blocks:
+          - type: text
+            text: { de: "Knallgas reagiert zu Wasser:", en: "Oxyhydrogen reacts to water:" }
+          - type: formula
+            formula: '\ce{2H2 + O2 -> 2H2O}'
+      - type: note
+        title: { de: "Merke", en: "Remember" }
+        blocks:
+          - type: text
+            text: { de: "Die Reaktion setzt $\\pu{572 kJ}$ frei.", en: "The reaction releases $\\pu{572 kJ}$." }
+      - type: section
+        id: bilder
+        title: { de: "Bilder", en: "Pictures" }
+        blocks:
+          - type: figure
+            image: images/raster.svg
+            alt:
+              {
+                de: "Ein blauer Kreis, ein grünes Quadrat und ein rotes Dreieck",
+                en: "A blue circle, a green square and a red triangle",
+              }
+            caption: { de: "Drei Formen.", en: "Three shapes." }
+            source: eigene Zeichnung
+            licence: CC0-1.0
+          - type: labelled-figure
+            image: images/raster.svg
+            alt: { de: "Drei Formen mit Nummern", en: "Three shapes with numbers" }
+            caption: { de: "Die Formen, nummeriert.", en: "The shapes, numbered." }
+            labels:
+              - { x: 20, y: 50, text: { de: "Kreis", en: "Circle" } }
+              - { x: 55, y: 50, text: { de: "Quadrat", en: "Square" } }
+              - { x: 88, y: 60, text: { de: "Dreieck", en: "Triangle" } }
+            source: eigene Zeichnung
+            licence: CC0-1.0
+          - type: timeline
+            data: ereignisse

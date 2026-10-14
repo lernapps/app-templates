@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+
+title: { de: "Stoffe 9", en: "Substances 9" }
+description: { de: "Seite 39 der Fixture mit vielen Seiten.", en: "Page 39 of the fixture with many pages." }
+blocks:
+  - type: text
+    text:
+      de: |
+        Diese Seite ist Seite **39** von 60. Auf ihr steht $n = 39$, und *jede* Art von Block.
+
+        - Weiter geht es mit [der nächsten Seite](/stoffe/stoffe-10/#grundlagen).
+        - Mehr steht in der [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
+      en: |
+        This page is page **39** of 60. It says $n = 39$, and has *every* kind of block.
+
+        - Go on with [the next page](/stoffe/stoffe-10/#grundlagen).
+        - Read more in [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
+  - type: section
+    id: grundlagen
+    title: { de: "Grundlagen", en: "Basics" }
+    blocks:
+      - type: formula
+        formula: '\frac{39}{100} \cdot 200 = 78'
+      - type: definition
+        term: { de: "Begriff 39", en: "Term 39" }
+        explanation:
+          {
+            de: "Ein Begriff, den Seite 39 erklärt, mit $39\\,\\%$.",
+            en: "A term that page 39 explains, with $39\\,\\%$.",
+          }
+      - type: figure
+        draw: { kind: hundred-grid, filled: 39 }
+        alt: { de: "Ein Hunderterfeld, 39 von 100 Kästchen gefärbt", en: "A hundred grid, 39 of 100 squares shaded" }
+        caption: { de: "39 % des Ganzen.", en: "39 % of the whole." }
+      - type: section
+        id: tabelle
+        title: { de: "Tabelle", en: "Table" }
+        blocks:
+          - type: table
+            caption: { de: "Werte der Seite 39", en: "Values of page 39" }
+            header: [{ de: "Größe", en: "Quantity" }, { de: "Wert", en: "Value" }, { de: "Formel", en: "Formula" }]
+            rowHeaders: true
+            rows:
+              - [{ de: "Prozentsatz", en: "Percentage" }, { de: "39", en: "39" }, { de: "$p = 39$", en: "$p = 39$" }]
+              - [{ de: "Grundwert", en: "Base value" }, { de: "200", en: "200" }, { de: "$G = 200$", en: "$G = 200$" }]
+          - type: figure
+            draw: { kind: bar, part: 39, whole: 60 }
+            alt: { de: "Ein Streifen, 39 von 60 Teilen gefärbt", en: "A strip, 39 of 60 parts shaded" }
+            caption: { de: "Wie weit du in der App bist.", en: "How far you are in the app." }
+      - type: section
+        id: geschichte
+        title: { de: "Geschichte", en: "History" }
+        blocks:
+          - type: timeline
+            events:
+              - date: -300
+                title: { de: "Euklid schreibt die Elemente", en: "Euclid writes the Elements" }
+              - date: 1202
+                label: { de: "im Jahr 1202", en: "in 1202" }
+                title: { de: "Fibonacci schreibt das Liber Abaci", en: "Fibonacci writes the Liber Abaci" }
+                text:
+                  {
+                    de: "Damit kommen die **arabischen Ziffern** nach Europa.",
+                    en: "With it, the **Arabic numerals** come to Europe.",
+                  }
+          - type: quote
+            text: { de: "Πάντα ῥεῖ", en: "Πάντα ῥεῖ" }
+            origin:
+              author: { de: "Heraklit", en: "Heraclitus" }
+              year: { de: "um 500 v. Chr.", en: "around 500 BC" }
+            source: Heraklit, Fragmente, überliefert bei Simplikios
+            licence: gemeinfrei
+  - type: section
+    id: anwendung
+    title: { de: "Anwendung", en: "Application" }
+    blocks:
+      - type: code
+        language: sql
+        caption: { de: "Ein kleines Programm", en: "A small program" }
+        code: |
+          SELECT name, jahr
+          FROM ereignisse
+          WHERE jahr > 1800
+          ORDER BY jahr;
+      - type: example
+        title: { de: "Beispiel 39", en: "Example 39" }
+        blocks:
+          - type: text
+            text: { de: "Knallgas reagiert zu Wasser:", en: "Oxyhydrogen reacts to water:" }
+          - type: formula
+            formula: '\ce{2H2 + O2 -> 2H2O}'
+      - type: note
+        title: { de: "Merke", en: "Remember" }
+        blocks:
+          - type: text
+            text: { de: "Die Reaktion setzt $\\pu{572 kJ}$ frei.", en: "The reaction releases $\\pu{572 kJ}$." }
+      - type: section
+        id: bilder
+        title: { de: "Bilder", en: "Pictures" }
+        blocks:
+          - type: figure
+            image: images/raster.svg
+            alt:
+              {
+                de: "Ein blauer Kreis, ein grünes Quadrat und ein rotes Dreieck",
+                en: "A blue circle, a green square and a red triangle",
+              }
+            caption: { de: "Drei Formen.", en: "Three shapes." }
+            source: eigene Zeichnung
+            licence: CC0-1.0
+          - type: labelled-figure
+            image: images/raster.svg
+            alt: { de: "Drei Formen mit Nummern", en: "Three shapes with numbers" }
+            caption: { de: "Die Formen, nummeriert.", en: "The shapes, numbered." }
+            labels:
+              - { x: 20, y: 50, text: { de: "Kreis", en: "Circle" } }
+              - { x: 55, y: 50, text: { de: "Quadrat", en: "Square" } }
+              - { x: 88, y: 60, text: { de: "Dreieck", en: "Triangle" } }
+            source: eigene Zeichnung
+            licence: CC0-1.0
+          - type: timeline
+            data: ereignisse
