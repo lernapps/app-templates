@@ -77,7 +77,7 @@ blocks:
           W: { int: [1, 31] }
         where: ["W < G", "decimals(W * 100 / G) == 0"]
         task:
-          text: "In einer Klasse sind {G} Schüler. {W} davon haben ein Haustier. Wie viel Prozent der Klasse sind das?"
+          text: "In einer Klasse sind {{G}} Schüler. {{W}} davon haben ein Haustier. Wie viel Prozent der Klasse sind das?"
           figure: { kind: bar, part: W, whole: G }
         answer: { value: "W * 100 / G", compare: { number: { format: percent, decimals: 0 } } }
         mistakes:
@@ -89,7 +89,7 @@ blocks:
               value: "G * 100 / W",
               message: "Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.",
             }
-        hint: "Teile den Teil ({W} Schüler) durch das Ganze ({G} Schüler) und nimm das Ergebnis mal 100."
+        hint: "Teile den Teil ({{W}} Schüler) durch das Ganze ({{G}} Schüler) und nimm das Ergebnis mal 100."
         steps:
-          - '$p = \frac{ W }{ G } \cdot 100$'
-          - '$p = \frac{{W}}{{G}} \cdot 100 = {answer}$, also {answer} %.'
+          - '$p = \frac{W}{G} \cdot 100$'
+          - '$p = \frac{{{W}}}{{{G}}} \cdot 100 = {{answer}}$, also {{answer}} %.'

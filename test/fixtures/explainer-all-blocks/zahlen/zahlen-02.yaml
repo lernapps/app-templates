@@ -154,8 +154,8 @@ blocks:
         task:
           text:
             {
-              de: "In welcher Hauptgruppe steht {e.name} ({e.symbol})?",
-              en: "In which main group is {e.name} ({e.symbol})?",
+              de: "In welcher Hauptgruppe steht {{e.name}} ({{e.symbol}})?",
+              en: "In which main group is {{e.name}} ({{e.symbol}})?",
             }
         answer: { value: "e.group", compare: { choice: [1, 2, 3, 4, 5, 6, 7, 8] } }
         mistakes:

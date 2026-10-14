@@ -31,7 +31,7 @@ import {
 import { ExpressionError, parse, variables } from "./expression.ts";
 import { dataOf, templatesOf } from "./exercises.ts";
 import { formulaProblem } from "./formula.ts";
-import { soundness, type Generated, type Templates } from "./generated.ts";
+import { soundness, templateProblems, unusedVariables, type Generated, type Templates } from "./generated.ts";
 import { htmlTag, inspect } from "./markdown.ts";
 import { MESSAGES } from "./messages.ts";
 import { allBlocks } from "./routes.ts";
@@ -696,6 +696,16 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
   texts.check(yaml, [...at, "task", "text"], "markdown");
   texts.check(yaml, [...at, "hint"], "markdown");
   (block.steps ?? []).forEach((_step, index) => texts.check(yaml, [...at, "steps", index], "markdown"));
+  for (const problem of templateProblems(block)) {
+    problems.at(yaml, [...at, ...problem.path], problem.message, problem.lang);
+  }
+  for (const name of unusedVariables(block)) {
+    problems.at(
+      yaml,
+      [...at, "given", name],
+      `${name} is never used: no placeholder {{${name}}} in the task, figure, steps, hint or mistakes, and no expression of the figure, answer or mistakes names it; use it, or remove it from given`,
+    );
+  }
   if (problems.lines.length > before || check.seeds === 0) return;
   // the property test over fixed seeds
   const records: Record<string, DataRecord[]> = {};
@@ -708,7 +718,7 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
     problems.at(
       yaml,
       at,
-      `a formula with its placeholders filled in does not parse (${reason.trim()}); write a variable that stays a letter with spaces: { p }`,
+      `a formula with its placeholders filled in does not parse (${reason.trim()}); check its braces: a placeholder is {{G}}, a letter is G`,
     );
     return;
   }

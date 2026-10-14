@@ -1036,7 +1036,7 @@
       }
     },
     "generatedFigure": {
-      "description": "A figure drawn from the task's values: hundred-grid with filled, or bar with part and whole, each a number or an expression. Without JavaScript and before the answer it must not show the answer; alt says what it shows, with placeholders ({G}; {figure.filled} for its own values); a default text by kind otherwise.",
+      "description": "A figure drawn from the task's values: hundred-grid with filled, or bar with part and whole, each a number or an expression. Without JavaScript and before the answer it must not show the answer; alt says what it shows, with placeholders ({{G}}; {{figure.filled}} for its own values); a default text by kind otherwise.",
       "type": "object",
       "additionalProperties": false,
       "required": ["kind"],
@@ -1059,7 +1059,7 @@
       }
     },
     "generated": {
-      "description": "An exercise drawn from a seed, property-based: given draws the values, where filters them, task is the text with placeholders ({G}, {e.name}; {answer} in the steps) and an optional figure, answer is an expression with its comparator, mistakes are typical wrong answers each with a message saying what went wrong, hint and steps help. The build checks it over 200 fixed seeds: where holds in at least 1 of 10 draws; the answer is defined, in its format and passes its comparator; no mistake equals it; the task is the same each time and keeps no placeholder; the figure does not show the answer. Without JavaScript the page shows three worked tasks (seeds 1, 2, 3) with their solution; with JavaScript a live task, Neue Aufgabe, and the deep link ?seed=<n>#<id>.",
+      "description": "An exercise drawn from a seed, property-based: given draws the values, where filters them, task is the text with placeholders ({{G}}, {{e.name}}; {{answer}} in the steps) and an optional figure, answer is an expression with its comparator, mistakes are typical wrong answers each with a message saying what went wrong, hint and steps help. A placeholder is always two braces around a declared name or its field, nothing else inside, in prose and in formulas alike ($\\frac{{{W}}}{{{G}}}$); one brace is never a placeholder, so in a formula G and {G} are the letter. The build checks that every placeholder names a variable of given (or answer), that no prose has a placeholder with one brace or spaces inside, and that every variable of given is used in a placeholder or in an expression of the figure, answer or mistakes; then it checks it over 200 fixed seeds: where holds in at least 1 of 10 draws; the answer is defined, in its format and passes its comparator; no mistake equals it; the task is the same each time and keeps no placeholder; the figure does not show the answer. Without JavaScript the page shows three worked tasks (seeds 1, 2, 3) with their solution; with JavaScript a live task, Neue Aufgabe, and the deep link ?seed=<n>#<id>.",
       "required": ["id", "given", "task", "answer"],
       "properties": {
         "id": {
@@ -1134,7 +1134,7 @@
           "$ref": "#/$defs/markdown"
         },
         "steps": {
-          "description": "The steps of the solution, restricted Markdown with placeholders and {answer}.",
+          "description": "The steps of the solution, restricted Markdown with placeholders and {{answer}}.",
           "type": "array",
           "minItems": 1,
           "items": {

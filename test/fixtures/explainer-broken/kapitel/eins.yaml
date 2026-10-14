@@ -25,7 +25,7 @@ blocks:
           b: { int: [1, 9] }
         where: ["a != b"]
         task:
-          text: { de: "Was ist {a} + {b}?", en: "What is {a} + {b}?" }
+          text: { de: "Was ist {{a}} + {{b}}?", en: "What is {{a}} + {{b}}?" }
         answer: { value: "a + b", compare: { number: { format: integer } } }
         mistakes:
           - { value: "a * b", message: { de: Das ist das Produkt., en: That is the product. } }

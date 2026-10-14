@@ -64,16 +64,16 @@ blocks:
           p: { oneOf: [5, 10, 12, 15, 20, 25, 30, 40] }
         where: ["decimals(G * p / 100) <= 2"]
         task:
-          text: "Ein Fahrrad kostet {G} €. Im Angebot gibt es {p} % Rabatt. Wie viel Euro sparst du?"
+          text: "Ein Fahrrad kostet {{G}} €. Im Angebot gibt es {{p}} % Rabatt. Wie viel Euro sparst du?"
           figure: { kind: hundred-grid, filled: p }
         answer: { value: "G * p / 100", compare: { number: { format: money } } }
         mistakes:
-          - { value: "G * p", message: "Du hast vergessen, durch 100 zu teilen: {p} % sind {p} Hundertstel." }
+          - { value: "G * p", message: "Du hast vergessen, durch 100 zu teilen: {{p}} % sind {{p}} Hundertstel." }
           - {
               value: "G - G * p / 100",
               message: "Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.",
             }
-        hint: "Rechne erst 1 % aus: {G} € geteilt durch 100. Dann nimm das mal {p}."
+        hint: "Rechne erst 1 % aus: {{G}} € geteilt durch 100. Dann nimm das mal {{p}}."
         steps:
           - '$W = \frac{G \cdot p}{100}$'
-          - '$W = \frac{{G} \cdot {p}}{100} = {answer}$, also {answer} € Rabatt.'
+          - '$W = \frac{{{G}} \cdot {{p}}}{100} = {{answer}}$, also {{answer}} € Rabatt.'
