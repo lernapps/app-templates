@@ -2,10 +2,13 @@
 // cannot say (one correct option in a single choice, unique ids, ...). Each problem names the question and what to
 // change, for the assistant that wrote the bank. One question validates on its own too (validateQuestion), with the
 // same messages, for another archetype that embeds the quiz's questions; the bank validates each of its questions so.
+// A bank in several languages declares them (languages, German first): each of its learner texts must then be a map
+// with each of them and no other, with the messages of the explainer's language check.
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
-import { textLanguages, type Text } from "../shared/languages.ts";
+import { languageListProblems, textLanguages, type Text } from "../shared/languages.ts";
 import schema from "./quiz.v1.schema.json" with { type: "json" };
-import { questionIn, questionTexts, type Question, type Quiz } from "./quiz.ts";
+import { questionIn, questionTexts, quizIn, quizLanguages, type Question, type Quiz } from "./quiz.ts";
+import { QUIZ_MESSAGES } from "./render.ts";
 
 export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/quiz.v1.schema.json";
 /** The schema of one question, for a `$ref` from another schema (with the quiz's schema added to its validator). */
@@ -21,7 +24,7 @@ function compiled<T>(ref: string): ValidateFunction<T> {
   if (validate === undefined) throw new Error(`the quiz's schema has no ${ref}`);
   return validate;
 }
-const validateBank = compiled<Quiz>(SCHEMA_URL);
+const validateBank = compiled<Quiz<Text>>(SCHEMA_URL);
 const validateOne = compiled<Question>(QUESTION_SCHEMA_URL);
 
 /** `["options", "1", "text"]` as `.options[1].text`. */
@@ -52,6 +55,9 @@ function inBank(path: string, value: unknown): string {
   const at = readable(parts);
   return at === "" ? "the bank" : at.slice(1);
 }
+
+/** Where the quiz declares its languages, for the message about a language it does not declare. */
+const DECLARED_IN = "src/quiz.json";
 
 /** The value at a JSON pointer of `root`. */
 function valueAt(root: unknown, pointer: string): unknown {
@@ -197,10 +203,14 @@ function questionProblems(question: Question): QuestionProblem[] {
  * `languages` and in no other (German first, with the messages of the explainer's language check), then what the
  * schema cannot say. A plain string is German, complete only while German is the only language.
  */
-export function questionDetails(question: Question<Text>, languages: readonly string[] = ["de"]): QuestionProblem[] {
+export function questionDetails(
+  question: Question<Text>,
+  languages: readonly string[] = ["de"],
+  declaredIn?: string,
+): QuestionProblem[] {
   const problems: QuestionProblem[] = [];
   for (const { path, text } of questionTexts(question)) {
-    for (const problem of textLanguages(text, languages).problems) {
+    for (const problem of textLanguages(text, languages, false, declaredIn).problems) {
       problems.push({ path, lang: problem.lang, message: problem.message });
     }
   }
@@ -215,31 +225,59 @@ export function questionSchemaProblems(value: unknown, at: string): string[] {
 
 /**
  * The problems of one question; none when it is valid. `at` is where the question is, e.g. `questions[2]` in a bank
- * or `blocks[3]` on a page; each problem starts with it, the path below it and the question's id.
+ * or `blocks[3]` on a page; each problem starts with it, the path below it and the question's id. `languages` are the
+ * declared languages of the page, declared in `declaredIn` (src/app.yaml by default).
  */
-export function validateQuestion(value: unknown, at: string, languages: readonly string[] = ["de"]): string[] {
+export function validateQuestion(
+  value: unknown,
+  at: string,
+  languages: readonly string[] = ["de"],
+  declaredIn?: string,
+): string[] {
   const schemaProblems = questionSchemaProblems(value, at);
   if (schemaProblems.length > 0) return schemaProblems;
   const question = value as Question<Text>;
-  return questionDetails(question, languages).map((problem) =>
+  return questionDetails(question, languages, declaredIn).map((problem) =>
     problem.lang === undefined
       ? `${at} (question "${question.id}"): ${problem.message}`
       : `${at}${readable(problem.path.map(String))} (${problem.lang}) (question "${question.id}"): ${problem.message}`,
   );
 }
 
+/** The problems of the bank's own texts (title, intro, sources) in its languages. */
+function bankTextProblems(quiz: Quiz<Text>, languages: readonly string[]): string[] {
+  const texts: [string, Text][] = [
+    ["title", quiz.title],
+    ["intro", quiz.intro],
+    ...(quiz.sources ?? []).map((source, index): [string, Text] => [`sources[${index}].title`, source.title]),
+  ];
+  return texts.flatMap(([at, text]) =>
+    textLanguages(text, languages, false, DECLARED_IN).problems.map(
+      (problem) => `${at} (${problem.lang}): ${problem.message}`,
+    ),
+  );
+}
+
 /** The problems of a question bank; none when it is valid. */
 export function problems(value: unknown): string[] {
   if (!validateBank(value)) return schemaMessages(validateBank.errors ?? [], (path) => inBank(path, value), value);
+  const languages = quizLanguages(value);
+  const listed = languageListProblems(languages, Object.keys(QUIZ_MESSAGES)).map(
+    (problem) => `languages[${Math.max(languages.lastIndexOf(problem.lang), 0)}]: ${problem.message}`,
+  );
+  if (listed.length > 0) return listed;
   const ids = value.questions.map((question) => question.id);
   return [
     ...duplicates(ids).map((id) => `questions: the id "${id}" appears twice; each question needs its own id`),
-    ...value.questions.flatMap((question, index) => validateQuestion(question, `questions[${index}]`)),
+    ...bankTextProblems(value, languages),
+    ...value.questions.flatMap((question, index) =>
+      validateQuestion(question, `questions[${index}]`, languages, DECLARED_IN),
+    ),
   ];
 }
 
-/** Reads a question bank from JSON text; throws an Error whose message lists every problem. */
-export function parseBank(text: string, file: string): Quiz {
+/** Reads a question bank from JSON text, in all its languages; throws an Error whose message lists every problem. */
+export function readBank(text: string, file: string): Quiz<Text> {
   let value: unknown;
   try {
     value = JSON.parse(text);
@@ -256,7 +294,8 @@ export function parseBank(text: string, file: string): Quiz {
       ].join("\n"),
     );
   }
-  // a question may write its texts as maps by language; the quiz is German
-  const quiz = value as Quiz;
-  return { ...quiz, questions: quiz.questions.map((question) => questionIn(question, "de")) };
+  return value as Quiz<Text>;
 }
+
+/** Reads a question bank from JSON text, in German; throws an Error whose message lists every problem. */
+export const parseBank = (text: string, file: string): Quiz => quizIn(readBank(text, file), "de");

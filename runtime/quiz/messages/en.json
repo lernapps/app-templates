@@ -34,5 +34,7 @@
   "yourChoice": "your choice",
   "moreReading": "More on it:",
   "sources": "Sources",
-  "sourcesIntro": "The facts in this quiz come from these sources:"
+  "sourcesIntro": "The facts in this quiz come from these sources:",
+  "language": "English",
+  "languages": "Language"
 }
