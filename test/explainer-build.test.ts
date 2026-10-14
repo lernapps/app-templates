@@ -1,6 +1,7 @@
 // The explainer's build, end to end through Vite, on the template's content and on the fixtures: one build writes
 // every page in every language, each linking the one hashed client module and stylesheet that Vite builds from
-// index.html at its own depth, with its language and the archetype marker; and llms.txt for each language tree.
+// index.html at its own depth, with its language and the archetype marker, and an exercise on every content page (a
+// generated one with three worked tasks); and llms.txt for each language tree.
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -51,6 +52,13 @@ describe("one build writes every page", () => {
         expect(existsSync(join(dirname(file), src)), `${route.path}: ${src}`).toBe(true);
         const href = /<link rel="stylesheet" crossorigin href="([^"]+)"/.exec(html)?.[1] ?? "";
         expect(existsSync(join(dirname(file), href)), `${route.path}: ${href}`).toBe(true);
+        // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
+        if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
+        for (const generated of html.split('class="explainer-exercise explainer-generated"').slice(1)) {
+          const exercise = generated.split('class="explainer-live"')[0] ?? "";
+          expect(exercise.split('class="explainer-worked-task"').length - 1).toBe(3);
+          expect(exercise.split('<details class="explainer-solution">').length - 1).toBe(3);
+        }
       }
       for (const lang of new Set(all.map((route) => route.lang))) {
         const llms = readFileSync(join(root, "dist", lang === "de" ? "" : lang, "llms.txt"), "utf8");

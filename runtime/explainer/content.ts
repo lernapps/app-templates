@@ -1,9 +1,16 @@
 // The content of an explainer, as the YAML files in src/ give it (explainer.v1.schema.json) and the build reads it
 // (load.ts): the app, its chapters in order, their pages in order, the data files and the bundled images.
 
+import type { Question } from "../quiz/quiz.ts";
+import type { Generated } from "./generated.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 
 export { inLanguage, type Text };
+
+/** An exercise of one of the quiz's question types, with the quiz's fields; its texts may be maps by language. */
+export type QuestionBlock = Question<Text>;
+/** An exercise block: one of the quiz's question types, or generated. */
+export type Exercise = QuestionBlock | Generated;
 
 export interface Source {
   title: Text;
@@ -49,7 +56,8 @@ export type Block =
   | ({ type: "quote"; text: Text; origin: { author: Text; work?: Text; year?: number | Text } } & Credit)
   | { type: "code"; language: string; code: string; caption?: Text }
   | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
-  | { type: "section"; id: string; title: Text; blocks: readonly Block[] };
+  | { type: "section"; id: string; title: Text; blocks: readonly Block[] }
+  | Exercise;
 
 export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;
 
@@ -87,6 +95,11 @@ export function timelineEvents(site: Site, block: BlockOf<"timeline">): readonly
   if (block.events !== undefined) return block.events;
   return (site.data[block.data ?? ""] ?? []) as unknown as readonly Event[];
 }
+
+/** Whether a block is an exercise. */
+export const isExercise = (block: Block): block is Exercise =>
+  block.type === "generated" ||
+  ["single-choice", "multiple-choice", "true-false", "number", "ordering", "matching"].includes(block.type);
 
 /** The anchor of a term in the glossary: the German term in lower case, umlauts spelled out, hyphens for the rest. */
 export function termId(term: Text): string {
