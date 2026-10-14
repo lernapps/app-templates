@@ -46,6 +46,35 @@ body {
   overflow-wrap: break-word;
 }
 
+/* the language switch of a quiz in several languages: a link to the quiz in each language, the current one marked */
+.quiz-languages {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 0;
+}
+
+.quiz-languages ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quiz-languages a {
+  display: inline-block;
+  padding: 0.25rem 0;
+  color: var(--quiz-accent);
+}
+
+.quiz-languages a[aria-current="page"] {
+  color: var(--quiz-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .quiz h1 {
   font-size: 1.75rem;
   line-height: 1.2;

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json",
+  "languages": ["de", "en"],
+  "title": {
+    "de": "Naturwunder der Welt",
+    "en": "Natural wonders of the world"
+  },
+  "intro": {
+    "de": "Drei Fragen zu einem Fluss, einem See und einem Berg. Für die Klassen 5 bis 7.",
+    "en": "Three questions on a river, a lake and a mountain. For years 5 to 7."
+  },
+  "questions": [
+    {
+      "id": "grand-canyon",
+      "type": "single-choice",
+      "text": {
+        "de": "Welcher Fluss hat den Grand Canyon in den USA geformt?",
+        "en": "Which river shaped the Grand Canyon in the USA?"
+      },
+      "options": [
+        {
+          "text": {
+            "de": "Colorado",
+            "en": "Colorado"
+          },
+          "correct": true,
+          "info": {
+            "de": "Der Colorado ist der größte Fluss im Südwesten Nordamerikas. Er ist gut 2300 km lang.",
+            "en": "The Colorado is the largest river in the south-west of North America. It is about 2300 km long."
+          },
+          "link": {
+            "title": {
+              "de": "Colorado River (Wikipedia)",
+              "en": "Colorado River (Wikipedia)"
+            },
+            "url": "https://de.wikipedia.org/wiki/Colorado_River"
+          }
+        },
+        {
+          "text": {
+            "de": "Nil",
+            "en": "Nile"
+          },
+          "correct": false,
+          "info": {
+            "de": "Der Nil fließt durch mehrere Länder Afrikas und mündet in Ägypten ins Mittelmeer.",
+            "en": "The Nile flows through several countries of Africa and reaches the Mediterranean Sea in Egypt."
+          }
+        },
+        {
+          "text": {
+            "de": "Amazonas",
+            "en": "Amazon"
+          },
+          "correct": false,
+          "info": {
+            "de": "Der Amazonas fließt durch den Norden Südamerikas bis in den Atlantik.",
+            "en": "The Amazon flows through the north of South America into the Atlantic."
+          }
+        }
+      ],
+      "explanation": {
+        "de": "Der Grand Canyon ist eine steile Schlucht in Arizona. Der Colorado hat sie über Millionen von Jahren in das Gestein gegraben.",
+        "en": "The Grand Canyon is a steep gorge in Arizona. The Colorado dug it into the rock over millions of years."
+      },
+      "links": [
+        {
+          "title": {
+            "de": "Grand Canyon (Wikipedia)",
+            "en": "Grand Canyon (Wikipedia)"
+          },
+          "url": "https://de.wikipedia.org/wiki/Grand_Canyon"
+        }
+      ]
+    },
+    {
+      "id": "totes-meer",
+      "type": "true-false",
+      "text": {
+        "de": "Das Tote Meer liegt tiefer als der Meeresspiegel.",
+        "en": "The Dead Sea lies below sea level."
+      },
+      "answer": true,
+      "explanation": {
+        "de": "Das Tote Meer liegt mehr als 440 m unter dem Meeresspiegel. Kein anderer See der Erde liegt so tief.",
+        "en": "The Dead Sea lies more than 440 m below sea level. No other lake on Earth lies so low."
+      },
+      "links": [
+        {
+          "title": {
+            "de": "Totes Meer (Wikipedia)",
+            "en": "Dead Sea (Wikipedia)"
+          },
+          "url": "https://de.wikipedia.org/wiki/Totes_Meer"
+        }
+      ]
+    },
+    {
+      "id": "everest-hoehe",
+      "type": "number",
+      "text": {
+        "de": "Wie hoch ist der Mount Everest? Gib die Höhe in Metern an. Bis zu 100 m daneben zählt noch als richtig.",
+        "en": "How high is Mount Everest? Give the height in metres. Up to 100 m off still counts as right."
+      },
+      "answer": 8848,
+      "tolerance": 100,
+      "unit": {
+        "de": "m",
+        "en": "m"
+      },
+      "explanation": {
+        "de": "Der Mount Everest im Himalaya ist mit etwas mehr als 8848 m der höchste Berg der Erde.",
+        "en": "Mount Everest in the Himalayas is the highest mountain on Earth, at a little more than 8848 m."
+      },
+      "links": [
+        {
+          "title": {
+            "de": "Mount Everest (Wikipedia)",
+            "en": "Mount Everest (Wikipedia)"
+          },
+          "url": "https://de.wikipedia.org/wiki/Mount_Everest"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "title": {
+        "de": "Wikipedia, die freie Enzyklopädie: die oben verlinkten Artikel, abgerufen im Oktober 2026",
+        "en": "Wikipedia, the free encyclopedia: the articles linked above, retrieved in October 2026"
+      },
+      "url": "https://de.wikipedia.org/wiki/Wikipedia:Hauptseite"
+    }
+  ]
+}
