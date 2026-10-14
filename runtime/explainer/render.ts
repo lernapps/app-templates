@@ -21,7 +21,8 @@ import { bar, hundredGrid } from "./figures.ts";
 import { renderFormula } from "./formula.ts";
 import { plain, renderInline, renderMarkdown } from "./markdown.ts";
 import { message, type Messages } from "./messages.ts";
-import { contentPages, hiddenChapter, languageRoot, relative, routes, terms, type Route } from "./routes.ts";
+import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
+import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 
 /** A rendered page: its language, what goes into <head>, and what replaces the marker in <body>. */
 export interface RenderedPage {
@@ -234,16 +235,13 @@ function pageContents(context: Context, blocks: readonly Block[]): string {
 
 function header(context: Context): string {
   const { site, route } = context;
-  const languages = site.app.languages;
-  const switcher =
-    languages.length < 2
-      ? ""
-      : `<nav class="explainer-languages" aria-label="${plain(context.t("languages"))}"><ul>${languages
-          .map(
-            (lang) =>
-              `<li><a href="${relative(route.path, languageRoot(lang) + route.local)}" hreflang="${lang}" lang="${lang}"${lang === route.lang ? ' aria-current="page"' : ""}>${plain(message(lang, "language"))}</a></li>`,
-          )
-          .join("")}</ul></nav>`;
+  const switcher = languageSwitch({
+    ...route,
+    languages: site.app.languages,
+    className: "explainer-languages",
+    label: plain(context.t("languages")),
+    name: (lang) => plain(message(lang, "language")),
+  });
   return `<header class="explainer-header"><p class="explainer-brand"><a href="${context.to("")}">${context.text(site.app.title)}</a></p>${switcher}</header>`;
 }
 
@@ -362,12 +360,7 @@ function head(context: Context): string {
       : route.chapter?.summary !== undefined && route.kind === "chapter"
         ? inLanguage(route.chapter.summary, context.lang)
         : inLanguage(site.app.intro, context.lang);
-  const alternates = site.app.languages
-    .map(
-      (lang) =>
-        `<link rel="alternate" hreflang="${lang}" href="${relative(route.path, languageRoot(lang) + route.local)}" />`,
-    )
-    .join("\n    ");
+  const alternates = alternateLinks({ ...route, languages: site.app.languages }).join("\n    ");
   return [
     `<title>${plain(title)}</title>`,
     `<meta name="description" content="${plain(description.replace(/\s+/g, " ").trim())}" />`,

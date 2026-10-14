@@ -1,5 +1,4 @@
-// Learner texts in several languages, shared by the archetypes' runtimes (the explainer now; the quiz's question
-// blocks can take the same shape): a text is a string while German is the app's only language, else a map of texts
+// Learner texts in several languages, shared by the archetypes' runtimes (the explainer, the quiz): a text is a string while German is the app's only language, else a map of texts
 // by language, { de: …, en: … }, complete in every declared language and in no other. German is always first.
 
 /** A learner text: a string while German is the only language, else a map of texts by language. */
@@ -25,13 +24,15 @@ export function inLanguage(text: Text, lang: string): string {
 
 /**
  * The text in each of the app's `languages` that it has, and the problems of its languages: a translation missing,
- * a language not declared. A plain string is German, and complete only while German is the only language; with
- * `neutral` (a formula, a code), a plain string is the same in every language.
+ * a language not declared (in `declaredIn`, the file with the app's languages). A plain string is German, and complete
+ * only while German is the only language; with `neutral` (a formula, a code), a plain string is the same in every
+ * language.
  */
 export function textLanguages(
   value: Text,
   languages: readonly string[],
   neutral = false,
+  declaredIn = "src/app.yaml",
 ): { texts: TextIn[]; problems: LanguageProblem[] } {
   if (typeof value === "string") {
     if (neutral) return { texts: languages.map((lang) => ({ lang, text: value, keyed: false })), problems: [] };
@@ -48,7 +49,7 @@ export function textLanguages(
       .filter((lang) => !languages.includes(lang))
       .map((lang) => ({
         lang,
-        message: `${lang} is not a language of the app; declare it in languages in src/app.yaml, or remove it`,
+        message: `${lang} is not a language of the app; declare it in languages in ${declaredIn}, or remove it`,
       })),
     ...languages.filter((lang) => !(lang in value)).map((lang) => ({ lang, message: "the translation is missing" })),
   ];

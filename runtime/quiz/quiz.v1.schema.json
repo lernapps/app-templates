@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json",
   "title": "Question bank of a lernapps quiz",
-  "description": "The questions of a quiz built from the archetype quiz (runtime @lernapps/app-templates), in src/quiz.json: a quiz about things to know. Each option carries short background knowledge, each question links to further reading. The build validates the bank against this schema and fails with a message naming each problem. Every text is for learners: German, plain language, in your own words.",
+  "description": "The questions of a quiz built from the archetype quiz (runtime @lernapps/app-templates), in src/quiz.json: a quiz about things to know. Each option carries short background knowledge, each question links to further reading. The build validates the bank against this schema and fails with a message naming each problem. Every text is for learners: German, plain language, in your own words. A quiz in several languages declares them in languages, German first, and writes every text for learners as a map of texts by language ({ \"de\": …, \"en\": … }) with each of them; the build then writes a page per language.",
   "type": "object",
   "additionalProperties": false,
   "required": ["title", "intro", "questions"],
@@ -11,13 +11,23 @@
       "description": "This schema, for the editor.",
       "type": "string"
     },
+    "languages": {
+      "description": "The languages of the quiz, German first: [\"de\", \"en\"]. The build writes a page per language: German at the root, every other below /<language>/, with a language switch. Each language needs every text for learners as a map of texts by language; without languages, the quiz is German only and its texts are strings.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]{2}$"
+      },
+      "default": ["de"]
+    },
     "title": {
       "description": "The title of the quiz: the page's title and its h1 heading.",
-      "$ref": "#/$defs/text"
+      "$ref": "#/$defs/learnerText"
     },
     "intro": {
       "description": "One or two sentences under the heading: what the quiz is about and whom it is for.",
-      "$ref": "#/$defs/text"
+      "$ref": "#/$defs/learnerText"
     },
     "rememberLastResult": {
       "description": "Keep the last result on the learner's device (localStorage, through the preset's storage) and show it at the end. Off by default: then the quiz stores nothing.",
@@ -48,7 +58,7 @@
       "pattern": "\\S"
     },
     "learnerText": {
-      "description": "A text of a question for learners: a string, or a map of texts by language ({ de: …, en: … }) on a page in several languages. German is required; a page checks that every language it declares is there, and that no other is.",
+      "description": "A text for learners: a string, or a map of texts by language ({ de: …, en: … }) in a quiz or on a page in several languages. German is required; the quiz or page checks that every language it declares is there, and that no other is.",
       "anyOf": [
         {
           "$ref": "#/$defs/text"
@@ -312,7 +322,7 @@
       "properties": {
         "title": {
           "description": "The source, e.g. the article or book.",
-          "$ref": "#/$defs/text"
+          "$ref": "#/$defs/learnerText"
         },
         "url": {
           "description": "Its address, if it is on the web; https only.",

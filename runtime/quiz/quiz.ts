@@ -1,8 +1,8 @@
 // The question bank of a quiz about things to know (src/quiz.json, schema quiz.v1.schema.json) and what counts as
 // a right answer. Used at build time (validation, rendering), in the browser (the engine) and by the end-to-end
 // tests, so all three agree; per question also by other archetypes that embed the quiz's questions (question.ts).
-// A question's learner texts are strings; a page in several languages (the explainer) writes each as a map of texts
-// by language, { de: …, en: … } (Question<Text>), and questionIn gives the question in the page's language.
+// A learner text is a string; a quiz or page in several languages writes each as a map of texts by language,
+// { de: …, en: … } (Quiz<Text>, Question<Text>), and quizIn and questionIn give it in the page's language.
 import { inLanguage, type Text } from "../shared/languages.ts";
 
 export type { Text };
@@ -162,13 +162,33 @@ export function questionIn(question: Question<Text>, lang: string): Question {
 /** The id of a question's element on the page, and its address (#frage-<id>). */
 export const questionId = (question: Pick<Question, "id">): string => `frage-${question.id}`;
 
-export interface Quiz {
-  title: string;
-  intro: string;
+export interface Quiz<T extends Text = string> {
+  /** The quiz's languages, German first; German only when it has none. */
+  languages?: string[];
+  title: T;
+  intro: T;
   rememberLastResult?: boolean;
-  questions: Question[];
+  questions: Question<T>[];
   /** Where the facts come from. */
-  sources?: { title: string; url?: string }[];
+  sources?: { title: T; url?: string }[];
+}
+
+/** The quiz's languages, German first. */
+export const quizLanguages = (quiz: Pick<Quiz<Text>, "languages">): readonly string[] => quiz.languages ?? ["de"];
+
+/** The quiz in `lang`: each text from its map, a plain string as it is; everything else as it is. */
+export function quizIn(quiz: Quiz<Text>, lang: string): Quiz {
+  const { sources } = quiz;
+  // the keys in their order, so a quiz in German only is as it was
+  return {
+    ...(quiz as Omit<Quiz<Text>, "sources">),
+    title: inLanguage(quiz.title, lang),
+    intro: inLanguage(quiz.intro, lang),
+    questions: quiz.questions.map((question) => questionIn(question, lang)),
+    ...(sources === undefined
+      ? {}
+      : { sources: sources.map((source) => ({ ...source, title: inLanguage(source.title, lang) })) }),
+  };
 }
 
 /**

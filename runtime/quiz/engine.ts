@@ -2,8 +2,9 @@
 // (render.ts); the engine turns that page into a quiz: one question at a time in an order given by the seed in the
 // address (?seed=<number>); after each answer, right or wrong, the background of every option with the right ones
 // and the learner's choice marked, the explanation and further reading; the score and the solutions at the end. A deep
-// link (#frage-<id>) opens its question. Nothing is stored, except the last result on the device when the bank asks
-// for it (rememberLastResult), through the storage of @lernapps/tooling. An app's src/main.ts is
+// link (#frage-<id>) opens its question. The quiz's own texts are in the page's language (its data's lang, German
+// without one). Nothing is stored, except the last result on the device when the bank asks for it
+// (rememberLastResult), through the storage of @lernapps/tooling. An app's src/main.ts is
 //
 //   import "@lernapps/app-templates/quiz/style.css";
 //   import { startQuiz } from "@lernapps/app-templates/quiz";
@@ -22,8 +23,7 @@ import type { QuizData } from "./render.ts";
 export * from "./quiz.ts";
 export type { QuizData } from "./render.ts";
 
-const t = translator(de);
-/** The texts of a question on its own, by the page's language. */
+/** The quiz's texts, by the page's language. */
 const BY_LANGUAGE: Readonly<Record<string, typeof de>> = { de, en };
 const SEED = "seed";
 
@@ -171,7 +171,8 @@ export function startQuiz(root: Document = document): void {
   const dataElement = root.getElementById("quiz-data");
   const main = root.getElementById("quiz");
   if (!dataElement || !main) return;
-  const { quiz, storage: storageName } = JSON.parse(dataElement.textContent ?? "{}") as QuizData;
+  const { quiz, storage: storageName, lang = "de" } = JSON.parse(dataElement.textContent ?? "{}") as QuizData;
+  const t = translator(BY_LANGUAGE[lang] ?? de);
   const storage = storageName === undefined ? undefined : createStorage(storageName);
   const seed = seedOf(root.location);
   const order = shuffled(quiz.questions.length, seed).flatMap((index) => quiz.questions[index] ?? []);
@@ -191,7 +192,7 @@ export function startQuiz(root: Document = document): void {
     if (!item) continue;
     items.set(question.id, item);
     list.append(item); // in the order of the seed
-    startQuestion(item, question, { seed, onAnswer: (answer) => answers.set(question.id, answer) });
+    startQuestion(item, question, { seed, lang, onAnswer: (answer) => answers.set(question.id, answer) });
   }
 
   const show = (index: number, focus: boolean) => {
