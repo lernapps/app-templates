@@ -1,7 +1,8 @@
 // Language maps in the quiz's question schema, for the explainer that embeds the quiz's question types: every learner
 // text of a question is a string or a map { de: …, en: … }; German is required; completeness is checked against the
-// declared languages with the explainer's messages; rendering and the checker pick the page's language. Banks with
-// plain strings stay valid as they are.
+// declared languages with the explainer's messages; rendering and the checker pick the page's language. A link's
+// address is one for every language, or a map of addresses by language, checked the same way. Banks with plain strings
+// stay valid as they are.
 import { describe, expect, test } from "vite-plus/test";
 import { messagesIn, questionIn, renderQuestion, renderSolution, validateQuestion } from "../runtime/quiz/question.ts";
 import { isCorrect, type Question } from "../runtime/quiz/quiz.ts";
@@ -71,6 +72,31 @@ describe("language maps in a question", () => {
     expect(
       validateQuestion({ ...plain, links: [{ title: "Uluru", url: "https://de.wikipedia.org/wiki/Uluru" }] }, "q"),
     ).toEqual([]);
+  });
+
+  test("a link's address by language: complete like a text, https only, rendered in the page's language", () => {
+    const wiki = both("https://de.wikipedia.org/wiki/Uluru", "https://en.wikipedia.org/wiki/Uluru");
+    const linked = { ...number, links: [{ title: both("Uluru (Wikipedia)", "Uluru (Wikipedia)"), url: wiki }] };
+    expect(validateQuestion(linked, "blocks[0]", ["de", "en"])).toEqual([]);
+    expect(questionIn(linked, "en").links[0]?.url).toBe("https://en.wikipedia.org/wiki/Uluru");
+    expect(renderSolution(questionIn(linked, "en"), { lang: "en" })).toContain(
+      'href="https://en.wikipedia.org/wiki/Uluru"',
+    );
+    expect(renderSolution(questionIn(linked, "de"), { lang: "de" })).toContain(
+      'href="https://de.wikipedia.org/wiki/Uluru"',
+    );
+    const missing = { ...linked, links: [{ ...linked.links[0], url: { de: wiki.de } }] };
+    expect(validateQuestion(missing, "blocks[0]", ["de", "en"])).toEqual([
+      'blocks[0].links[0].url (en) (question "hoehe"): the translation is missing',
+    ]);
+    const http = { ...linked, links: [{ ...linked.links[0], url: { ...wiki, en: "http://en.wikipedia.org/" } }] };
+    expect(validateQuestion(http, "blocks[0]", ["de", "en"])).toEqual([
+      'blocks[0].links[0].url (question "hoehe") (en): must be an https address',
+    ]);
+    const plain = { ...linked, links: [{ ...linked.links[0], url: "http://de.wikipedia.org/" }] };
+    expect(validateQuestion(plain, "blocks[0]", ["de", "en"])).toEqual([
+      'blocks[0].links[0].url (question "hoehe"): must be an https address, or a map of https addresses by language: { de: https://…, en: https://… }',
+    ]);
   });
 
   test("the checker and the rendering pick the page's language", () => {
