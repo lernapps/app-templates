@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title:
+  de: Die Revolution von 1789
+  en: The revolution of 1789
+pages: [staende, sommer-1789, menschenrechte]

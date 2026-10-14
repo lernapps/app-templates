@@ -1,0 +1,13 @@
+title: { de: Zwei, en: Two }
+blocks:
+  - type: figure
+    image: images/punkt.svg
+    alt: { de: Ein schwarzer Punkt, en: A black dot }
+    caption: { de: Ein Punkt., en: A dot. }
+    source: eigene Zeichnung
+    licence: CC0-1.0
+  - type: quote
+    text: { de: "Je pense, donc je suis.", en: "Je pense, donc je suis." }
+    origin: { author: René Descartes, work: Discours de la méthode, year: 1637 }
+    source: René Descartes, Discours de la méthode, 1637
+    licence: gemeinfrei

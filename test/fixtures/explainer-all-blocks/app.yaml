@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+# Two of each: two chapters of two pages, in German and English, with two section levels and every block type on every page.
+title: { de: "Alle Blöcke", en: "All blocks" }
+intro:
+  {
+    de: "Eine App mit zwei Kapiteln zu je zwei Seiten, auf Deutsch und Englisch. Jede Seite hat jede Art von Block.",
+    en: "An app of two chapters of two pages each, in German and English. Every page has every kind of block.",
+  }
+languages: [de, en]
+chapters: [zahlen, formen]
+sources:
+  - title: { de: "Prozentrechnung (Wikipedia)", en: "Percentage (Wikipedia, German)" }
+    url: https://de.wikipedia.org/wiki/Prozentrechnung

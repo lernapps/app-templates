@@ -1,10 +1,10 @@
 // The runtime package @lernapps/app-templates: format, lint with type check, unit tests, and the build of the
 // runtime into dist/ (vp pack, run by `prepare` when an app installs the package from git). The template folders
-// (quiz/, ...) are apps of their own and checked in their own folder with `lernapps check`, as is the page that
+// (quiz/, explainer/) are apps of their own and checked in their own folder with `lernapps check`, as is the page that
 // embeds the quiz's questions one by one (test/fixtures/question-page/).
 import { defineConfig } from "vite-plus";
 
-const notCode = ["dist/**", "node_modules/**", "quiz/**", "test/fixtures/question-page/**", "**/*.md"];
+const notCode = ["dist/**", "node_modules/**", "quiz/**", "explainer/**", "test/fixtures/question-page/**", "**/*.md"];
 
 export default defineConfig({
   fmt: {
@@ -32,6 +32,9 @@ export default defineConfig({
       "quiz-plugin": "runtime/quiz/plugin.ts",
       "quiz-question": "runtime/quiz/question.ts",
       "quiz-e2e": "runtime/quiz/e2e.ts",
+      explainer: "runtime/explainer/explainer.ts",
+      "explainer-plugin": "runtime/explainer/plugin.ts",
+      "explainer-e2e": "runtime/explainer/e2e.ts",
     },
     format: "esm",
     platform: "node",
