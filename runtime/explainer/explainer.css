@@ -171,6 +171,15 @@ figcaption p {
   max-width: 100%;
 }
 
+/* an image without a size of its own (an SVG with only a viewBox) fills the width, as in a figure */
+.explainer-labelled-fill {
+  display: block;
+}
+
+.explainer-labelled-fill img {
+  width: 100%;
+}
+
 .explainer-marker {
   position: absolute;
   transform: translate(-50%, -50%);
