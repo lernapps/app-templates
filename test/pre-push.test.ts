@@ -7,7 +7,16 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterAll, describe, expect, test } from "vite-plus/test";
-import { covers, prePush, ROOT_ONLY, TEMPLATE_PATHS, TEMPLATES, templatesFor, type Lane } from "../scripts/pre-push.ts";
+import {
+  covers,
+  prePush,
+  ROOT_ONLY,
+  TEMPLATE_PATHS,
+  TEMPLATES,
+  templatesFor,
+  TOOLING_REF,
+  type Lane,
+} from "../scripts/pre-push.ts";
 
 const root = join(import.meta.dirname, "..");
 const ZERO = "0".repeat(40);
@@ -147,4 +156,10 @@ describe("the positive list", () => {
       expect(TEMPLATE_PATHS[template]).toContain(`runtime/${template}/`);
     }
   });
+});
+
+test("the hook's classifier is the commit of lernapps/tooling that CI's change scope runs", () => {
+  const workflow = readFileSync(join(root, ".github/workflows/check.yml"), "utf8");
+  expect(/^\s*tooling-ref: (\S+)/m.exec(workflow)?.[1]).toBe(TOOLING_REF);
+  expect(/lernapps\/tooling\/\.github\/workflows\/changes\.yml@(\S+)/.exec(workflow)?.[1]).toBe(TOOLING_REF);
 });

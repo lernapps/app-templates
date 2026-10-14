@@ -67,7 +67,6 @@
     "yaml": "2.9.1"
   },
   "devDependencies": {
-    "@lernapps/tooling": "github:lernapps/tooling#9b9a34c25af4fa397b64f5e01b1640245a1d3726",
     "@types/node": "22.20.5",
     "typescript": "6.0.3",
     "vite-plus": "1.0.0",

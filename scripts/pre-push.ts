@@ -1,5 +1,5 @@
 // The pre-push hook of this repo (.vite-hooks/pre-push). It first asks the change scope of the pushed commits
-// (`lernapps changes`, the classifier of @lernapps/tooling, with "kind": "app" in package.json): a push of only the plan
+// (`lernapps changes`, the classifier of lernapps/tooling at TOOLING_REF, with "kind": "app" in package.json): a push of only the plan
 // (.vibe/**) or only docs (docs/**/*.md; this repo has no site) checks nothing. Any other push runs the root checks
 // (vp check, npm run check:vue, vp test run), and `lernapps check --pre-push` in each template folder the push affects:
 // the positive list TEMPLATE_PATHS below. The fixture jobs of check.yml (quiz-many-questions, quiz-bilingual,
@@ -12,9 +12,18 @@
 // prints one line saying what it checked, or on a failure one line naming the step and the log. Without lines on
 // standard input (run by hand) it runs everything it can: the root checks and every template's check.
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+/**
+ * The commit of lernapps/tooling whose classifier (`lernapps changes`) the hook runs. As in CI (changes.yml), only its
+ * folders changes/ and src/ are fetched, once per commit into .git/lernapps/, and run with node: the
+ * classifier needs only Node's own modules. Not a devDependency, which every app's install of this package from git
+ * would fetch and build once more; not npx, which resolves a git package again on every run (13 to 18 s, and npm 10
+ * fails on this one). The same commit as `tooling-ref` in .github/workflows/check.yml (test/pre-push.test.ts checks it).
+ */
+export const TOOLING_REF = "9b9a34c25af4fa397b64f5e01b1640245a1d3726";
 
 export const TEMPLATES = ["quiz", "explainer"] as const;
 export type Template = (typeof TEMPLATES)[number];
@@ -114,8 +123,46 @@ export function pushedFiles(lines: string, cwd: string): string[] | undefined {
 }
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const LERNAPPS = join(ROOT, "node_modules", ".bin", "lernapps");
 const LOG = "node_modules/.cache/lernapps/pre-push.log";
+
+/** The classifier's entry point at TOOLING_REF, fetched on first use (changes/ and src/ only); undefined if it cannot be. */
+function classifier(): string | undefined {
+  // in the clone's git folder: node refuses TypeScript below node_modules/, and npm ci would delete it
+  const gitDir = spawnSync("git", ["rev-parse", "--git-common-dir"], { cwd: ROOT, encoding: "utf8" }).stdout.trim();
+  if (gitDir === "") return undefined;
+  const dir = resolve(ROOT, gitDir, "lernapps", `tooling-${TOOLING_REF}`);
+  const main = join(dir, "changes", "main.ts");
+  if (existsSync(main)) return main;
+  const temp = `${dir}.${process.pid}`;
+  rmSync(temp, { recursive: true, force: true });
+  mkdirSync(temp, { recursive: true });
+  const git = (...args: string[]) => spawnSync("git", args, { cwd: temp, stdio: "ignore" }).status === 0;
+  const fetched =
+    git("init", "--quiet") &&
+    git("sparse-checkout", "set", "--no-cone", "/changes/", "/src/") &&
+    git(
+      "fetch",
+      "--quiet",
+      "--depth",
+      "1",
+      "--filter=blob:none",
+      "https://github.com/lernapps/tooling.git",
+      TOOLING_REF,
+    ) &&
+    git("checkout", "--quiet", "FETCH_HEAD");
+  if (fetched) {
+    try {
+      renameSync(temp, dir);
+    } catch {
+      // another push fetched it at the same time
+    }
+  }
+  rmSync(temp, { recursive: true, force: true });
+  return existsSync(main) ? main : undefined;
+}
+
+/** The installation of the tooling the root's type check needs, as check.yml's job runtime runs it. */
+const INSTALL_TOOLING = `npm install --no-save "$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"`;
 
 /** Runs the lanes, each step's output into the log; on the first failure stops the other steps. */
 function runLogged(cwd: string, log: string): Run {
@@ -165,6 +212,12 @@ function runLogged(cwd: string, log: string): Run {
         });
       };
       if (all.length === 0) return done(undefined);
+      // the root's type check needs the optional peer @lernapps/tooling, as check.yml's job runtime installs it
+      if (!existsSync(join(cwd, "node_modules", "@lernapps", "tooling", "package.json"))) {
+        const step = all[0]?.[0] ?? { name: "vp check", cwd: ".", command: [] };
+        writeFileSync(log, "@lernapps/tooling is not installed\n", { flag: "a" });
+        return done({ step: { ...step, name: `${step.name} (needs @lernapps/tooling: ${INSTALL_TOOLING})` }, code: 1 });
+      }
       for (const lane of all) next(lane, 0);
     });
 }
@@ -192,11 +245,16 @@ export async function prePush(lines: string, { cwd, write, run }: Options): Prom
   let scope = "all";
   let reason = "the changed paths are not known";
   if (files !== undefined) {
-    if (!existsSync(LERNAPPS)) {
-      say("cannot ask the change scope: @lernapps/tooling is not installed (npm ci)");
+    const main = classifier();
+    if (main === undefined) {
+      say(`cannot fetch the classifier of lernapps/tooling at ${TOOLING_REF} (offline?)`);
       return 1;
     }
-    const result = spawnSync(LERNAPPS, ["changes", "--", ...files], { cwd, encoding: "utf8" });
+    const result = spawnSync(process.execPath, [main, "--", ...files], {
+      cwd,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024,
+    });
     if (result.status !== 0) {
       say(`lernapps changes failed (exit ${result.status ?? 1}): ${result.stderr.trim()}`);
       return result.status ?? 1;

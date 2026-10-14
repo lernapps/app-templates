@@ -27,7 +27,7 @@ jobs:
   changes:
     uses: lernapps/tooling/.github/workflows/changes.yml@9b9a34c25af4fa397b64f5e01b1640245a1d3726 # main
     with:
-      tooling-ref: 9b9a34c25af4fa397b64f5e01b1640245a1d3726 # the classifier of the commit package.json pins
+      tooling-ref: 9b9a34c25af4fa397b64f5e01b1640245a1d3726 # the classifier the pre-push hook runs (TOOLING_REF)
 
   runtime:
     needs: changes
@@ -40,14 +40,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # the unit tests with this repo's own @lernapps/tooling (a devDependency: the hooks' `lernapps changes`)
-      - run: npx vp test run
-      # @lernapps/tooling is an optional peer (apps have it); the type check runs against the version the quiz pins,
-      # in place of this repo's own.
+      # @lernapps/tooling is an optional peer (apps have it); the type check needs it: the version the quiz pins.
       - run: npm install --no-save --no-audit --no-fund "$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"
       - run: npx vp check
       # the .vue files of the fixtures, which the type check of vp check does not read
       - run: npm run check:vue
+      - run: npx vp test run
 
   template:
     needs: changes

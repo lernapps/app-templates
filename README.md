@@ -54,13 +54,14 @@ with which a creator and their AI assistant build a learning app.
 and in `test/fixtures/question-page/`. `npm ci` also installs this repo's git hooks ([`.vite-hooks/`](.vite-hooks/)):
 the pre-commit hook formats and fixes the staged files (`vp staged`); the pre-push hook
 ([`scripts/pre-push.ts`](scripts/pre-push.ts)) checks nothing for a push of only the plan (`.vibe/**`) or only docs
-(`docs/**/*.md`, the change scope of `lernapps changes`), and otherwise runs the root checks and `lernapps check
---pre-push` in each template folder the push affects. Install a template's folder (`npm install` in it) to push a
-change to it. Which paths affect which template is a positive list, `TEMPLATE_PATHS`: a path on no list runs the root
-checks only, and CI, which gates every job on the change scope and runs all of them for any code change, catches the
-rest; when it catches what the hook let through, add the path to the list. The fixture jobs run only in CI. The
-job `check` reports the overall result and is the check to require. A change reaches new apps once the pin in lernapps/tooling moves to its
-commit on `main`; Renovate moves existing apps.
+(`docs/**/*.md`, the change scope of `lernapps changes`, whose classifier the hook fetches once at the commit check.yml
+uses), and otherwise runs the root checks and `lernapps check --pre-push` in each template folder the push affects.
+Install a template's folder (`npm install` in it) to push a change to it. Which paths affect which template is a
+positive list, `TEMPLATE_PATHS`: a path on no list runs the root checks only, and CI, which gates every job on the
+change scope and runs all of them for any code change, catches the rest; when it catches what the hook let through, add
+the path to the list. The fixture jobs run only in CI. The job `check` reports the overall result and is the check to
+require. A change reaches new apps once the pin in lernapps/tooling moves to its commit on `main`; Renovate moves
+existing apps.
 
 ## License
 
