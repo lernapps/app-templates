@@ -1,0 +1,374 @@
+/* The look of an explainer (@lernapps/app-templates/explainer/style.css): plain, readable at 360 px, contrast for
+   WCAG 2.1 AA, and complete without JavaScript. */
+:root {
+  --explainer-text: #1a1a1a;
+  --explainer-muted: #4a4a4a;
+  --explainer-background: #ffffff;
+  --explainer-surface: #f4f5f7;
+  --explainer-border: #8a8f98;
+  --explainer-accent: #1d4ed8;
+  --explainer-example: #ecfdf3;
+  --explainer-note: #fff7e0;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--explainer-background);
+  color: var(--explainer-text);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+.explainer-header,
+.explainer-breadcrumbs,
+.explainer,
+.explainer-pager,
+.explainer-footer {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+  overflow-wrap: break-word;
+}
+
+a {
+  color: var(--explainer-accent);
+}
+
+.explainer-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+}
+
+.explainer-brand {
+  margin: 0;
+  font-weight: 600;
+}
+
+.explainer-languages ul,
+.explainer-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-languages a[aria-current="page"] {
+  color: var(--explainer-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.explainer-breadcrumbs {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.explainer-breadcrumbs li + li::before {
+  content: "›";
+  margin-right: 0.75rem;
+  color: var(--explainer-muted);
+}
+
+.explainer h1 {
+  font-size: 1.875rem;
+  line-height: 1.2;
+}
+
+.explainer h2,
+.explainer h3,
+.explainer h4 {
+  line-height: 1.25;
+  scroll-margin-top: 1rem;
+}
+
+.explainer-toc {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--explainer-accent);
+  background: var(--explainer-surface);
+}
+
+.explainer-toc-title {
+  margin: 0.25rem 0;
+  font-weight: 600;
+}
+
+/* a formula wider than the page scrolls on its own; vertically, MathML may overhang its box by a pixel */
+.explainer-formula {
+  margin: 1rem 0;
+  padding: 0.25rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+math {
+  font-size: 1.1em;
+}
+
+.explainer-figure,
+.explainer-quote,
+.explainer-code {
+  margin: 1.25rem 0;
+}
+
+.explainer-figure img,
+.explainer-drawing {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.explainer-hundred-grid {
+  width: 16rem;
+}
+
+.explainer-bar {
+  width: 100%;
+  max-width: 28rem;
+}
+
+figcaption {
+  margin-top: 0.5rem;
+  color: var(--explainer-muted);
+  font-size: 0.9375rem;
+}
+
+figcaption p {
+  margin: 0;
+}
+
+.explainer-credit {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.explainer-labelled-image {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.explainer-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 1.6rem;
+  padding: 0 0.3rem;
+  border-radius: 1rem;
+  background: var(--explainer-text);
+  color: var(--explainer-background);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.6rem;
+  text-align: center;
+}
+
+.explainer-table {
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.explainer-table table {
+  border-collapse: collapse;
+}
+
+.explainer-table caption {
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.explainer-table th,
+.explainer-table td {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--explainer-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.explainer-table thead th,
+.explainer-table th[scope="row"] {
+  background: var(--explainer-surface);
+}
+
+.explainer-timeline {
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+  border-left: 3px solid var(--explainer-border);
+  list-style: none;
+}
+
+.explainer-timeline li {
+  margin-bottom: 0.75rem;
+}
+
+.explainer-event {
+  margin: 0;
+}
+
+.explainer-date {
+  display: block;
+  color: var(--explainer-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-event-text p {
+  margin: 0.25rem 0 0;
+}
+
+.explainer-definition {
+  margin: 1rem 0;
+}
+
+.explainer-definition dt {
+  font-weight: 600;
+}
+
+.explainer-definition dd {
+  margin-left: 1rem;
+}
+
+.explainer-definition dd p:first-child {
+  margin-top: 0.25rem;
+}
+
+.explainer-quote blockquote {
+  margin: 0;
+  padding: 0.25rem 1rem;
+  border-left: 4px solid var(--explainer-border);
+  font-style: italic;
+}
+
+.explainer-code pre {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: var(--explainer-surface);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.explainer-box {
+  margin: 1.25rem 0;
+  padding: 0.25rem 1rem;
+  border: 1px solid var(--explainer-border);
+  border-radius: 0.5rem;
+}
+
+.explainer-example {
+  background: var(--explainer-example);
+}
+
+.explainer-note {
+  background: var(--explainer-note);
+}
+
+.explainer-box-title {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 1.0625rem;
+}
+
+.explainer-pages li,
+.explainer-chapters > li {
+  margin-bottom: 0.5rem;
+}
+
+.explainer-chapter-link {
+  font-weight: 600;
+}
+
+.explainer-description {
+  display: block;
+  color: var(--explainer-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-glossary dt {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.explainer-glossary dd {
+  margin-left: 1rem;
+}
+
+.explainer-pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.explainer-pager a[rel="next"] {
+  margin-left: auto;
+}
+
+.explainer-footer {
+  margin-top: 2rem;
+  padding-bottom: 1.5rem;
+  color: var(--explainer-muted);
+  font-size: 0.9375rem;
+}
+
+/* code, highlighted at build time (highlight.js classes); every colour has 4.5:1 on the code's background */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type {
+  color: #7b2382;
+}
+
+.hljs-string,
+.hljs-attr,
+.hljs-regexp {
+  color: #0f5a2e;
+}
+
+.hljs-number,
+.hljs-symbol {
+  color: #8a3b00;
+}
+
+.hljs-comment,
+.hljs-meta {
+  color: #50555c;
+  font-style: italic;
+}
+
+.hljs-title,
+.hljs-function,
+.hljs-name,
+.hljs-built_in {
+  color: #1d4ed8;
+}
+
+.hljs-variable,
+.hljs-params,
+.hljs-tag {
+  color: #1a1a1a;
+}
