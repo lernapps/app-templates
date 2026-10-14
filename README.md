@@ -17,12 +17,12 @@ with which a creator and their AI assistant build a learning app.
 | Folder | Archetype | What the app supplies |
 |---|---|---|
 | [`quiz/`](quiz/) | a quiz about things to know: questions with options, feedback on every option, score and solutions | the question bank `src/quiz.json` ([schema](https://lernapps.net/tooling/schemas/quiz.v1.schema.json)) |
-| [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes and code, readable without JavaScript, in one or more languages (exercises follow) | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/` ([schema](https://lernapps.net/tooling/schemas/explainer.v1.schema.json)) |
+| [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes and code, and an exercise on every page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/` ([schema](https://lernapps.net/tooling/schemas/explainer.v1.schema.json)) |
 
 - [`runtime/`](runtime/): the runtime of each archetype, published from git as `@lernapps/app-templates`; its exports
   are in [`package.json`](package.json), what each does in the comments of its source. The quiz's questions also work
   one by one, for other archetypes that embed them as exercises: `@lernapps/app-templates/quiz/question` (schema,
-  validation, rendering, checker, messages), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of
+  validation, rendering, checker, messages; a question's texts may be maps by language), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of
   `@lernapps/app-templates/quiz/e2e`; [`test/fixtures/question-page/`](test/fixtures/question-page/) is a page built so.
 - Which commit of this repo a new app gets and what the generator adds to the template:
   `npx --yes github:lernapps/tooling#main create --help`.

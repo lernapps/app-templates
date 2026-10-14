@@ -20,8 +20,11 @@ export function hundredGrid(filled: number, alt: string): string {
   return `<svg class="explainer-drawing explainer-hundred-grid" role="img" aria-label="${escape(alt)}" viewBox="0 0 111 111" xmlns="http://www.w3.org/2000/svg">${cells.join("")}</svg>`;
 }
 
-/** A strip for `whole`, `part` of it shaded; under it 0, part and whole, and their percentages. */
-export function bar(part: number, whole: number, alt: string, locale: string): string {
+/**
+ * A strip for `whole`, `part` of it shaded; under it 0, part and whole, and their percentages (without them in a task
+ * that asks for the percentage: `percent` false).
+ */
+export function bar(part: number, whole: number, alt: string, locale: string, percent = true): string {
   const numbers = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
   const share = Math.min(part / whole, 1);
   const width = 298 * share;
@@ -29,15 +32,19 @@ export function bar(part: number, whole: number, alt: string, locale: string): s
   const label = (x: number, y: number, anchor: string, text: string) =>
     `<text x="${x.toFixed(1)}" y="${y}" text-anchor="${anchor}" font-size="12" fill="#1a1a1a">${escape(text)}</text>`;
   return [
-    `<svg class="explainer-drawing explainer-bar" role="img" aria-label="${escape(alt)}" viewBox="0 0 300 74" xmlns="http://www.w3.org/2000/svg">`,
+    `<svg class="explainer-drawing explainer-bar" role="img" aria-label="${escape(alt)}" viewBox="0 0 300 ${percent ? 74 : 58}" xmlns="http://www.w3.org/2000/svg">`,
     `<rect x="1" y="1" width="298" height="36" fill="${OFF}" stroke="${LINE}"/>`,
     `<rect x="1" y="1" width="${width.toFixed(1)}" height="36" fill="${ON}"/>`,
     label(1, 54, "start", "0"),
     label(at, 54, "middle", numbers.format(part)),
     label(299, 54, "end", numbers.format(whole)),
-    label(1, 70, "start", "0 %"),
-    label(at, 70, "middle", `${numbers.format(share * 100)} %`),
-    label(299, 70, "end", "100 %"),
+    ...(percent
+      ? [
+          label(1, 70, "start", "0 %"),
+          label(at, 70, "middle", `${numbers.format(share * 100)} %`),
+          label(299, 70, "end", "100 %"),
+        ]
+      : []),
     `</svg>`,
   ].join("");
 }

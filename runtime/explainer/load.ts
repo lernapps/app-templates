@@ -2,16 +2,21 @@
 // (explainer.v1.schema.json), then what a schema cannot say. The order lists are complete and unique, the depth is
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
-// list, bundled images and quotes name source and licence, links to pages of the app find their page and section, and
-// src/ holds nothing else. Each problem is one line: the file, its line, the place in the file, the language where it
+// list, bundled images and quotes name source and licence, links to pages of the app find their page and section,
+// every page has an exercise, a question of the quiz's types passes the quiz's validation in every declared language,
+// a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), and src/
+// holds nothing else. Each problem is one line: the file, its line, the place in the file, the language where it
 // matters, and what to do.
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import { isNode, LineCounter, parseDocument, type Document } from "yaml";
 import schema from "./explainer.v1.schema.json" with { type: "json" };
+import quizSchema from "../quiz/quiz.v1.schema.json" with { type: "json" };
+import { questionDetails } from "../quiz/validate.ts";
 import {
   inLanguage,
+  isExercise,
   termId,
   type App,
   type Block,
@@ -23,9 +28,13 @@ import {
   type Site,
   type Text,
 } from "./content.ts";
+import { ExpressionError, parse, variables } from "./expression.ts";
+import { dataOf, templatesOf } from "./exercises.ts";
 import { formulaProblem } from "./formula.ts";
+import { soundness, type Generated, type Templates } from "./generated.ts";
 import { htmlTag, inspect } from "./markdown.ts";
 import { MESSAGES } from "./messages.ts";
+import { allBlocks } from "./routes.ts";
 import { languageListProblems, textLanguages } from "../shared/languages.ts";
 
 export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/explainer.v1.schema.json";
@@ -68,7 +77,9 @@ export function pathText(path: Path): string {
   return path.map((part, index) => (typeof part === "number" ? `[${part}]` : index === 0 ? part : `.${part}`)).join("");
 }
 
-const ajv = new Ajv2020({ allErrors: true, strict: true });
+// union types ("type": ["string", "object"]) keep the messages of the comparator and the lists plain
+const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true });
+ajv.addSchema(quizSchema);
 ajv.addSchema(schema);
 const validator = (name: string): ValidateFunction => {
   const validate = ajv.getSchema(`${SCHEMA_URL}#/$defs/${name}`);
@@ -111,7 +122,24 @@ const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
   example: "box",
   note: "box",
   section: "section",
+  generated: "generated",
 };
+
+/** The fields of each of the quiz's question types, from the quiz's schema. */
+const quizDefinitions = quizSchema.$defs as unknown as Record<string, { properties?: Record<string, unknown> }>;
+const QUIZ_BRANCH: Readonly<Record<string, string>> = {
+  "single-choice": "choice",
+  "multiple-choice": "choice",
+  "true-false": "trueFalse",
+  number: "number",
+  ordering: "ordering",
+  matching: "matching",
+};
+const quizFields = (type: string): Set<string> =>
+  new Set([
+    ...Object.keys(quizDefinitions["question"]?.properties ?? {}),
+    ...Object.keys(quizDefinitions[QUIZ_BRANCH[type] ?? ""]?.properties ?? {}),
+  ]);
 
 const get = (value: unknown, path: Path): unknown =>
   path.reduce<unknown>(
@@ -227,6 +255,11 @@ function schemaProblems(yaml: YamlFile, errors: readonly ErrorObject[], problems
               : typeof kind === "string"
                 ? "drawing"
                 : undefined;
+        if (typeof type === "string" && type in QUIZ_BRANCH) {
+          if (!quizFields(type).has(property))
+            problems.at(yaml, path, `${property} is not a field of a ${type} exercise`);
+          break;
+        }
         if (definition === undefined) break;
         if (property !== "type" && !known(definitions[definition]).has(property)) {
           const what = path.at(-1) === "draw" ? `a ${String(kind)} drawing` : `a ${String(type)} block`;
@@ -287,7 +320,7 @@ interface Link {
 /** The checks of the texts: languages, raw HTML, Markdown, formulas. */
 class Texts {
   readonly links: Link[] = [];
-  private readonly languages: readonly string[];
+  readonly languages: readonly string[];
   private readonly problems: Problems;
   constructor(languages: readonly string[], problems: Problems) {
     this.languages = languages;
@@ -350,6 +383,10 @@ interface PageCheck {
   images: Map<string, string>;
   /** The anchors of the page's sections: warum, regel/merkhilfe. */
   anchors: Set<string>;
+  /** The ids of the page's exercises, which are anchors too, with where each is. */
+  exercises: Map<string, Path>;
+  /** How many seeds the property test of a generated exercise draws. */
+  seeds: number;
 }
 
 function checkEvents(check: PageCheck, yaml: YamlFile, path: Path, events: readonly Event[]): void {
@@ -519,8 +556,165 @@ function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Path, dep
       case "code":
         texts.check(yaml, [...at, "caption"], "plain");
         break;
+      case "generated":
+        checkExerciseId(check, block.id, at);
+        checkGenerated(check, block, at);
+        break;
+      default:
+        checkExerciseId(check, block.id, at);
+        for (const problem of questionDetails(block, texts.languages)) {
+          const path = [...at, ...problem.path, ...(problem.lang === undefined ? [] : [problem.lang])];
+          problems.at(yaml, path, problem.message, problem.lang);
+        }
     }
   });
+}
+
+/** An exercise's id is an anchor of its page: once on the page. */
+function checkExerciseId(check: PageCheck, id: string, at: Path): void {
+  if (check.exercises.has(id)) {
+    check.problems.at(check.yaml, [...at, "id"], `${id} is the id of another exercise on this page; give each its own`);
+  } else check.exercises.set(id, at);
+}
+
+const ARBITRARIES = ["int", "decimal", "oneOf", "pick", "shuffle"] as const;
+
+/** The parsed expression at `path`, or a problem; the variables it uses must be declared. */
+function checkExpression(check: PageCheck, path: Path, source: string, declared: ReadonlySet<string>): boolean {
+  try {
+    const used = variables(parse(source));
+    const undeclared = [...used].filter((name) => !declared.has(name));
+    for (const name of undeclared) {
+      check.problems.at(
+        check.yaml,
+        path,
+        `${name} is not declared; declare it in given, or use one of ${[...declared].join(", ")}`,
+      );
+    }
+    return undeclared.length === 0;
+  } catch (error) {
+    check.problems.at(
+      check.yaml,
+      path,
+      `the expression "${source}" does not parse: ${error instanceof ExpressionError ? error.message : String(error)}`,
+    );
+    return false;
+  }
+}
+
+/** A generated exercise: its arbitraries, expressions and texts, then the property test over fixed seeds. */
+function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
+  const { yaml, texts, problems } = check;
+  const before = problems.lines.length;
+  const declared = new Set(Object.keys(block.given));
+  const data = (name: string, path: Path) => {
+    const file = check.dataFiles.get(name);
+    if (file === undefined) problems.at(yaml, path, `src/data/${name}.yaml does not exist`);
+    return Array.isArray(file?.value) ? (file.value as unknown[]) : undefined;
+  };
+  for (const [name, arbitrary] of Object.entries(block.given)) {
+    const path = [...at, "given", name];
+    const kinds = ARBITRARIES.filter((kind) => arbitrary[kind] !== undefined);
+    if (kinds.length !== 1) {
+      problems.at(
+        yaml,
+        path,
+        `give exactly one of ${ARBITRARIES.join(", ")}${kinds.length > 1 ? `, not ${kinds.join(" and ")}` : ""}`,
+      );
+      continue;
+    }
+    const range = arbitrary.int ?? arbitrary.decimal;
+    if (range !== undefined && range[0] > range[1])
+      problems.at(yaml, path, `${range[0]} is more than ${range[1]}; write [min, max]`);
+    if (arbitrary.decimal !== undefined && arbitrary.step === undefined) {
+      problems.at(yaml, path, "a decimal needs its step, e.g. step: 0.1");
+    }
+    if (arbitrary.step !== undefined && range === undefined) problems.at(yaml, path, "step goes with int or decimal");
+    if ((arbitrary.pick === undefined) !== (arbitrary.from === undefined)) {
+      problems.at(
+        yaml,
+        path,
+        arbitrary.pick === undefined
+          ? "from goes with pick: how many to pick"
+          : "pick needs from: a list or { data: <name> }",
+      );
+    }
+    if (arbitrary.distinct !== undefined && arbitrary.pick === undefined)
+      problems.at(yaml, path, "distinct goes with pick");
+    const source = arbitrary.from ?? arbitrary.shuffle;
+    const key = arbitrary.from !== undefined ? "from" : "shuffle";
+    let size: number | undefined;
+    if (source !== undefined && !Array.isArray(source)) {
+      size = data((source as { data: string }).data, [...path, key, "data"])?.length;
+    } else if (Array.isArray(source)) size = source.length;
+    if (arbitrary.distinct === true && arbitrary.pick !== undefined && size !== undefined && arbitrary.pick > size) {
+      problems.at(yaml, path, `${arbitrary.pick} distinct picks from a list of ${size}; pick fewer`);
+    }
+    const literals = arbitrary.oneOf ?? (Array.isArray(source) ? source : []);
+    const listKey = arbitrary.oneOf !== undefined ? "oneOf" : key;
+    literals.forEach((item, index) => {
+      if (isObject(item)) texts.check(yaml, [...path, listKey, index], "plain");
+    });
+  }
+  (block.where ?? []).forEach((source, index) => checkExpression(check, [...at, "where", index], source, declared));
+  checkExpression(check, [...at, "answer", "value"], block.answer.value, declared);
+  (block.mistakes ?? []).forEach((mistake, index) => {
+    checkExpression(check, [...at, "mistakes", index, "value"], mistake.value, declared);
+    texts.check(yaml, [...at, "mistakes", index, "message"], "plain");
+  });
+  const compare = block.answer.compare;
+  if (typeof compare === "object") {
+    for (const kind of ["choice", "set"] as const) {
+      const options = (compare as Record<string, unknown>)[kind];
+      if (typeof options === "string") checkExpression(check, [...at, "answer", "compare", kind], options, declared);
+      else if (Array.isArray(options)) {
+        options.forEach((item, index) => {
+          if (isObject(item)) texts.check(yaml, [...at, "answer", "compare", kind, index], "plain");
+        });
+      }
+    }
+    if ("number" in compare) texts.check(yaml, [...at, "answer", "compare", "number", "unit"], "plain");
+  }
+  const figure = block.task.figure;
+  if (figure !== undefined) {
+    const needed = figure.kind === "hundred-grid" ? ["filled"] : ["part", "whole"];
+    for (const key of ["filled", "part", "whole"] as const) {
+      const value = figure[key];
+      if (value === undefined) {
+        if (needed.includes(key))
+          problems.at(
+            yaml,
+            [...at, "task", "figure"],
+            `${key} is missing; a ${figure.kind} needs ${needed.join(" and ")}`,
+          );
+      } else if (!needed.includes(key)) {
+        problems.at(yaml, [...at, "task", "figure", key], `${key} is not a value of a ${figure.kind}`);
+      } else if (typeof value === "string") checkExpression(check, [...at, "task", "figure", key], value, declared);
+    }
+    texts.check(yaml, [...at, "task", "figure", "alt"], "plain");
+  }
+  texts.check(yaml, [...at, "task", "text"], "markdown");
+  texts.check(yaml, [...at, "hint"], "markdown");
+  (block.steps ?? []).forEach((_step, index) => texts.check(yaml, [...at, "steps", index], "markdown"));
+  if (problems.lines.length > before || check.seeds === 0) return;
+  // the property test over fixed seeds
+  const records: Record<string, DataRecord[]> = {};
+  for (const [name, file] of check.dataFiles) records[name] = file.value as DataRecord[];
+  let templates: Templates;
+  try {
+    templates = templatesOf(block, texts.languages);
+  } catch (error) {
+    const reason = (error instanceof Error ? error.message : String(error)).split("\n")[0] ?? "";
+    problems.at(
+      yaml,
+      at,
+      `a formula with its placeholders filled in does not parse (${reason.trim()}); write a variable that stays a letter with spaces: { p }`,
+    );
+    return;
+  }
+  for (const problem of soundness(block, dataOf(block, records), templates, texts.languages, check.seeds)) {
+    problems.at(yaml, [...at, ...problem.path], problem.message, problem.lang);
+  }
 }
 
 /** The files and folders in `dir`, sorted. */
@@ -553,8 +747,11 @@ function checkOrder(
   return ok;
 }
 
+/** How many seeds the property test of each generated exercise draws at build time. */
+export const SEEDS = 200;
+
 /** The problems of the content in `root`/src, and the content when there are none. */
-export function check(root: string): { site?: Site; problems: string[] } {
+export function check(root: string, seeds = SEEDS): { site?: Site; problems: string[] } {
   const problems = new Problems();
   const src = join(root, "src");
   if (!existsSync(join(src, "app.yaml"))) {
@@ -691,12 +888,30 @@ export function check(root: string): { site?: Site; problems: string[] } {
       texts.check(yaml, ["title"], "plain");
       texts.check(yaml, ["description"], "plain");
       const pageAnchors = new Set<string>();
+      const exercises = new Map<string, Path>();
       checkBlocks(
-        { yaml, texts, problems, root, dataFiles, terms, images, anchors: pageAnchors },
+        { yaml, texts, problems, root, dataFiles, terms, images, anchors: pageAnchors, exercises, seeds },
         page.blocks,
         ["blocks"],
         0,
       );
+      if (![...allBlocks(page.blocks)].some(isExercise)) {
+        problems.at(
+          yaml,
+          ["blocks"],
+          "the page has no exercise; give it a section with an exercise: one of the quiz's question types, or generated",
+        );
+      }
+      for (const [id, path] of exercises) {
+        if (pageAnchors.has(id)) {
+          problems.at(
+            yaml,
+            [...path, "id"],
+            `${id} is also the anchor of a section of this page; give the exercise its own id`,
+          );
+        }
+        pageAnchors.add(id);
+      }
       anchors.set(`/${chapterId}/${pageId}/`, pageAnchors);
       pages.push({ ...page, id: pageId, chapter: chapterId, file });
     }
@@ -735,9 +950,11 @@ export function check(root: string): { site?: Site; problems: string[] } {
   return { site: { app, chapters, data, images }, problems: [] };
 }
 
-/** The content in `root`/src; throws a ContentError with every problem when it is not valid. */
-export function loadSite(root: string): Site {
-  const { site, problems } = check(root);
+/**
+ * The content in `root`/src, its generated exercises tested over `seeds` seeds (0: not at all, for a reader of content
+ * the build has checked); throws a ContentError with every problem when it is not valid. */
+export function loadSite(root: string, seeds = SEEDS): Site {
+  const { site, problems } = check(root, seeds);
   if (site === undefined) throw new ContentError(problems);
   return site;
 }

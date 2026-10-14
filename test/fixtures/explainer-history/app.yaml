@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
-# A history app with one chapter, which the navigation hides and the addresses keep. Its exercises (an ordering
-# exercise, the generated events exercise) and its component come with the next steps of the explainer runtime.
+# A history app with one chapter, which the navigation hides and the addresses keep, with an ordering exercise and
+# the generated events exercise from a data file. Its component comes with a next step of the explainer runtime.
 title:
   de: Die Französische Revolution
   en: The French Revolution

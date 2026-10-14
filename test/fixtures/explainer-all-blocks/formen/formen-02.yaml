@@ -115,3 +115,35 @@ blocks:
             licence: CC0-1.0
           - type: timeline
             data: ereignisse
+  - type: section
+    id: uebung
+    title: { de: "Übung", en: "Exercise" }
+    blocks:
+      - type: matching
+        id: formen-ecken
+        text: { de: "Ordne jeder Form die Zahl ihrer Ecken zu.", en: "Match each shape with its number of corners." }
+        pairs:
+          - { left: { de: "Dreieck", en: "Triangle" }, right: { de: "drei", en: "three" } }
+          - { left: { de: "Quadrat", en: "Square" }, right: { de: "vier", en: "four" } }
+          - { left: { de: "Kreis", en: "Circle" }, right: { de: "keine", en: "none" } }
+        explanation: { de: "Ein Kreis hat keine Ecken.", en: "A circle has no corners." }
+        links:
+          - title: { de: "Kreis (Wikipedia)", en: "Circle (Wikipedia, German)" }
+            url: https://de.wikipedia.org/wiki/Kreis_(Geometrie)
+      - type: generated
+        id: gerade-zahlen
+        given:
+          xs: { shuffle: [1, 2, 3, 4, 5, 6, 7, 8] }
+        task:
+          text: { de: "Welche dieser Zahlen sind gerade: {xs}?", en: "Which of these numbers are even: {xs}?" }
+        answer: { value: "[2, 4, 6, 8]", compare: { set: "xs" } }
+        mistakes:
+          - value: "[2, 4, 6]"
+            message: { de: "8 ist auch gerade.", en: "8 is even too." }
+      - type: generated
+        id: symbole
+        given:
+          es: { pick: 3, distinct: true, from: { data: elemente } }
+        task:
+          text: { de: "Ordne jedem Element sein Symbol zu.", en: "Match each element with its symbol." }
+        answer: { value: "es", compare: { pairs: { left: name, right: symbol } } }

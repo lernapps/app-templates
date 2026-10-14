@@ -69,3 +69,29 @@ blocks:
             text:
               de: In den Generalständen hatte jeder Stand **eine** Stimme. So konnten Klerus und Adel den Dritten Stand immer überstimmen.
               en: In the Estates-General each estate had **one** vote. So the clergy and the nobility could always outvote the Third Estate.
+  - type: section
+    id: uebung
+    title:
+      de: Übung
+      en: Exercise
+    blocks:
+      - type: ordering
+        id: staende-ordnen
+        text:
+          de: Bringe die Stände in ihre Rangfolge, den ersten Stand zuerst.
+          en: Put the estates in their rank, the First Estate first.
+        items:
+          - de: die Geistlichen
+            en: the clergy
+          - de: der Adel
+            en: the nobility
+          - de: alle anderen
+            en: everyone else
+        explanation:
+          de: Der erste Stand waren die Geistlichen, der zweite der Adel, der dritte alle anderen.
+          en: The First Estate was the clergy, the Second the nobility, the Third everyone else.
+        links:
+          - title:
+              de: Ständegesellschaft (Wikipedia)
+              en: Society of estates (Wikipedia, German)
+            url: https://de.wikipedia.org/wiki/Ständegesellschaft

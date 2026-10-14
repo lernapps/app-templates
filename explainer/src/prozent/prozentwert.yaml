@@ -1,6 +1,4 @@
 # yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
-# Each page of an explainer will end with an exercise (section Übung). Exercises come with the next version of the
-# explainer runtime; its schema will then require one on every page.
 title: Prozentwert
 description: "Den Prozentwert berechnen: W = G · p : 100, mit einem Beispiel und dem Hunderterfeld."
 blocks:
@@ -55,3 +53,27 @@ blocks:
             caption: Das Hunderterfeld ist der Grundwert, 100 Kästchen sind 100 %. Die 12 gefärbten Kästchen sind der Prozentwert.
           - type: text
             text: "Über 1 %: 250 € : 100 = 2,50 € sind 1 %. Dann 2,50 € · 12 = 30 €."
+  - type: section
+    id: uebung
+    title: Übung
+    blocks:
+      - type: generated
+        id: prozentwert-ueben
+        given:
+          G: { int: [150, 1500], step: 5 }
+          p: { oneOf: [5, 10, 12, 15, 20, 25, 30, 40] }
+        where: ["decimals(G * p / 100) <= 2"]
+        task:
+          text: "Ein Fahrrad kostet {G} €. Im Angebot gibt es {p} % Rabatt. Wie viel Euro sparst du?"
+          figure: { kind: hundred-grid, filled: p }
+        answer: { value: "G * p / 100", compare: { number: { format: money } } }
+        mistakes:
+          - { value: "G * p", message: "Du hast vergessen, durch 100 zu teilen: {p} % sind {p} Hundertstel." }
+          - {
+              value: "G - G * p / 100",
+              message: "Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.",
+            }
+        hint: "Rechne erst 1 % aus: {G} € geteilt durch 100. Dann nimm das mal {p}."
+        steps:
+          - '$W = \frac{G \cdot p}{100}$'
+          - '$W = \frac{{G} \cdot {p}}{100} = {answer}$, also {answer} € Rabatt.'

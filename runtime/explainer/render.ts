@@ -1,5 +1,6 @@
 // Renders every page of an explainer at build time into static HTML: the text, every formula as MathML, every figure
-// as inline SVG or an image, tables, timelines, definitions, quotes, highlighted code, and the navigation (contents,
+// as inline SVG or an image, tables, timelines, definitions, quotes, highlighted code, the exercises (exercises.ts:
+// each with its solution in a <details>, a generated one with three worked tasks), and the navigation (contents,
 // breadcrumbs, previous and next, the contents of a page with three or more sections, the glossary, the language
 // switch). Without JavaScript the page is complete; the client module only adds. Links to other sites are plain
 // links with rel="noopener": nothing is loaded from another server before a click. The end-to-end tests rely on the
@@ -15,6 +16,7 @@ import {
   type Site,
   type Text,
 } from "./content.ts";
+import { renderExercise } from "./exercises.ts";
 import { bar, hundredGrid } from "./figures.ts";
 import { renderFormula } from "./formula.ts";
 import { plain, renderInline, renderMarkdown } from "./markdown.ts";
@@ -209,6 +211,8 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
       const caption = block.caption === undefined ? "" : `<figcaption>${context.text(block.caption)}</figcaption>`;
       return `<figure class="explainer-code"><pre role="region" aria-label="${plain(context.t("code", { language }))}" tabindex="0"><code class="hljs language-${language}">${highlight(block.code, language)}</code></pre>${caption}</figure>`;
     }
+    default:
+      return renderExercise(block, context.lang, context.site.data, context.resolve);
   }
 }
 
