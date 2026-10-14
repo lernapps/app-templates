@@ -25,7 +25,7 @@ function app(src: string): string {
 
 const contents: [string, string, number][] = [
   ["the template", join(import.meta.dirname, "../explainer/src"), 3],
-  ["the many-pages fixture", join(import.meta.dirname, "fixtures/explainer-many-pages"), 60],
+  ["the all-blocks fixture", join(import.meta.dirname, "fixtures/explainer-all-blocks"), 4],
   ["the history fixture", join(import.meta.dirname, "fixtures/explainer-history"), 3],
 ];
 
