@@ -103,9 +103,10 @@ blocks:
             caption: { de: "Drei Formen.", en: "Three shapes." }
             source: eigene Zeichnung
             licence: CC0-1.0
+          # an SVG with only a viewBox, no width and height: the labelled image still has a size
           - type: labelled-figure
-            image: images/raster.svg
-            alt: { de: "Drei Formen mit Nummern", en: "Three shapes with numbers" }
+            image: images/umriss.svg
+            alt: { de: "Drei Umrisse mit Nummern", en: "Three outlines with numbers" }
             caption: { de: "Die Formen, nummeriert.", en: "The shapes, numbered." }
             labels:
               - { x: 20, y: 50, text: { de: "Kreis", en: "Circle" } }
