@@ -7,6 +7,7 @@
 // language, and for an exercise the place of its feedback. Links to other sites are plain links with rel="noopener":
 // nothing is loaded from another server before a click. The end-to-end tests rely on the classes, ids and rel
 // attributes written here.
+import { readFileSync } from "node:fs";
 import { messagesIn } from "../quiz/render.ts";
 import { highlight, type CodeLanguage } from "./code.ts";
 import { propsIn } from "./components.ts";
@@ -28,6 +29,18 @@ import { plain, renderInline, renderMarkdown } from "./markdown.ts";
 import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
+
+/**
+ * Whether the bundled image `image` has no size of its own: an SVG whose root has neither a width nor a height (only a
+ * viewBox, or percentages). In a box as wide as its content, as the image of a labelled figure is, the browser draws
+ * such an image with zero width.
+ */
+function sizeless(site: Site, image: string): boolean {
+  const file = site.images.get(image);
+  if (file === undefined || !image.endsWith(".svg")) return false;
+  const root = /<svg\b[^>]*>/i.exec(readFileSync(file, "utf8"))?.[0] ?? "";
+  return !/\s(?:width|height)\s*=\s*["']?\s*\d*\.?\d+\s*(?:px|pt|pc|mm|cm|in|em|ex|rem)?\s*["'\s/>]/i.test(root);
+}
 
 /** A rendered page: its language, what goes into <head>, and what replaces the marker in <body>. */
 export interface RenderedPage {
@@ -175,7 +188,7 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
       const caption = block.caption === undefined ? "" : context.markdown(block.caption);
       return [
         `<figure class="explainer-figure explainer-labelled">`,
-        `<div class="explainer-labelled-image"><img src="${plain(relative(context.route.path, block.image))}" alt="${context.text(block.alt)}">${markers}</div>`,
+        `<div class="explainer-labelled-image${sizeless(context.site, block.image) ? " explainer-labelled-fill" : ""}"><img src="${plain(relative(context.route.path, block.image))}" alt="${context.text(block.alt)}">${markers}</div>`,
         `<ol class="explainer-legend">${legend}</ol>`,
         `<figcaption>${caption}${credit(context, block)}</figcaption>`,
         `</figure>`,
