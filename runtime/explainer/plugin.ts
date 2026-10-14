@@ -17,22 +17,14 @@ import type { Plugin } from "vite-plus";
 import type { Site } from "./content.ts";
 import { loadSite } from "./load.ts";
 import { llmsTxt, renderSite, type RenderedPage } from "./render.ts";
-import { languageRoot } from "./routes.ts";
+import { fromDepth, languageRoot, withLanguage } from "../shared/pages.ts";
 
 const MARKER = "<!-- explainer -->";
-
-/** The shell's relative URLs (./assets/…, built by Vite with base "./"), from a page at `path`. */
-export function fromDepth(html: string, path: string): string {
-  const up = "../".repeat(path.split("/").filter((part) => part !== "").length);
-  return html.replace(/((?:src|href)=")\.\/(?!\/)/g, `$1${up === "" ? "./" : up}`);
-}
 
 /** The shell with the page in it. */
 export function fill(shell: string, page: RenderedPage): string {
   if (!shell.includes(MARKER)) throw new Error(`index.html has no ${MARKER}: put it in <body>, where the pages go`);
-  const html = shell
-    .replace(/<html([^>]*?)\slang="[^"]*"/, "<html$1")
-    .replace("<html", `<html lang="${page.route.lang}"`)
+  const html = withLanguage(shell, page.route.lang)
     .replace(/\s*<title>[\s\S]*?<\/title>/, "")
     .replace("</head>", `  ${page.head}\n  </head>`);
   return fromDepth(html, page.route.path).replace(MARKER, () => page.body);

@@ -12,6 +12,7 @@ import {
   type Site,
   type Text,
 } from "./content.ts";
+import { languageRoot } from "../shared/pages.ts";
 import { message } from "./messages.ts";
 
 export interface Route {
@@ -27,18 +28,8 @@ export interface Route {
   page?: Page;
 }
 
-/** The root of a language's tree, from the app's root. */
-export const languageRoot = (lang: string): string => (lang === "de" ? "" : `${lang}/`);
-
 /** Whether the app's one chapter is hidden in the navigation. */
 export const hiddenChapter = (site: Site): boolean => site.chapters.length === 1;
-
-/** A relative URL from the page at `from` to `to` (both from the app's root). */
-export function relative(from: string, to: string): string {
-  const up = "../".repeat(from.split("/").filter((part) => part !== "").length);
-  const url = `${up}${to}`;
-  return url === "" ? "./" : url.startsWith("#") ? `./${url}` : url;
-}
 
 /** The content pages in order, over all chapters. */
 export const contentPages = (site: Site): Page[] => site.chapters.flatMap((chapter) => chapter.pages);

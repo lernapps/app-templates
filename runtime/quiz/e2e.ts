@@ -12,17 +12,35 @@
 // right answers give the full score and show the solutions; nothing is stored on the device before, and afterwards
 // only the last result when the bank asks for it. Without JavaScript every question and its solution, with the same
 // background and links, can be read. Each test opens its own page; none depends on another, so they run in parallel.
+// A bank in several languages runs all of this in German; for each other language, kept short: without JavaScript
+// its page (/<language>/) is in that language with every question and its solution, and its switch leads to the page
+// in every language; with JavaScript one question is answered, with the feedback in that language.
 // The helpers answerQuestion, expectBackground and expectFeedbackInView work per question, on any page with a question
 // that renderQuestion of @lernapps/app-templates/quiz/question rendered and startQuestion made live.
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "playwright/test";
+import type { Text } from "../shared/languages.ts";
 import de from "./messages/de.json" with { type: "json" };
-import { questionId, rightAnswer, wrongAnswer, type Answer, type Question, type Quiz } from "./quiz.ts";
+import en from "./messages/en.json" with { type: "json" };
+import {
+  questionId,
+  quizIn,
+  quizLanguages,
+  rightAnswer,
+  wrongAnswer,
+  type Answer,
+  type Question,
+  type Quiz,
+} from "./quiz.ts";
+
+const MESSAGES: Readonly<Record<string, typeof de>> = { de, en };
+/** The quiz's own texts in `lang`. */
+const messagesOf = (lang: string) => MESSAGES[lang] ?? de;
 
 const question = (page: Page, item: Question) => page.locator(`#${questionId(item)}`);
 
-/** Gives `answer` to the question through its controls, as a learner does. */
-export async function answerQuestion(page: Page, item: Question, answer: Answer): Promise<void> {
+/** Gives `answer` to the question through its controls, as a learner does, on a page in `lang`. */
+export async function answerQuestion(page: Page, item: Question, answer: Answer, lang = "de"): Promise<void> {
   const form = question(page, item);
   switch (item.type) {
     case "single-choice":
@@ -45,7 +63,7 @@ export async function answerQuestion(page: Page, item: Question, answer: Answer)
       break;
     }
   }
-  await form.getByRole("button", { name: de.check }).click();
+  await form.getByRole("button", { name: messagesOf(lang).check }).click();
 }
 
 /** What the learner learns about a question shows in `where`: each option's background, the explanation, the links. */
@@ -76,7 +94,9 @@ export async function expectFeedbackInView(page: Page, item: Question): Promise<
 
 /** The quiz's tests, for the question bank in `bank` (relative to the app's root). */
 export function quizTests(bank = "src/quiz.json"): void {
-  const quiz = JSON.parse(readFileSync(bank, "utf8")) as Quiz;
+  const all = JSON.parse(readFileSync(bank, "utf8")) as Quiz<Text>;
+  const languages = quizLanguages(all);
+  const quiz = quizIn(all, "de");
 
   test.describe("quiz", () => {
     // The runtime scrolls smoothly unless the learner asks for less motion (quiz.css) and moves the focus after every
@@ -172,5 +192,50 @@ export function quizTests(bank = "src/quiz.json"): void {
         }
       });
     });
+
+    for (const lang of languages.slice(1)) {
+      const local = quizIn(all, lang);
+      const words = messagesOf(lang);
+      const address = `./${lang}/`;
+
+      test.describe(`in ${lang}`, () => {
+        test.describe("without JavaScript", () => {
+          test.use({ javaScriptEnabled: false });
+
+          test(`the page is in ${lang}, every question and its solution can be read, the switch leads to every language`, async ({
+            page,
+          }) => {
+            await page.goto(address);
+            await expect(page.locator("html")).toHaveAttribute("lang", lang);
+            await expect(page.locator("h1")).toHaveText(local.title);
+            await expect(page.locator("#loesungen h2")).toHaveText(words.solutions);
+            for (const item of local.questions) {
+              await expect(question(page, item).locator("legend")).toHaveText(item.text);
+              await expectBackground(page.locator(`#loesung-${item.id}`), item);
+            }
+            for (const other of languages) {
+              await expect(page.locator(`link[rel="alternate"][hreflang="${other}"]`)).toHaveCount(1);
+            }
+            for (const other of languages.filter((candidate) => candidate !== lang)) {
+              await page.goto(address);
+              await page.locator(`.quiz-languages a[hreflang="${other}"]`).click();
+              await expect(page.locator("html")).toHaveAttribute("lang", other);
+              await expect(page.locator("h1")).toHaveText(quizIn(all, other).title);
+              await expect(page.locator('.quiz-languages a[aria-current="page"]')).toHaveAttribute("hreflang", other);
+            }
+          });
+        });
+
+        test(`one question, answered in ${lang}`, async ({ page }) => {
+          const item = local.questions[0];
+          if (item === undefined) throw new Error("the quiz has no questions");
+          await page.goto(`${address}#${questionId(item)}`);
+          await expect(question(page, item)).toBeVisible();
+          await answerQuestion(page, item, rightAnswer(item), lang);
+          await expect(question(page, item).locator(".quiz-feedback")).toContainText(words.right);
+          await expectBackground(question(page, item).locator(".quiz-reveal"), item);
+        });
+      });
+    }
   });
 }

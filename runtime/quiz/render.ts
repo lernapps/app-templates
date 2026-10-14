@@ -4,15 +4,18 @@
 // JavaScript the engine (engine.ts) turns it into a quiz, one question at a time. The engine and the end-to-end tests
 // rely on the ids, classes and data attributes written here. One question's controls (renderQuestion) and its
 // solution (renderSolution) render on their own too, for another archetype that embeds the quiz's questions; the
-// quiz is built from the same two. Links to other sites are plain links with rel="noopener", as in the site frame:
+// quiz is built from the same two. A quiz in several languages renders a page per language (renderQuiz with the
+// page's `lang` in its data and the quiz's languages): its texts, the quiz's own texts in that language, and a language
+// switch of plain links before the quiz; German is at the root, every other language below /<language>/. Links to other sites are plain links with rel="noopener", as in the site frame:
 // nothing is loaded from another server before a click.
 import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
+import { alternateLinks, languageRoot, languageSwitch } from "../shared/pages.ts";
 import { mixed, questionId, type Link, type Question, type Quiz } from "./quiz.ts";
 
 export type QuizMessages = typeof de;
-/** The quiz's texts for learners in each language it has them; the quiz itself is German. */
+/** The quiz's texts for learners in each language it has them: a quiz may declare only these languages. */
 export const QUIZ_MESSAGES: Readonly<Record<string, QuizMessages>> = { de, en };
 const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
 
@@ -37,13 +40,14 @@ function language(lang = "de"): Language {
   }
   return found;
 }
-const { t } = language("de");
-
 /** What the engine reads from the page (script#quiz-data). */
 export interface QuizData {
+  /** The quiz in the page's language. */
   quiz: Quiz;
   /** The name of the app's storage, when the quiz keeps the last result on the device. */
   storage?: string;
+  /** The page's language, when it is not German. */
+  lang?: string;
 }
 
 const escape = (text: string) =>
@@ -236,17 +240,18 @@ export function renderSolution(
   return [optionInfo(question, words), explanation, ...links].filter((part) => part !== "").join("\n");
 }
 
-function solutionItem(question: Question): string {
+function solutionItem(question: Question, lang: string): string {
+  const { t } = language(lang);
   return [
     `<li class="quiz-solution" id="${solutionId(question)}">`,
     `<h3>${escape(question.text)}</h3>`,
-    renderSolution(question),
+    renderSolution(question, { lang }),
     `<p><a href="#${questionId(question)}">${t("toQuestion")}</a></p>`,
     `</li>`,
   ].join("\n");
 }
 
-function renderSources(quiz: Quiz): string[] {
+function renderSources(quiz: Quiz, { t }: Language): string[] {
   if (quiz.sources === undefined) return [];
   return [
     `<section class="quiz-sources" id="quellen">`,
@@ -262,11 +267,39 @@ function renderSources(quiz: Quiz): string[] {
   ];
 }
 
-/** The page's title and description, and the quiz itself for the page's body. */
-export function renderQuiz(data: QuizData): { title: string; description: string; body: string } {
+/** The pages of a quiz: its languages, German first. */
+export interface QuizPages {
+  languages?: readonly string[];
+}
+
+/** One page of the quiz: its title and description, its alternates in its languages for <head>, and its body. */
+export interface RenderedQuiz {
+  title: string;
+  description: string;
+  /** The page in each of the quiz's languages; none while it has one. */
+  alternates: string[];
+  body: string;
+}
+
+/**
+ * The page of the quiz in its data's language (German without one): its title and description, its alternates, and
+ * the quiz itself for the page's body, after a language switch when the quiz has several `languages`.
+ */
+export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {}): RenderedQuiz {
   const { quiz } = data;
+  const lang = data.lang ?? "de";
+  const words = language(lang);
+  const { t } = words;
+  const where = { path: languageRoot(lang), local: "", languages };
   const json = JSON.stringify(data).replace(/</g, "\\u003c");
   const body = [
+    languageSwitch({
+      ...where,
+      lang,
+      className: "quiz-languages",
+      label: escape(t("languages")),
+      name: (other) => escape(messagesIn(other).language),
+    }),
     `<main class="quiz" id="quiz">`,
     `<h1>${escape(quiz.title)}</h1>`,
     `<p class="quiz-intro">${escape(quiz.intro)}</p>`,
@@ -275,7 +308,7 @@ export function renderQuiz(data: QuizData): { title: string; description: string
     `<h2 class="quiz-heading">${t("questions")}</h2>`,
     `<p class="quiz-progress" hidden></p>`,
     `<ol class="quiz-questions">`,
-    ...quiz.questions.map((question) => renderQuestion(question, { element: "li", next: true })),
+    ...quiz.questions.map((question) => renderQuestion(question, { element: "li", next: true, lang })),
     `</ol>`,
     `<section class="quiz-result" id="ergebnis" hidden tabindex="-1">`,
     `<h2>${t("result")}</h2>`,
@@ -286,13 +319,16 @@ export function renderQuiz(data: QuizData): { title: string; description: string
     `<section class="quiz-solutions" id="loesungen">`,
     `<h2>${t("solutions")}</h2>`,
     `<ol>`,
-    ...quiz.questions.map(solutionItem),
+    ...quiz.questions.map((question) => solutionItem(question, lang)),
     `</ol>`,
     `</section>`,
-    ...renderSources(quiz),
+    ...renderSources(quiz, words),
     `</main>`,
     `<footer class="quiz-footer"><p>${t("footer")} · <a href="https://lernapps.net/imprint/">${t("imprint")}</a> · <a href="https://lernapps.net/privacy/">${t("privacy")}</a></p></footer>`,
     `<script type="application/json" id="quiz-data">${json}</script>`,
-  ].join("\n");
-  return { title: quiz.title, description: quiz.intro, body };
+  ]
+    .filter((part) => part !== "")
+    .join("\n");
+  const alternates = languages.length < 2 ? [] : alternateLinks(where);
+  return { title: quiz.title, description: quiz.intro, alternates, body };
 }
