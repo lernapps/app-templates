@@ -30,6 +30,18 @@ interface Base<T extends Text> {
   links: Link<T>[];
   /** What to look at again after a wrong answer, without giving the answer away. */
   hint?: T;
+  /** Test cases for the build, never shown to learners: answers the text allows, and typical wrong ones. */
+  examples?: Examples;
+}
+
+/**
+ * The examples of an exercise: answers that the build runs through the exercise's check (validate.ts). Each accepted
+ * one must pass, each rejected one must fail. Written as the learner would give them, in the shape of the exercise's
+ * type; never part of what a page renders or ships.
+ */
+export interface Examples<A = unknown> {
+  accepted?: readonly A[];
+  rejected?: readonly A[];
 }
 
 export interface SingleChoice<T extends Text = string> extends Base<T> {
@@ -140,7 +152,7 @@ export function questionAddresses(question: Question<Text>): { path: (string | n
   ];
 }
 
-/** The question in `lang`: each text and address from its map, a plain string as it is. */
+/** The question in `lang`: each text and address from its map, a plain string as it is; without its examples. */
 export function questionIn(question: Question<Text>, lang: string): Question {
   const t = (text: Text) => inLanguage(text, lang);
   const link = (value: Link<Text>): Link => ({ title: t(value.title), url: t(value.url) });

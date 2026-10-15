@@ -134,6 +134,7 @@ blocks:
           - answer: 12
             message:
               { de: "Du hast die Ecken und die Seiten zusammengezählt.", en: "You added up the corners and the sides." }
+        examples: { accepted: [6, "6 Ecken"], rejected: [5] }
         explanation: { de: "Sechs Ecken und sechs Seiten.", en: "Six corners and six sides." }
         links:
           - title: { de: "Sechseck (Wikipedia)", en: "Hexagon (Wikipedia)" }
@@ -151,6 +152,7 @@ blocks:
           - { de: "Fünfeck", en: "Pentagon" }
         explanation: { de: "Drei, vier, fünf Ecken.", en: "Three, four, five corners." }
         hint: { de: "Zähle bei jeder Form die Ecken.", en: "Count the corners of each shape." }
+        examples: { accepted: [[Dreieck, Quadrat, Fünfeck]], rejected: [[2, 1, 0]] }
         links:
           - title: { de: "Vieleck (Wikipedia)", en: "Polygon (Wikipedia, German)" }
             url: https://de.wikipedia.org/wiki/Polygon

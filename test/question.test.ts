@@ -11,6 +11,7 @@ import {
   messages,
   QUESTION_SCHEMA_URL,
   questionId,
+  questionIn,
   quizSchema,
   renderQuestion,
   renderSolution,
@@ -135,6 +136,73 @@ describe("the validation of one question", () => {
       'blocks[2].options[0].text (question "galapagos"): must not be empty',
     );
     expect(validateQuestion("frage", "blocks[2]")).toEqual(["blocks[2]: must be object"]);
+  });
+});
+
+describe("a question's examples run through its checker", () => {
+  /** The fixture's question `id` with `examples`. */
+  const withExamples = (id: string, examples: unknown) => ({ ...copy(id), examples });
+
+  test.each([
+    ["grand-canyon", { accepted: ["Colorado"], rejected: [1, "Nil"] }],
+    [
+      "weltnaturerbe",
+      {
+        accepted: [["Victoriafälle", 1, 0]],
+        rejected: [
+          [0, 1],
+          [0, 1, 2, 3],
+        ],
+      },
+    ],
+    ["totes-meer", { accepted: [true], rejected: [false] }],
+    ["everest-hoehe", { accepted: [8800, "8 900"], rejected: [8700, "8.900"] }],
+    [
+      "berge-ordnen",
+      { accepted: [[0, 1, 2, 3]], rejected: [["Mont Blanc", "Zugspitze", "Kilimandscharo", "Mount Everest"]] },
+    ],
+    [
+      "wasserfaelle-laender",
+      {
+        accepted: [
+          [
+            ["Victoriafälle", "Simbabwe und Sambia"],
+            [0, 0],
+            [2, 2],
+          ],
+        ],
+        rejected: [
+          [
+            [0, 1],
+            [1, 0],
+            [2, 2],
+          ],
+        ],
+      },
+    ],
+  ])("%s: each as it is listed", (id, examples) => {
+    expect(validateQuestion(withExamples(id, examples), "questions[0]")).toEqual([]);
+  });
+
+  test("one the checker judges otherwise, or that no learner could give, names its place", () => {
+    expect(
+      validateQuestion(
+        withExamples("berge-ordnen", { accepted: [[1, 0, 2, 3]], rejected: [[0, 1, 2]] }),
+        "questions[4]",
+      ),
+    ).toEqual([
+      'questions[4].examples.accepted[0] (question "berge-ordnen"): the check rejects [1,0,2,3], but it is listed as accepted; if the task\'s text allows it, change the question (e.g. another type, a tolerance) so that its check accepts it, else move it to rejected',
+      'questions[4].examples.rejected[0] (question "berge-ordnen"): give each of the 4 items once, in the learner\'s order',
+    ]);
+    expect(validateQuestion(withExamples("everest-hoehe", { rejected: [8900] }), "blocks[2]")).toEqual([
+      'blocks[2].examples.rejected[0] (question "everest-hoehe"): the check accepts 8900, but it is listed as rejected; if the task\'s text rules it out, change the question (e.g. another type, a tolerance) so that its check rejects it, else move it to accepted',
+    ]);
+  });
+
+  test("the quiz in a language has none of them", () => {
+    expect(
+      questionIn(withExamples("totes-meer", { accepted: [true] }) as unknown as Question, "de"),
+    ).not.toHaveProperty("examples");
   });
 });
 

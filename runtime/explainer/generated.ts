@@ -1,6 +1,7 @@
 // Generated exercises (`generated`), the explainer's native notation for exercises drawn from a seed, in the style of
 // property-based testing: arbitraries (`given`), preconditions (`where`), a task template with an optional figure,
-// an answer with a comparator, typical mistakes with their messages, a hint and the steps. The same code runs at build
+// an answer with a comparator, typical mistakes with their messages, a hint and the steps, and examples: answers
+// the build runs through the check of every seed's task (exampleProblems), never shown to learners. The same code runs at build
 // time (the worked tasks without JavaScript, the property test over fixed seeds) and in the browser (a live task for
 // any seed, "Neue Aufgabe"), so both agree. The comparator maps the answer onto the quiz's answer kinds: number,
 // choice, order, set and pairs become the quiz's number, single-choice, ordering, multiple-choice and matching
@@ -39,6 +40,7 @@ import {
   type Answer,
   type Question,
 } from "../quiz/quiz.ts";
+import { verdict } from "../shared/examples.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 
 /** A literal of a list in the content: a number, a string, or a text by language. */
@@ -92,6 +94,11 @@ export interface Generated {
   readonly mistakes?: readonly { readonly value: string; readonly message: Text }[];
   readonly hint?: Text;
   readonly steps?: readonly Text[];
+  /**
+   * Test cases for the build, never shown to learners: answers as expressions of given and answer, which the check
+   * of every seed's task must accept or reject (exampleProblems).
+   */
+  readonly examples?: { readonly accepted?: readonly string[]; readonly rejected?: readonly string[] };
 }
 
 /** The records of the data files, by name. */
@@ -698,6 +705,16 @@ function answerGiving(spec: Generated, task: Task, value: Value): Answer {
   }
 }
 
+/**
+ * The learner's answer that gives `value`, an example, through the controls of the task's question: as answerGiving,
+ * but a number as it is, with up to six decimals, so an example just outside the tolerance stays outside.
+ */
+function exampleGiving(spec: Generated, task: Task, value: Value): Answer {
+  if (kindOf(spec.answer.compare).kind !== "number") return answerGiving(spec, task, value);
+  if (!(value instanceof Fraction)) throw new ExpressionError("an example of number is a number");
+  return formatNumber(value, "de");
+}
+
 /** The learner's answer that gives the mistake `index` of a task, through the controls of its question. */
 export function answerFor(spec: Generated, task: Task, _question: Question, index: number): Answer {
   return answerGiving(spec, task, task.mistakes[index] as Value);
@@ -1007,6 +1024,56 @@ export function soundness(
     if (problems.length > 0) return problems;
   }
   return [];
+}
+
+/**
+ * Whether the check of every seed's task, 1 to `seeds`, judges each example as it is listed: an accepted one passes,
+ * a rejected one fails. An example is an expression of given and of answer, the task's right answer (unless given
+ * declares its own answer), evaluated per seed. One problem per example, at the first seed that judges it otherwise.
+ */
+export function exampleProblems(
+  spec: Generated,
+  data: Data,
+  templates: Templates,
+  languages: readonly string[],
+  seeds = 200,
+): GeneratedProblem[] {
+  const examples = (["accepted", "rejected"] as const).flatMap((kind) =>
+    (spec.examples?.[kind] ?? []).map((source, index) => ({ kind, index, expression: parse(source) })),
+  );
+  if (examples.length === 0) return [];
+  const lang = languages[0] ?? "de";
+  const problems = new Map<string, GeneratedProblem>();
+  for (let seed = 1; seed <= seeds && problems.size < examples.length; seed++) {
+    const task = generate(spec, seed, data);
+    const question = questionFor(spec, task, lang, templates);
+    const env = { answer: task.answer, ...task.values };
+    for (const { kind, index, expression } of examples) {
+      const key = `${kind}#${index}`;
+      if (problems.has(key)) continue;
+      const path = ["examples", kind, index];
+      let given: Answer;
+      let shown: string;
+      try {
+        const value = evaluate(expression, env);
+        shown = label(value, lang);
+        given = exampleGiving(spec, task, value);
+      } catch (error) {
+        problems.set(key, {
+          path,
+          message: `for seed ${seed} the learner could not give this answer: ${message(error)}`,
+        });
+        continue;
+      }
+      const right = isCorrect(question, given);
+      if (right === (kind === "accepted")) continue;
+      problems.set(key, {
+        path,
+        message: `for seed ${seed} (answer ${answerLabel(spec, task, lang)}) ${verdict(`"${shown}"`, right, "the check", "change the exercise (e.g. another comparator, a tolerance) so that its check")}`,
+      });
+    }
+  }
+  return [...problems.values()];
 }
 
 /** What a learner sees of a task: its text and its question's options, items or pairs; "Neue Aufgabe" changes it. */
