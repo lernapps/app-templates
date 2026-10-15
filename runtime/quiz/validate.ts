@@ -220,8 +220,23 @@ function questionProblems(question: Question): QuestionProblem[] {
         question.pairs.map((pair) => pair.right),
       );
       break;
-    case "true-false":
     case "number":
+      question.mistakes?.forEach((mistake, index) => {
+        if (Math.abs(mistake.answer - question.answer) <= question.tolerance + 1e-9) {
+          problems.push({
+            path: ["mistakes", index, "answer"],
+            message: `the mistake ${mistake.answer} counts as right: it is within the tolerance of the answer ${question.answer}; give the wrong number the mistake leads to`,
+          });
+        }
+      });
+      for (const value of duplicates((question.mistakes ?? []).map((mistake) => String(mistake.answer)))) {
+        problems.push({
+          path: ["mistakes"],
+          message: `the mistake ${value} appears twice; list each wrong number once`,
+        });
+      }
+      break;
+    case "true-false":
       break;
   }
   return problems;

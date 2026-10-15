@@ -1,10 +1,14 @@
 // The client module of an explainer (@lernapps/app-templates/explainer), loaded by every page from the app's
 // src/main.ts. Every page is complete without JavaScript; this module only adds: it marks the page as running with
-// JavaScript (class explainer-js on <html>) and makes its exercises live. A question of one of the quiz's types gets
-// the quiz's controls, "Prüfen" and its feedback (startQuestion of the quiz runtime). A generated exercise gets a live
-// task under its worked tasks: from the seed in the address when the address names it (?seed=<n>#<exercise>), else
-// from a new one; the quiz's controls, checker and feedback through its comparator, the message of a typical mistake,
-// and "Neue Aufgabe", which draws the next task and writes its seed into the address. Nothing is stored.
+// JavaScript (class explainer-js on <html>) and makes its exercises live. Every exercise is answered before its
+// solution shows: a wrong answer gets its reason and may be tried again, and the solution shows after the right
+// answer or "Lösung zeigen" (startQuestion of the quiz runtime with retry). A question of one of the quiz's types gets
+// the quiz's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
+// shows the same after the answer. A generated exercise gets a live task: from the seed in the address when the
+// address names it (?seed=<n>#<exercise>), else from a new one; the quiz's controls, checker and feedback through its
+// comparator, the message of a typical mistake, and "Neue Aufgabe", which draws the next task and writes its seed into
+// the address. Its worked tasks, with their solutions, show below the live task once the learner has solved it or
+// asked for its solution. Nothing is stored.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { startQuestion } from "../quiz/engine.ts";
 import { renderQuestion } from "../quiz/render.ts";
@@ -37,6 +41,12 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   const live = element.querySelector<HTMLElement>(".explainer-live");
   if (!live) return;
   const { spec, templates, lang, texts } = data;
+  // the worked tasks with their solutions, once the learner has solved a live task or asked for its solution
+  const worked = [...element.querySelectorAll<HTMLElement>(".explainer-worked-intro, .explainer-worked")];
+  for (const part of worked) part.hidden = true;
+  const showWorked = () => {
+    for (const part of worked) part.hidden = false;
+  };
   let seed = seedFromAddress(spec.id) ?? 1 + Math.floor(Math.random() * 999_983);
 
   const show = (focus: boolean) => {
@@ -67,7 +77,9 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
     if (item) {
       startQuestion(item, question, {
         lang,
+        retry: true,
         diagnose: (answer) => diagnose(spec, task, question, answer, lang, templates),
+        onReveal: showWorked,
       });
       const legend = item.querySelector<HTMLElement>("legend");
       if (focus && legend) moveFocus(legend);
@@ -97,7 +109,11 @@ export function startExplainer(root: Document = document): void {
     const data = JSON.parse(script.textContent ?? "{}") as ExerciseData;
     if (data.kind === "question") {
       const item = element.querySelector<HTMLElement>(".quiz-question");
-      if (item) startQuestion(item, data.question, { lang: data.lang });
+      if (!item) continue;
+      // the question shows the same as its "Lösung" once it is answered
+      const solution = element.querySelector<HTMLElement>(":scope > details.explainer-solution");
+      if (solution) solution.hidden = true;
+      startQuestion(item, data.question, { lang: data.lang, retry: true });
     } else startGenerated(element, data);
   }
 }

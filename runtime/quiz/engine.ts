@@ -17,7 +17,17 @@ import { translator } from "@lernapps/tooling/i18n";
 import { createStorage } from "@lernapps/tooling/storage";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
-import { hash, isComplete, isCorrect, questionId, shuffled, type Answer, type Question } from "./quiz.ts";
+import {
+  hash,
+  isComplete,
+  isCorrect,
+  missesRight,
+  questionId,
+  shuffled,
+  wrongReasons,
+  type Answer,
+  type Question,
+} from "./quiz.ts";
 import type { QuizData } from "./render.ts";
 
 export * from "./quiz.ts";
@@ -87,17 +97,28 @@ export interface StartQuestionOptions {
   seed?: number;
   /** The page's language, for the feedback (German by default; the question is already in it). */
   lang?: string;
-  /** What went wrong in a wrong answer, e.g. a typical mistake; shown under the feedback. */
+  /** What went wrong in a wrong answer, e.g. a typical mistake; shown under the feedback before any other reason. */
   diagnose?: (answer: Answer) => string | undefined;
-  /** Called once, when the learner has answered completely, right or wrong. */
+  /**
+   * A wrong answer may be tried again, as an exercise does: the controls stay open, the feedback says why the answer
+   * is wrong and offers "Lösung zeigen"; the solution shows only after the right answer or that button. Without it,
+   * as in a quiz round, every complete answer locks the question and shows its solution at once.
+   */
+  retry?: boolean;
+  /** Called on each complete answer, right or wrong; once in a quiz round, where the answer locks the question. */
   onAnswer?: (answer: Answer, right: boolean) => void;
+  /** Called once, when the solution shows. */
+  onReveal?: () => void;
 }
 
 /**
  * Makes one rendered question (`item`, the element of renderQuestion) live: the button to check it shows; a complete
- * answer, right or wrong, gets its feedback, then the background of every option with the right ones and the
- * learner's choice marked, the explanation and further reading; the controls are locked, the button to the next
- * question shows if there is one, and the focus moves to the feedback. An incomplete answer is asked to be completed.
+ * answer gets its feedback, with a wrong one the most specific reason the question gives (the diagnosis, the
+ * background of each wrong option chosen, a number's typical mistake, else its hint). Then the solution shows: the
+ * background of every option with the right ones and the learner's choice marked, the explanation and further
+ * reading; the controls are locked, the button to the next question shows if there is one, and the focus moves to the
+ * feedback. With `retry`, a wrong answer keeps the controls open and offers "Lösung zeigen" instead. An incomplete
+ * answer is asked to be completed.
  */
 export function startQuestion(item: HTMLElement, question: Question, options: StartQuestionOptions = {}): void {
   const t = translator(BY_LANGUAGE[options.lang ?? "de"] ?? de);
@@ -106,6 +127,7 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
   const check = item.querySelector<HTMLButtonElement>(".quiz-check");
   const next = item.querySelector<HTMLButtonElement>(".quiz-next");
   if (!form || !feedback || !check) return;
+  const doc = item.ownerDocument;
   // the options of a choice in an order of their own, from the seed and the question
   const fieldset = item.querySelector("fieldset");
   if (
@@ -121,7 +143,53 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
   }
   const actions = item.querySelector<HTMLElement>(".quiz-actions");
   if (actions) actions.hidden = false;
+  // "Lösung zeigen", after a wrong answer of a question that may be tried again
+  let solve: HTMLButtonElement | undefined;
+  if (options.retry === true) {
+    solve = doc.createElement("button");
+    solve.type = "button";
+    solve.className = "quiz-solve";
+    solve.textContent = t("showSolution");
+    solve.hidden = true;
+    check.after(" ", solve);
+  }
+  const line = (text: string, option?: string) => {
+    const why = doc.createElement("p");
+    why.className = "quiz-diagnosis";
+    if (option !== undefined) {
+      const name = doc.createElement("strong");
+      name.textContent = `${option}:`;
+      why.append(name, " ");
+    }
+    why.append(text);
+    feedback.append(why);
+  };
   let answered = false;
+  let last: Answer | undefined;
+
+  /** The solution: every option's background, the right ones marked, the learner's last choice marked too. */
+  const reveal = () => {
+    answered = true;
+    const solution = item.querySelector<HTMLElement>(".quiz-reveal");
+    for (const index of last === undefined ? [] : chosenOptions(question, last)) {
+      const option = solution?.querySelector<HTMLElement>(`[data-option="${index}"]`);
+      if (!option) continue;
+      option.classList.add("quiz-info-chosen");
+      const badge = doc.createElement("span");
+      badge.className = "quiz-badge quiz-badge-chosen";
+      badge.textContent = t("yourChoice");
+      option.querySelector(".quiz-info-head")?.append(" ", badge);
+    }
+    if (solution) solution.hidden = false;
+    for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")) {
+      control.disabled = true;
+    }
+    check.hidden = true;
+    if (solve) solve.hidden = true;
+    if (next) next.hidden = false;
+    options.onReveal?.();
+  };
+
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     if (answered) return;
@@ -131,38 +199,38 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
       feedback.className = "quiz-feedback";
       return;
     }
-    answered = true;
+    last = answer;
     const right = isCorrect(question, answer);
     feedback.className = `quiz-feedback ${right ? "quiz-right" : "quiz-wrong"}`;
     feedback.textContent = t(right ? "right" : "wrong");
-    const diagnosis = right ? undefined : options.diagnose?.(answer);
-    if (diagnosis !== undefined) {
-      const why = item.ownerDocument.createElement("p");
-      why.className = "quiz-diagnosis";
-      why.textContent = diagnosis;
-      feedback.append(why);
+    if (!right) {
+      // the most specific reason: the diagnosis, else what the question says about this answer; the background of a
+      // chosen option only where the solution does not show it right away
+      const diagnosis = options.diagnose?.(answer);
+      const reasons =
+        diagnosis !== undefined
+          ? [{ text: diagnosis }]
+          : wrongReasons(question, answer).filter((reason) => options.retry === true || reason.option === undefined);
+      for (const reason of reasons) line(reason.text, reason.option);
+      const missing = missesRight(question, answer);
+      if (diagnosis === undefined && missing) line(t("missingRight"));
+      if (options.retry === true) {
+        if (reasons.length === 0 && !missing) line(t("lookAgain"));
+        line(t("tryAgain"));
+      }
     }
-    // every option's background, the right ones marked, the learner's choice marked too
-    const reveal = item.querySelector<HTMLElement>(".quiz-reveal");
-    for (const index of chosenOptions(question, answer)) {
-      const option = reveal?.querySelector<HTMLElement>(`[data-option="${index}"]`);
-      if (!option) continue;
-      option.classList.add("quiz-info-chosen");
-      const badge = item.ownerDocument.createElement("span");
-      badge.className = "quiz-badge quiz-badge-chosen";
-      badge.textContent = t("yourChoice");
-      option.querySelector(".quiz-info-head")?.append(" ", badge);
-    }
-    if (reveal) reveal.hidden = false;
-    for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")) {
-      control.disabled = true;
-    }
-    check.hidden = true;
-    if (next) next.hidden = false;
     options.onAnswer?.(answer, right);
+    if (right || options.retry !== true) reveal();
+    else if (solve) solve.hidden = false;
     // the focus on the feedback, not on the button below the background: the feedback stays in view, a screen
     // reader reads it, and the next tab stops are the links of the background, then the button
     moveFocus(feedback);
+  });
+  solve?.addEventListener("click", () => {
+    if (answered) return;
+    reveal();
+    // the focus on the solution, which shows below the feedback in place of the button
+    moveFocus(item.querySelector<HTMLElement>(".quiz-reveal") ?? feedback);
   });
 }
 

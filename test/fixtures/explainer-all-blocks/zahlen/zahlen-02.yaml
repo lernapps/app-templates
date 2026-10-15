@@ -147,6 +147,7 @@ blocks:
         text: { de: "100 % sind das Ganze.", en: "100 % is the whole." }
         answer: true
         explanation: { de: "Der Grundwert ist 100 %.", en: "The base value is 100 %." }
+        hint: { de: "Lies noch einmal, was der Grundwert ist.", en: "Read again what the base value is." }
         links:
           - title: { de: "Prozent (Wikipedia)", en: "Percent (Wikipedia, German)" }
             url: https://de.wikipedia.org/wiki/Prozent

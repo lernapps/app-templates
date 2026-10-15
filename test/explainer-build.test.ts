@@ -94,9 +94,21 @@ describe("one build writes every page", () => {
         // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
         if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
         for (const generated of html.split('class="explainer-exercise explainer-generated"').slice(1)) {
-          const exercise = generated.split('class="explainer-live"')[0] ?? "";
+          const exercise = generated.split('class="explainer-exercise-data"')[0] ?? "";
           expect(exercise.split('class="explainer-worked-task"').length - 1).toBe(3);
           expect(exercise.split('<details class="explainer-solution">').length - 1).toBe(3);
+        }
+      }
+      // each old address of app.yaml, in each language tree: a page that moves on to its new place and links it
+      for (const [from, to] of Object.entries(loadSite(root).app.redirects ?? {})) {
+        for (const lang of new Set(all.map((route) => route.lang))) {
+          const at = `${lang === "de" ? "" : `${lang}/`}${from.slice(1)}`;
+          const href = `${"../".repeat(at.split("/").length - 1)}${lang === "de" ? "" : `${lang}/`}${to.slice(1)}`;
+          const html = readFileSync(join(root, "dist", at, "index.html"), "utf8");
+          expect(html, `${at}: in its language`).toContain(`<html lang="${lang}">`);
+          expect(html, `${at}: moves on`).toContain(`<meta http-equiv="refresh" content="0; url=${href}" />`);
+          expect(html, `${at}: canonical`).toContain(`<link rel="canonical" href="${href}" />`);
+          expect(html, `${at}: the link`).toContain(`<a href="${href}">`);
         }
       }
       for (const lang of new Set(all.map((route) => route.lang))) {

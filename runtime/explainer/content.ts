@@ -24,6 +24,8 @@ export interface App {
   languages: readonly string[];
   chapters: readonly string[];
   sources?: readonly Source[];
+  /** Old addresses of the app, each leading to a page (and section) of it: "/strom/alt/" → "/strom/neu/#teil". */
+  redirects?: Readonly<Record<string, string>>;
 }
 
 export interface Credit {
@@ -122,7 +124,7 @@ export interface ComponentInfo {
   props: Readonly<Record<string, Field>>;
   /** Whether it emits answered: an exercise. */
   exercise: boolean;
-  /** Whether it keeps its nojs text as a caption once it runs, rather than replacing it. */
+  /** Whether it keeps its nojs text, folded as a text description, once it runs, rather than replacing it. */
   caption: boolean;
   /** The absolute path of its logic module <Name>.ts, for an exercise. */
   logic?: string;

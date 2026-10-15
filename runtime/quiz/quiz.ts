@@ -28,6 +28,8 @@ interface Base<T extends Text> {
   /** Why the right answer is right; for types without options also their background. */
   explanation: T;
   links: Link<T>[];
+  /** What to look at again after a wrong answer, without giving the answer away. */
+  hint?: T;
 }
 
 export interface SingleChoice<T extends Text = string> extends Base<T> {
@@ -45,11 +47,18 @@ export interface TrueFalse<T extends Text = string> extends Base<T> {
   answer: boolean;
 }
 
+/** A typical wrong number, and what went wrong when the learner gives it. */
+export interface NumberMistake<T extends Text = string> {
+  answer: number;
+  message: T;
+}
+
 export interface NumberQuestion<T extends Text = string> extends Base<T> {
   type: "number";
   answer: number;
   tolerance: number;
   unit?: T;
+  mistakes?: NumberMistake<T>[];
 }
 
 /** `items` in the right order. */
@@ -88,6 +97,7 @@ export function questionTexts(question: Question<Text>): { path: (string | numbe
     { path: ["text"], text: question.text },
     { path: ["explanation"], text: question.explanation },
     ...question.links.map((link, index) => ({ path: ["links", index, "title"], text: link.title })),
+    ...(question.hint === undefined ? [] : [{ path: ["hint"], text: question.hint }]),
   ];
   switch (question.type) {
     case "single-choice":
@@ -100,6 +110,9 @@ export function questionTexts(question: Question<Text>): { path: (string | numbe
       break;
     case "number":
       if (question.unit !== undefined) texts.push({ path: ["unit"], text: question.unit });
+      question.mistakes?.forEach((mistake, index) =>
+        texts.push({ path: ["mistakes", index, "message"], text: mistake.message }),
+      );
       break;
     case "ordering":
       question.items.forEach((item, index) => texts.push({ path: ["items", index], text: item }));
@@ -136,6 +149,7 @@ export function questionIn(question: Question<Text>, lang: string): Question {
     text: t(question.text),
     explanation: t(question.explanation),
     links: question.links.map(link),
+    ...(question.hint === undefined ? {} : { hint: t(question.hint) }),
   };
   switch (question.type) {
     case "single-choice":
@@ -159,6 +173,11 @@ export function questionIn(question: Question<Text>, lang: string): Question {
         answer: question.answer,
         tolerance: question.tolerance,
         ...(question.unit === undefined ? {} : { unit: t(question.unit) }),
+        ...(question.mistakes === undefined
+          ? {}
+          : {
+              mistakes: question.mistakes.map((mistake) => ({ answer: mistake.answer, message: t(mistake.message) })),
+            }),
       };
     case "ordering":
       return { ...base, type: question.type, items: question.items.map(t) };
@@ -225,6 +244,9 @@ export function parseNumber(input: string, unit?: string): number | undefined {
 
 const isIndexList = (answer: Answer): answer is readonly number[] => Array.isArray(answer);
 
+/** Whether `value` is within the tolerance of `target`, with a little slack for decimal rounding. */
+const within = (value: number, target: number, tolerance: number) => Math.abs(value - target) <= tolerance + 1e-9;
+
 /** Whether `answer` is the right answer to `question`; an answer of the wrong shape is not. */
 export function isCorrect(question: Question, answer: Answer): boolean {
   switch (question.type) {
@@ -241,7 +263,7 @@ export function isCorrect(question: Question, answer: Answer): boolean {
       if (typeof answer !== "string") return false;
       const value = parseNumber(answer, question.unit);
       // a little slack for decimal rounding: 0.1 + 0.2 is within 0.3 ± 0
-      return value !== undefined && Math.abs(value - question.answer) <= question.tolerance + 1e-9;
+      return value !== undefined && within(value, question.answer, question.tolerance);
     }
     case "ordering":
       return isIndexList(answer) && answer.length === question.items.length && answer.every((place, i) => place === i);
@@ -249,6 +271,42 @@ export function isCorrect(question: Question, answer: Answer): boolean {
       return isIndexList(answer) && answer.length === question.pairs.length && answer.every((pair, i) => pair === i);
   }
 }
+
+/**
+ * Why `answer` to `question` is wrong, as specifically as the question says it: for a choice the background of each
+ * wrong option the learner chose (with the option), for a number the message of the typical mistake it matches; else
+ * the question's hint. None for a right answer, nor when the question says nothing more.
+ */
+export function wrongReasons(question: Question, answer: Answer): { option?: string; text: string }[] {
+  if (isCorrect(question, answer)) return [];
+  const specific: { option?: string; text: string }[] = [];
+  if (question.type === "single-choice" || question.type === "multiple-choice") {
+    const chosen = typeof answer === "number" ? [answer] : isIndexList(answer) ? answer : [];
+    for (const index of chosen) {
+      const option = question.options[index];
+      if (option !== undefined && !option.correct && option.info !== "") {
+        specific.push({ option: option.text, text: option.info });
+      }
+    }
+  }
+  if (question.type === "number" && typeof answer === "string") {
+    const value = parseNumber(answer, question.unit);
+    const mistake =
+      value === undefined
+        ? undefined
+        : question.mistakes?.find((candidate) => within(value, candidate.answer, question.tolerance));
+    if (mistake !== undefined) specific.push({ text: mistake.message });
+  }
+  if (specific.length > 0) return specific;
+  return question.hint === undefined ? [] : [{ text: question.hint }];
+}
+
+/** Whether a multiple-choice answer chose only right options, but not all of them. */
+export const missesRight = (question: Question, answer: Answer): boolean =>
+  question.type === "multiple-choice" &&
+  isIndexList(answer) &&
+  answer.every((index) => question.options[index]?.correct === true) &&
+  !isCorrect(question, answer);
 
 /** Whether the learner has answered at all: something chosen, typed or placed everywhere. */
 export function isComplete(question: Question, answer: Answer | undefined): answer is Answer {

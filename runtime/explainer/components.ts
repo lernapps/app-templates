@@ -6,10 +6,11 @@
 // import from a URL), no code or HTML from strings (eval, new Function, innerHTML, v-html), imports only from vue, the
 // runtime @lernapps/app-templates, @lernapps/tooling/storage, i18n and a11y and the component's own folder, and browser
 // globals (window, document, localStorage, …) only inside onMounted and the hooks that run after it, because the build
-// renders the component without a browser. A component that emits answered is an exercise: its logic module <Name>.ts
+// renders the component without a browser. A component that emits answered is an exercise (answered { correct,
+// reason? }, reason the text of what went wrong in a wrong answer, shown under the feedback): its logic module <Name>.ts
 // exports generate(seed, props), check(task, answer), solution(task) and wrong(task), which the build tests over fixed
-// seeds (propertyProblems). A component keeps its nojs text as a caption when it declares defineOptions({ nojs:
-// "caption" }); by default it replaces it.
+// seeds (propertyProblems). A component keeps its nojs text, folded as a text description under it, when it declares
+// defineOptions({ nojs: "caption" }); by default it replaces it.
 //
 // The props of a block are checked against the component's prop types (defineProps<…>()), which the SFC compiler
 // resolves, as Vue itself does for its runtime props, rather than vue-component-meta, which needs TypeScript's
@@ -573,11 +574,20 @@ export function readComponents(root: string): {
             line(
               file,
               original?.line ? { line: original.line, column: original.column + 1 } : undefined,
-              `nojs is "caption" or "replace": whether the component keeps its nojs text as a caption once it runs, or replaces it`,
+              `nojs is "caption" or "replace": whether the component keeps its nojs text, folded as a text description under it, once it runs, or replaces it`,
             ),
           );
         }
       }
+    }
+    if (exercise && caption) {
+      problems.push(
+        line(
+          file,
+          undefined,
+          `it emits answered, so it is an exercise, and keeps its nojs text, which gives the task with its solution: an exercise replaces its nojs text, so the solution shows only after the answer; remove nojs: "caption" from defineOptions (vue-component-nojs)`,
+        ),
+      );
     }
     const props = propTypes(file, path, setup.content, setup.loc.start.line);
     problems.push(...props.problems);
