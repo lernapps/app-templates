@@ -3,7 +3,6 @@
 // components (src/components/, components.ts) with the blocks that use them.
 
 import type { Question } from "../quiz/quiz.ts";
-import type { ComponentInfo } from "./components.ts";
 import type { Generated } from "./generated.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 
@@ -93,6 +92,39 @@ export interface Site {
   images: ReadonlyMap<string, string>;
   /** Each vue-component block, with its component and where it is. */
   components: readonly ComponentUse[];
+}
+
+// What the build reads of a component (components.ts). Declared here, not there: the client module reaches this file,
+// and components.ts is build code that needs Node.
+
+/** A prop type that a block's props can give. */
+export type PropType =
+  | { kind: "string" | "number" | "boolean" | "unknown" }
+  | { kind: "literal"; values: readonly (string | number | boolean)[] }
+  | { kind: "array"; of: PropType }
+  | { kind: "object"; fields: Readonly<Record<string, Field>> }
+  | { kind: "union"; of: readonly PropType[] };
+
+export interface Field {
+  type: PropType;
+  optional: boolean;
+  /** The declaration as written, e.g. "parts: string[]". */
+  source: string;
+}
+
+export interface ComponentInfo {
+  name: string;
+  /** src/components/<Name>.vue */
+  file: string;
+  /** The .vue file's absolute path. */
+  path: string;
+  props: Readonly<Record<string, Field>>;
+  /** Whether it emits answered: an exercise. */
+  exercise: boolean;
+  /** Whether it keeps its nojs text as a caption once it runs, rather than replacing it. */
+  caption: boolean;
+  /** The absolute path of its logic module <Name>.ts, for an exercise. */
+  logic?: string;
 }
 
 /** A vue-component block of a page, with the component it uses. */
