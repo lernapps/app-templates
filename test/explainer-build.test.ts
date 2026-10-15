@@ -2,7 +2,8 @@
 // every page in every language, each linking the one hashed client module and stylesheet that Vite builds from
 // index.html at its own depth, with its language and the archetype marker, and an exercise on every content page (a
 // generated one with three worked tasks); and llms.txt for each language tree. A page with a component also loads the
-// islands module, which brings Vue; a page without one ships no Vue at all.
+// islands module, which brings Vue; a page without one ships no Vue at all. Each language's page, complete without
+// JavaScript, credits its images and quotes and links further reading in its own language.
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -10,6 +11,7 @@ import { describe, expect, test } from "vite-plus/test";
 import { build } from "vite-plus";
 import { explainer } from "../runtime/explainer/plugin.ts";
 import { loadSite } from "../runtime/explainer/load.ts";
+import { renderPage } from "../runtime/explainer/render.ts";
 import { routes } from "../runtime/explainer/routes.ts";
 
 /** An app with the content of `src`: index.html, src/main.ts with a stylesheet next to the app, and the content. */
@@ -106,4 +108,21 @@ describe("one build writes every page", () => {
     },
     60_000,
   );
+});
+
+test("each language's page has its own credits and the addresses of its links", () => {
+  const site = loadSite(app(join(import.meta.dirname, "fixtures/explainer-all-blocks")));
+  const page = (lang: string) => {
+    const route = routes(site).find((candidate) => candidate.lang === lang && candidate.local === "formen/formen-01/");
+    if (route === undefined) throw new Error(`no page formen/formen-01/ in ${lang}`);
+    return renderPage(site, route).body;
+  };
+  const [de, en] = [page("de"), page("en")];
+  expect(de).toContain("eigene Zeichnung");
+  expect(de).toContain('href="https://de.wikipedia.org/wiki/Sechseck"');
+  expect(en).toContain("own drawing");
+  expect(en).toContain("Heraclitus, fragments");
+  expect(en).toContain('href="https://en.wikipedia.org/wiki/Hexagon"');
+  expect(en).not.toContain("eigene Zeichnung");
+  expect(en).not.toContain("wikipedia.org/wiki/Sechseck");
 });

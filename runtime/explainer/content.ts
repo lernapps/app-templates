@@ -27,7 +27,8 @@ export interface App {
 }
 
 export interface Credit {
-  source?: string;
+  /** A URL, the same in every language, or a citation: a text. */
+  source?: Text;
   licence?: string;
 }
 

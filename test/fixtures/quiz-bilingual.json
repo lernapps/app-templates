@@ -33,7 +33,10 @@
               "de": "Colorado River (Wikipedia)",
               "en": "Colorado River (Wikipedia)"
             },
-            "url": "https://de.wikipedia.org/wiki/Colorado_River"
+            "url": {
+              "de": "https://de.wikipedia.org/wiki/Colorado_River",
+              "en": "https://en.wikipedia.org/wiki/Colorado_River"
+            }
           }
         },
         {

@@ -65,7 +65,11 @@ blocks:
             origin:
               author: { de: "Heraklit", en: "Heraclitus" }
               year: { de: "um 500 v. Chr.", en: "around 500 BC" }
-            source: Heraklit, Fragmente, überliefert bei Simplikios
+            source:
+              {
+                de: "Heraklit, Fragmente, überliefert bei Simplikios",
+                en: "Heraclitus, fragments, handed down by Simplicius",
+              }
             licence: gemeinfrei
   - type: section
     id: anwendung
@@ -103,7 +107,7 @@ blocks:
                 en: "A blue circle, a green square and a red triangle",
               }
             caption: { de: "Drei Formen.", en: "Three shapes." }
-            source: eigene Zeichnung
+            source: { de: "eigene Zeichnung", en: "own drawing" }
             licence: CC0-1.0
           - type: labelled-figure
             image: images/raster.svg
@@ -113,7 +117,7 @@ blocks:
               - { x: 20, y: 50, text: { de: "Kreis", en: "Circle" } }
               - { x: 55, y: 50, text: { de: "Quadrat", en: "Square" } }
               - { x: 88, y: 60, text: { de: "Dreieck", en: "Triangle" } }
-            source: eigene Zeichnung
+            source: https://github.com/lernapps/app-templates
             licence: CC0-1.0
           - type: timeline
             data: ereignisse

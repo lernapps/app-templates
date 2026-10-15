@@ -98,7 +98,8 @@ const external = (url: string, text = url) => `<a href="${plain(url)}" rel="noop
 
 function credit(context: Context, item: Credit): string {
   if (item.source === undefined || item.licence === undefined) return "";
-  const source = /^https?:\/\//.test(item.source) ? external(item.source) : plain(item.source);
+  const given = inLanguage(item.source, context.lang);
+  const source = /^https?:\/\//.test(given) ? external(given) : plain(given);
   const text = context.t("credit", { source: "\u0000", licence: plain(item.licence) }).replace("\u0000", source);
   return ` <span class="explainer-credit">${text}</span>`;
 }
