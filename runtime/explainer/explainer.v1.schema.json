@@ -107,10 +107,26 @@
       "type": "object",
       "properties": {
         "source": {
-          "description": "Where it comes from: a URL or a citation.",
-          "type": "string",
-          "minLength": 1,
-          "pattern": "\\S"
+          "description": "Where it comes from: a URL, the same in every language and shown as a link, or a citation, a text like any other: a string while German is the only language of the app, else a map of texts by language with every declared language, e.g. { de: eigene Zeichnung, en: own drawing }. Each language's page shows its own.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": {
+                "pattern": "^[a-z]{2}$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            }
+          ]
         },
         "licence": {
           "description": "Its licence: an SPDX identifier (CC-BY-SA-4.0, CC0-1.0, …), or gemeinfrei for a work in the public domain.",

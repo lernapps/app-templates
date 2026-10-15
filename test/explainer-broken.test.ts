@@ -159,6 +159,22 @@ const cases: [string, (root: string) => void, string][] = [
     "src/kapitel/zwei.yaml:16: blocks[2].text (en): the translation is missing",
   ],
   [
+    "a credit in German only",
+    (root) =>
+      edit(root, "kapitel/zwei.yaml", "source: { de: eigene Zeichnung, en: own drawing }", "source: eigene Zeichnung"),
+    "src/kapitel/zwei.yaml:7: blocks[0].source (en): the translation is missing; write the text as a map: { de: …, en: … }",
+  ],
+  [
+    "a link's address missing a language",
+    (root) => edit(root, "kapitel/zwei.yaml", `, en: "https://en.wikipedia.org/wiki/Point_(geometry)" }`, " }"),
+    "src/kapitel/zwei.yaml:20: blocks[2].links[0].url (en): the translation is missing",
+  ],
+  [
+    "a link's address over http",
+    (root) => edit(root, "kapitel/zwei.yaml", `en: "https://en.wikipedia.org`, `en: "http://en.wikipedia.org`),
+    "src/kapitel/zwei.yaml:20: blocks[2].links[0].url (en): must be an https address",
+  ],
+  [
     "a page without an exercise",
     (root) => {
       const file = join(root, "src/kapitel/zwei.yaml");

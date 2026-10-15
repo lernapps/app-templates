@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json",
   "title": "Question bank of a lernapps quiz",
-  "description": "The questions of a quiz built from the archetype quiz (runtime @lernapps/app-templates), in src/quiz.json: a quiz about things to know. Each option carries short background knowledge, each question links to further reading. The build validates the bank against this schema and fails with a message naming each problem. Every text is for learners: German, plain language, in your own words. A quiz in several languages declares them in languages, German first, and writes every text for learners as a map of texts by language ({ \"de\": …, \"en\": … }) with each of them; the build then writes a page per language.",
+  "description": "The questions of a quiz built from the archetype quiz (runtime @lernapps/app-templates), in src/quiz.json: a quiz about things to know. Each option carries short background knowledge, each question links to further reading. The build validates the bank against this schema and fails with a message naming each problem. Every text is for learners: German, plain language, in your own words. A quiz in several languages declares them in languages, German first, and writes every text for learners as a map of texts by language ({ \"de\": …, \"en\": … }) with each of them, and the address of a link as one for every language or as a map by language; the build then writes a page per language.",
   "type": "object",
   "additionalProperties": false,
   "required": ["title", "intro", "questions"],
@@ -97,7 +97,7 @@
           "$ref": "#/$defs/learnerText"
         },
         "links": {
-          "description": "Further reading on the question, at least one link, e.g. to the article in the German Wikipedia.",
+          "description": "Further reading on the question, at least one link, e.g. to the article in the German Wikipedia; in a quiz or on a page in several languages to the article in each language's Wikipedia, with url as a map by language.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -309,11 +309,30 @@
           "$ref": "#/$defs/learnerText"
         },
         "url": {
-          "description": "The address, https only. Check that it opens the page you mean.",
-          "type": "string",
-          "pattern": "^https://[^\\s]+$"
+          "description": "The address, https only: one for every language, or, in a quiz or on a page in several languages where the page to read differs by language (the article in each language's Wikipedia), a map of addresses by language ({ \"de\": \"https://de.wikipedia.org/wiki/Uluru\", \"en\": \"https://en.wikipedia.org/wiki/Uluru\" }) with every declared language, as a text's map. Each language's page links the address of its language. Check that each opens the page you mean.",
+          "$ref": "#/$defs/address"
         }
       }
+    },
+    "address": {
+      "description": "An address, https only: a string, the same in every language, or a map of addresses by language ({ de: …, en: … }) in a quiz or on a page in several languages. The quiz or page checks that a map has every language it declares, and no other.",
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^https://[^\\s]+$"
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z]{2}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^https://[^\\s]+$"
+          }
+        }
+      ]
     },
     "source": {
       "type": "object",

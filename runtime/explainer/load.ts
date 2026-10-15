@@ -14,7 +14,7 @@ import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.
 import { isNode, LineCounter, parseDocument, type Document } from "yaml";
 import schema from "./explainer.v1.schema.json" with { type: "json" };
 import quizSchema from "../quiz/quiz.v1.schema.json" with { type: "json" };
-import { questionDetails } from "../quiz/validate.ts";
+import { addressProblem, questionDetails } from "../quiz/validate.ts";
 import {
   inLanguage,
   isExercise,
@@ -49,6 +49,8 @@ const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, comp
 const RESERVED = new Set(["data", "images", "glossar", "components", "assets"]);
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const IMAGE = /^[a-z0-9]+(-[a-z0-9]+)*\.(svg|png|jpg|webp)$/;
+/** A source of a credit that is only a URL, rendered as a link. */
+const SOURCE_URL = /^https?:\/\/\S+$/;
 
 type Path = readonly (string | number)[];
 
@@ -231,7 +233,11 @@ function schemaProblems(yaml: YamlFile, errors: readonly ErrorObject[], problems
       case "if":
         break;
       case "anyOf": {
-        if (typeof value === "string") problems.at(yaml, path, "must not be empty");
+        // the address of a link of an exercise of the quiz's types: an https address, or a map of them by language
+        if (path.at(-1) === "url") {
+          const { lang, message } = addressProblem(value);
+          problems.at(yaml, path, message, lang);
+        } else if (typeof value === "string") problems.at(yaml, path, "must not be empty");
         else if (isObject(value)) {
           for (const [lang, text] of Object.entries(value)) {
             if (typeof text !== "string") problems.at(yaml, path, "must be a text", lang);
@@ -335,13 +341,16 @@ class Texts {
   }
 
   /**
-   * The text at `path` of `yaml`: a plain text, restricted Markdown, a formula, or a name (a person, a work); a formula
-   * or a name given as a string is the same in every language.
+   * The text at `path` of `yaml`: a plain text, restricted Markdown, a formula, a name (a person, a work), or the source
+   * of a credit (a URL or a citation); a formula, a name or a URL given as a string is the same in every language, a
+   * citation is a plain text.
    */
-  check(yaml: YamlFile, path: Path, kind: "plain" | "markdown" | "latex" | "name"): void {
+  check(yaml: YamlFile, path: Path, kind: "plain" | "markdown" | "latex" | "name" | "credit"): void {
     const value = get(yaml.value, path);
     if (value === undefined) return;
-    const { texts, problems } = textLanguages(value as Text, this.languages, kind === "latex" || kind === "name");
+    const neutral =
+      kind === "latex" || kind === "name" || (kind === "credit" && typeof value === "string" && SOURCE_URL.test(value));
+    const { texts, problems } = textLanguages(value as Text, this.languages, neutral);
     for (const problem of problems) this.problems.at(yaml, path, problem.message, problem.lang);
     for (const { lang, text, keyed } of texts) {
       const at = keyed ? [...path, lang] : path;
@@ -350,7 +359,7 @@ class Texts {
         if (problem !== undefined) this.problems.at(yaml, at, problem, keyed ? lang : undefined);
         continue;
       }
-      if (kind === "plain" || kind === "name") {
+      if (kind === "plain" || kind === "name" || kind === "credit") {
         const tag = htmlTag(text);
         if (tag !== undefined) {
           this.problems.at(
@@ -485,12 +494,14 @@ function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Path, dep
         if (block.image !== undefined) checkImage(check, [...at, "image"], block.image);
         texts.check(yaml, [...at, "alt"], "plain");
         texts.check(yaml, [...at, "caption"], "markdown");
+        texts.check(yaml, [...at, "source"], "credit");
         break;
       case "labelled-figure":
         checkImage(check, [...at, "image"], block.image);
         texts.check(yaml, [...at, "alt"], "plain");
         texts.check(yaml, [...at, "caption"], "markdown");
         block.labels.forEach((_label, label) => texts.check(yaml, [...at, "labels", label, "text"], "plain"));
+        texts.check(yaml, [...at, "source"], "credit");
         break;
       case "table": {
         texts.check(yaml, [...at, "caption"], "plain");
@@ -563,6 +574,7 @@ function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Path, dep
         texts.check(yaml, [...at, "origin", "author"], "name");
         texts.check(yaml, [...at, "origin", "work"], "name");
         if (typeof block.origin.year !== "number") texts.check(yaml, [...at, "origin", "year"], "plain");
+        texts.check(yaml, [...at, "source"], "credit");
         break;
       case "code":
         texts.check(yaml, [...at, "caption"], "plain");
