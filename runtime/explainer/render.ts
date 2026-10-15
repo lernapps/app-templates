@@ -261,7 +261,7 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
     ? `<p class="quiz-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
     : "";
   return [
-    `<div class="explainer-component" data-component="${component.name}"${component.caption ? ' data-nojs="caption"' : ""}>`,
+    `<div class="explainer-component" data-component="${component.name}"${component.caption ? ` data-nojs="caption" data-caption="${plain(context.t("textDescription"))}"` : ""}>`,
     `<div class="explainer-island" hidden>${markup}</div>`,
     `<div class="explainer-nojs">${context.markdown(block.nojs)}</div>`,
     feedback,

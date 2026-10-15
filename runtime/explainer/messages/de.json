@@ -27,5 +27,6 @@
   "newTask": "Neue Aufgabe",
   "hint": "Tipp",
   "gridAlt": "Ein Hunderterfeld, {{figure.filled}} Kästchen sind gefärbt.",
-  "barAlt": "Ein Streifen für {{figure.whole}}, davon {{figure.part}} gefärbt."
+  "barAlt": "Ein Streifen für {{figure.whole}}, davon {{figure.part}} gefärbt.",
+  "textDescription": "Beschreibung als Text"
 }

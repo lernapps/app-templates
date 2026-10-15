@@ -103,6 +103,10 @@
           "items": {
             "$ref": "#/$defs/link"
           }
+        },
+        "hint": {
+          "description": "Optional: what to look at again after a wrong answer, in one sentence, without giving the answer away, e.g. \"Schau dir noch einmal an, wie hoch die Spannung im Haushalt ist.\" Shown with the feedback of a wrong answer when nothing more specific applies: a chosen option's info or a number's typical mistake come first. In an explainer, a wrong answer can be tried again, with this hint, before the solution shows.",
+          "$ref": "#/$defs/learnerText"
         }
       },
       "allOf": [
@@ -216,7 +220,7 @@
                 "type": "boolean"
               },
               "info": {
-                "description": "One to three sentences of background on this option itself, true whether or not it is the right answer, e.g. \"Der Uluru ist ein Inselberg in der Wüste Zentralaustraliens ...\". Shown for every option after the answer.",
+                "description": "One to three sentences of background on this option itself, true whether or not it is the right answer, e.g. \"Der Uluru ist ein Inselberg in der Wüste Zentralaustraliens ...\". After an answer it shows for every option. For a wrong option it is also the reason a learner who chose it reads with the feedback, so say there why it does not fit.",
                 "$ref": "#/$defs/learnerText"
               },
               "link": {
@@ -256,6 +260,26 @@
         "unit": {
           "description": "The unit, shown next to the input, e.g. \"cm\"; the learner does not type it.",
           "$ref": "#/$defs/learnerText"
+        },
+        "mistakes": {
+          "description": "Optional: typical wrong numbers, each with a message that says what went wrong, e.g. { \"answer\": 2300, \"message\": \"Du hast mit 10 statt mit 100 multipliziert.\" }. A learner's number within the tolerance of a mistake's answer gets its message with the feedback. A mistake's answer must not count as right, and each is listed once.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["answer", "message"],
+            "properties": {
+              "answer": {
+                "description": "The wrong number, as the mistake gives it.",
+                "type": "number"
+              },
+              "message": {
+                "description": "What went wrong, in one or two sentences, without giving the right number away.",
+                "$ref": "#/$defs/learnerText"
+              }
+            }
+          }
         }
       }
     },

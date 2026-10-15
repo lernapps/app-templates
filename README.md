@@ -38,9 +38,15 @@ with which a creator and their AI assistant build a learning app.
   hydrates; only a page with a component loads Vue. It checks each block's props against the component's prop types,
   and on the SFC compiler's output: no network, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from
   `vue`, this runtime, `@lernapps/tooling/storage`, `i18n` and `a11y` and the folder itself, browser globals only in
-  `onMounted`, and 20 kB gzip of the component's own code. A component that emits `answered { correct }` is an
-  exercise: its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
+  `onMounted`, and 20 kB gzip of the component's own code. Once it runs, it replaces its `nojs` text, or keeps it
+  folded as a text description under it with `defineOptions({ nojs: "caption" })`. A component that emits
+  `answered { correct, reason? }` is an exercise (`reason`: what went wrong in a wrong answer, shown with the
+  feedback): its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
   `wrong(task)`, which the build tests over 50 fixed seeds per block ([`components.ts`](runtime/explainer/components.ts)).
+- Both archetypes write `404.html` at the bundle's root: GitHub Pages serves it for any address the app does not
+  have, and its script finds the app's root (the nearest folder upwards with a `404.html`, so a preview below
+  `pr-preview/pr-<n>/` finds its own) and moves on to its start page
+  ([`pages.ts`](runtime/shared/pages.ts)).
 - Which commit of this repo a new app gets and what the generator adds to the template:
   `npx --yes github:lernapps/tooling#main create --help`.
 - What an archetype is and how the parts fit: the [architecture of the tooling](https://lernapps.net/tooling/architecture/).

@@ -10,13 +10,14 @@
 // reads without JavaScript. The app's src/main.ts starts the engine (@lernapps/app-templates/quiz) on that page.
 // A bank in several languages (languages: ["de", "en"]) gives a page per language: German in index.html, every other
 // language in <language>/index.html, the built index.html with that language's quiz and its relative asset URLs
-// rewritten for its depth; each with its language, its alternates and a language switch. `vp dev` serves the same
-// pages, /en/ in English.
+// rewritten for its depth; each with its language, its alternates and a language switch. 404.html leads every address
+// the app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same pages, /en/
+// in English.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite-plus";
 import type { Text } from "../shared/languages.ts";
-import { fromDepth, languageRoot, withLanguage } from "../shared/pages.ts";
+import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
 import { renderQuiz } from "./render.ts";
 import { readBank } from "./validate.ts";
@@ -119,6 +120,7 @@ export function quiz(): Plugin {
     },
     generateBundle() {
       if (bank === undefined || shell === undefined) return;
+      this.emitFile({ type: "asset", fileName: "404.html", source: notFoundPage() });
       for (const lang of quizLanguages(bank.quiz).slice(1)) {
         const path = languageRoot(lang);
         this.emitFile({

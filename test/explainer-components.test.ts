@@ -90,6 +90,12 @@ const cases: [string, (root: string) => void, string][] = [
     "src/components/Tap.vue: it emits answered, so it is an exercise, and its logic module src/components/Tap.ts is missing: export generate(seed, props), check(task, answer), solution(task) and wrong(task) from it (vue-component-exercise-contract)",
   ],
   [
+    "an exercise component that keeps its nojs text, with the solution, once it runs",
+    (root) =>
+      edit(root, VUE, "const emit = defineEmits", 'defineOptions({ nojs: "caption" });\nconst emit = defineEmits'),
+    'src/components/AssignLabels.vue: it emits answered, so it is an exercise, and keeps its nojs text, which gives the task with its solution: an exercise replaces its nojs text, so the solution shows only after the answer; remove nojs: "caption" from defineOptions (vue-component-nojs)',
+  ],
+  [
     "a component that fetches",
     (root) =>
       edit(root, VUE, "  done.value = true;\n", '  done.value = true;\n  void fetch("https://example.org/log");\n'),

@@ -383,7 +383,8 @@ figcaption p {
 }
 
 /* Exercises: the quiz's question types and generated exercises, the quiz's controls and feedback in the explainer's
-   colours. Without JavaScript the worked tasks and every "Lösung" show; the live part shows with JavaScript. */
+   colours. Without JavaScript the worked tasks and every "Lösung" show; with JavaScript the live part shows, and the
+   solutions and worked tasks once the exercise is solved or its solution asked for. */
 .explainer-exercise,
 .explainer-component {
   --explainer-right: #14532d;
@@ -466,6 +467,11 @@ figcaption p {
   background: var(--explainer-accent);
   color: #ffffff;
   cursor: pointer;
+}
+
+.explainer-exercise .quiz-solve {
+  background: var(--explainer-background);
+  color: var(--explainer-accent);
 }
 
 .explainer-exercise button:focus-visible,
@@ -570,15 +576,26 @@ figcaption p {
   height: auto;
 }
 
-.explainer-live {
+.explainer-live:not([hidden]) + .explainer-worked-intro {
   margin-top: 1rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--explainer-border);
 }
 
-/* A component: its island, hidden until it hydrates, and its nojs text, which it replaces or keeps as its caption */
+/* A component: its island, hidden until it hydrates, and its nojs text, which it replaces or keeps folded as a text
+   description under it; the reason of a wrong answer under its feedback */
 .explainer-nojs.explainer-caption {
   margin-top: 0.5rem;
   color: var(--explainer-muted);
   font-size: 0.9375rem;
+}
+
+.explainer-nojs.explainer-caption summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.explainer-component .quiz-diagnosis {
+  display: block;
+  margin: 0.25rem 0 0;
 }

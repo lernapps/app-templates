@@ -11,18 +11,30 @@
 // language, its alternates in the other languages, a language switch and the archetype marker. Previous and next
 // form one chain over all pages, in the order of the lists. Every exercise shows its text in the page's language, and
 // every "Lösung" opens and shows the answer the checker accepts. With JavaScript, in German, one exercise of each type
-// per page: a question of the quiz's types accepts its right answer and rejects a wrong one, the feedback in view with
-// the focus; a generated exercise shows, at its deep link ?seed=<n>#<id>, the task the notation gives for that seed,
-// accepts its right answer, rejects a wrong one (a mistake, with its message), and "Neue Aufgabe" changes the
-// task; each component hydrates without a console error, and an exercise component's answered gives the feedback,
-// once for each answer, in view with the focus. Without JavaScript, each component's nojs text is visible and not
-// empty, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
+// per page, whose solution shows only once it is answered: a question of the quiz's types accepts its right answer
+// and then shows its solution; it rejects a wrong one with the most specific reason it has, stays open for another
+// try, and shows its solution on "Lösung zeigen"; the feedback each time in view with the focus. A generated exercise
+// shows, at its deep link ?seed=<n>#<id>, the task the notation gives for that seed, its worked tasks still hidden;
+// it rejects a wrong one (a mistake, with its message), shows its solution and the worked tasks on "Lösung zeigen",
+// "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
+// console error, folds a nojs text it keeps, and an exercise component's answered gives the feedback, once for each
+// answer, with the reason of a wrong one, in view with the focus. Without JavaScript, each component's nojs text is
+// visible and not empty, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type Page } from "playwright/test";
-import { questionId, rightAnswer, wrongAnswer } from "../quiz/quiz.ts";
+import {
+  missesRight,
+  questionId,
+  rightAnswer,
+  wrongAnswer,
+  wrongReasons,
+  type Answer,
+  type Question,
+} from "../quiz/quiz.ts";
 import { answerQuestion, expectFeedbackInView } from "../quiz/e2e.ts";
 import { messagesIn } from "../quiz/render.ts";
 import { answerFor, fill, generate, plainText, questionFor, taskKey, taskText } from "./generated.ts";
+import { message as messageOf } from "./messages.ts";
 import { outline, type ExerciseOutline, type PageOutline } from "./outline.ts";
 
 /** The seed of the deep link the tests open a generated exercise with. */
@@ -111,8 +123,14 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     await expect(element, `${item.url}: ${component.name} hydrates`).toHaveAttribute("data-hydrated", "");
     await expect(element.locator(":scope > .explainer-island")).toBeVisible();
     const nojs = element.locator(":scope > .explainer-nojs");
-    if (component.caption) await expect(nojs, "the nojs text stays as the caption").toBeVisible();
-    else await expect(nojs, "the component replaces its nojs text").toBeHidden();
+    if (component.caption) {
+      // the nojs text stays as a text description, folded: its summary shows, one click opens it
+      const details = nojs.locator(":scope > details");
+      await expect(details.locator(":scope > summary"), "the nojs text folds").toHaveText(
+        messageOf("de", "textDescription"),
+      );
+      await expect(details).not.toHaveAttribute("open");
+    } else await expect(nojs, "the component replaces its nojs text").toBeHidden();
     if (!component.exercise) continue;
     // the component's own answered, as it emits it, with each result: one feedback, in view with the focus
     const feedback = element.locator(":scope > .quiz-feedback");
@@ -128,6 +146,15 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       await expect(feedback).toBeFocused();
       await expect(feedback).toBeInViewport();
     }
+    // a wrong answer with its reason: the reason under the feedback
+    await element.evaluate((node) => {
+      type Instance = { emit(event: string, payload: unknown): void };
+      const island = node.querySelector(".explainer-island") as unknown as { _vnode?: { component?: Instance } };
+      island._vnode?.component?.emit("answered", { correct: false, reason: "Der Grund." });
+    });
+    await expect(feedback.locator(".quiz-diagnosis"), `${component.name}: the reason of a wrong answer`).toHaveText(
+      "Der Grund.",
+    );
     await expect(element.locator(".quiz-feedback"), "one feedback").toHaveCount(1);
   }
   expect(errors, `${item.url}: no console error`).toEqual([]);
@@ -136,21 +163,51 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
 /** The feedback of the question `id` says `text`. */
 const feedback = (page: Page, id: string) => page.locator(`[id="${id}"] .quiz-feedback`);
 
-/** With JavaScript: a question of the quiz's types accepts its right answer and rejects a wrong one. */
+/** The first reason the feedback gives for the wrong `answer`: the most specific the question has. */
+function reasonFor(question: Question, answer: Answer): string {
+  const quiz = messagesIn("de");
+  const [first] = wrongReasons(question, answer);
+  if (first !== undefined) return first.option === undefined ? first.text : `${first.option}: ${first.text}`;
+  return missesRight(question, answer) ? quiz.missingRight : quiz.lookAgain;
+}
+
+/**
+ * A wrong answer to the question in `exercise` (an element's id): the feedback with the reason `reason`, in view
+ * with the focus; the solution still hidden and the controls open; then "Lösung zeigen" shows the solution.
+ */
+async function wrongThenSolution(page: Page, exercise: string, question: Question, reason: string): Promise<void> {
+  const item = page.locator(`[id="${questionId(question)}"]`);
+  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").wrong);
+  await expect(item.locator(".quiz-diagnosis").first(), `${exercise}: the reason of the wrong answer`).toHaveText(
+    reason,
+  );
+  await expectFeedbackInView(page, question);
+  await expect(item.locator(".quiz-reveal"), `${exercise}: no solution after a wrong answer`).toBeHidden();
+  await expect(item.locator("input, select").first(), `${exercise}: another try`).toBeEnabled();
+  await item.getByRole("button", { name: messagesIn("de").showSolution }).click();
+  await expect(item.locator(".quiz-reveal"), `${exercise}: the solution on Lösung zeigen`).toBeVisible();
+  await expect(item.locator(".quiz-reveal")).toBeFocused();
+}
+
+/** With JavaScript: a question of the quiz's types, answered before its solution shows, right and wrong. */
 async function checkQuestion(
   page: Page,
   url: string,
   exercise: Extract<ExerciseOutline, { kind: "question" }>,
 ): Promise<void> {
   const { question } = exercise;
+  const item = page.locator(`[id="${exercise.id}"]`);
   await page.goto(`./${url}#${exercise.id}`);
+  await expect(item.locator(".quiz-reveal"), `${exercise.id}: no solution before the answer`).toBeHidden();
+  await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung before the answer`).toBeHidden();
   await answerQuestion(page, question, rightAnswer(question));
   await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").right);
   await expectFeedbackInView(page, question);
+  await expect(item.locator(".quiz-reveal"), `${exercise.id}: the solution after the right answer`).toBeVisible();
   await page.reload();
-  await answerQuestion(page, question, wrongAnswer(question));
-  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").wrong);
-  await expectFeedbackInView(page, question);
+  const wrong = wrongAnswer(question);
+  await answerQuestion(page, question, wrong);
+  await wrongThenSolution(page, exercise.id, question, reasonFor(question, wrong));
 }
 
 /** With JavaScript: a generated exercise at its deep link, its answers, a mistake, and "Neue Aufgabe". */
@@ -164,20 +221,23 @@ async function checkGenerated(
   const question = questionFor(spec, task, "de", templates);
   const address = `./${url}?seed=${SEED}#${exercise.id}`;
   const legend = page.locator(`[id="${questionId(question)}"] legend`);
+  const worked = page.locator(`[id="${exercise.id}"] .explainer-worked`);
   await page.goto(address);
   await expect(legend, "the deep link shows the task of its seed").toHaveText(
     plainText(taskText(spec, task, "de", templates)),
   );
+  await expect(worked, `${exercise.id}: no worked task before the answer`).toBeHidden();
   // a wrong answer: the first mistake, with its message; the comparator's wrong answer without mistakes
   if (task.mistakes.length > 0) {
     await answerQuestion(page, question, answerFor(spec, task, question, 0));
     const message = fill(templates["de"]?.messages[0] ?? "", spec, task, "de", "text");
-    await expect(feedback(page, questionId(question)).locator(".quiz-diagnosis"), "the mistake's message").toHaveText(
-      message,
-    );
-  } else await answerQuestion(page, question, wrongAnswer(question));
-  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").wrong);
-  await expectFeedbackInView(page, question);
+    await wrongThenSolution(page, exercise.id, question, message);
+  } else {
+    const wrong = wrongAnswer(question);
+    await answerQuestion(page, question, wrong);
+    await wrongThenSolution(page, exercise.id, question, reasonFor(question, wrong));
+  }
+  await expect(worked, `${exercise.id}: the worked tasks with the solution`).toBeVisible();
   // "Neue Aufgabe": another task, its seed in the address; its right answer counts
   await page.locator(`[id="${exercise.id}"] .explainer-new-task`).click();
   const seed = Number(new URL(page.url()).searchParams.get("seed"));
