@@ -1,8 +1,9 @@
 // The exercises of an explainer page at build time: a block of one of the quiz's question types, rendered through
 // the quiz runtime's per-question exports (its controls, and a <details> "Lösung" with the right answer, the
 // background of every option, the explanation and the links); and a generated exercise: its templates rendered once
-// per language (restricted Markdown, formulas as MathML, the placeholders as tokens), three worked tasks from fixed
-// seeds each with a <details> "Lösung", and the place of the live task. Each exercise carries the data its live part
+// per language (restricted Markdown, formulas as MathML, the placeholders as tokens), the place of the live task, and
+// three worked tasks from fixed seeds each with a <details> "Lösung" (with JavaScript they show once the live task is
+// solved). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
 import { questionIn, type Question } from "../quiz/quiz.ts";
 import { answerText, messagesIn, renderQuestion, renderSolution } from "../quiz/render.ts";
@@ -165,9 +166,9 @@ function generatedExercise(
   };
   return [
     `<div class="explainer-exercise explainer-generated" id="${spec.id}">`,
+    `<div class="explainer-live" hidden></div>`,
     `<p class="explainer-worked-intro">${plain(message(lang, "workedTasks"))}</p>`,
     `<ol class="explainer-worked">${worked.join("\n")}</ol>`,
-    `<div class="explainer-live" hidden></div>`,
     `<script type="application/json" class="explainer-exercise-data">${json(exerciseData)}</script>`,
     `</div>`,
   ].join("\n");

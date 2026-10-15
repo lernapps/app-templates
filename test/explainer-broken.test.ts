@@ -183,6 +183,21 @@ const cases: [string, (root: string) => void, string][] = [
     },
     "src/kapitel/zwei.yaml:3: blocks: the page has no exercise; give it a section with an exercise: one of the quiz's question types, or generated",
   ],
+  [
+    "a redirect to a page that does not exist",
+    (root) => edit(root, "app.yaml", "/kapitel/eins/#abschnitt", "/kapitel/drei/"),
+    "src/app.yaml:10: redirects./kapitel/alt/: /kapitel/drei/ is no page of the app; lead the old address to a page: /<chapter>/<page>/, or /<chapter>/<page>/#<section>",
+  ],
+  [
+    "a redirect to a section that does not exist",
+    (root) => edit(root, "app.yaml", "#abschnitt", "#nirgends"),
+    "src/app.yaml:10: redirects./kapitel/alt/: /kapitel/eins/#nirgends leads to no section of its page",
+  ],
+  [
+    "a redirect from a page of the app",
+    (root) => edit(root, "app.yaml", "/kapitel/alt/:", "/kapitel/zwei/:"),
+    "src/app.yaml:10: redirects./kapitel/zwei/: /kapitel/zwei/ is a page of the app; a redirect keeps an old address working, so remove it while the page is there",
+  ],
 ];
 
 describe("a broken explainer fails the build with its one line", () => {

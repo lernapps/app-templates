@@ -179,6 +179,18 @@
           "items": {
             "$ref": "#/$defs/source"
           }
+        },
+        "redirects": {
+          "description": "Optional: old addresses of the app that keep working after a page was removed, renamed or moved, e.g. because a catalog entry or a bookmark links to them. Each key is the old address, each value the page that took its place, written like a link to a page of the app: { \"/strom/alte-seite/\": \"/strom/spannung/\", \"/strom/messen/\": \"/strom/spannung/#messen\" }. The build writes a small page at each old address, in every language tree, that moves on to the new page at once and links it; it fails when the new page or section does not exist, or when the old address is still a page of the app.",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^/[a-z0-9]+(-[a-z0-9]+)*/([a-z0-9]+(-[a-z0-9]+)*/)?$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^/([a-z0-9]+(-[a-z0-9]+)*/){0,2}(#\\S+)?$"
+          }
         }
       }
     },
@@ -1090,7 +1102,7 @@
       }
     },
     "generated": {
-      "description": "An exercise drawn from a seed, property-based: given draws the values, where filters them, task is the text with placeholders ({{G}}, {{e.name}}; {{answer}} in the steps) and an optional figure, answer is an expression with its comparator, mistakes are typical wrong answers each with a message saying what went wrong, hint and steps help. A placeholder is always two braces around a declared name or its field, nothing else inside, in prose and in formulas alike ($\\frac{{{W}}}{{{G}}}$); one brace is never a placeholder, so in a formula G and {G} are the letter. The build checks that every placeholder names a variable of given (or answer), that no prose has a placeholder with one brace or spaces inside, and that every variable of given is used in a placeholder or in an expression of the figure, answer or mistakes; then it checks it over 200 fixed seeds: where holds in at least 1 of 10 draws; the answer is defined, in its format and passes its comparator; no mistake equals it; the task is the same each time and keeps no placeholder; the figure does not show the answer. Without JavaScript the page shows three worked tasks (seeds 1, 2, 3) with their solution; with JavaScript a live task, Neue Aufgabe, and the deep link ?seed=<n>#<id>.",
+      "description": "An exercise drawn from a seed, property-based: given draws the values, where filters them, task is the text with placeholders ({{G}}, {{e.name}}; {{answer}} in the steps) and an optional figure, answer is an expression with its comparator, mistakes are typical wrong answers each with a message saying what went wrong, hint and steps help. A placeholder is always two braces around a declared name or its field, nothing else inside, in prose and in formulas alike ($\\frac{{{W}}}{{{G}}}$); one brace is never a placeholder, so in a formula G and {G} are the letter. The build checks that every placeholder names a variable of given (or answer), that no prose has a placeholder with one brace or spaces inside, and that every variable of given is used in a placeholder or in an expression of the figure, answer or mistakes; then it checks it over 200 fixed seeds: where holds in at least 1 of 10 draws; the answer is defined, in its format and passes its comparator; no mistake equals it; the task is the same each time and keeps no placeholder; the figure does not show the answer. Without JavaScript the page shows three worked tasks (seeds 1, 2, 3) with their solution; with JavaScript a live task, Neue Aufgabe, and the deep link ?seed=<n>#<id>: a wrong answer gets the message of the mistake it matches (else a line to look again, with the hint above) and may be tried again; the solution, the steps and the worked tasks show after the right answer or Lösung zeigen.",
       "required": ["id", "given", "task", "answer"],
       "properties": {
         "id": {
@@ -1143,7 +1155,7 @@
           }
         },
         "mistakes": {
-          "description": "Typical mistakes: the wrong answer as an expression, and a message (plain text) that says what went wrong.",
+          "description": "Typical mistakes: the wrong answer as an expression, and a message (plain text) that says what went wrong. A learner who gives that answer reads the message with the feedback, and may try again.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -1161,7 +1173,7 @@
           }
         },
         "hint": {
-          "description": "A hint before the answer, restricted Markdown with placeholders.",
+          "description": "A hint before the answer, restricted Markdown with placeholders; with JavaScript it stays folded under the live task until the learner opens it.",
           "$ref": "#/$defs/markdown"
         },
         "steps": {
@@ -1176,7 +1188,7 @@
       "type": "object"
     },
     "vueComponent": {
-      "description": "A Vue single-file component of the app, src/components/<component>.vue, for what no built-in block or generated exercise can express. The build renders it into the page and checks it (what it may do, its test file, and for an exercise, one that emits answered, its logic module <component>.ts); in the browser it hydrates in place. Without JavaScript the page shows its nojs text instead.",
+      "description": "A Vue single-file component of the app, src/components/<component>.vue, for what no built-in block or generated exercise can express. The build renders it into the page and checks it (what it may do, its test file, and for an exercise, one that emits answered { correct, reason? }, its logic module <component>.ts; reason, a text in the page's language, says what went wrong in a wrong answer and shows under the feedback); in the browser it hydrates in place. Without JavaScript the page shows its nojs text instead.",
       "required": ["component", "nojs"],
       "properties": {
         "component": {
@@ -1189,7 +1201,7 @@
           "type": "object"
         },
         "nojs": {
-          "description": "What the component shows and does, for readers without JavaScript, with its content: the labelled diagram described, or the task with its solution. Restricted Markdown, rendered in place; once the component runs, it replaces this text, or keeps it as its caption.",
+          "description": "What the component shows and does, for readers without JavaScript, with its content: the labelled diagram described, or the task with its solution. Restricted Markdown, rendered in place; once the component runs, it replaces this text, or, when the component declares defineOptions({ nojs: \"caption\" }), keeps it folded under it as a text description that one click opens; not for an exercise, whose nojs text gives the solution.",
           "$ref": "#/$defs/markdown"
         }
       },

@@ -27,5 +27,7 @@
   "newTask": "New task",
   "hint": "Hint",
   "gridAlt": "A hundred grid with {{figure.filled}} squares shaded.",
-  "barAlt": "A strip for {{figure.whole}}, {{figure.part}} of it shaded."
+  "barAlt": "A strip for {{figure.whole}}, {{figure.part}} of it shaded.",
+  "textDescription": "Text description",
+  "moved": "This page has moved. You will now find its content here:"
 }

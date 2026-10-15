@@ -9,8 +9,9 @@
 // entry: Vite builds the one hashed client module (src/main.ts) and stylesheet from it. The built index.html is then
 // the shell of every page: each page is the shell with its language, its head and its body where it says
 // <!-- explainer -->, written into its folder, with the shell's relative asset URLs (./assets/…) rewritten for its
-// depth. The bundled images go to images/, llms.txt to the root of each language tree. `vp dev` serves the same
-// pages, rendered on each request.
+// depth. The bundled images go to images/, llms.txt to the root of each language tree, and a small page that moves on
+// to its new place to each old address of app.yaml's redirects. `vp dev` serves the same pages, rendered on each
+// request.
 //
 // Components (src/components/<Name>.vue, components.ts): only when the app has them, the plugin compiles them with
 // @vitejs/plugin-vue and resolves vue to the copy this runtime depends on, so that the components and the islands
@@ -29,7 +30,7 @@ import type { Alias, Plugin, ViteDevServer } from "vite-plus";
 import { propertyProblems, propsIn, SIZE_BUDGET, type ExerciseLogic } from "./components.ts";
 import type { Block, Site } from "./content.ts";
 import { ContentError, loadSite } from "./load.ts";
-import { llmsTxt, renderSite, type Islands, type RenderedPage } from "./render.ts";
+import { llmsTxt, renderRedirects, renderSite, type Islands, type RenderedPage } from "./render.ts";
 import { fromDepth, languageRoot, withLanguage } from "../shared/pages.ts";
 
 const MARKER = "<!-- explainer -->";
@@ -229,6 +230,9 @@ export function explainer(): Plugin[] {
         if (page.route.path === "") index.source = html;
         else this.emitFile({ type: "asset", fileName: `${page.route.path}index.html`, source: html });
       }
+      for (const redirect of renderRedirects(content)) {
+        this.emitFile({ type: "asset", fileName: `${redirect.path}index.html`, source: redirect.html });
+      }
       for (const [image, file] of content.images) {
         this.emitFile({ type: "asset", fileName: image, source: readFileSync(file) });
       }
@@ -294,7 +298,13 @@ export function explainer(): Plugin[] {
           .then(({ islands: rendered, problems }) => {
             if (problems.length > 0) throw new ContentError(problems);
             const page = renderSite(content, rendered).find((candidate) => candidate.route.path === path);
-            if (page === undefined) return next();
+            if (page === undefined) {
+              const redirect = renderRedirects(content).find((candidate) => candidate.path === path);
+              if (redirect === undefined) return next();
+              response.setHeader("content-type", "text/html; charset=utf-8");
+              response.end(redirect.html);
+              return undefined;
+            }
             const shell = readFileSync(join(root, "index.html"), "utf8");
             const head = page.islands
               ? `<script type="module" src="/@id/__x00__lernapps-explainer-islands"></script>`

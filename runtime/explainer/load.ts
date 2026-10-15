@@ -2,12 +2,13 @@
 // (explainer.v1.schema.json), then what a schema cannot say. The order lists are complete and unique, the depth is
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
-// list, bundled images and quotes name source and licence, links to pages of the app find their page and section,
-// every page has an exercise, a question of the quiz's types passes the quiz's validation in every declared language,
-// a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), a
-// vue-component block names a component of src/components/ that passes its checks (components.ts), its props match the
-// component's prop types and it has its nojs text, and src/ holds nothing else. Each problem is one line: the file,
-// its line, the place in the file, the language where it matters, and what to do.
+// list, bundled images and quotes name source and licence, links to pages of the app find their page and section, so
+// do the redirects of app.yaml from old addresses that are no page of the app, every page has an exercise, a question
+// of the quiz's types passes the quiz's validation in every declared language, a generated exercise declares what it
+// uses and passes its property test over fixed seeds (generated.ts), a vue-component block names a component of
+// src/components/ that passes its checks (components.ts), its props match the component's prop types and it has its
+// nojs text, and src/ holds nothing else. Each problem is one line: the file, its line, the place in the file, the
+// language where it matters, and what to do.
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
@@ -1006,22 +1007,58 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
 
   // links to pages of the app
   const hidden = app.chapters.length === 1;
-  for (const link of texts.links) {
-    const [path = "", hash] = link.href.split("#");
+  /** Whether `path` is a page the build writes besides the content pages: the start, a chapter, the glossary. */
+  const generated = (path: string) =>
+    path === "/" ||
+    (path === "/glossar/" && terms.size > 0) ||
+    (!hidden && app.chapters.some((id) => path === `/${id}/`));
+  /** What is wrong with an address of a page of the app (and a section of it); nothing when it finds them. */
+  const target = (href: string): "page" | "section" | undefined => {
+    const [path = "", hash] = href.split("#");
     const pageAnchors = anchors.get(path);
-    const generated =
-      path === "/" ||
-      (path === "/glossar/" && terms.size > 0) ||
-      (!hidden && app.chapters.some((id) => path === `/${id}/`));
-    if (pageAnchors === undefined && !generated) {
+    if (pageAnchors === undefined && !generated(path)) return "page";
+    if (hash !== undefined && hash !== "" && (pageAnchors === undefined || !pageAnchors.has(hash))) return "section";
+    return undefined;
+  };
+  for (const link of texts.links) {
+    const found = target(link.href);
+    if (found === "page") {
       problems.at(
         link.yaml,
         link.path,
         `the link ${link.href} leads to no page of the app; write /<chapter>/<page>/, or /<chapter>/<page>/#<section>`,
         link.lang,
       );
-    } else if (hash !== undefined && hash !== "" && (pageAnchors === undefined || !pageAnchors.has(hash))) {
+    } else if (found === "section") {
       problems.at(link.yaml, link.path, `the link ${link.href} leads to no section of its page`, link.lang);
+    }
+  }
+
+  // the old addresses of app.yaml: none is a page of the app, each leads to one
+  for (const [from, to] of Object.entries(app.redirects ?? {})) {
+    const first = from.split("/")[1] ?? "";
+    if (anchors.has(from) || generated(from)) {
+      problems.at(
+        appYaml,
+        ["redirects", from],
+        `${from} is a page of the app; a redirect keeps an old address working, so remove it while the page is there`,
+      );
+    } else if (RESERVED.has(first) || /^[a-z]{2}$/.test(first)) {
+      problems.at(
+        appYaml,
+        ["redirects", from],
+        `${from} is reserved for the app's addresses (data, images, glossar, components, assets and two-letter language codes); a redirect cannot use it`,
+      );
+    }
+    const found = target(to);
+    if (found !== undefined) {
+      problems.at(
+        appYaml,
+        ["redirects", from],
+        found === "page"
+          ? `${to} is no page of the app; lead the old address to a page: /<chapter>/<page>/, or /<chapter>/<page>/#<section>`
+          : `${to} leads to no section of its page`,
+      );
     }
   }
 

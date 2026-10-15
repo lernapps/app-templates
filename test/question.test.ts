@@ -17,6 +17,7 @@ import {
   rightAnswer,
   validateQuestion,
   wrongAnswer,
+  wrongReasons,
   type Question,
 } from "../runtime/quiz/question.ts";
 import { renderQuiz } from "../runtime/quiz/render.ts";
@@ -82,6 +83,22 @@ describe("the validation of one question", () => {
     ],
     ["a link that is not https", { ...copy("uluru"), links: [{ title: "Uluru", url: "http://example.org" }] }],
     ["an item twice", { ...copy("berge-ordnen"), items: ["Zugspitze", "Zugspitze"] }],
+    ["an empty hint", { ...copy("berge-ordnen"), hint: "" }],
+    [
+      "a number's mistake that counts as right",
+      { ...copy("everest-hoehe"), mistakes: [{ answer: 8800, message: "x" }] },
+    ],
+    [
+      "a number's mistake twice",
+      {
+        ...copy("everest-hoehe"),
+        mistakes: [
+          { answer: 8000, message: "x" },
+          { answer: 8000, message: "y" },
+        ],
+      },
+    ],
+    ["a mistake on a type without it", { ...copy("berge-ordnen"), mistakes: [{ answer: 1, message: "x" }] }],
     [
       "a right entry twice",
       {
@@ -102,6 +119,12 @@ describe("the validation of one question", () => {
     const found = validateQuestion(item, "questions[0]");
     expect(found.length).toBeGreaterThan(0);
     expect(found).toEqual(inBank(item));
+  });
+
+  test("a number's mistake names its number", () => {
+    expect(validateQuestion(broken.find(([name]) => name.includes("counts as right"))?.[1], "blocks[2]")).toEqual([
+      'blocks[2] (question "everest-hoehe"): the mistake 8800 counts as right: it is within the tolerance of the answer 8848; give the wrong number the mistake leads to',
+    ]);
   });
 
   test("at the consumer's path, naming the question", () => {
@@ -210,6 +233,36 @@ test.each(questions.map((question) => [question.id, question] as const))(
     expect(isCorrect(item, wrongAnswer(item))).toBe(false);
   },
 );
+
+describe("why a wrong answer is wrong", () => {
+  const question = (id: string) => questions.find((item) => item.id === id) as Question;
+
+  test("a choice: the background of each wrong option chosen, with the option", () => {
+    const item = question("grand-canyon");
+    if (item.type !== "single-choice") throw new Error("grand-canyon is a single choice");
+    const wrong = item.options.findIndex((option) => !option.correct);
+    expect(wrongReasons(item, wrong)).toEqual([{ option: item.options[wrong]?.text, text: item.options[wrong]?.info }]);
+    expect(wrongReasons(item, rightAnswer(item))).toEqual([]);
+  });
+
+  test("a number: the message of the mistake it matches, within the tolerance; else the hint", () => {
+    const item = {
+      ...question("everest-hoehe"),
+      hint: "Schau dir die Höhe in Metern an.",
+      mistakes: [{ answer: 29_032, message: "Das ist die Höhe in Fuß." }],
+    } as Question;
+    expect(wrongReasons(item, "29000")).toEqual([{ text: "Das ist die Höhe in Fuß." }]);
+    expect(wrongReasons(item, "5000")).toEqual([{ text: "Schau dir die Höhe in Metern an." }]);
+  });
+
+  test("other types: the hint, or nothing", () => {
+    const item = question("berge-ordnen");
+    expect(wrongReasons(item, wrongAnswer(item))).toEqual([]);
+    expect(wrongReasons({ ...item, hint: "Der höchste Berg kommt zuletzt." }, wrongAnswer(item))).toEqual([
+      { text: "Der höchste Berg kommt zuletzt." },
+    ]);
+  });
+});
 
 test("the package exports the question, the engine, the e2e helpers and the messages", () => {
   const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
