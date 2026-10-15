@@ -16,7 +16,7 @@
 // Components (src/components/<Name>.vue, components.ts): only when the app has them, the plugin compiles them with
 // @vitejs/plugin-vue and resolves vue to the copy this runtime depends on, so that the components and the islands
 // module share one Vue. Before the pages are written, it runs the property test of each exercise component's logic
-// module for every block that uses it, and renders each block's component with Vue's server renderer in each
+// module for every block that uses it, with the block's examples, and renders each block's component with Vue's server renderer in each
 // language, both in a Vite server of their own; a problem fails the build with its line. The islands module
 // (islands.ts) is a chunk of its own with Vue, and only the pages with a component load it; each component is a chunk
 // that its pages load when they hydrate it, and its own code, gzipped, must stay within the budget.
@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import type { Component } from "vue";
 import type { Alias, Plugin, ViteDevServer } from "vite-plus";
-import { propertyProblems, propsIn, SIZE_BUDGET, type ExerciseLogic } from "./components.ts";
+import { exampleProblems, propertyProblems, propsIn, SIZE_BUDGET, type ExerciseLogic } from "./components.ts";
 import type { Block, Site } from "./content.ts";
 import { ContentError, loadSite } from "./load.ts";
 import { llmsTxt, renderSite, type Islands, type RenderedPage } from "./render.ts";
@@ -136,11 +136,20 @@ async function renderComponents(
   if (site.components.length === 0) return { islands, problems };
   const { createSSRApp } = (await load("vue")) as unknown as typeof import("vue");
   const { renderToString } = (await load("vue/server-renderer")) as unknown as typeof import("vue/server-renderer");
-  for (const { block, component, place } of site.components) {
+  for (const { block, component, place, examples } of site.components) {
     if (test && component.logic !== undefined) {
       const logic = (await load(`/${component.file.replace(/\.vue$/, ".ts")}`)) as unknown as ExerciseLogic;
-      for (const problem of propertyProblems(logic, propsIn(block.props, component, "de"))) {
+      const props = propsIn(block.props, component, "de");
+      const contract = propertyProblems(logic, props);
+      for (const problem of contract) {
         problems.push(`${place}: ${component.name}.ts: ${problem} (vue-component-exercise-contract)`);
+      }
+      if (contract.length === 0) {
+        for (const { kind, index, message } of exampleProblems(logic, props, block.examples)) {
+          problems.push(
+            `${examples[kind][index] ?? place}: ${component.name}.ts: ${message} (vue-component-exercise-contract)`,
+          );
+        }
       }
     }
     const definition = (await load(`/${component.file}`))["default"] as Component;

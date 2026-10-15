@@ -1171,6 +1171,30 @@
           "items": {
             "$ref": "#/$defs/markdown"
           }
+        },
+        "examples": {
+          "description": "Optional: test cases for the build, never shown to learners. Before you write the exercise, note which answers fulfil its text and which typical wrong answers there are; write the other correct answers the text allows into accepted (e.g. the answer rounded as the text permits: \"round(W / G * 100, 0)\"), the typical wrong ones into rejected. Each is an expression like answer.value, of the variables of given and of answer, the task's right answer, e.g. \"answer + 1\", \"reverse(answer)\". The build evaluates each for every seed it checks and runs it through the same check the page uses: an accepted one the check rejects, or a rejected one it accepts, fails the build; then the exercise checks something other than what its text asks, so change its comparator (e.g. set instead of order), its tolerance or its text. The mistakes already count as rejected.",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "accepted": {
+              "description": "Answers the text allows, each of which the check must accept for every seed.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/expression"
+              }
+            },
+            "rejected": {
+              "description": "Typical wrong answers, each of which the check must reject for every seed.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/expression"
+              }
+            }
+          }
         }
       },
       "type": "object"
@@ -1191,9 +1215,46 @@
         "nojs": {
           "description": "What the component shows and does, for readers without JavaScript, with its content: the labelled diagram described, or the task with its solution. Restricted Markdown, rendered in place; once the component runs, it replaces this text, or, when the component declares defineOptions({ nojs: \"caption\" }), keeps it folded under it as a text description that one click opens; not for an exercise, whose nojs text gives the solution.",
           "$ref": "#/$defs/markdown"
+        },
+        "examples": {
+          "description": "Required for an exercise component (one that emits answered), else not allowed: test cases for the build, never shown to learners. Its check is the component's own code, so before you write it, note which answers fulfil the task's text and which typical wrong answers there are: at least one answer the check must accept, other than the one solution(task) gives where the text allows another (e.g. a circuit with one lamp and a switch, when the text asks for one lamp), and at least one it must reject. Each answer is written as check(task, answer) of <component>.ts takes it. The build runs each through check, for the task of its seed, or of every seed the property test draws when it gives none, and fails when an accepted one fails or a rejected one passes.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "accepted": {
+              "description": "Answers the text allows, each of which check must accept.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/componentExample"
+              }
+            },
+            "rejected": {
+              "description": "Typical wrong answers, each of which check must reject.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/componentExample"
+              }
+            }
+          }
         }
       },
       "type": "object"
+    },
+    "componentExample": {
+      "description": "One answer of an exercise component's examples.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["answer"],
+      "properties": {
+        "answer": {
+          "description": "The answer as check(task, answer) of the component's logic module takes it, e.g. a list or a record."
+        },
+        "seed": {
+          "description": "Optional: the seed of the task to check it against, when the right answer depends on the task; without it, the answer is checked against the task of every seed.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
   }
 }

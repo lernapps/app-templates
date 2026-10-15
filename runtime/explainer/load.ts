@@ -4,9 +4,10 @@
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
 // list, bundled images and quotes name source and licence, links to pages of the app find their page and section,
 // every page has an exercise, a question of the quiz's types passes the quiz's validation in every declared language,
-// a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), a
-// vue-component block names a component of src/components/ that passes its checks (components.ts), its props match the
-// component's prop types and it has its nojs text, and src/ holds nothing else. Each problem is one line: the file,
+// a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), the check
+// of each exercise judges its examples as they are listed, a vue-component block names a component of src/components/
+// that passes its checks (components.ts), its props match the component's prop types, it has its nojs text and, for an
+// exercise component, its examples (which the build step runs, plugin.ts), and src/ holds nothing else. Each problem is one line: the file,
 // its line, the place in the file, the language where it matters, and what to do.
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -34,7 +35,14 @@ import { propsProblems, readComponents, textPaths } from "./components.ts";
 import { ExpressionError, parse, variables } from "./expression.ts";
 import { dataOf, templatesOf } from "./exercises.ts";
 import { formulaProblem } from "./formula.ts";
-import { soundness, templateProblems, unusedVariables, type Generated, type Templates } from "./generated.ts";
+import {
+  exampleProblems,
+  soundness,
+  templateProblems,
+  unusedVariables,
+  type Generated,
+  type Templates,
+} from "./generated.ts";
 import { htmlTag, inspect } from "./markdown.ts";
 import { MESSAGES } from "./messages.ts";
 import { allBlocks } from "./routes.ts";
@@ -619,7 +627,36 @@ function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: P
     const value = block.props?.[name];
     for (const path of textPaths(value, field.type)) texts.check(yaml, [...at, "props", name, ...path], "plain");
   }
-  check.uses.push({ block, component, place: `${yaml.file}:${lineOf(yaml, at, 0) ?? 1}: ${pathText(at)}` });
+  // an exercise's check is the component's own code: its examples, at least one answer of each kind, test it
+  const examples = block.examples;
+  if (!component.exercise) {
+    if (examples !== undefined) {
+      problems.at(
+        yaml,
+        [...at, "examples"],
+        `${component.name} is no exercise (it emits no answered), so it has no check for examples; remove them`,
+      );
+    }
+  } else {
+    const kinds = (["accepted", "rejected"] as const).filter((kind) => (examples?.[kind] ?? []).length === 0);
+    if (kinds.length > 0) {
+      problems.at(
+        yaml,
+        examples === undefined ? at : [...at, "examples"],
+        `${examples === undefined ? "examples" : kinds.map((kind) => `examples.${kind}`).join(" and ")} ${kinds.length > 1 && examples !== undefined ? "are" : "is"} missing; an exercise component's block lists answers its check must accept (the other correct answers the text allows) and must reject (typical wrong ones), e.g. examples: { accepted: [{ answer: … }], rejected: [{ answer: … }] } (vue-component-exercise-contract)`,
+      );
+    }
+  }
+  const place = (path: Path) => `${yaml.file}:${lineOf(yaml, path, 0) ?? 1}: ${pathText(path)}`;
+  check.uses.push({
+    block,
+    component,
+    place: place(at),
+    examples: {
+      accepted: (examples?.accepted ?? []).map((_example, index) => place([...at, "examples", "accepted", index])),
+      rejected: (examples?.rejected ?? []).map((_example, index) => place([...at, "examples", "rejected", index])),
+    },
+  });
 }
 
 /** An exercise's id is an anchor of its page: once on the page. */
@@ -714,6 +751,13 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
     checkExpression(check, [...at, "mistakes", index, "value"], mistake.value, declared);
     texts.check(yaml, [...at, "mistakes", index, "message"], "plain");
   });
+  // an example may name the task's right answer too
+  const withAnswer = new Set([...declared, "answer"]);
+  for (const kind of ["accepted", "rejected"] as const) {
+    (block.examples?.[kind] ?? []).forEach((source, index) =>
+      checkExpression(check, [...at, "examples", kind, index], source, withAnswer),
+    );
+  }
   const compare = block.answer.compare;
   if (typeof compare === "object") {
     for (const kind of ["choice", "set"] as const) {
@@ -774,8 +818,11 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
     );
     return;
   }
-  for (const problem of soundness(block, dataOf(block, records), templates, texts.languages, check.seeds)) {
-    problems.at(yaml, [...at, ...problem.path], problem.message, problem.lang);
+  const sound = soundness(block, dataOf(block, records), templates, texts.languages, check.seeds);
+  for (const problem of sound) problems.at(yaml, [...at, ...problem.path], problem.message, problem.lang);
+  if (sound.length > 0) return;
+  for (const problem of exampleProblems(block, dataOf(block, records), templates, texts.languages, check.seeds)) {
+    problems.at(yaml, [...at, ...problem.path], problem.message);
   }
 }
 

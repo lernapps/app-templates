@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { build } from "vite-plus";
-import { propertyProblems } from "../runtime/explainer/components.ts";
+import { exampleProblems, propertyProblems } from "../runtime/explainer/components.ts";
 import { explainer } from "../runtime/explainer/plugin.ts";
 
 const FIXTURE = join(import.meta.dirname, "fixtures/explainer-history");
@@ -96,6 +96,22 @@ const cases: [string, (root: string) => void, string][] = [
     'src/components/AssignLabels.vue: it emits answered, so it is an exercise, and keeps its nojs text, which gives the task with its solution: an exercise replaces its nojs text, so the solution shows only after the answer; remove nojs: "caption" from defineOptions (vue-component-nojs)',
   ],
   [
+    "an exercise component's block without examples",
+    (root) =>
+      edit(
+        root,
+        "revolution/staende.yaml",
+        "        examples:\n          accepted:\n            - answer: [0, 1, 2]\n          rejected:\n            - answer: [2, 1, 0]\n            - answer: [0, 0, 2]\n",
+        "",
+      ),
+    "src/revolution/staende.yaml:50: blocks[0].blocks[3]: examples is missing; an exercise component's block lists answers its check must accept (the other correct answers the text allows) and must reject (typical wrong ones), e.g. examples: { accepted: [{ answer: … }], rejected: [{ answer: … }] } (vue-component-exercise-contract)",
+  ],
+  [
+    "an accepted example that the component's check rejects",
+    (root) => edit(root, "revolution/staende.yaml", "- answer: [0, 1, 2]", "- answer: [1, 0, 2]"),
+    "src/revolution/staende.yaml:70: blocks[0].blocks[3].examples.accepted[0]: AssignLabels.ts: for seed 1 check(task, answer) rejects [1,0,2], but it is listed as accepted; if the task's text allows it, fix check so that it accepts it, else move it to rejected (vue-component-exercise-contract)",
+  ],
+  [
     "a component that fetches",
     (root) =>
       edit(root, VUE, "  done.value = true;\n", '  done.value = true;\n  void fetch("https://example.org/log");\n'),
@@ -166,5 +182,23 @@ describe("the property test of an exercise component's logic", () => {
         50,
       ),
     ).toEqual(["for seed 1 generate(seed, props) throws: no task"]);
+  });
+});
+
+describe("the examples of an exercise component's block", () => {
+  const props = { parts: ["a", "b", "c"] };
+  test("each runs through check, for its seed or for every seed", async () => {
+    const logic = await import("./fixtures/explainer-history/components/AssignLabels.ts");
+    expect(
+      exampleProblems(logic, props, { accepted: [{ answer: [0, 1, 2] }], rejected: [{ answer: [2, 1, 0], seed: 3 }] }),
+    ).toEqual([]);
+    expect(exampleProblems(logic, props, { rejected: [{ answer: [0, 1, 2], seed: 7 }] })).toEqual([
+      {
+        kind: "rejected",
+        index: 0,
+        message:
+          "for seed 7 check(task, answer) accepts [0,1,2], but it is listed as rejected; if the task's text rules it out, fix check so that it rejects it, else move it to accepted",
+      },
+    ]);
   });
 });

@@ -43,6 +43,12 @@ with which a creator and their AI assistant build a learning app.
   `answered { correct, reason? }` is an exercise (`reason`: what went wrong in a wrong answer, shown with the
   feedback): its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
   `wrong(task)`, which the build tests over 50 fixed seeds per block ([`components.ts`](runtime/explainer/components.ts)).
+- Every exercise may carry `examples: { accepted, rejected }`, test cases that learners never see: the other correct
+  answers its text allows, and typical wrong ones. The build runs each through the same check the page uses (the
+  quiz's checker, a generated exercise's comparator for every seed, an exercise component's `check`) and fails on an
+  accepted example the check rejects or a rejected one it accepts. An exercise component's block must have at least
+  one of each, as its check is the app's own code; for every other exercise they are optional
+  ([`examples.ts`](runtime/shared/examples.ts)).
 - Both archetypes write `404.html` at the bundle's root: GitHub Pages serves it for any address the app does not
   have, and its script finds the app's root (the nearest folder upwards with a `404.html`, so a preview below
   `pr-preview/pr-<n>/` finds its own) and moves on to its start page

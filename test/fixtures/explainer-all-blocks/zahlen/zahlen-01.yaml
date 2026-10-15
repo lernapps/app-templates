@@ -142,6 +142,7 @@ blocks:
           - text: { de: "1", en: "1" }
             correct: false
             info: { de: "Das ist 1 % von 100.", en: "That is 1 % of 100." }
+        examples: { accepted: ["2"], rejected: [1] }
       - type: generated
         id: prozent-rechnen
         given:
@@ -153,6 +154,7 @@ blocks:
         answer: { value: "G * p / 100", compare: { number: { format: integer } } }
         mistakes:
           - { value: "G * p", message: { de: "Du hast nicht durch 100 geteilt.", en: "You did not divide by 100." } }
+        examples: { accepted: ["G / 100 * p"], rejected: ["G * p / 10", "answer + 1"] }
         hint: { de: "1 % von {{G}} ist $\\frac{{{G}}}{100}$.", en: "1 % of {{G}} is $\\frac{{{G}}}{100}$." }
         steps:
           - {
