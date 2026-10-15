@@ -1,1 +1,1 @@
-{ "extends": "@lernapps/tooling/tsconfig.json" }
+{ "extends": "@lernapps/tooling/tsconfig.json", "include": ["src"] }

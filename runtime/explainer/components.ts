@@ -24,6 +24,7 @@ import { join } from "node:path";
 import type { Node, Program } from "@babel/types";
 import type { SourceMapConsumer as Consumer } from "source-map-js";
 import { inLanguage, type Text } from "../shared/languages.ts";
+import type { ComponentInfo, Field, PropType } from "./content.ts";
 
 type Sfc = typeof import("vue/compiler-sfc");
 type TypeResolveContext = Parameters<Sfc["resolveTypeElements"]>[0];
@@ -37,36 +38,6 @@ const sfc = (): Sfc => (compiler ??= require("vue/compiler-sfc") as Sfc);
 export const COMPONENT_SEEDS = 50;
 /** The budget of a component's own code, gzipped, in bytes; Vue is loaded once per page and not counted. */
 export const SIZE_BUDGET = 20_000;
-
-/** A prop type that a block's props can give. */
-export type PropType =
-  | { kind: "string" | "number" | "boolean" | "unknown" }
-  | { kind: "literal"; values: readonly (string | number | boolean)[] }
-  | { kind: "array"; of: PropType }
-  | { kind: "object"; fields: Readonly<Record<string, Field>> }
-  | { kind: "union"; of: readonly PropType[] };
-
-export interface Field {
-  type: PropType;
-  optional: boolean;
-  /** The declaration as written, e.g. "parts: string[]". */
-  source: string;
-}
-
-export interface ComponentInfo {
-  name: string;
-  /** src/components/<Name>.vue */
-  file: string;
-  /** The .vue file's absolute path. */
-  path: string;
-  props: Readonly<Record<string, Field>>;
-  /** Whether it emits answered: an exercise. */
-  exercise: boolean;
-  /** Whether it keeps its nojs text as a caption once it runs, rather than replacing it. */
-  caption: boolean;
-  /** The absolute path of its logic module <Name>.ts, for an exercise. */
-  logic?: string;
-}
 
 /** Where a problem is: a line, and a column where it is known. */
 interface Place {
