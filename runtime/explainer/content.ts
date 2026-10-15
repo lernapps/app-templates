@@ -24,8 +24,6 @@ export interface App {
   languages: readonly string[];
   chapters: readonly string[];
   sources?: readonly Source[];
-  /** Old addresses of the app, each leading to a page (and section) of it: "/strom/alt/" → "/strom/neu/#teil". */
-  redirects?: Readonly<Record<string, string>>;
 }
 
 export interface Credit {

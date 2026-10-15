@@ -43,6 +43,10 @@ with which a creator and their AI assistant build a learning app.
   `answered { correct, reason? }` is an exercise (`reason`: what went wrong in a wrong answer, shown with the
   feedback): its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
   `wrong(task)`, which the build tests over 50 fixed seeds per block ([`components.ts`](runtime/explainer/components.ts)).
+- Both archetypes write `404.html` at the bundle's root: GitHub Pages serves it for any address the app does not
+  have, and its script finds the app's root (the nearest folder upwards with a `404.html`, so a preview below
+  `pr-preview/pr-<n>/` finds its own) and moves on to its start page
+  ([`pages.ts`](runtime/shared/pages.ts)).
 - Which commit of this repo a new app gets and what the generator adds to the template:
   `npx --yes github:lernapps/tooling#main create --help`.
 - What an archetype is and how the parts fit: the [architecture of the tooling](https://lernapps.net/tooling/architecture/).

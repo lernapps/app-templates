@@ -179,18 +179,6 @@
           "items": {
             "$ref": "#/$defs/source"
           }
-        },
-        "redirects": {
-          "description": "Optional: old addresses of the app that keep working after a page was removed, renamed or moved, e.g. because a catalog entry or a bookmark links to them. Each key is the old address, each value the page that took its place, written like a link to a page of the app: { \"/strom/alte-seite/\": \"/strom/spannung/\", \"/strom/messen/\": \"/strom/spannung/#messen\" }. The build writes a small page at each old address, in every language tree, that moves on to the new page at once and links it; it fails when the new page or section does not exist, or when the old address is still a page of the app.",
-          "type": "object",
-          "minProperties": 1,
-          "propertyNames": {
-            "pattern": "^/[a-z0-9]+(-[a-z0-9]+)*/([a-z0-9]+(-[a-z0-9]+)*/)?$"
-          },
-          "additionalProperties": {
-            "type": "string",
-            "pattern": "^/([a-z0-9]+(-[a-z0-9]+)*/){0,2}(#\\S+)?$"
-          }
         }
       }
     },

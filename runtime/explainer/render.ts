@@ -450,49 +450,6 @@ export function renderSite(site: Site, islands: Islands = new Map()): RenderedPa
   return routes(site).map((route) => renderPage(site, route, islands));
 }
 
-/** A page that moves on to another: where it is, from the app's root, and its whole document. */
-export interface RenderedRedirect {
-  path: string;
-  html: string;
-}
-
-/**
- * The redirects of app.yaml in every language tree: a small page of its own at each old address, which moves on to
- * the page (and section) that took its place at once (<meta http-equiv="refresh">), names it as canonical, keeps
- * itself out of search engines, and links it for a reader whose browser does not move on.
- */
-export function renderRedirects(site: Site): RenderedRedirect[] {
-  const all = routes(site);
-  return site.app.languages.flatMap((lang) =>
-    Object.entries(site.app.redirects ?? {}).map(([from, to]) => {
-      const [target = "", hash] = to.split("#");
-      const path = languageRoot(lang) + from.slice(1);
-      const local = target.slice(1);
-      const title =
-        all.find((route) => route.lang === lang && route.local === local)?.title ?? inLanguage(site.app.title, lang);
-      const href = plain(relative(path, languageRoot(lang) + local) + (hash === undefined ? "" : `#${hash}`));
-      const html = [
-        `<!doctype html>`,
-        `<html lang="${lang}">`,
-        `  <head>`,
-        `    <meta charset="utf-8" />`,
-        `    <meta name="viewport" content="width=device-width, initial-scale=1" />`,
-        `    <title>${plain(local === "" ? title : `${title} – ${inLanguage(site.app.title, lang)}`)}</title>`,
-        `    <meta name="robots" content="noindex" />`,
-        `    <link rel="canonical" href="${href}" />`,
-        `    <meta http-equiv="refresh" content="0; url=${href}" />`,
-        `  </head>`,
-        `  <body>`,
-        `    <main><p>${plain(message(lang, "moved"))} <a href="${href}">${plain(title)}</a></p></main>`,
-        `  </body>`,
-        `</html>`,
-        ``,
-      ].join("\n");
-      return { path, html };
-    }),
-  );
-}
-
 /** llms.txt of a language tree: the app, its pages with their sections as deep links, from that tree's root. */
 export function llmsTxt(site: Site, lang: string): string {
   const t = (key: keyof Messages) => message(lang, key);
