@@ -6,5 +6,3 @@ intro:
   }
 languages: [de, en]
 chapters: [kapitel]
-redirects:
-  /kapitel/alt/: /kapitel/eins/#abschnitt

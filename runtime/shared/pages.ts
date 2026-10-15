@@ -54,3 +54,56 @@ export function languageSwitch(
   );
   return `<nav class="${className}" aria-label="${label}"><ul>${links.join("")}</ul></nav>`;
 }
+
+/**
+ * The page for every address the app does not have, 404.html at the bundle's root: GitHub Pages serves it for any
+ * missing path below the site, at that path, so the page cannot know its own depth, and relative links in it would
+ * point below the missing path. Its script finds the app's root instead: from the missing path's folder upwards, the
+ * first folder whose 404.html exists (one HEAD request each, to the same server) is the root of the bundle that
+ * answers there: the app at /<repo>/, a preview at /<repo>/pr-preview/pr-<n>/ (which has its own 404.html), or / when
+ * served locally. It then moves on to that root's start page and points the link there. Without JavaScript the link
+ * leads to the start page of the site. German, plain language, not indexed, nothing loaded from another server.
+ */
+export function notFoundPage(): string {
+  const script = `(async () => {
+  const link = document.getElementById("start");
+  let folder = location.pathname.slice(0, location.pathname.lastIndexOf("/") + 1);
+  for (;;) {
+    try {
+      const found = await fetch(folder + "404.html", { method: "HEAD", cache: "no-store" });
+      if (found.ok) break;
+    } catch {
+      return;
+    }
+    if (folder === "/") return;
+    folder = folder.slice(0, folder.lastIndexOf("/", folder.length - 2) + 1);
+  }
+  link.href = folder;
+  link.textContent = "Zur Startseite der App";
+  if (folder === location.pathname) return;
+  document.getElementById("weiter").hidden = false;
+  location.replace(folder);
+})();`;
+  return [
+    `<!doctype html>`,
+    `<html lang="de">`,
+    `  <head>`,
+    `    <meta charset="utf-8" />`,
+    `    <meta name="viewport" content="width=device-width, initial-scale=1" />`,
+    `    <meta name="robots" content="noindex" />`,
+    `    <title>Seite nicht gefunden</title>`,
+    `    <style>body { margin: 2rem auto; max-width: 40rem; padding: 0 1rem; font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; background: #ffffff; } a { color: #1d4ed8; }</style>`,
+    `  </head>`,
+    `  <body>`,
+    `    <main>`,
+    `      <h1>Seite nicht gefunden</h1>`,
+    `      <p>Diese Seite gibt es nicht (mehr).</p>`,
+    `      <p id="weiter" hidden>Du wirst zur Startseite der App weitergeleitet.</p>`,
+    `      <p><a id="start" href="/">Zur Startseite</a></p>`,
+    `    </main>`,
+    `    <script>${script}</script>`,
+    `  </body>`,
+    `</html>`,
+    ``,
+  ].join("\n");
+}
