@@ -33,7 +33,7 @@ export interface ComponentOutline {
   nojs: string;
   /** Whether it emits answered, an exercise. */
   exercise: boolean;
-  /** Whether it keeps its nojs text as a caption once it runs. */
+  /** Whether it keeps its nojs text, folded as a text description, once it runs. */
   caption: boolean;
 }
 

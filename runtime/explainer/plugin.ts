@@ -9,7 +9,8 @@
 // entry: Vite builds the one hashed client module (src/main.ts) and stylesheet from it. The built index.html is then
 // the shell of every page: each page is the shell with its language, its head and its body where it says
 // <!-- explainer -->, written into its folder, with the shell's relative asset URLs (./assets/…) rewritten for its
-// depth. The bundled images go to images/, llms.txt to the root of each language tree. `vp dev` serves the same
+// depth. The bundled images go to images/, llms.txt to the root of each language tree, and 404.html, which leads
+// every address the app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same
 // pages, rendered on each request.
 //
 // Components (src/components/<Name>.vue, components.ts): only when the app has them, the plugin compiles them with
@@ -30,7 +31,7 @@ import { propertyProblems, propsIn, SIZE_BUDGET, type ExerciseLogic } from "./co
 import type { Block, Site } from "./content.ts";
 import { ContentError, loadSite } from "./load.ts";
 import { llmsTxt, renderSite, type Islands, type RenderedPage } from "./render.ts";
-import { fromDepth, languageRoot, withLanguage } from "../shared/pages.ts";
+import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 
 const MARKER = "<!-- explainer -->";
 const ISLANDS = "\0lernapps-explainer-islands";
@@ -229,6 +230,7 @@ export function explainer(): Plugin[] {
         if (page.route.path === "") index.source = html;
         else this.emitFile({ type: "asset", fileName: `${page.route.path}index.html`, source: html });
       }
+      this.emitFile({ type: "asset", fileName: "404.html", source: notFoundPage() });
       for (const [image, file] of content.images) {
         this.emitFile({ type: "asset", fileName: image, source: readFileSync(file) });
       }

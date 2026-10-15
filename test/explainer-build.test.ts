@@ -13,6 +13,8 @@ import { explainer } from "../runtime/explainer/plugin.ts";
 import { loadSite } from "../runtime/explainer/load.ts";
 import { renderPage } from "../runtime/explainer/render.ts";
 import { routes } from "../runtime/explainer/routes.ts";
+import { notFoundPage } from "../runtime/shared/pages.ts";
+import { runInNewContext } from "node:vm";
 
 /** An app with the content of `src`: index.html, src/main.ts with a stylesheet next to the app, and the content. */
 function app(src: string): string {
@@ -94,11 +96,15 @@ describe("one build writes every page", () => {
         // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
         if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
         for (const generated of html.split('class="explainer-exercise explainer-generated"').slice(1)) {
-          const exercise = generated.split('class="explainer-live"')[0] ?? "";
+          const exercise = generated.split('class="explainer-exercise-data"')[0] ?? "";
           expect(exercise.split('class="explainer-worked-task"').length - 1).toBe(3);
           expect(exercise.split('<details class="explainer-solution">').length - 1).toBe(3);
         }
       }
+      // every address the app does not have: 404.html at the root, not indexed, with a link to the start page
+      const missing = readFileSync(join(root, "dist", "404.html"), "utf8");
+      expect(missing).toContain('<meta name="robots" content="noindex" />');
+      expect(missing).toContain('<a id="start" href="/">');
       for (const lang of new Set(all.map((route) => route.lang))) {
         const llms = readFileSync(join(root, "dist", lang === "de" ? "" : lang, "llms.txt"), "utf8");
         for (const route of all.filter((candidate) => candidate.kind === "page" && candidate.lang === "de")) {
@@ -125,4 +131,38 @@ test("each language's page has its own credits and the addresses of its links", 
   expect(en).toContain('href="https://en.wikipedia.org/wiki/Hexagon"');
   expect(en).not.toContain("eigene Zeichnung");
   expect(en).not.toContain("wikipedia.org/wiki/Sechseck");
+});
+
+describe("404.html finds the app's root from any missing address and moves on to it", () => {
+  /** Runs the page's script at `path` on a server that has 404.html in `roots`; where it moves on to, if anywhere. */
+  async function movesTo(path: string, roots: readonly string[]): Promise<string | undefined> {
+    const script = /<script>([\s\S]*)<\/script>/.exec(notFoundPage())?.[1] ?? "";
+    const elements = { start: { href: "/", textContent: "" }, weiter: { hidden: true } };
+    let target: string | undefined;
+    const fetch = (url: string) => Promise.resolve({ ok: roots.some((root) => url === `${root}404.html`) });
+    const location = { pathname: path, replace: (url: string) => (target = url) };
+    const document = { getElementById: (id: "start" | "weiter") => elements[id] };
+    await runInNewContext(script, { fetch, location, document });
+    if (target !== undefined) expect(elements.start.href).toBe(target);
+    return target;
+  }
+
+  test.each([
+    ["/elektrizitaet/strom/alt/", ["/", "/elektrizitaet/"], "/elektrizitaet/"],
+    ["/elektrizitaet/strom", ["/", "/elektrizitaet/"], "/elektrizitaet/"],
+    [
+      "/elektrizitaet/pr-preview/pr-12/strom/alt/",
+      ["/", "/elektrizitaet/", "/elektrizitaet/pr-preview/pr-12/"],
+      "/elektrizitaet/pr-preview/pr-12/",
+    ],
+    ["/elektrizitaet/pr-preview/pr-13/strom/", ["/", "/elektrizitaet/"], "/elektrizitaet/"],
+    ["/strom/alt/", ["/"], "/"],
+  ])("%s: to %s", async (path, roots, root) => {
+    expect(await movesTo(path, roots)).toBe(root);
+  });
+
+  test("not when the root itself is missing, nor without any root", async () => {
+    expect(await movesTo("/elektrizitaet/", ["/elektrizitaet/"])).toBeUndefined();
+    expect(await movesTo("/a/b/", [])).toBeUndefined();
+  });
 });
