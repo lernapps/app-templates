@@ -68,7 +68,7 @@ with which a creator and their AI assistant build a learning app.
   Claude first and the default, and "Prompt kopieren"); the way the learner picks is kept on the device
   (`@lernapps/tooling/storage`) and is the default from then on. On a page the prompt also gets the page's address and,
   from its tutor file, the tasks and solutions of the numbers in that address ([`tutorpage.ts`](runtime/explainer/tutorpage.ts));
-  a prompt too long for the assistant's address goes short, with the whole one on the clipboard
+  a prompt too long for the assistant's address goes short, with the whole one on the clipboard; the short one names every address the tutor may fetch (llms.txt and each page's tutor file), because a chat assistant fetches only addresses its user wrote into the conversation, not those it finds in a fetched file
   ([`prompt.ts`](runtime/explainer/prompt.ts)). Without JavaScript the section has a plain link per assistant. A page opened with `von=tutor`
   shows "Zurück zum Tutor", which closes the tab ([`tutor.ts`](runtime/explainer/tutor.ts)).
 - Every exercise may carry `examples: { accepted, rejected }`, test cases that learners never see: the other correct

@@ -63,6 +63,7 @@ interface Words {
   startTitle: string;
   start: string[];
   short: string;
+  fetchable: string;
 }
 
 const WORDS: Readonly<Record<string, Words>> = {
@@ -98,7 +99,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     done: "Eine Seite ist abgehakt, wenn drei Aufgaben der Seite in der App richtig waren und die lernende Person eine davon erklären kann.",
     rulesTitle: "App-Regeln",
     readFirst:
-      "Lies zuerst {llms}: alle Seiten mit ihren Abschnitten und die Regeln. Die Tutor-Datei jeder Seite enthält ihre Übungen mit Aufgaben, Lösungen und typischen Fehlern, für Aufgaben mit Zufallszahlen alle ihre Nummern (höchstens {n}, jede eine andere Aufgabe).",
+      "Lies zuerst {llms}: alle Seiten mit ihren Abschnitten und die Regeln. Alle Adressen in dieser Anleitung darfst du abrufen. Die Tutor-Datei jeder Seite enthält ihre Übungen mit Aufgaben, Lösungen und typischen Fehlern, für Aufgaben mit Zufallszahlen alle ihre Nummern (höchstens {n}, jede eine andere Aufgabe).",
     appRules: "Regeln dieser App:",
     startTitle: "Start",
     start: [
@@ -106,6 +107,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Ein Schritt pro Antwort. Keine Einleitung über dich, keine Zusammenfassung.",
     ],
     short: "Lies {prompt} und sei mein Tutor für die Lern-App „{app}“, genau nach dieser Anleitung.",
+    fetchable: "Diese Adressen darfst du bei Bedarf abrufen, weil ich sie dir hier nenne (andere nicht):",
   },
   en: {
     title: "AI tutor",
@@ -139,7 +141,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     done: "A page is done when three of its tasks were right in the app and the learner can explain one of them.",
     rulesTitle: "Rules for the app",
     readFirst:
-      "First read {llms}: every page with its sections, and the rules. Each page's tutor file holds its exercises with tasks, solutions and typical mistakes, for tasks with random numbers all their numbers (at most {n}, each a different task).",
+      "First read {llms}: every page with its sections, and the rules. You may fetch every address in this guide. Each page's tutor file holds its exercises with tasks, solutions and typical mistakes, for tasks with random numbers all their numbers (at most {n}, each a different task).",
     appRules: "Rules of this app:",
     startTitle: "Start",
     start: [
@@ -147,6 +149,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "One step per answer. No introduction about yourself, no summary.",
     ],
     short: "Read {prompt} and be my tutor for the learning app “{app}”, exactly as it says.",
+    fetchable: "You may fetch these addresses when you need them, because I name them here (no others):",
   },
 };
 
@@ -198,11 +201,22 @@ export function tutorPrompt(site: Site, lang: string): string {
   return `${lines.join("\n").trimEnd()}\n`;
 }
 
-/** The short prompt a provider link carries when the whole one is too long: it points to tutor.md. */
+/**
+ * The short prompt a provider link carries when the whole one is too long: it points to tutor.md, and it names every
+ * address the tutor may fetch (llms.txt, the tutor file of each page). An assistant fetches only addresses the user
+ * wrote into the conversation, not those it finds in a fetched file, so the prompt itself must list them.
+ */
 export function shortPrompt(site: Site, lang: string): string {
-  return wordsIn(lang)
-    .short.replace("{prompt}", `${BASE}${PROMPT_FILE}`)
+  const words = wordsIn(lang);
+  const first = words.short
+    .replace("{prompt}", `${BASE}${PROMPT_FILE}`)
     .replace("{app}", line(inLanguage(site.app.title, lang)));
+  const addresses = [
+    `${BASE}${PROMPT_FILE}`,
+    `${BASE}llms.txt`,
+    ...contentPages(site).map((page) => `${BASE}${tutorFileOf(page)}`),
+  ];
+  return [first, "", words.fetchable, ...addresses.map((address) => `- ${address}`)].join("\n");
 }
 
 /** The prompt with its links from `base`: "" for tutor.md, the language tree's address for the copied prompt. */
