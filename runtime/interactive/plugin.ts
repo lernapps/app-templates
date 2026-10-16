@@ -10,7 +10,8 @@
 // - the component rules on every single-file component in src/ (src/ui/) and the app's own TypeScript modules they
 //   import, with the explainer's checks on the SFC compiler's output (../explainer/components.ts): no network, no
 //   eval, new Function, innerHTML or v-html, imports only from vue, this runtime, @lernapps/tooling/storage, i18n and
-//   a11y and the app's own files in src/, browser globals only in onMounted;
+//   a11y, the app's own files in src/ and the libraries in the dependencies of its package.json (bundled; never from
+//   a URL), browser globals only in onMounted;
 // - the core (src/core/index.ts, contract.ts), loaded in a Vite server of its own: it exports start and step (and tick,
 //   if any, as a function, which a playthrough with ticks needs), every route starts, and every playthrough plays:
 //   start(seed, route), then for each step step(state, input) for each of its inputs (its keys as key inputs) and

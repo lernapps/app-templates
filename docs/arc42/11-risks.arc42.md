@@ -111,16 +111,3 @@ mitigation: Planned in the sketch (tooling step 2); until then the review reads 
 :::
 ```
 
-## Size Budget Left in the Build
-
-The frame limits no app's size (`dec-no-size-limit`), but `runtime/interactive/plugin.ts` still fails the build when
-an interactive app's own code is over its `SIZE_BUDGET`, so a large interactive app cannot be built today.
-
-```arc42
-:::risk
-id: risk-size-budget-left
-title: A size budget still in the interactive build
-severity: low
-mitigation: Technical debt; remove SIZE_BUDGET and its check from runtime/interactive/plugin.ts.
-:::
-```

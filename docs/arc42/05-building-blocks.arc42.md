@@ -168,8 +168,7 @@ protocol: TypeScript import, @lernapps/tooling/i18n
 ## Skills
 
 Built in the tooling, one folder per skill. An app commits its skills under `.agents/skills/`: `lernapps-app` for
-every app; the archetype's skill (`lernapps-quiz`, `lernapps-explainer`, or `lernapps-interactive` once its
-tooling pull request is merged); the content
+every app; the archetype's skill (`lernapps-quiz`, `lernapps-explainer` or `lernapps-interactive`); the content
 skills (`lernapps-content-research`, `lernapps-exercise-patterns`, `lernapps-content-growth`); `lernapps-listing`;
 and the app's own content guide `app-content`. `lernapps update` installs and replaces the `lernapps-*` skills from
 the tooling's `skills/` folder and leaves the app's own alone. They hold the guidance no check can make

@@ -83,8 +83,8 @@ category: accessibility
 
 An app's own Vue components (the explainer's components, the interactive UI) and the modules they import are checked
 on the SFC compiler's output at build and by lint rules: no network, no `eval`, `new Function`, `innerHTML` or
-`v-html`, imports only from Vue, the runtime, the storage, i18n and a11y helpers and the app's own files, browser
-globals only once mounted.
+`v-html`, imports only from Vue, the runtime, the storage, i18n and a11y helpers and the app's own files (an
+interactive app's also from the libraries in its dependencies, never from a URL), browser globals only once mounted.
 
 ```arc42
 :::concept

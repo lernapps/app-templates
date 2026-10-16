@@ -16,7 +16,7 @@ id: dec-one-archetype
 title: One interactive archetype for every kind of app
 status: accepted
 date: 2026-10-16
-addresses: con-runtime-unchanged, qg-understandable, risk-interactive-skill-missing
+addresses: con-runtime-unchanged, qg-understandable
 :::
 ```
 
@@ -58,8 +58,8 @@ addresses: qg-checkable, qg-accessibility
 Interactive apps will use more than keys and mouse: touch, gestures and other input later. So the core's
 `step(state, input)` takes a typed input (a key, a pointer or touch action, …), extensible by new kinds; playthroughs
 record such inputs, and the components translate any device input into inputs, so that the build and the browser play
-the same steps. Rejected: keys as the only input, with pointer and
-touch disguised as keys. Not built: the runtime passes only keys (`risk-input-only-keys`).
+the same steps. Rejected: keys as the only input, with pointer and touch disguised as keys. Built: a key input and an
+action input; a core returns the state unchanged for a kind it does not know.
 
 ```arc42
 :::decision
@@ -68,7 +68,7 @@ title: The core's input is typed and extensible (key, pointer, touch, …)
 status: accepted
 date: 2026-10-16
 supersedes: dec-keys-as-input
-addresses: qg-checkable, qg-accessibility, risk-input-only-keys
+addresses: qg-checkable, qg-accessibility
 :::
 ```
 
@@ -92,9 +92,11 @@ addresses: qg-checkable
 
 A playthrough is a seed, a route and steps of inputs with the state or announcement expected after them, written as
 YAML under `src/playthroughs/`. The build plays each against the core twice and the browser plays the same inputs, so
-determinism and behaviour are checked without test code per app. A step that lets n ticks pass, in the build and in
-the browser, is accepted (owner) but not built yet, nor are the core's property tests over fixed seeds; until then
-every playthrough played twice checks determinism. Rejected: free test code as the only behaviour check.
+determinism and behaviour are checked without test code per app. A step can let n ticks pass; the build calls `tick`
+n times, and the browser steps the shell's tick through the tests' clock (`if-test-clock`) rather than Playwright's
+fake clock, which would also freeze the announcement's timer. The core's property tests over fixed seeds are not
+built; until then every playthrough played twice checks determinism. Rejected: free test code as the only behaviour
+check.
 
 ```arc42
 :::decision
@@ -102,6 +104,24 @@ id: dec-playthroughs-as-data
 title: Playthroughs as data, played in the build and in the browser
 status: accepted
 date: 2026-10-16
-addresses: qg-checkable, risk-time-not-replayed, risk-no-core-property-tests
+addresses: qg-checkable, risk-no-core-property-tests
+:::
+```
+
+## Libraries in the Dependencies
+
+An interactive app may use libraries: its components and modules may import the packages listed in the dependencies
+of its package.json, which the build bundles; their licences are checked by `lernapps check` (`dependency-licence`).
+An import from a URL, network APIs, `eval`, `innerHTML` and `v-html` stay forbidden. The explainer's components keep
+their narrower scope. Rejected: only Vue, the runtime and the tooling helpers, which would make every app write again
+what a library already does well.
+
+```arc42
+:::decision
+id: dec-libraries
+title: An interactive app may import the libraries in its dependencies
+status: accepted
+date: 2026-10-16
+addresses: qg-privacy
 :::
 ```

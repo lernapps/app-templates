@@ -85,8 +85,8 @@ source: Decided sketch, step 12, section 2; owner, 2026-10-16, conversation (Vue
 
 The app's components and the modules they import are checked on the SFC compiler's output at build: no network
 APIs, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from Vue, the runtime, the tooling's storage,
-i18n and a11y helpers and the app's own files, and browser globals only once mounted, because the build renders
-without a browser.
+i18n and a11y helpers and the app's own files (an interactive app's also from the libraries in its dependencies,
+never from a URL), and browser globals only once mounted, because the build renders without a browser.
 
 ```arc42
 :::constraint
