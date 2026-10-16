@@ -1,0 +1,12 @@
+{
+  "game": "Spiel",
+  "type": "Tippe {letter}.",
+  "hit": "Richtig. Tippe {letter}.",
+  "miss": "Falsch. Tippe {letter}.",
+  "late": "Zu spät. Tippe {letter}.",
+  "start": "Neue Runde. Tippe {letter}.",
+  "score": "Punkte: {score} von {total}",
+  "misses": "Fehler: {misses}",
+  "done": "Fertig: {score} von {total} richtig. Mit Enter spielst du noch eine Runde.",
+  "again": "Noch eine Runde"
+}

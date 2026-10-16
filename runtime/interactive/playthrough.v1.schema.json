@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lernapps.net/tooling/schemas/playthrough.v1.schema.json",
+  "title": "A playthrough of a lernapps interactive app",
+  "description": "A file src/playthroughs/<name>.yaml of an app built from the archetype interactive: keys a learner types, from the start of a route with a seed, and after each step what is expected: the state of the core (the fields named, compared with the state step(state, key) gives) or the announcement for screen readers (@lernapps/tooling/a11y), or both. The build plays every playthrough against the core and fails with one line per mismatch; the end-to-end tests play the same keys in the browser. Between keys the build lets no time pass, the browser does: expect only what the keys decide.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["seed", "steps"],
+  "properties": {
+    "route": {
+      "description": "The route it starts at, an id of routes in src/app.yaml; the first route when it names none.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "seed": {
+      "description": "The seed it starts with: start(seed, route); in the browser the address app/?seed=<seed>#<route>.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647
+    },
+    "steps": {
+      "description": "The steps, in order.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    }
+  },
+  "$defs": {
+    "step": {
+      "description": "Keys, then what is expected after them: state, announce, or both.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["keys"],
+      "properties": {
+        "keys": {
+          "description": "The keys, one after the other, each as the browser names it (KeyboardEvent.key): a, A, Enter, \" \" for the space bar, ArrowLeft.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "state": {
+          "description": "The state expected after the keys: the fields named, each compared in the same way; a list or any other value is compared as a whole."
+        },
+        "announce": {
+          "description": "The announcement expected after the keys, in German: what @lernapps/tooling/a11y's announce said last. Only the browser can see it.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      }
+    }
+  }
+}
