@@ -10,7 +10,7 @@
 // the shell of every page: each page is the shell with its language, its head and its body where it says
 // <!-- explainer -->, written into its folder, with the shell's relative asset URLs (./assets/…) rewritten for its
 // depth. The bundled images go to images/, llms.txt to the root of each language tree with a tutor file next to each
-// page (tutor.ts; every link of both checked), and 404.html, which leads
+// page (tutor.ts) and the tutor prompt tutor.md (prompt.ts; every link of these checked), and 404.html, which leads
 // every address the app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same
 // pages, rendered on each request.
 //
@@ -43,6 +43,7 @@ import { llmsTxt, renderSite, type Descriptions, type Islands, type RenderedPage
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { contentPages, routes } from "./routes.ts";
 import { anchorsOf, linkProblems, tutorFile, tutorFileOf } from "./tutor.ts";
+import { PROMPT_FILE, tutorPrompt, withBase } from "./prompt.ts";
 
 const MARKER = "<!-- explainer -->";
 const ISLANDS = "\0lernapps-explainer-islands";
@@ -273,7 +274,10 @@ export function explainer(): Plugin[] {
       const problems: string[] = [];
       for (const lang of content.app.languages) {
         // llms.txt and the tutor files, each link checked against the pages and anchors of the language tree
-        const written = new Map<string, string>([["llms.txt", llmsTxt(content, lang)]]);
+        const written = new Map<string, string>([
+          ["llms.txt", llmsTxt(content, lang)],
+          [PROMPT_FILE, withBase(tutorPrompt(content, lang), "")],
+        ]);
         for (const page of contentPages(content)) {
           written.set(tutorFileOf(page), tutorFile(content, page, lang, descriptions));
         }
