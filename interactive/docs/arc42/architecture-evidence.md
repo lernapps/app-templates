@@ -8,12 +8,18 @@ validator does not parse it. Owner decisions count as evidence.
 | Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
 | --- | --- | --- | --- | --- |
 | `lernapps/tooling .vibe/development-plan-agentic-app-creation.md`, "Sketch: the interactive archetype (step 12, decided by the owner)" | Scope, the opinionated frame (Vue fixed), shell and app split, arc42 in the app, accessibility default with declared limits, tests | all chapters | high | — |
-| owner, 2026-10-16, conversation | Small storage: localStorage through the tooling wrapper, 100 kB per app; IndexedDB wrapper only when an app needs it; no settings, motion, sound or pause now; low stimulation as advice; architecture English and minimal; note all generic components, optional ones too | ch.2, ch.5, ch.8, ch.9 | high | — |
-| owner, 2026-10-16, conversation | An optional client-side AI tutor | ch.1, ch.5 | high | OPEN: handoff to the learner's own assistant (as the explainer) or a model running in the browser? |
+| owner, 2026-10-16, conversation | Small storage: localStorage through the tooling wrapper, 100 kB per app; no settings, motion, sound or pause now; low stimulation as advice; architecture English and minimal; note all generic components, optional ones too | ch.2, ch.5, ch.8, ch.9 | high | — |
+| owner, 2026-10-16, review | Tutor: no model in the browser; the tutor is the handoff to the learner's own assistant as in the explainer (bb-tutor-handoff, optional, not built for interactive apps); dec-tutor-variant accepted; bb-tutor-handoff provides the tutor prompt and files that actor-learner-assistant requires | ch.1, ch.3, ch.4, ch.5, ch.6, ch.8, ch.9, ch.11, ch.12 | high | — (resolves OPEN: handoff or model in the browser) |
+| owner, 2026-10-16, review | IndexedDB left out entirely (bb-large-storage and its mentions removed) | ch.2, ch.5, ch.8, ch.9 | high | — |
+| owner, 2026-10-16, review | No size limit: bb-size-budget, con-size-budget, concept-size-budget, qg-small and their scenarios and risks removed; the app's size goes into its catalog entry (fact sheet); optional loading indicator (progress bar at start, not built) in the shell; SIZE_BUDGET in runtime/interactive/plugin.ts is technical debt | ch.1, ch.2, ch.4, ch.5, ch.6, ch.7, ch.8, ch.10, ch.11, ch.12 | high | — (resolves OPEN: size budget scope) |
+| owner, 2026-10-16, review | Low stimulation: the skill lernapps-interactive (not built) is a tooling block providing the skill text that actor-creator-assistant requires; it implements concept-low-stimulation | ch.3, ch.5, ch.8 | high | — |
+| owner, 2026-10-16, review | Quality goals qg-privacy, qg-checkable, qg-accessibility (default with declared limits), qg-understandable (a reviewer or the creator's agent understands an app's structure from its architecture); qg-small dropped | ch.1, ch.4, ch.10 | high | — |
+| owner, 2026-10-16, review | Playthrough time steps (n ticks, build and browser, not built); actor interfaces if-start-page, if-app-address (bb-app-page), if-static-files (bb-build); shared-origin storage risk medium and accepted; core property tests stay planned; interactive apps get the same Pages workflow (check, publish, preview) in step 2 of the plan | ch.3, ch.5, ch.7, ch.8, ch.9, ch.11 | high | — (resolves OPENs on actor interfaces, time steps, storage risk, Pages workflow) |
+| owner, 2026-10-16, review | Exercise contract: the optional exports with which an app describes its tasks (describe(state, lang) gives task and solution text for the tutor and task numbers; examples of accepted and rejected answers checked at build), from the explainer's exercise components | ch.5, ch.6 | high | — |
 | `lernapps/.github ORGANIZATION.md`, "Every page, in every repo" | No cookies, no tracking, no requests to other servers before a click; WCAG 2.1 AA and 360 px for platform pages, default for apps | ch.2 | high | — |
 | `runtime/interactive/contract.ts` | Core contract start(seed, route), step(state, key), tick(state, dt); TICK = 20; playthrough format | ch.5, ch.6 | high | — |
 | `runtime/interactive/interactive.ts` (startInteractive) | Shell: state holder, input routing, clock, hash routes, seed from the address | ch.5, ch.6 | high | — |
-| `runtime/interactive/plugin.ts`, `load.ts`, `render.ts` | Build: start page and app page, validation, core and playthrough checks, size budget 100 kB | ch.5, ch.6 | high | — |
+| `runtime/interactive/plugin.ts`, `load.ts`, `render.ts` | Build: start page and app page, validation, core and playthrough checks; SIZE_BUDGET 100 kB still in plugin.ts (debt) | ch.5, ch.6, ch.11 | high | — |
 | `runtime/interactive/e2e.ts` (interactiveTests) | Browser playthroughs, pages without JavaScript, 360 px | ch.5, ch.10 | high | — |
 
 ## Rows from the chapters
@@ -26,8 +32,9 @@ validator does not parse it. Owner decisions count as evidence.
 | same, section 3 | Static start page from src/app.yaml readable without JS; app page; hash routes; app writes core, ui, data, playthroughs; runtime not changed by the app | ch.1 / 1.1 | high | — |
 | `runtime/interactive/interactive.ts` (startInteractive) | Keys and component-emitted input step the core; tick every TICK; seed from ?seed; route from #id | ch.1 / 1.1 | high | — |
 | `ORGANIZATION.md`, "Apps and the app overview" | An app connects to the platform only through its entry in the app overview | ch.1 / 1.1 | high | — |
-| owner, 2026-10-16, conversation | Optional client-side AI tutor | ch.1 / 1.1 | high | OPEN: handoff to the learner's own assistant or a model in the browser? |
-| agent inference from Sketch step 12 sections 2, 4, 5, 6 and ORGANIZATION.md "Every page" | Proposed quality goals qg-privacy, qg-checkable, qg-accessibility, qg-small, qg-understandable and their order | ch.1 / 1.2 | low | OPEN: owner to confirm set, order, priorities and ids |
+| owner, 2026-10-16, review | Optional tutor as a handoff to the learner's own assistant, no model in the browser | ch.1 / 1.1 | high | — |
+| owner, 2026-10-16, review | Quality goals qg-privacy, qg-checkable, qg-accessibility, qg-understandable and their order | ch.1 / 1.2 | high | — |
+| coordinator's proposal | Priorities: qg-privacy high, qg-checkable high, qg-accessibility medium, qg-understandable medium | ch.1 / 1.2, ch.10 | low | OPEN: confirm priorities (pending the owner) |
 | `ORGANIZATION.md` lines 3, 13-21, 35-40 | Stakeholders: learners, creators (and their AI assistant), owner Oliver Jägle, teachers and parents; listing decided by the owner | ch.1 / 1.3 | high | — |
 | tooling `scripts/verdict.ts` header; ORGANIZATION.md line 51 | Reviewers: a review agent before listing; the owner decides the listing | ch.1 / 1.3 | medium | — |
 
@@ -42,14 +49,13 @@ validator does not parse it. Owner decisions count as evidence.
 | `runtime/explainer/components.ts` header; `runtime/interactive/plugin.ts` lines 9-13 | Component rules on SFC compiler output: no network, eval, new Function, innerHTML, v-html; restricted imports; browser globals only in onMounted | ch.2 / con-component-rules | high | — |
 | Sketch step 12, sections 3-4 | Runtime interactive/ is not changed by the app; the app writes in the template's folders | ch.2 / con-runtime-unchanged | high | — |
 | tooling `archetypes/shared/storage.ts` header; test `app-check-failing.e2e.test.ts` (storage-through-wrapper) | Storage only through the wrapper, localStorage under prefix lernapps:<app>:, failures tolerated | ch.2 / con-state-on-device | high | — |
-| owner, 2026-10-16, conversation; Sketch step 12, section 3 | Quota 100 kB per app, save refuses beyond; IndexedDB wrapper only when needed | ch.2 / con-storage-quota | high | — |
+| owner, 2026-10-16, conversation; Sketch step 12, section 3 | Quota 100 kB per app, save refuses beyond | ch.2 / con-storage-quota | high | — |
 | tooling `archetypes/shared/storage.ts` (no limit in save) | Quota not built yet | ch.2 / con-storage-quota | high | — |
 | `ORGANIZATION.md` lines 57-58; Sketch step 12, section 5 | WCAG 2.1 AA and 360 px: platform rule, app default, deviations declared in the entry; start page meets both; low stimulation advice only | ch.2 / con-accessibility-default | high | — |
 | tooling `check/rules/accessible.ts:8`, `usable-at-360px.ts:10` (severity error) | Warning mode for apps with declared limits not built yet | ch.2 / con-accessibility-default | high | — |
 | `ORGANIZATION.md` lines 61-64; owner, 2026-10-16, conversation | German for learner text, English for infrastructure; app author decides names inside the repo; architecture in English | ch.2 / con-language | high | — |
 | Sketch step 12, section 2; tooling `check/rules/dependency-licence.ts` (ALLOWED); ORGANIZATION.md lines 70-79 | Libraries bundled, never from a CDN, under allowlisted licences; app repo MIT | ch.2 / con-bundled-licences | high | — |
-| `runtime/interactive/plugin.ts:21-22, 41, 217-230` (SIZE_BUDGET) | 100 kB gzip of the app's own src/ code; Vue, runtime and libraries not counted | ch.2 / con-size-budget | high | OPEN: contradicts Sketch step 12 section 2 ("size budget for the whole app") |
-| Sketch step 12, section 2 | Libraries inside a size budget for the whole app | ch.2 / con-size-budget | high | OPEN: contradicts runtime/interactive/plugin.ts (own code only) |
+| owner, 2026-10-16, review; `runtime/interactive/plugin.ts:41` (SIZE_BUDGET) | No size limit; con-size-budget removed; the build's SIZE_BUDGET is debt (ch.11) | ch.2 | high | — (resolves OPEN: size budget scope) |
 | `ORGANIZATION.md` line 59; `runtime/interactive/render.ts:67` | Links to imprint and privacy notice in the shell's footer | ch.2 / con-imprint-privacy | high | — |
 | Sketch step 12, section 4 | Architecture in docs/arc42, kept current; arc42 diff before commit, arc42 validate in lernapps check | ch.2 / con-architecture-current | high | — |
 | search of tooling for "arc42 diff"/"arc42 validate" outside the plan (only scripts/build.sh, review-summary.ts) | arc42 checks not yet wired into app hooks and check | ch.2 / con-architecture-current | medium | OPEN: confirm the arc42 hook and check for apps are not built yet |
@@ -58,15 +64,16 @@ validator does not parse it. Owner decisions count as evidence.
 
 | Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
 | --- | --- | --- | --- | --- |
-| ch.5 interfaces (if-*) | Chapter 5 defines only code contracts inside the boundary; no interface for built pages, addresses, build/check commands or the tutor handoff | ch.3 / all actors | high | OPEN: should ch.5 add interfaces for the pages, the addresses, the commands and the tutor handoff? |
+| owner, 2026-10-16, review; ch.5 if-start-page, if-app-address, if-static-files, if-tutor-files, if-skill-interactive | Every actor requires an interface of chapter 5 | ch.3 / all actors | high | — (resolves OPEN: interfaces for pages, addresses, static files, tutor handoff); the commands stay open, see below |
 | `ORGANIZATION.md` lines 3, 13-21 (stakeholders); ch.1 1.3 | Learners (adults and students, often in German schools), teachers and parents as users | ch.3 / actor-learner, actor-teacher-parent | high | — |
-| `runtime/interactive/interactive.ts` (startInteractive); `runtime/interactive/render.ts` | Learner plays the app page with keys and pointer input; start page readable without JavaScript | ch.3 / actor-learner | high | OPEN: no interface in ch.5 for pages and addresses |
-| `ORGANIZATION.md` line 58; decided sketch step 12 section 3 | Start page in German, without JavaScript, for teachers and parents | ch.3 / actor-teacher-parent | high | OPEN: no interface in ch.5 for the start page |
+| `runtime/interactive/interactive.ts` (startInteractive); `runtime/interactive/render.ts`; owner, 2026-10-16, review | Learner plays the app page with keys and pointer input; start page readable without JavaScript; requires if-start-page, if-app-address | ch.3 / actor-learner | high | — |
+| `ORGANIZATION.md` line 58; decided sketch step 12 section 3; owner, 2026-10-16, review | Start page in German, without JavaScript, for teachers and parents; requires if-start-page | ch.3 / actor-teacher-parent | high | — |
 | decided sketch step 12 section 3 "What the agent writes" | The creator's assistant writes src/core, src/ui, src/data, src/playthroughs (and src/app.yaml) | ch.3 / actor-creator-assistant | high | — |
-| ch.5 if-app-description, if-core-contract, if-root-component, if-playthrough-format | The assistant's `requires` points at the four contracts it writes against | ch.3 / actor-creator-assistant | medium | OPEN: no interface in ch.5 for vp build, vp dev, lernapps check |
-| `ORGANIZATION.md` "What every site shares" line 28; con-frontend-only | Static files published from gh-pages to lernapps.net/<repo>/, PR previews | ch.3 / actor-github-pages | high | OPEN: no interface in ch.5 for the built static files |
-| `ORGANIZATION.md` line 50; `tooling check/rules/entry-links-resolve.ts` header | App connects to the platform only through its overview entry; entry URL and topic links must resolve | ch.3 / actor-app-overview | high | OPEN: no interface in ch.5 for the start page URL and #route deep links |
-| owner, 2026-10-16, conversation; `runtime/explainer/tutor.ts`; ch.5 bb-tutor-handoff | Learner's own assistant exists only if the tutor is a handoff; not built for interactive apps | ch.3 / actor-learner-assistant | low | OPEN: tutor variant (handoff vs. model in the browser); OPEN: interface for the handoff |
+| ch.5 if-app-description, if-core-contract, if-root-component, if-playthrough-format, if-skill-interactive; owner, 2026-10-16, review | The assistant's `requires` points at the four contracts it writes against and the skill text | ch.3 / actor-creator-assistant | medium | OPEN: no interface in ch.5 for vp build, vp dev, lernapps check |
+| `ORGANIZATION.md` "What every site shares" line 28; con-frontend-only; owner, 2026-10-16, review | Static files published from gh-pages to lernapps.net/<repo>/, PR previews; requires if-static-files | ch.3 / actor-github-pages | high | — |
+| `ORGANIZATION.md` line 50; `tooling check/rules/entry-links-resolve.ts` header; owner, 2026-10-16, review | App connects to the platform only through its overview entry; entry URL and topic links must resolve; requires if-start-page, if-app-address | ch.3 / actor-app-overview | high | — |
+| tooling `.vibe/development-plan-agentic-app-creation.md` KD-13 (fact sheet, later); `apps/schemas/entry.v1.schema.json` (no size field); owner, 2026-10-16, review | The entry's fact sheet states the app's size; not built yet | ch.3 / actor-app-overview, ch.4, ch.5 / bb-build-checks, ch.12 / term-entry | high | — |
+| owner, 2026-10-16, review; `runtime/explainer/tutor.ts:1-12`, `tutorpage.ts:1-5` | The tutor is the learner's own assistant, receiving the tutor prompt and files after a click; not built for interactive apps | ch.3 / actor-learner-assistant | high | — |
 | arc42 cli W021/W023/W028 (dist/cli.mjs) | Context diagram: boundary subgraph, edges from actors to the boundary, only actor-facing blocks inside | ch.3 / system-context | high | — |
 
 ### Chapter 4
@@ -78,19 +85,20 @@ validator does not parse it. Owner decisions count as evidence.
 | `runtime/interactive/interactive.ts`; `contract.ts` TICK=20 | Shell holds state, routes keys and pointer input, ticks every 20 ms, route and seed from the address | ch.4 / System decomposition | high | — |
 | `runtime/interactive/plugin.ts` (two plays, SIZE_BUDGET, component rules); `e2e.ts` | Build fails on broken description, contract, non-determinism, component rules, size; browser tests via lernapps check --pre-push | ch.4 / Operational approach | high | — |
 | `ORGANIZATION.md` "What every site shares" (Renovate) ; con-runtime-unchanged | Runtime and tooling reach the app as dependency updates | ch.4 / Operational approach | high | — |
-| ch.1 1.2 proposed goals | Strategy addresses all five proposed goals; goal-to-approach mapping | ch.4 / strategy-fixed-frame-free-app addresses | low | OPEN: goal set needs the owner's confirmation (agent inference) |
-| con-storage-quota; owner, 2026-10-16, conversation | Storage quota 100 kB per app, decided, not built | ch.4 / table qg-small | high | — |
+| owner, 2026-10-16, review | Strategy addresses the four goals; goal-to-approach mapping | ch.4 / strategy-fixed-frame-free-app addresses | high | — |
 | con-architecture-current; decided sketch step 12 section 4 | arc42 diff before commit and validate in check decided, not built | ch.4 / Operational approach | medium | OPEN: confirm not built yet for apps |
-| owner, 2026-10-16, conversation | Tutor form open | ch.4 | high | OPEN: handoff vs. model in the browser |
-| decided sketch section 2 vs. `plugin.ts` SIZE_BUDGET comment | Size budget scope contradicts: whole app vs. src/ only | ch.4 | high | OPEN: contradicts plugin.ts / sketch; which holds? |
+| owner, 2026-10-16, review | Tutor as handoff, no model in the browser | ch.4 | high | — |
+| owner, 2026-10-16, review | No size limit; size stated in the catalog entry | ch.4 / Operational approach | high | — |
 
 ### Chapter 5
 
 | Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
 | --- | --- | --- | --- | --- |
 | tooling `.vibe/development-plan-agentic-app-creation.md`, sketch §3 | Runtime `interactive/` the app does not change; app writes src/core, src/ui, src/data, src/playthroughs | ch.5 / bb-runtime, bb-app, bb-core, bb-ui, bb-data, bb-playthroughs | high | — |
-| `runtime/interactive/plugin.ts:1-21`, `interactive()` | Build step: validation, component rules, core and playthrough checks, pages, 404, size budget; app adds it via vite.config.ts | ch.5 / bb-build, if-build-plugin, bb-build-checks, bb-not-found-page | high | — |
-| `runtime/interactive/plugin.ts` `SIZE_BUDGET = 100_000`, `generateBundle` | Own code of src/ gzipped within 100 kB; Vue, runtime, libraries not counted | ch.5 / bb-size-budget | high | — |
+| `runtime/interactive/plugin.ts:1-21`, `interactive()` | Build step: validation, component rules, core and playthrough checks, pages, 404; app adds it via vite.config.ts | ch.5 / bb-build, if-build-plugin, bb-build-checks, bb-not-found-page | high | — |
+| `tooling archetypes/shared/preset.ts:9` (relative URLs); `generator/app/.github/workflows/pages.yml`; owner, 2026-10-16, review | The build's static files, served by GitHub Pages | ch.5 / if-static-files | high | — |
+| `runtime/interactive/render.ts`; `runtime/interactive/interactive.ts` (seedParam, routeOf); owner, 2026-10-16, review | Start page at lernapps.net/<repo>/ and app address app/?seed=<n>#<route> as interfaces for the actors (provider bb-app-page chosen) | ch.5 / if-start-page, if-app-address | high | — |
+| owner, 2026-10-16, review | Size not limited; the build check is removed from the model; optional loading indicator (progress bar at start, not built) | ch.5 / bb-build-checks, bb-loading-indicator | high | — |
 | `runtime/interactive/plugin.ts` `coreProblems`, `play` | Exports checked, every route starts, each playthrough played twice without tick, states compared | ch.5 / bb-core-check, bb-build-playthroughs | high | — |
 | `runtime/interactive/load.ts:1-6`, `loadInteractive` | app.yaml and playthroughs validated against schemas plus German first, languages, unique ids, ≥1 playthrough, known routes | ch.5 / bb-app-validation, if-app-description, if-playthrough-format | high | — |
 | `runtime/interactive/load.ts:106` `languageListProblems(app.languages, Object.keys(MESSAGES))` | An app may declare only languages the runtime has texts for (de, en) | ch.5 / bb-page-tree | high | — |
@@ -104,10 +112,10 @@ validator does not parse it. Owner decisions count as evidence.
 | `runtime/interactive/interactive.ts` seedParam | Seed from ?seed=n else random | ch.5 / bb-seed | high | — |
 | `runtime/interactive/contract.ts` `Core`, `Playthrough` | Core contract start(seed, route), step(state, key), tick?(state, dt); playthrough seed, route, steps of keys with state/announce | ch.5 / if-core-contract, if-playthrough-format | high | — |
 | `runtime/interactive/e2e.ts:1-15`, `interactiveTests` | Pages without JS in every language, playthroughs in the browser with state and polite live region; desktop and 360 px | ch.5 / bb-browser-playthroughs, if-interactive-tests | high | — |
-| `runtime/explainer/tutor.ts`, `tutorpage.ts`, `prompt.ts`, `explainer.ts:12,101` | Tutor handoff (prompt, providers, clipboard, tutor.md, llms.txt, Zurück zum Tutor) built for the explainer only | ch.5 / bb-tutor-handoff | high | OPEN: tutor as handoff or model in the browser? |
-| owner, 2026-10-16, conversation | Client-side AI tutor form undecided | ch.5 / bb-tutor-handoff, bb-tutor-in-browser | high | OPEN: handoff or in-browser model? |
+| `runtime/explainer/tutor.ts:1-12`, `tutorpage.ts:1-5`, `prompt.ts`, `explainer.ts:12,101` | Tutor handoff (prompt, providers, clipboard, tutor.md, llms.txt, Zurück zum Tutor) built for the explainer only; tutor prompt and files as interface | ch.5 / bb-tutor-handoff, if-tutor-files | high | — |
+| owner, 2026-10-16, review | No model in the browser; bb-tutor-in-browser removed | ch.5 | high | — (resolves OPEN: tutor variant) |
 | `runtime/explainer/tasks.ts:1-7` | Task numbers built for the explainer only | ch.5 / bb-task-numbers | high | — |
-| sketch §3 "Optional, for apps with tasks"; `runtime/explainer/components.ts`, `shared/examples.ts` | Exercise contract (seed, describe, about, examples) optional, brings task numbers and tutor; not built for interactive | ch.5 / bb-exercise-contract | high | — |
+| sketch §3 "Optional, for apps with tasks"; `runtime/explainer/components.ts:9-14`, `shared/examples.ts:1-5`; owner, 2026-10-16, review | Exercise contract: optional exports, describe(state, lang) for task and solution text (tutor, task numbers), examples of accepted and rejected answers checked at build; not built for interactive | ch.5 / bb-exercise-contract | high | — |
 | owner, 2026-10-16, conversation | No settings dialog, less motion, sound or pause in scope now | ch.5 / bb-settings | high | — |
 | brief, "Generic components to cover" | "time limit off" as an example setting | ch.5 / bb-settings | medium | — |
 | `tooling archetypes/shared/preset.ts:1-25` | Preset: lint with lernapps rules, type check, format, tests, pre-commit, relative URLs | ch.5 / bb-preset, if-preset, bb-lint-rules | high | — |
@@ -117,7 +125,9 @@ validator does not parse it. Owner decisions count as evidence.
 | `tooling archetypes/shared/playwright.ts:1-6` | e2e against built app, Chromium desktop and 360 px | ch.5 / bb-playwright-config | high | — |
 | `tooling archetypes/shared/storage.ts:1-16` | Only storage, localStorage under app prefix, try/catch | ch.5 / bb-small-storage, if-device-storage | high | — |
 | owner, 2026-10-16, conversation; `grep -n quota storage.ts` (no match) | Quota 100 kB per app decided, not built yet | ch.5 / bb-small-storage | high | — |
-| owner, 2026-10-16, conversation | IndexedDB wrapper only when an app needs it | ch.5 / bb-large-storage | high | — |
+| owner, 2026-10-16, review | IndexedDB left out; bb-large-storage removed | ch.5 | high | — |
+| `ls tooling/skills` (no lernapps-interactive); `tooling/guidance` (plan-template.md, increment-template.md); `tooling/skills/lernapps-app/SKILL.md`; owner, 2026-10-16, review | Skill lernapps-interactive not built; the plan template and lernapps-app exist for every archetype, no other guidance for this archetype yet | ch.5 / bb-skill-interactive, if-skill-interactive | high | — |
+| `src/core/index.ts:4`; `src/ui/App.vue:9` | Core imports src/data JSON; UI imports src/messages JSON for the translator | ch.5 / if-app-data, if-messages | high | — |
 | `tooling archetypes/shared/a11y.ts:21,31,37` | announce, moveFocus, prefersReducedMotion | ch.5 / bb-a11y, if-a11y | high | — |
 | `tooling archetypes/shared/i18n.ts:1-6` | translator over src/messages | ch.5 / bb-i18n, if-translator, bb-messages | high | — |
 | `src/ui/App.vue:5-7` | UI imports announce and translator; props state, lang; emits input | ch.5 / bb-ui, if-root-component | high | — |
@@ -138,12 +148,12 @@ validator does not parse it. Owner decisions count as evidence.
 | `tooling archetypes/shared/storage.ts:1-16` | load/save/remove under prefix; blocked or full storage: save false, app keeps working | ch.6 / scenario-device-storage | high | — |
 | owner, 2026-10-16, conversation; `grep -n quota storage.ts` (no match) | Quota 100 kB decided, not built | ch.6 / scenario-device-storage | high | — |
 | `grep -rn storage src/` (none) | Template app does not use the storage | ch.6 / scenario-device-storage | high | — |
-| `runtime/interactive/plugin.ts:1-21` | Build order: validate, component rules, core in own Vite server, exports, routes start, playthroughs twice without tick, then pages, 404, size budget; one line per problem; vp dev renders per request | ch.6 / scenario-build | high | — |
+| `runtime/interactive/plugin.ts:1-21` | Build order: validate, component rules, core in own Vite server, exports, routes start, playthroughs twice without tick, then pages, 404; one line per problem; vp dev renders per request | ch.6 / scenario-build | high | — |
 | `vite.config.ts` | interactive() inside lernapps() preset | ch.6 / scenario-build | high | — |
 | `runtime/interactive/e2e.ts:1-16, 56`; `tooling archetypes/shared/playwright.ts:1-7` | lernapps check --pre-push runs e2e on built app via vp preview on free port, Chromium desktop and 360 px, reduced motion; no-JS checks; playthroughs at app/?seed#route with state and polite live region; check adds axe and width | ch.6 / scenario-browser-playthroughs | high | — |
 | `tooling archetypes/shared/hooks/pre-push`; `generator/app/.github/workflows/pages.yml:3-5` | pre-push hook and CI run lernapps check | ch.6 / scenario-browser-playthroughs | high | — |
 | `runtime/explainer/prompt.ts:1-8`, `tutor.ts:1-11` | Explainer tutor: copy button, provider links, tutor.md, llms.txt, nothing before a click | ch.6 / scenario-tutor | high | — |
-| owner, 2026-10-16, conversation | Tutor form for interactive undecided | ch.6 / scenario-tutor | high | OPEN: handoff to the learner's own assistant or a model in the browser? |
+| owner, 2026-10-16, review | Tutor for interactive apps works as in the explainer, no model in the browser | ch.6 / scenario-tutor | high | — |
 
 ### Chapter 7
 
@@ -153,7 +163,7 @@ validator does not parse it. Owner decisions count as evidence.
 | `tooling actions/app-publish/action.yml:3-5` | Publish to gh-pages branch served from root; only lernapps org repos at lernapps.net/<repo>/, others at <owner>.github.io/<repo>/ | ch.7 / dn-github-pages | high | — |
 | `tooling generator/app/.github/workflows/pages.yml:3-18, 33-61` | Jobs app (lernapps check), deploy on main, preview on PRs from the repo at pr-preview/pr-<n>/, not indexed, removed on close; plan/docs-only changes publish nothing | ch.7 / env-ci, dn-ci-runner, dn-pr-preview | high | — |
 | `tooling package.json` `appTemplates.archetypes` = explainer, quiz; `grep interactive generator/create.ts` (none) | Tooling has no interactive archetype yet, so no generated workflow for interactive apps | ch.7 / Deployment overview | high | — |
-| agent inference from sketch §7 step 2 | Interactive apps will use the same pages.yml once the archetype exists | ch.7 / env-ci, dn-ci-runner, dn-github-pages, dn-pr-preview | low | OPEN: will interactive apps get the same generated Pages workflow? |
+| owner, 2026-10-16, review | Interactive apps get the same Pages workflow (check, publish, preview) in step 2 of the plan | ch.7 / env-ci, dn-ci-runner, dn-github-pages, dn-pr-preview | high | — (resolves OPEN: same Pages workflow) |
 | `app-templates .github/workflows/check.yml:1-12` | Template folders are checked by app-templates' CI with lernapps check | ch.7 / Deployment overview | high | — |
 | `tooling archetypes/shared/hooks/pre-commit`, `pre-push`; `install-hooks.ts:1-4` | Pre-commit fast checks, pre-push heavy checks; hooks not installed in a folder inside another repo | ch.7 / dn-creator-machine | high | — |
 | `runtime/interactive/plugin.ts:20-21` | vp dev serves the pages rendered per request | ch.7 / dn-creator-machine | high | — |
@@ -168,19 +178,18 @@ validator does not parse it. Owner decisions count as evidence.
 | `runtime/interactive/contract.ts:1-7, Core` | Core pure TS without DOM, state plain JSON; runtime keeps state; components only show it; runs in Node and browser | ch.8 / concept-core-and-shell | high | — |
 | `contract.ts:1-3`; `interactive.ts:29-30`; `plugin.ts:13-17` | Deterministic by seed; seed from ?seed else random; build plays twice | ch.8 / concept-determinism | high | — |
 | `contract.ts:5-7, PlaythroughStep`; `e2e.ts:12-15` | Playthrough = seed, route, steps of keys with state/announcement; build without ticks, browser same keys | ch.8 / concept-playthroughs | high | — |
-| sketch §6; `grep -n -i "property" plugin.ts` (only an unrelated comment) | Core property tests over fixed seeds not built yet | ch.8 / concept-playthroughs | medium | — |
+| sketch §6; `grep -n -i "property" plugin.ts` (only an unrelated comment); owner, 2026-10-16, review | Core property tests over fixed seeds stay planned; time steps decided, not built | ch.8 / concept-playthroughs | high | — |
 | `render.ts:1-9`; `e2e.ts:7-11` | Start page without script; app page noscript note with link back; plain links; e2e checks without JS per language | ch.8 / concept-readable-without-js | high | — |
 | `pages.ts:1-4`; `load.ts:106`; `i18n.ts:1-6` | German at root, others below /<lang>/; only runtime-supported languages; texts via translator | ch.8 / concept-languages | high | — |
 | `ORGANIZATION.md:57`; sketch §5; owner, 2026-10-16, conversation | WCAG 2.1 AA and 360 px default, limits declared in entry, warnings then | ch.8 / concept-accessibility | high | — |
 | ch.2 con-accessibility-default (wave 1) | Warnings for declared limits not built yet | ch.8 / concept-accessibility | medium | — |
 | `a11y.ts:21,31,37`; `interactive.ts:22,58`; `check/rules/accessible.ts`, `usable-at-360px.ts` | announce, moveFocus; keys on controls stay theirs; check runs axe and width | ch.8 / concept-accessibility | high | — |
 | `plugin.ts:9-12`; `runtime/explainer/components.ts`; sketch §2 | Component rules on SFC output and lint rules; Vue fixed so they hold for every app | ch.8 / concept-component-rules | high | — |
-| `storage.ts:1-3, 16-17`; owner, 2026-10-16, conversation | localStorage via wrapper, prefix lernapps:<app>:, wrapped access; quota 100 kB decided not built; IndexedDB only when needed | ch.8 / concept-device-storage | high | — |
+| `storage.ts:1-3, 16-17`; owner, 2026-10-16, conversation | localStorage via wrapper, prefix lernapps:<app>:, wrapped access; quota 100 kB decided not built | ch.8 / concept-device-storage | high | — |
 | `interactive.ts:31-34, 61-66`; `render.ts` route anchors; sketch §3 | Routes in app.yaml as app/#id, restart on new route; entry topics and entry-links-resolve | ch.8 / concept-hash-routes | high | — |
-| `plugin.ts` `SIZE_BUDGET`, l.18-20 | Own code of src/ gzipped ≤ 100 kB; libraries not counted | ch.8 / concept-size-budget | high | OPEN: contradicts sketch §2 ("a size budget for the whole app") |
-| sketch §2 | Libraries inside a size budget for the whole app | ch.8 / concept-size-budget | high | OPEN: contradicts plugin.ts SIZE_BUDGET scope |
-| `runtime/explainer/prompt.ts:1-8`; owner, 2026-10-16, conversation | Tutor optional, not built for interactive; nothing before a click; form open | ch.8 / concept-tutor | high | OPEN: handoff or model in the browser? |
-| sketch §5; owner, 2026-10-16, conversation; `ls tooling/skills` (no lernapps-interactive) | Low stimulation only advice of the skill; skill not written yet; no settings now | ch.8 / concept-low-stimulation | high | — |
+| owner, 2026-10-16, review | concept-size-budget removed | ch.8 | high | — (resolves OPEN: size budget scope) |
+| `runtime/explainer/prompt.ts:1-8`; owner, 2026-10-16, review | Tutor optional, not built for interactive; handoff to the learner's own assistant after a click | ch.8 / concept-tutor | high | — |
+| sketch §5; owner, 2026-10-16, conversation; owner, 2026-10-16, review; `ls tooling/skills` (no lernapps-interactive) | Low stimulation only advice of the skill lernapps-interactive (bb-skill-interactive implements it); skill not written yet; no settings now | ch.8 / concept-low-stimulation | high | — |
 
 ### Chapter 9
 
@@ -195,19 +204,20 @@ validator does not parse it. Owner decisions count as evidence.
 | agent inference | Keys as input supports qg-accessibility (keyboard operation, Tab keeps focus movement) | ch.9 / dec-keys-as-input addresses | low | OPEN: confirm that dec-keys-as-input should address qg-accessibility |
 | `runtime/interactive/interactive.ts:29-36,61-64`; `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:381` | Seed from ?seed=<n> else random; route of the address passed to start and on hashchange; routes so entry topics point somewhere | ch.9 / dec-start-seed-route | high | — |
 | `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:388,423-424`; `runtime/interactive/plugin.ts:14-17`; `e2e.ts:12-15` | Playthroughs as data (keys, expected state/announcement), played twice by the build and with the keyboard in the browser | ch.9 / dec-playthroughs-as-data | high | — |
-| `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:378-380`; owner, 2026-10-16, conversation | localStorage through the wrapper, 100 kB quota per app, shared 5 MiB, save refuses beyond; IndexedDB wrapper only on need (YAGNI) | ch.9 / dec-small-storage | high | — |
+| `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:378-380`; owner, 2026-10-16, conversation; owner, 2026-10-16, review | localStorage through the wrapper, 100 kB quota per app, shared 5 MiB, save refuses beyond; IndexedDB left out; shared origin accepted | ch.9 / dec-small-storage | high | — |
 | `tooling archetypes/shared/storage.ts:36-45` | save has no quota today | ch.9 / dec-small-storage | high | — |
 | `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:412-420`; `dotgithub ORGANIZATION.md:57-58`; owner, 2026-10-16, conversation | WCAG 2.1 AA and 360 px platform rules, app default, deviations declared in the entry, warnings then; start page meets both; low stimulation advice only | ch.9 / dec-accessibility-default | high | — |
 | owner, 2026-10-16, conversation | No settings dialog, less motion, sound or pause in scope now | ch.9 / dec-no-settings | high | — |
 | `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:393-408` | arc42 in docs/arc42, English and minimal; frame from tooling, app adds own part; checked only by arc42 diff --staged --strict and arc42 validate; responsibilities not checked | ch.9 / dec-arc42-in-app | high | — |
-| owner, 2026-10-16, conversation; `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:390-391` | Optional client-side AI tutor; sketch lets the exercise contract bring "the tutor"; variant open | ch.9 / dec-tutor-variant | high | OPEN: handoff to the learner's own assistant (as in the explainer) or a model running in the browser? |
+| owner, 2026-10-16, review | Tutor as handoff to the learner's own assistant, accepted; a model in the browser rejected | ch.9 / dec-tutor-variant | high | — (resolves OPEN: tutor variant) |
+| owner, 2026-10-16, review | Playthrough time steps accepted, not built | ch.9 / dec-playthroughs-as-data | high | — |
 
 ### Chapter 10
 
 | Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
 | --- | --- | --- | --- | --- |
-| ch.1 1.2; ev-ch1 agent inference row | The five goals and ids qg-privacy, qg-checkable, qg-accessibility, qg-small, qg-understandable | ch.10 / all quality goals | low | OPEN: owner to confirm set, order, ids |
-| no source | Priorities of the five goals | ch.10 / all quality goals | — | OPEN: priority of each goal (left out) |
+| owner, 2026-10-16, review | The four goals qg-privacy, qg-checkable, qg-accessibility, qg-understandable; qg-small dropped with qs-size-budget and qs-storage-quota | ch.10 / all quality goals | high | — |
+| coordinator's proposal | Priorities high, high, medium, medium | ch.10 / all quality goals | low | OPEN: confirm priorities (pending the owner) |
 | `tooling check/rules/no-request-before-click.ts`; `check/visit.ts` | Requests to other hosts during page load are blocked, recorded, errors | ch.10 / qs-no-request-before-click | high | — |
 | `tooling lint/rules/storage-through-wrapper.ts`, `vue-component-no-network.ts`; `archetypes/shared/storage.ts` prefix lernapps:<app>: | Direct storage, cookies and network calls reported; storage through createStorage under the app prefix | ch.10 / qs-state-on-device | high | — |
 | `runtime/interactive/plugin.ts` lines 16, 145-152 | Playthroughs played twice; differing states fail the build | ch.10 / qs-deterministic-core | high | — |
@@ -215,8 +225,6 @@ validator does not parse it. Owner decisions count as evidence.
 | `tooling check/rules/accessible.ts` | axe-core WCAG 2.1 A and AA, severity error | ch.10 / qs-axe-clean | high | — |
 | `tooling check/rules/usable-at-360px.ts` | No page wider than 360 px, severity error | ch.10 / qs-usable-at-360px | high | — |
 | decided sketch step 12 section 5; con-accessibility-default | Warnings for apps with declared limits decided, not built | ch.10 / qs-axe-clean | high | — |
-| `runtime/interactive/plugin.ts` lines 21, 41, 225-228 | SIZE_BUDGET 100 kB gzip of src/ modules; build fails with a message | ch.10 / qs-size-budget | high | OPEN: size budget scope (sketch: whole app) |
-| owner, 2026-10-16, conversation; `archetypes/shared/storage.ts` (no limit) | Quota 100 kB per app, save refuses beyond; not built | ch.10 / qs-storage-quota | high | — |
 | decided sketch step 12 section 4 | arc42 diff --staged --strict before commit, ~0.2 s, unclaimed code and blocks without prose fail; not built for apps | ch.10 / qs-architecture-current | medium | OPEN: confirm not built yet for apps |
 
 ### Chapter 11
@@ -226,15 +234,15 @@ validator does not parse it. Owner decisions count as evidence.
 | `runtime/interactive/plugin.ts:17`; `contract.ts:28-38` (PlaythroughStep has only keys, state, announce) | Build never calls tick; playthroughs cannot express time | ch.11 / risk-time-not-replayed | high | — |
 | `runtime/interactive/interactive.ts:67`; `e2e.ts:127-148`; `interactive/src/core/index.ts:89-94`; `src/data/lessons.json:2-3` | In the browser the clock runs between key presses; the template's core counts a letter as a miss after 5 s, so browser playthroughs depend on typing speed | ch.11 / risk-time-not-replayed | high | — |
 | `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:436-437` | The pilot is the real-time typing game, which puts the most pressure on real time | ch.11 / risk-time-not-replayed | high | — |
-| agent inference | Mitigation idea: a playthrough step that lets time pass | ch.11 / risk-time-not-replayed | low | OPEN: whether playthroughs get a step that lets time pass, played as ticks in build and browser |
+| owner, 2026-10-16, review | Mitigation: a playthrough step that lets n ticks pass, in the build and in the browser; not built yet | ch.11 / risk-time-not-replayed | high | — (resolves OPEN: time step) |
 | `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:416-417,431-435`; ch.2 con-accessibility-default | Entry field for limits and warnings planned, not built; accessible and usable-at-360px are errors for every app today | ch.11 / risk-accessibility-limits-not-built | high | — |
 | `tooling archetypes/shared/storage.ts:36-45`; owner, 2026-10-16, conversation | Quota of 100 kB decided, wrapper has no limit | ch.11 / risk-storage-quota-not-built | high | — |
 | `tooling archetypes/shared/storage.ts:1-3,15-17`; `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:378-379` | All apps share one origin and its 5 MiB localStorage; separation only by the prefix lernapps:<app>: from a name the app chooses | ch.11 / risk-shared-origin-storage | high | — |
-| agent inference | Clearing site data or browser eviction loses every app's values; a duplicate storage name collides | ch.11 / risk-shared-origin-storage | low | OPEN: confirm severity medium and that loss of stored data is acceptable |
-| owner, 2026-10-16, conversation; ch.5 bb-tutor-handoff, bb-tutor-in-browser | Tutor undecided and built only for the explainer | ch.11 / risk-tutor-not-built | high | OPEN: tutor variant |
+| agent inference; owner, 2026-10-16, review | Clearing site data or browser eviction loses every app's values; a duplicate storage name collides; severity medium, accepted | ch.11 / risk-shared-origin-storage | high | — (resolves OPEN: severity and acceptance) |
+| owner, 2026-10-16, review; ch.5 bb-tutor-handoff | Tutor decided as handoff, built only for the explainer | ch.11 / risk-tutor-not-built | high | — |
 | `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:403-405,431-432`; ch.2 con-architecture-current | arc42 diff in pre-commit and arc42 validate in lernapps check planned, not wired | ch.11 / risk-arc42-checks-not-wired | medium | OPEN: confirm not built yet (from ch.2) |
-| `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:370` vs `runtime/interactive/plugin.ts:20-22,41,217-228` | Sketch: budget for the whole app incl. libraries; build: only src/ modules, 100 kB gzip | ch.11 / risk-size-budget-scope | high | OPEN: contradicts plugin.ts; which scope holds? |
-| `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:423` vs `runtime/interactive/plugin.ts` (no property tests; grep "propert" finds none) | Core property tests over fixed seeds planned, not built; build plays only playthroughs twice | ch.11 / risk-no-core-property-tests | medium | — |
+| owner, 2026-10-16, review; `runtime/interactive/plugin.ts:21-22,41,217-230` | No size limit decided, but SIZE_BUDGET = 100 kB still fails the build; technical debt, to be removed | ch.11 / risk-size-budget-left | high | — |
+| `lernapps/tooling .vibe/development-plan-agentic-app-creation.md:423` vs `runtime/interactive/plugin.ts`; owner, 2026-10-16, review | Core property tests over fixed seeds stay planned, not built | ch.11 / risk-no-core-property-tests | high | — |
 | agent inference | Severities and priority order of all risks | ch.11 / all risks | low | OPEN: confirm severities and order |
 
 ### Chapter 12
@@ -247,4 +255,4 @@ validator does not parse it. Owner decisions count as evidence.
 | `dotgithub ORGANIZATION.md:3,14,50-51` | Creators list apps; one entry per app in apps/entries/, schema-checked, the only link to an app; app overview provides the catalog; owner decides listing | ch.12 / term-creator, term-entry, term-catalog | high | — |
 | `runtime/interactive/plugin.ts:18-20`; `e2e.ts:7-11` | Start page without script from app.yaml; app page loads the client module, noscript note links back | ch.12 / term-start-page, term-app-page | high | — |
 | `runtime/interactive/contract.ts:5-7,26-38` | Playthrough: seed, route, steps of keys with expected state or announcement | ch.12 / term-playthrough | high | — |
-| owner, 2026-10-16, conversation | Optional client-side AI tutor, variant open | ch.12 / term-tutor | high | OPEN: tutor variant |
+| owner, 2026-10-16, review | Tutor: the learner's own assistant, handed the task after a click | ch.12 / term-tutor | high | — |

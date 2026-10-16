@@ -1,7 +1,7 @@
 # Cross-cutting Concepts
 
-The concepts every interactive app implements. The first eleven are the ones chapter 5's blocks name; the last is
-advice only.
+The concepts every interactive app implements. The first ten are the ones the runtime and tooling blocks implement;
+the last is advice the archetype's skill gives.
 
 ## Core and shell
 
@@ -34,9 +34,9 @@ category: testing
 ## Playthroughs
 
 A playthrough is data: a seed, a route and steps of keys, each with the state (a part of it) or the announcement
-expected after them. The build plays it against the core without ticks, the end-to-end tests play the same keys in the
-browser, so behaviour is specified once and checked in both places. The core's property tests over fixed seeds from the
-decided sketch are not built yet.
+expected after them. The build plays it against the core, the end-to-end tests play the same keys in the browser, so
+behaviour is specified once and checked in both places. A time step that lets n ticks pass, in the build and in the
+browser, is decided but not built yet, nor are the core's property tests over fixed seeds.
 
 ```arc42
 :::concept
@@ -108,8 +108,7 @@ category: security
 
 What an app remembers goes through the storage wrapper into `localStorage`, under the prefix `lernapps:<app>:`,
 because all apps share one origin; every access is wrapped, so blocked or full storage means the app remembers
-nothing and keeps working. The quota of 100 kB per app is decided, not built; an IndexedDB wrapper comes only when an
-app needs more.
+nothing and keeps working. The quota of 100 kB per app is decided, not built.
 
 ```arc42
 :::concept
@@ -133,42 +132,23 @@ category: navigation
 :::
 ```
 
-## Size budget
-
-The app's own code, the modules of `src/` in the built chunks gzipped together, must stay within 100 kB or the build
-fails, so apps load fast on school devices. Vue, the runtime and bundled libraries are not counted today.
-
-OPEN: The decided sketch puts bundled libraries inside "a size budget for the whole app", while the build counts only
-the app's own code. Which holds?
-
-```arc42
-:::concept
-id: concept-size-budget
-title: Size budget
-category: performance
-:::
-```
-
 ## Tutor
 
-Optional and not built for interactive apps. Whatever form it takes, nothing leaves the device before the learner's
-click; the explainer's form is a handoff of a prompt and static tutor files to the learner's own assistant.
-
-OPEN: Is the "client-side AI tutor" a handoff to the learner's own assistant (as in the explainer) or a model running
-in the browser?
+Optional and not built for interactive apps yet: no model runs in the browser; the tutor is a handoff of the current
+task to the learner's own assistant, after a click, through a prompt and static tutor files, as in the explainer.
 
 ```arc42
 :::concept
 id: concept-tutor
-title: Tutor
+title: Tutor as a handoff to the learner's own assistant
 category: learning
 :::
 ```
 
 ## Low stimulation (advice)
 
-Advice, not a rule or check: the skill of the interactive archetype is to recommend no flashing, calm motion and sound
-off by default, and say why; that skill is not written yet. No building block implements it; a settings dialog (less
+Advice, not a rule or check: the skill `lernapps-interactive` recommends no flashing, calm motion and sound off by
+default, and says why; the creator's assistant follows it. The skill is not written yet, and a settings dialog (less
 motion, sound, pause) is not in scope now.
 
 ```arc42

@@ -49,7 +49,7 @@ puts the most pressure on exactly this.
 id: risk-time-not-replayed
 title: Time is not replayed by playthroughs
 severity: high
-mitigation: Accepted for now; tick logic is tested only by the app's own unit tests. OPEN: whether playthroughs get a step that lets time pass, played as ticks in the build and in the browser.
+mitigation: Playthroughs get a time step that lets n ticks pass, played in the build and in the browser (decided, not built yet); until then tick logic is tested only by the app's own unit tests.
 :::
 ```
 
@@ -93,21 +93,21 @@ overwrites its values.
 id: risk-shared-origin-storage
 title: Storage shared by every app of the origin
 severity: medium
-mitigation: Accepted: apps keep only small data that may be lost, under their own prefix, and keep working with nothing remembered; the quota limits what one app takes.
+mitigation: Accepted (owner): apps keep only small data that may be lost, under their own prefix, and keep working with nothing remembered; the quota limits what one app takes.
 :::
 ```
 
 ## Tutor Not Built
 
-The optional tutor is part of the frame but undecided (handoff or model in the browser) and built only for the
-explainer, so an interactive app has no tutor and nothing tells it how one will fit.
+The tutor is decided as a handoff to the learner's own assistant (`dec-tutor-variant`), but it is built only for the
+explainer, so an interactive app has no tutor yet.
 
 ```arc42
 :::risk
 id: risk-tutor-not-built
-title: Tutor undecided and not built
+title: Tutor handoff not built for interactive apps
 severity: medium
-mitigation: The owner decides the variant (dec-tutor-variant); until then apps add no tutor of their own.
+mitigation: Build the handoff with the exercise contract and task numbers from the explainer's parts; until then apps add no tutor of their own.
 :::
 ```
 
@@ -125,19 +125,17 @@ mitigation: Planned in the sketch (tooling step 2); until then the review reads 
 :::
 ```
 
-## Size Budget Scope Contradiction
+## Size Budget Left in the Build
 
-The sketch puts bundled libraries inside a size budget for the whole app; the build counts only the app's own code in
-`src/`. A large library can make an app slow on school devices without failing the build.
-
-OPEN: Which holds: should Vue, the runtime and bundled libraries count against a budget too?
+The app's size is not limited, but `runtime/interactive/plugin.ts` still fails the build when the app's own code is
+over `SIZE_BUDGET` = 100 kB gzip, so a large app cannot be built today.
 
 ```arc42
 :::risk
-id: risk-size-budget-scope
-title: Size budget scope contradicts the sketch
+id: risk-size-budget-left
+title: SIZE_BUDGET still in the build plugin
 severity: low
-mitigation: The owner decides the scope; until then the build checks the app's own code only.
+mitigation: Technical debt; remove SIZE_BUDGET and its check from runtime/interactive/plugin.ts.
 :::
 ```
 
@@ -151,6 +149,6 @@ core is checked for the seeds its playthroughs name and no others.
 id: risk-no-core-property-tests
 title: Core property tests over fixed seeds not built
 severity: low
-mitigation: Accepted for now; the build checks determinism with every playthrough played twice.
+mitigation: Planned; until then the build checks determinism with every playthrough played twice.
 :::
 ```

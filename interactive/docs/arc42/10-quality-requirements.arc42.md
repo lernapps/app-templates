@@ -1,11 +1,10 @@
 # Quality Requirements
 
-The five quality goals chapter 1 proposes, in its order, each made testable by scenarios from the runtime, the tooling
-and the decided sketch. Scenarios marked "not built yet" describe a decided check that does not exist today.
+The four quality goals of chapter 1, in its order, each made testable by scenarios from the runtime, the tooling and
+the decided sketch. Scenarios marked "not built yet" describe a decided check that does not exist today. The set is
+the owner's; the priorities are the coordinator's proposal.
 
-OPEN: The quality goals are agent inference from the decided sketch and the organisation rules; the owner has not
-confirmed the set, the order or the ids, and no source gives their priorities. The `priority` of every goal below is
-therefore left out until the owner sets it (high, medium or low).
+OPEN: Confirm the priorities of the quality goals.
 
 ## 10.1 Quality Goals
 
@@ -14,12 +13,11 @@ therefore left out until the owner sets it (high, medium or low).
 The app sends nothing anywhere and requests nothing from another server before a click; what it remembers stays on the
 learner's device. The privacy notice of lernapps.net promises this for every app.
 
-OPEN: Priority of `qg-privacy`?
-
 ```arc42
 :::quality-goal
 id: qg-privacy
 title: Privacy
+priority: high
 :::
 ```
 
@@ -28,53 +26,37 @@ title: Privacy
 The rules an app keeps are verified by machine, at build and in the browser, so that an assistant can change free code
 and still learn at once when it breaks the frame.
 
-OPEN: Priority of `qg-checkable`?
-
 ```arc42
 :::quality-goal
 id: qg-checkable
 title: Checkable by machine
+priority: high
 :::
 ```
 
 ## Accessibility
 
-Start page and app page meet WCAG 2.1 AA and work at 360 px by default; an app that cannot declares its limits in its
-entry.
-
-OPEN: Priority of `qg-accessibility`?
+A default with declared limits: start page and app page meet WCAG 2.1 AA and work at 360 px, and an app that cannot
+declares its limits in its entry.
 
 ```arc42
 :::quality-goal
 id: qg-accessibility
 title: Accessibility by default
-:::
-```
-
-## Small
-
-An app loads fast and takes little: its own code within a size budget, its storage within a quota.
-
-OPEN: Priority of `qg-small`?
-
-```arc42
-:::quality-goal
-id: qg-small
-title: Small
+priority: medium
 :::
 ```
 
 ## Understandable
 
-An AI assistant that did not write the app can extend it, because its architecture is written down early, in English
-and minimal, and kept current with the code.
-
-OPEN: Priority of `qg-understandable`?
+A reviewer or the creator's agent understands an app's structure from its architecture, written in English and
+minimal and kept current with the code.
 
 ```arc42
 :::quality-goal
 id: qg-understandable
-title: Understandable for the next assistant
+title: Understandable from its architecture
+priority: medium
 :::
 ```
 
@@ -170,37 +152,6 @@ quality: qg-accessibility
 stimulus: lernapps check opens every page of the built app in a 360 px wide window
 response: A wider page is an error of usable-at-360px, naming the elements that are too wide
 metric: Page width at most 360 px on every page
-:::
-```
-
-## Size budget
-
-The build gzips the app's own modules of `src/` in the built chunks together.
-
-```arc42
-:::quality-scenario
-id: qs-size-budget
-title: The app's own code stays within 100 kB
-quality: qg-small
-stimulus: The creator's assistant adds code or data to src/ and builds
-response: Over the budget the build fails, naming the size and asking for less code or data in a smaller form
-metric: At most 100 kB gzip for the app's own code in src/
-:::
-```
-
-## Storage quota
-
-Not built yet (owner, 2026-10-16): all apps share the 5 MiB of `localStorage` on lernapps.net, so `save` refuses
-beyond 100 kB per app; today the wrapper has no limit.
-
-```arc42
-:::quality-scenario
-id: qs-storage-quota
-title: Saving beyond the quota is refused
-quality: qg-small
-stimulus: An app saves a value that would take its stored data beyond 100 kB
-response: save returns false and stores nothing; the app keeps working
-metric: At most 100 kB stored per app under its prefix
 :::
 ```
 

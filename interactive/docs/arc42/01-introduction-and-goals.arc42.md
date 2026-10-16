@@ -56,8 +56,8 @@ An interactive app of lernapps.net is a small learning app in which doing is the
 groups burst when typed, a Kniffel trainer that teaches probability, a proofreading app in which the learner marks the
 mistakes. Every such app has the same frame: a static start page from `src/app.yaml` (what the app does, how to play,
 its competencies, optional background sections), readable without JavaScript; one app page in the browser, which runs
-the app's deterministic core and shows its state with Vue; hash routes for modes and levels; and, optionally, a tutor
-(how it works is open, see below). The runtime in `@lernapps/app-templates` provides the frame and the app does not
+the app's deterministic core and shows its state with Vue; hash routes for modes and levels; and, optionally, a tutor,
+which hands the current task to the learner's own AI assistant (no model runs in the browser). The runtime in `@lernapps/app-templates` provides the frame and the app does not
 change it; the creator's assistant writes the core, the UI, the data and the playthroughs. The app reaches learners
 through one entry in the lernapps.net app overview, which links to it.
 
@@ -67,14 +67,11 @@ through one entry in the lernapps.net app overview, which links to it.
 | Play and practise | learner | the app page: keys and pointer input step the core, a clock ticks it, state stays on the device |
 | Open a mode or level directly | learner, catalog entry | a hash route per mode or level, a seed in the address |
 | Build and extend the app | creator and their AI assistant | free code under fixed rules that the build and `lernapps check` verify |
-| Get help with a task | learner | an optional tutor |
-
-OPEN: Is the "client-side AI tutor" a handoff to the learner's own assistant (as in the explainer) or a model running
-in the browser?
+| Get help with a task | learner | an optional handoff of the task to the learner's own assistant, after a click |
 
 ## 1.2 Quality Goals
 
-The proposed top quality goals, in this order:
+The top quality goals, in this order:
 
 - `qg-privacy`: the app sends nothing anywhere and requests nothing from another server before a click; what it
   remembers stays on the learner's device.
@@ -82,13 +79,12 @@ The proposed top quality goals, in this order:
   deterministic by its seed, and every playthrough plays the same in the build and in the browser.
 - `qg-accessibility`: start page and app page meet WCAG 2.1 AA and work at 360 px by default; an app that cannot
   declares its limits in its entry.
-- `qg-small`: an app loads fast and takes little: its own code stays within a size budget and its storage within a
-  quota.
-- `qg-understandable`: an AI assistant that did not write the app can extend it, because its architecture is written
-  down early, in English and minimal, and kept current with the code.
+- `qg-understandable`: a reviewer or the creator's agent understands an app's structure from its architecture.
 
-OPEN: The quality goals above are agent inference from the decided sketch and the organisation rules; the owner has
-not ranked them or chosen their ids. Confirm the set, the order and the priorities for chapter 10.
+The set is the owner's (2026-10-16, review); the priorities (privacy and checkable high, accessibility and
+understandable medium) are the coordinator's proposal.
+
+OPEN: Confirm the priorities of the quality goals.
 
 See [10-quality-requirements.arc42.md](10-quality-requirements.arc42.md) for the complete
 quality catalog with priorities and measurable scenarios.

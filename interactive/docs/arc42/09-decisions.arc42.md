@@ -156,8 +156,8 @@ addresses: qg-checkable
 
 A playthrough is a seed, a route and steps of keys with the state or announcement expected after them, written as
 YAML under `src/playthroughs/`. The build plays each against the core twice and the browser plays the same keys, so
-determinism and behaviour are checked without test code per app. Rejected: free test code as the only behaviour
-check.
+determinism and behaviour are checked without test code per app. A step that lets n ticks pass, in the build and in
+the browser, is accepted (owner) but not built yet. Rejected: free test code as the only behaviour check.
 
 ```arc42
 :::decision
@@ -169,19 +169,19 @@ addresses: qg-checkable
 :::
 ```
 
-## Small Storage Now, Large Storage on Need
+## Small Storage with a Quota
 
 All apps share the origin's 5 MiB of `localStorage`. The only storage is the tooling's `localStorage` wrapper under the
-app's prefix with a quota of 100 kB per app, and `save` refuses beyond it. An IndexedDB wrapper is built only when an
-app needs more and is then added to the architecture (YAGNI). The quota is decided, not built.
+app's prefix with a quota of 100 kB per app, and `save` refuses beyond it; the shared origin is accepted as a risk. The
+quota is decided, not built.
 
 ```arc42
 :::decision
 id: dec-small-storage
-title: localStorage with a 100 kB quota, IndexedDB only on need
+title: localStorage through the wrapper with a 100 kB quota
 status: accepted
 date: 2026-10-16
-addresses: con-state-on-device, con-storage-quota, qg-privacy, qg-small, risk-shared-origin-storage
+addresses: con-state-on-device, con-storage-quota, qg-privacy, risk-shared-origin-storage
 :::
 ```
 
@@ -235,18 +235,16 @@ addresses: con-architecture-current, qg-understandable
 
 ## Tutor Variant
 
-The optional client-side AI tutor is either a handoff to the learner's own assistant, as the explainer has (prompt,
-provider choice, clipboard fallback, `tutor.md`, `llms.txt`), or a model running in the browser. The sketch lets the
-exercise contract bring "the tutor", which suggests the handoff, but the owner keeps the choice open.
-
-OPEN: Is the "client-side AI tutor" a handoff to the learner's own assistant (as in the explainer) or a model running
-in the browser?
+The optional tutor is a handoff to the learner's own assistant, as the explainer has it: after a click, a prompt
+(copied or passed to a chosen provider) and static `tutor.md` and `llms.txt` files give it the task on the learner's
+screen. Rejected: a model running in the browser. Not built for interactive apps yet.
 
 ```arc42
 :::decision
 id: dec-tutor-variant
-title: Tutor as handoff or as a model in the browser
-status: proposed
+title: Tutor as a handoff to the learner's own assistant
+status: accepted
+date: 2026-10-16
 addresses: risk-tutor-not-built, con-no-request-before-click, qg-privacy
 :::
 ```

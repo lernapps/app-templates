@@ -163,8 +163,8 @@ definition: A seed, a route and a list of steps, each a list of keys followed by
 
 ## Entry
 
-The only way an app connects to the platform: its entry links to it. Its topics may point to the app's routes, and an
-app that deviates from the accessibility default says so there.
+The only way an app connects to the platform: its entry links to it. Its topics may point to the app's routes, an app
+that deviates from the accessibility default says so there, and its fact sheet states the app's size (not built yet).
 
 ```arc42
 :::glossary-term
@@ -188,13 +188,12 @@ definition: The apps the app overview of lernapps.net provides, one entry per ap
 
 ## Tutor
 
-Optional and not built for interactive apps; whether it is a handoff to the learner's own assistant or a model in the
-browser is open (see `dec-tutor-variant`).
+Optional and not built for interactive apps yet; no model runs in the browser (see `dec-tutor-variant`).
 
 ```arc42
 :::glossary-term
 id: term-tutor
 title: Tutor
-definition: An optional client-side AI helper for the learner's current task in the app.
+definition: The learner's own AI assistant, to which the app hands the current task after a click, through a prompt and static tutor files.
 :::
 ```

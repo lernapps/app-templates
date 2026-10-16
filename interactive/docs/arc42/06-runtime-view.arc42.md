@@ -63,14 +63,14 @@ involves: bb-ui, bb-small-storage
 `src/app.yaml` and the playthroughs, checks the components on the SFC compiler's output, loads the core in a Vite
 server of its own, checks its exports and that every route starts, and plays every playthrough twice without ticks,
 comparing the two plays and the expected states. Only then does it write the start page and the app page in every
-language and the 404 page, and finally checks the size budget. Any problem fails the build with one line per problem.
+language and the 404 page. Any problem fails the build with one line per problem; the app's size is not limited.
 
 ```arc42
 :::runtime-scenario
 id: scenario-build
 title: Building with the checks and playthroughs
 trigger: The creator, a git hook or CI runs the build
-involves: bb-preset, bb-build, bb-description, bb-playthroughs, bb-app-validation, bb-component-rules, bb-core-check, bb-core, bb-build-playthroughs, bb-start-page, bb-app-page, bb-page-tree, bb-not-found-page, bb-size-budget
+involves: bb-preset, bb-build, bb-description, bb-playthroughs, bb-app-validation, bb-component-rules, bb-core-check, bb-core, bb-build-playthroughs, bb-start-page, bb-app-page, bb-page-tree, bb-not-found-page
 :::
 ```
 
@@ -93,19 +93,16 @@ involves: bb-lernapps-check, bb-playwright-config, bb-browser-playthroughs, bb-p
 
 ## Asking the tutor (not built)
 
-Not built for interactive apps. In the explainer the learner clicks "Mit einem KI-Tutor lernen": a button copies a
-ready prompt, or a provider link opens the learner's own assistant with it; static `tutor.md` and `llms.txt` files give
-the assistant the tasks, and nothing leaves the device before the click. Whether the interactive tutor works this way
-or as a model in the browser is open.
-
-OPEN: Is the "client-side AI tutor" a handoff to the learner's own assistant (as in the explainer) or a model running
-in the browser?
+Not built for interactive apps yet; it will work as in the explainer. The learner clicks "Mit einem KI-Tutor lernen":
+a button copies a ready prompt, or a provider link opens the learner's own assistant with it; static `tutor.md` and
+`llms.txt` files give the assistant the tasks and solutions the exercise contract describes, and nothing leaves the
+device before the click. No model runs in the browser.
 
 ```arc42
 :::runtime-scenario
 id: scenario-tutor
 title: Asking the tutor (not built)
 trigger: The learner asks for help with a task
-involves: bb-tutor-handoff, bb-tutor-in-browser, bb-task-numbers, bb-exercise-contract
+involves: bb-tutor-handoff, bb-task-numbers, bb-exercise-contract
 :::
 ```

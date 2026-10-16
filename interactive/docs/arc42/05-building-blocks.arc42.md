@@ -57,7 +57,6 @@ flowchart TB
                 bb-component-rules["Component rules"]
                 bb-core-check["Core contract check"]
                 bb-build-playthroughs["Build playthrough player"]
-                bb-size-budget["Size budget"]
             end
         end
         subgraph bb-shell["Shell"]
@@ -65,10 +64,10 @@ flowchart TB
             bb-clock["Clock"]
             bb-hash-router["Hash router"]
             bb-seed["Seed from the address"]
+            bb-loading-indicator["Loading indicator (optional, not built)"]
         end
         bb-browser-playthroughs["Browser playthrough player"]
         bb-tutor-handoff["Tutor handoff (optional, not built)"]
-        bb-tutor-in-browser["Tutor in the browser (not built)"]
         bb-task-numbers["Task numbers (optional, not built)"]
         bb-exercise-contract["Exercise contract (optional, not built)"]
         bb-settings["Settings (not built)"]
@@ -95,9 +94,9 @@ flowchart TB
         bb-lernapps-check["lernapps check"]
         bb-playwright-config["Playwright configuration"]
         bb-small-storage["Small storage"]
-        bb-large-storage["Large storage (not built)"]
         bb-a11y["Announcer and focus"]
         bb-i18n["i18n"]
+        bb-skill-interactive["Skill lernapps-interactive (not built)"]
     end
 ```
 
@@ -125,6 +124,8 @@ flowchart TB
     end
     bb-main -->|"if-core-contract"| bb-core
     bb-main -->|"if-root-component"| bb-ui
+    bb-core -->|"if-app-data"| bb-data
+    bb-ui -->|"if-messages"| bb-messages
 ```
 
 ## Interactive runtime
@@ -141,7 +142,7 @@ technology: TypeScript, Vue, Vite plugin (@lernapps/app-templates/interactive)
 :::
 ```
 
-## Build step
+### Build step
 
 Built. The Vite plugin `interactive()` reads the app's description and playthroughs, runs the build checks and writes
 every page into the built index.html shell. `vp dev` serves the same pages.
@@ -155,7 +156,7 @@ technology: Vite plugin (runtime/interactive/plugin.ts, load.ts, render.ts)
 :::
 ```
 
-### Build plugin interface
+#### Build plugin interface
 
 The app's vite.config.ts adds `interactive()` to the tooling preset; that is the only way the app enters the build.
 
@@ -168,7 +169,21 @@ protocol: TypeScript import, @lernapps/app-templates/interactive/plugin
 :::
 ```
 
-## Start page
+#### Built static files
+
+The build writes the app as static files (pages, 404 page, bundle) with relative URLs, which GitHub Pages serves as
+they are.
+
+```arc42
+:::interface
+id: if-static-files
+title: Built static files (dist)
+provider: bb-build
+protocol: Static files over HTTPS (GitHub Pages)
+:::
+```
+
+#### Start page
 
 Built. Renders the static start page from `src/app.yaml` (what the app does, link into the app, routes, how to play,
 competencies, background sections, imprint and privacy notice) with a `<noscript>` note and no script, so the app is
@@ -185,7 +200,21 @@ implements: concept-readable-without-js, concept-accessibility
 :::
 ```
 
-## App page
+##### Start page interface
+
+Learners, teachers and parents read the app at `lernapps.net/<repo>/` (and `/<language>/` for further languages), and
+the catalog entry links there.
+
+```arc42
+:::interface
+id: if-start-page
+title: Start page lernapps.net/<repo>/
+provider: bb-start-page
+protocol: HTML page over HTTPS, without JavaScript
+:::
+```
+
+#### App page
 
 Built. Renders the app page: title, `<noscript>` note with a link back, the routes as anchor links, and the element
 the shell mounts into, carrying the route ids.
@@ -201,7 +230,21 @@ implements: concept-hash-routes
 :::
 ```
 
-## Language page trees
+##### App address
+
+The app page's address `app/?seed=<n>#<route>` opens a mode or level, optionally with a fixed seed; learners play
+there and the catalog entry's topics link to the routes.
+
+```arc42
+:::interface
+id: if-app-address
+title: App address app/?seed=<n>#<route>
+provider: bb-app-page
+protocol: URL over HTTPS (query and hash)
+:::
+```
+
+#### Language page trees
 
 Built. Every page exists once per declared language, German at the root and every other language below
 `/<language>/`, with alternates and a switch of plain links; an app may declare only the languages the runtime has
@@ -218,7 +261,7 @@ implements: concept-languages, concept-readable-without-js
 :::
 ```
 
-## 404 page
+#### 404 page
 
 Built. A 404.html leads every address the app does not have to its start page, because the app is served statically
 under any path.
@@ -232,10 +275,10 @@ technology: TypeScript (runtime/shared/pages.ts)
 :::
 ```
 
-## Build checks
+#### Build checks
 
 Built. Before anything is written, the build fails with one line per problem, so that a broken app never reaches the
-browser.
+browser. The app's size is not limited; it goes into the app's catalog entry (the fact sheet) instead.
 
 ```arc42
 :::building-block
@@ -246,7 +289,7 @@ technology: TypeScript (runtime/interactive/plugin.ts, load.ts)
 :::
 ```
 
-## Description validation
+##### Description validation
 
 Built. Validates `src/app.yaml` and every playthrough against their JSON schemas, then German first, complete
 languages, unique ids, at least one playthrough and known routes.
@@ -261,7 +304,7 @@ requires: if-app-description, if-playthrough-format
 :::
 ```
 
-## Component rules
+##### Component rules
 
 Built. The explainer's code checks on the SFC compiler's output of every component in `src/`: no network, no `eval`,
 `innerHTML` or `v-html`, imports only from Vue, the runtime, the storage, i18n and a11y helpers and `src/`, browser
@@ -277,7 +320,7 @@ implements: concept-component-rules
 :::
 ```
 
-## Core contract check
+##### Core contract check
 
 Built. Loads the core in a Vite server of its own and checks its exports and that every route starts.
 
@@ -292,10 +335,11 @@ implements: concept-determinism
 :::
 ```
 
-## Build playthrough player
+##### Build playthrough player
 
-Built. Plays every playthrough against the core twice, without ticks, and fails when the two plays differ or a state
-differs from the expected one, so determinism and behaviour are tested without a browser.
+Built. Plays every playthrough against the core twice and fails when the two plays differ or a state differs from the
+expected one, so determinism and behaviour are tested without a browser. Time steps (a step that lets n ticks pass)
+are decided, not built yet; today the build never ticks.
 
 ```arc42
 :::building-block
@@ -308,22 +352,7 @@ implements: concept-playthroughs, concept-determinism
 :::
 ```
 
-## Size budget
-
-Built. The app's own code in `src/`, gzipped, must stay within 100 kB; Vue, the runtime and bundled libraries do not
-count.
-
-```arc42
-:::building-block
-id: bb-size-budget
-title: Size budget
-parent: bb-build-checks
-technology: TypeScript, zlib (runtime/interactive/plugin.ts)
-implements: concept-size-budget
-:::
-```
-
-## Shell
+### Shell
 
 Built. `startInteractive(core, root)` mounts the app's root component on the app page and holds the core's state, so
 that the app's components only show it; on any other page it does nothing.
@@ -339,7 +368,7 @@ implements: concept-core-and-shell
 :::
 ```
 
-### Start interface
+#### Start interface
 
 The app's `src/main.ts` calls `startInteractive` with its core and root component.
 
@@ -352,7 +381,7 @@ protocol: TypeScript import, @lernapps/app-templates/interactive
 :::
 ```
 
-### State property
+#### State property
 
 The shell mirrors the state on the host element as `lernappsState`, which the browser playthrough player reads.
 
@@ -365,7 +394,7 @@ protocol: DOM property
 :::
 ```
 
-## Input router
+#### Input router
 
 Built. Gives every key typed on the page to `step`, except keys on links, buttons and form fields or with Ctrl, Alt or
 Meta, and steps every key the root component emits as `input` (pointer input as a button that stands for a key).
@@ -380,7 +409,7 @@ requires: if-core-contract, if-root-component
 :::
 ```
 
-## Clock
+#### Clock
 
 Built. Calls `tick(state, 20)` every 20 ms when the core has `tick`, so real-time apps move without their own loop in
 the core.
@@ -395,7 +424,7 @@ requires: if-core-contract
 :::
 ```
 
-## Hash router
+#### Hash router
 
 Built. Starts the core with the route of the address (`#<id>`, else the first route) and again on every new route, so
 that modes and levels have addresses an entry's topics can point to.
@@ -411,7 +440,7 @@ implements: concept-hash-routes
 :::
 ```
 
-## Seed from the address
+#### Seed from the address
 
 Built. Takes the seed from `?seed=<n>`, else a random one, so that a round can be replayed and tested at its address.
 
@@ -426,10 +455,24 @@ implements: concept-determinism
 :::
 ```
 
-## Browser playthrough player
+#### Loading indicator
+
+Optional, not built: a progress bar while the app page loads at start, so that a large app shows that it is coming;
+the size of an app is not limited.
+
+```arc42
+:::building-block
+id: bb-loading-indicator
+title: Loading indicator
+parent: bb-shell
+:::
+```
+
+### Browser playthrough player
 
 Built. `interactiveTests()` checks the pages without JavaScript in every language and plays every playthrough's keys
-in the browser, comparing the state and the announcement after each step; run at desktop width and 360 px.
+in the browser, comparing the state and the announcement after each step; run at desktop width and 360 px. Time steps
+are decided, not built yet.
 
 ```arc42
 :::building-block
@@ -442,7 +485,7 @@ implements: concept-playthroughs, concept-readable-without-js
 :::
 ```
 
-### Interactive tests interface
+#### Interactive tests interface
 
 The app's `e2e/interactive.e2e.ts` only calls `interactiveTests()`.
 
@@ -455,11 +498,11 @@ protocol: TypeScript import, @lernapps/app-templates/interactive/e2e
 :::
 ```
 
-## Tutor handoff
+### Tutor handoff
 
-Optional, not built for interactive apps (built for the explainer only): a handoff to the learner's own assistant with
-a prompt, provider choice, clipboard fallback, static tutor.md and llms.txt files and "Zurück zum Tutor". Whether the
-interactive tutor is this or a model in the browser is OPEN.
+Optional, not built for interactive apps yet (built for the explainer): no model runs in the browser; after the
+learner's click the app hands the current task to the learner's own assistant with a prompt, a provider choice and a
+clipboard fallback, and "Zurück zum Tutor" leads back.
 
 ```arc42
 :::building-block
@@ -471,21 +514,21 @@ implements: concept-tutor
 :::
 ```
 
-## Tutor in the browser
+#### Tutor prompt and tutor files
 
-Optional, not built: a tutor model running in the learner's browser, the alternative to the handoff. OPEN: whether
-the "client-side AI tutor" means this; nothing about its form is decided.
+The prompt names the task on the learner's screen and links the static `tutor.md` files and `llms.txt`, which give
+the assistant the tasks and their solutions; a chat assistant reads them without running JavaScript.
 
 ```arc42
-:::building-block
-id: bb-tutor-in-browser
-title: Tutor in the browser
-parent: bb-runtime
-implements: concept-tutor
+:::interface
+id: if-tutor-files
+title: Tutor prompt, tutor.md and llms.txt
+provider: bb-tutor-handoff
+protocol: Prompt text (clipboard or provider link), static Markdown files over HTTPS
 :::
 ```
 
-## Task numbers
+### Task numbers
 
 Optional, not built for interactive apps (built for the explainer only): numbered tasks in the address that learner,
 tutor and address share; they come with the exercise contract.
@@ -499,10 +542,11 @@ technology: TypeScript (explainer: runtime/explainer/tasks.ts)
 :::
 ```
 
-## Exercise contract
+### Exercise contract
 
-Optional, not built for interactive apps (built for the explainer only): for apps with tasks, the core would also
-give `describe`, `about` and `examples`, which bring task numbers and the tutor.
+Optional, not built for interactive apps: the optional exports with which an app describes its tasks, taken from the
+explainer's exercise components. `describe(state, lang)` gives the task and its solution as text for the tutor and the
+task numbers, and examples of accepted and rejected answers are checked at build.
 
 ```arc42
 :::building-block
@@ -513,7 +557,7 @@ technology: TypeScript (explainer: runtime/explainer/components.ts, shared/examp
 :::
 ```
 
-## Settings
+### Settings
 
 Not built and not in scope now (owner): a settings dialog, e.g. time limit off, less motion, sound or pause. Noted so
 that an app that needs one later adds it here rather than on its own.
@@ -528,8 +572,8 @@ parent: bb-runtime
 
 ## Tooling helpers
 
-Built. The parts of `@lernapps/tooling` an interactive app uses, shared with every lernapps app, so that rules and
-helpers reach the app through updates without edits.
+Built. The parts of `@lernapps/tooling` an interactive app uses, shared with every lernapps app, so that rules,
+helpers and guidance reach the app through updates without edits.
 
 ```arc42
 :::building-block
@@ -539,7 +583,7 @@ technology: TypeScript (@lernapps/tooling)
 :::
 ```
 
-## Preset
+### Preset
 
 Built. The vite-plus configuration the app extends and never edits: lint with the lernapps rules, type check, format,
 unit tests, pre-commit staged files and a build with relative URLs.
@@ -553,7 +597,7 @@ technology: vite-plus (archetypes/shared/preset.ts)
 :::
 ```
 
-### Preset interface
+#### Preset interface
 
 The app's vite.config.ts calls `lernapps({ plugins: [interactive()] })`.
 
@@ -566,7 +610,7 @@ protocol: TypeScript import, @lernapps/tooling/preset
 :::
 ```
 
-## Lint rules
+### Lint rules
 
 Built. The lernapps lint rules (learner texts German, no request before a click, storage through the wrapper, the Vue
 component rules, suppression reasons), set by the preset.
@@ -581,7 +625,7 @@ implements: concept-component-rules
 :::
 ```
 
-## lernapps check
+### lernapps check
 
 Built. `lernapps check` verifies the built app (accessible, usable at 360 px, no request before a click, no tracking,
 links and entry links resolve) and runs the e2e tests before a push. `arc42 validate` in the check is planned, not
@@ -597,7 +641,7 @@ implements: concept-accessibility
 :::
 ```
 
-## Playwright configuration
+### Playwright configuration
 
 Built. Runs the e2e tests against the built app on a free port, in Chromium at desktop width and 360 px.
 
@@ -610,7 +654,7 @@ technology: Playwright (archetypes/shared/playwright.ts)
 :::
 ```
 
-## Small storage
+### Small storage
 
 Built, optional for an app: the only storage, `localStorage` under the app's prefix, every access wrapped so the app
 keeps working when storage is blocked or full. The decided quota of 100 kB per app is not built yet.
@@ -625,7 +669,7 @@ implements: concept-device-storage
 :::
 ```
 
-### Device storage interface
+#### Device storage interface
 
 An app's components may load, save and remove JSON values through `createStorage`; the template app does not use it.
 
@@ -638,21 +682,7 @@ protocol: TypeScript import, @lernapps/tooling/storage
 :::
 ```
 
-## Large storage
-
-Not built: an IndexedDB wrapper, built and added here only when an app needs more than the small storage holds.
-
-```arc42
-:::building-block
-id: bb-large-storage
-title: Large storage
-parent: bb-tooling
-technology: IndexedDB
-implements: concept-device-storage
-:::
-```
-
-## Announcer and focus
+### Announcer and focus
 
 Built. Live-region announcements, focus moves and the reduced-motion query, so that feedback reaches screen readers
 and keyboard users.
@@ -667,7 +697,7 @@ implements: concept-accessibility
 :::
 ```
 
-### Accessibility helpers interface
+#### Accessibility helpers interface
 
 The UI announces every change through `announce`; the browser playthrough player reads its polite live region.
 
@@ -680,7 +710,7 @@ protocol: TypeScript import, @lernapps/tooling/a11y
 :::
 ```
 
-## i18n
+### i18n
 
 Built. A translator over the app's message files, so learner texts never sit as strings in code.
 
@@ -694,7 +724,7 @@ implements: concept-languages
 :::
 ```
 
-### Translator interface
+#### Translator interface
 
 The UI gets its texts through `translator(messages)`.
 
@@ -704,6 +734,35 @@ id: if-translator
 title: translator(messages)
 provider: bb-i18n
 protocol: TypeScript import, @lernapps/tooling/i18n
+:::
+```
+
+### Skill lernapps-interactive
+
+Not built yet: the skill of the interactive archetype, the guidance the creator's assistant follows when it builds an
+interactive app, including the advice on low stimulation. The plan template and the skill `lernapps-app` exist for
+every archetype; guidance of its own for this archetype exists only once this skill is written.
+
+```arc42
+:::building-block
+id: bb-skill-interactive
+title: Skill lernapps-interactive
+parent: bb-tooling
+technology: Markdown skill (skills/lernapps-interactive, not built)
+implements: concept-low-stimulation
+:::
+```
+
+#### Skill text
+
+The creator's assistant loads the skill's text and follows it; it is advice and recipes, not a check.
+
+```arc42
+:::interface
+id: if-skill-interactive
+title: Skill text of lernapps-interactive
+provider: bb-skill-interactive
+protocol: Markdown (SKILL.md) loaded by the assistant
 :::
 ```
 
@@ -721,7 +780,7 @@ requires: if-build-plugin, if-preset, if-interactive-tests
 :::
 ```
 
-## Description
+### Description
 
 Built in the template. `src/app.yaml` says what the start page shows, the languages and the routes.
 
@@ -735,7 +794,7 @@ technology: YAML
 :::
 ```
 
-### App description interface
+#### App description interface
 
 The page builders, the validation and the tests read the app only through this schema.
 
@@ -749,7 +808,7 @@ path: src/app.yaml
 :::
 ```
 
-## main.ts glue
+### main.ts glue
 
 Built in the template. Imports the runtime's style, the core and the root component and calls `startInteractive`.
 
@@ -764,7 +823,7 @@ requires: if-start-interactive, if-core-contract, if-root-component
 :::
 ```
 
-## Core
+### Core
 
 Built in the template. The app's logic, pure TypeScript without DOM, deterministic by its seed, its state plain JSON,
 so that it can be played and tested in Node and in the browser alike; it reads the app's data.
@@ -776,11 +835,12 @@ title: Core
 parent: bb-app
 path: src/core
 technology: TypeScript
+requires: if-app-data
 implements: concept-core-and-shell, concept-determinism
 :::
 ```
 
-### Core contract
+#### Core contract
 
 The core exports `start(seed, route)`, `step(state, key)` and, when the app moves on its own, `tick(state, dt)`.
 
@@ -794,7 +854,7 @@ path: src/core/index.ts
 :::
 ```
 
-## UI
+### UI
 
 Built in the template. Vue components that show the state and turn pointer input into keys; free in how they render
 (DOM, SVG, canvas).
@@ -806,12 +866,12 @@ title: UI
 parent: bb-app
 path: src/ui
 technology: Vue single-file components
-requires: if-a11y, if-translator
+requires: if-a11y, if-translator, if-messages
 implements: concept-component-rules, concept-accessibility
 :::
 ```
 
-### Root component
+#### Root component
 
 The root component takes the props `state` and `lang` and emits `input` with a key.
 
@@ -825,7 +885,7 @@ path: src/ui/App.vue
 :::
 ```
 
-## Data
+### Data
 
 Built in the template. The app's content as data in its own format (lessons, texts with their faulty versions).
 
@@ -839,7 +899,21 @@ technology: JSON
 :::
 ```
 
-## Messages
+#### App data
+
+The core imports the data files as JSON modules, so they are bundled and checked with the core.
+
+```arc42
+:::interface
+id: if-app-data
+title: Data files (JSON imports)
+provider: bb-data
+protocol: JSON module import
+path: src/data
+:::
+```
+
+### Messages
 
 Built in the template. The app's learner texts by language, read through the translator.
 
@@ -854,10 +928,24 @@ implements: concept-languages
 :::
 ```
 
-## Playthroughs
+#### Message files
+
+The UI imports one message file per language and hands it to the translator.
+
+```arc42
+:::interface
+id: if-messages
+title: Message files by language
+provider: bb-messages
+protocol: JSON module import
+path: src/messages
+:::
+```
+
+### Playthroughs
 
 Built in the template. Playthroughs as data: a seed, a route and steps of keys with the state or announcement
-expected after them.
+expected after them; steps that let time pass are decided, not built yet.
 
 ```arc42
 :::building-block
@@ -870,7 +958,7 @@ implements: concept-playthroughs
 :::
 ```
 
-### Playthrough format
+#### Playthrough format
 
 Both playthrough players read playthroughs in this format.
 

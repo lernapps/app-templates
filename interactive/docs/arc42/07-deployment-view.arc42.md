@@ -6,12 +6,10 @@ An interactive app is static files: it is built and checked on the creator's mac
 repo's GitHub Pages and run entirely in the learner's browser. There is no server of the app's own; what the app
 remembers stays in the browser's `localStorage`. A pull request gets a preview of the same files.
 
-The Pages workflow, the app check and the publish actions are built for the explainer and quiz archetypes; the tooling
-does not have the interactive archetype yet, so an interactive app has no generated workflow today. The template app
-itself is checked by the CI of `lernapps/app-templates`.
-
-OPEN: Will an interactive app get the same generated Pages workflow (app check, publish, preview) as explainer and quiz
-apps once the tooling has the interactive archetype? This chapter assumes so.
+An interactive app gets the same generated Pages workflow (app check, publish, preview) as the other archetypes, in
+step 2 of the plan. It is built for the explainer and quiz archetypes only; the tooling does not have the interactive
+archetype yet, so an interactive app has no generated workflow today. The template app itself is checked by the CI of
+`lernapps/app-templates`. The diagram shows one representative block per node; each node's section lists all it hosts.
 
 ```arc42
 :::diagram
@@ -24,17 +22,22 @@ notation: mermaid-architecture
 ```mermaid
 architecture-beta
     group env-development(server)[Development]
+    group dn-creator-machine(server)[Creator machine] in env-development
     group env-ci(cloud)[CI]
+    group dn-ci-runner(server)[GitHub Actions runner] in env-ci
     group env-production(internet)[Production and preview]
-    service dn-creator-machine(server)[Creator machine] in env-development
-    service dn-ci-runner(server)[GitHub Actions runner] in env-ci
-    service dn-github-pages(cloud)[GitHub Pages] in env-production
-    service dn-pr-preview(cloud)[Pull request preview] in env-production
-    service dn-learner-browser(internet)[Learner browser] in env-production
-    dn-creator-machine:R --> L:dn-ci-runner
-    dn-ci-runner:R --> L:dn-github-pages
-    dn-ci-runner:B --> T:dn-pr-preview
-    dn-github-pages:R --> L:dn-learner-browser
+    group dn-github-pages(cloud)[GitHub Pages] in env-production
+    group dn-pr-preview(cloud)[Pull request preview] in env-production
+    group dn-learner-browser(internet)[Learner browser] in env-production
+    service bb-preset(server)[Preset and hooks] in dn-creator-machine
+    service bb-lernapps-check(server)[lernapps check] in dn-ci-runner
+    service bb-start-page(disk)[Start page] in dn-github-pages
+    service bb-page-tree(disk)[Page trees] in dn-pr-preview
+    service bb-core(server)[Core] in dn-learner-browser
+    bb-preset:R --> L:bb-lernapps-check
+    bb-lernapps-check:R --> L:bb-start-page
+    bb-lernapps-check:B --> T:bb-page-tree
+    bb-start-page:R --> L:bb-core
 ```
 
 ## Development
@@ -61,7 +64,7 @@ id: dn-creator-machine
 title: Creator's machine
 type: device
 parent: env-development
-hosts: bb-preset, bb-lint-rules, bb-lernapps-check, bb-playwright-config, bb-app-validation, bb-component-rules, bb-core-check, bb-build-playthroughs, bb-size-budget, bb-start-page, bb-app-page, bb-page-tree, bb-not-found-page, bb-browser-playthroughs, bb-description, bb-main, bb-core, bb-ui, bb-data, bb-messages, bb-playthroughs
+hosts: bb-preset, bb-lint-rules, bb-lernapps-check, bb-playwright-config, bb-app-validation, bb-component-rules, bb-core-check, bb-build-playthroughs, bb-start-page, bb-app-page, bb-page-tree, bb-not-found-page, bb-browser-playthroughs, bb-description, bb-main, bb-core, bb-ui, bb-data, bb-messages, bb-playthroughs
 :::
 ```
 
@@ -89,7 +92,7 @@ id: dn-ci-runner
 title: GitHub Actions runner
 type: server
 parent: env-ci
-hosts: bb-preset, bb-lint-rules, bb-lernapps-check, bb-playwright-config, bb-app-validation, bb-component-rules, bb-core-check, bb-build-playthroughs, bb-size-budget, bb-start-page, bb-app-page, bb-page-tree, bb-not-found-page, bb-browser-playthroughs, bb-description, bb-main, bb-core, bb-ui, bb-data, bb-messages, bb-playthroughs
+hosts: bb-preset, bb-lint-rules, bb-lernapps-check, bb-playwright-config, bb-app-validation, bb-component-rules, bb-core-check, bb-build-playthroughs, bb-start-page, bb-app-page, bb-page-tree, bb-not-found-page, bb-browser-playthroughs, bb-description, bb-main, bb-core, bb-ui, bb-data, bb-messages, bb-playthroughs
 :::
 ```
 
