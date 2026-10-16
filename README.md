@@ -88,6 +88,28 @@ with which a creator and their AI assistant build a learning app.
 - A template has no `prepare` script of its own, so `npm install` in its folder leaves this repo's git hooks alone;
   the generator gives the app the one that installs them.
 
+## Architecture
+
+Every archetype follows one architecture, because they share its quality goals: the generic part in
+[`docs/arc42/`](docs/arc42/) (the frame: static description, page trees and 404 page, build checks, shell, end-to-end
+tests, tooling helpers, the optional tutor handoff, task numbers and exercise contract), and one extension per
+archetype in its folder, with only the blocks it adds below the generic ones. An app's architecture is both together.
+
+- **Quiz** ([`quiz/docs/arc42/`](quiz/docs/arc42/)): the quiz rendering writes the bank into a worksheet page, the
+  bank validation checks `src/quiz.json`, the quiz engine checks answers with the question types' checker and keeps
+  only the last result on the device when the bank asks; no tutor.
+- **Explainer** ([`explainer/docs/arc42/`](explainer/docs/arc42/)): the page rendering writes the YAML pages and the
+  component islands at build, the content validation and the examples check guard the content, the client module and
+  the islands check answers in the browser and keep only the chosen way to the tutor; the tutor handoff, task numbers
+  and exercise contract are built for it.
+- **Interactive** ([`interactive/docs/arc42/`](interactive/docs/arc42/)): the start page and app page render from
+  `src/app.yaml`, the core contract check and both playthrough players check the core, the shell mounts the root
+  component and feeds the core keys, ticks, route and seed; the app's own storage goes through the small storage; no
+  tutor yet. Only an interactive app adds an architecture part of its own.
+
+Validate an archetype's architecture by copying the files of `docs/arc42/` and of its extension into one folder and
+running `arc42 validate` there with `--root <template folder>`.
+
 ## Contributing
 
 `npm ci`, then the steps of the workflow [`check.yml`](.github/workflows/check.yml): the runtime's checks at the root

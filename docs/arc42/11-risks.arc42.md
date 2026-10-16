@@ -35,23 +35,8 @@ mitigation: Add k6 load test suite as a nightly CI job with a p95 threshold gate
 ```
 -->
 
-Risks and debt of the frame every interactive app shares, highest first. An app adds its own below these.
-
-## Time Is Not Replayed by Playthroughs
-
-A playthrough holds only keys. The build never calls `tick`, so what a core does over time (a letter not typed in time,
-letters flying across the screen) is not checked there; in the browser the clock runs in real time between key
-presses, so a playthrough of a real-time core depends on how fast the test types. The pilot, a real-time typing game,
-puts the most pressure on exactly this.
-
-```arc42
-:::risk
-id: risk-time-not-replayed
-title: Time is not replayed by playthroughs
-severity: high
-mitigation: Playthroughs get a time step that lets n ticks pass, played in the build and in the browser (decided, not built yet); until then tick logic is tested only by the app's own unit tests.
-:::
-```
+Risks and debt of the frame every lernapps app shares, highest first. Each extension adds its archetype's, and an
+interactive app its own.
 
 ## Declared Accessibility Limits Not Built
 
@@ -78,7 +63,7 @@ refuses, so one app can fill the origin's shared 5 MiB.
 id: risk-storage-quota-not-built
 title: Storage quota of 100 kB not built
 severity: medium
-mitigation: Build the quota into the tooling's storage wrapper, so that save refuses beyond 100 kB per app; until then no template app stores anything.
+mitigation: Build the quota into the tooling's storage wrapper, so that save refuses beyond 100 kB per app; until then apps keep only small values (the quiz's last result, the explainer's chosen way to the tutor).
 :::
 ```
 
@@ -97,15 +82,15 @@ mitigation: Accepted (owner): apps keep only small data that may be lost, under 
 :::
 ```
 
-## Tutor Not Built
+## Tutor Not Built for Quiz and Interactive Apps
 
 The tutor is decided as a handoff to the learner's own assistant (`dec-tutor-variant`), but it is built only for the
-explainer, so an interactive app has no tutor yet.
+explainer, so a quiz or an interactive app has no tutor yet.
 
 ```arc42
 :::risk
 id: risk-tutor-not-built
-title: Tutor handoff not built for interactive apps
+title: Tutor handoff not built for quiz and interactive apps
 severity: medium
 mitigation: Build the handoff with the exercise contract and task numbers from the explainer's parts; until then apps add no tutor of their own.
 :::
@@ -125,30 +110,3 @@ mitigation: Planned in the sketch (tooling step 2); until then the review reads 
 :::
 ```
 
-## Size Budget Left in the Build
-
-The app's size is not limited, but `runtime/interactive/plugin.ts` still fails the build when the app's own code is
-over `SIZE_BUDGET` = 100 kB gzip, so a large app cannot be built today.
-
-```arc42
-:::risk
-id: risk-size-budget-left
-title: SIZE_BUDGET still in the build plugin
-severity: low
-mitigation: Technical debt; remove SIZE_BUDGET and its check from runtime/interactive/plugin.ts.
-:::
-```
-
-## Core Property Tests Not Built
-
-The sketch has the build run the core's property tests over fixed seeds; the build plays only the playthroughs, so a
-core is checked for the seeds its playthroughs name and no others.
-
-```arc42
-:::risk
-id: risk-no-core-property-tests
-title: Core property tests over fixed seeds not built
-severity: low
-mitigation: Planned; until then the build checks determinism with every playthrough played twice.
-:::
-```

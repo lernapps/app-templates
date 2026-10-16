@@ -1,9 +1,69 @@
 # Architecture evidence
 
-Traceability of the facts in the chapters of this architecture to their sources. Not an arc42 chapter; the
-validator does not parse it. Owner decisions count as evidence.
+Traceability of the facts of the generic architecture (`docs/arc42/`) and its three extensions
+(`quiz/docs/arc42/`, `explainer/docs/arc42/`, `interactive/docs/arc42/`) to their sources. Not an arc42 chapter; the
+validator does not parse it. Owner decisions count as evidence. An app's workspace is the generic files plus its
+archetype's extension; each combination is validated with `--root` at the template folder.
 
-## Sources inventoried
+## Generic architecture and extensions (owner, 2026-10-16)
+
+The architecture was first written for the interactive archetype (rows from "Sources inventoried" on). By the owner's
+decision of 2026-10-16 it became the generic architecture of every lernapps app, at the repo root, with one extension
+per archetype. Rows below this section name ids as they were before the split; the table of moved ids maps them.
+
+| Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
+| --- | --- | --- | --- | --- |
+| owner, 2026-10-16, decision (relayed by the coordinator) | One architecture for every archetype; quiz, explainer and interactive stay separate archetypes and follow it because they share its quality goals; generic part at `docs/arc42/`, one extension per archetype in its template folder that adds only its own blocks (below the generic ones via `parent`), interfaces, decisions, risks and terms, and defines no generic id again | all chapters; dec-generic-plus-extensions; concept-archetype-extension | high | — |
+| owner, 2026-10-16, decision | Only interactive apps write an architecture part of their own; the quiz's and the explainer's notation fixes their structure | ch.2 con-architecture-current; ch.9 dec-arc42-in-app; quiz dec-quiz-only-bank; explainer dec-explainer-only-content | high | — |
+| owner, 2026-10-16, decision | Quality goal priorities confirmed: privacy and checkable high, accessibility and understandable medium | ch.1, ch.10 | high | — (resolved) |
+| owner, 2026-10-16, decision | Readable without JavaScript is a quality goal of the quiz and the explainer (text-heavy), not of the generic architecture and not of interactive apps (only their start page reads without JavaScript) | quiz qg-quiz-readable-without-js, explainer qg-explainer-readable-without-js; ch.8 concept-readable-without-js; ch.6 scenario-pages | high | OPEN: priority of both goals (medium proposed by the agent) |
+| owner, 2026-10-16, earlier review (kept in force) | No model in the browser; no IndexedDB; no size limit, the size in the entry and an optional loading indicator; the skill as an interface used by the creator's assistant | ch.5 bb-tutor-handoff, bb-small-storage, bb-loading-indicator, bb-skill-app; ch.9 dec-tutor-variant, dec-small-storage, dec-no-size-limit, dec-skill-interface | high | — |
+| `runtime/shared/pages.ts` header | Page trees per language and 404.html are shared by the archetypes' build steps | ch.5 bb-page-tree, bb-not-found-page | high | — |
+| `runtime/shared/examples.ts` header; `runtime/quiz/validate.ts` header | The examples check runs for the quiz's questions and the explainer's exercises; interactive apps have none | ch.5 bb-examples-check | high | — |
+| `runtime/explainer/components.ts` header ("The interactive archetype runs the same code checks"); `runtime/interactive/plugin.ts` lines 10-13 | Component rules shared by explainer components and the interactive UI; the quiz has no components | ch.5 bb-component-rules; ch.2 con-vue-typescript | high | — |
+| `runtime/quiz/question.ts`, `quiz.ts` headers; `runtime/explainer/exercises.ts` header | The six question types and checker are used by the quiz and by the explainer's quiz-type exercises | ch.5 bb-question-types | high | — |
+| `runtime/explainer/tutor.ts`, `tutorpage.ts`, `prompt.ts`, `tasks.ts`, `components.ts`, `generated.ts` headers; no tutor code in `runtime/quiz/`, `runtime/interactive/` | Tutor handoff, task numbers and exercise contract built for the explainer, not for the quiz and interactive apps | ch.5 bb-tutor-handoff, bb-task-numbers, bb-exercise-contract; ch.3, ch.6, ch.11 | high | — |
+| `runtime/quiz/engine.ts` lines 1-17, 244 | The quiz engine: one question at a time in the seed's order, deep link, stores only the last result when the bank asks | quiz bb-quiz-engine, scenario-quiz-answer | high | — |
+| `runtime/quiz/render.ts` header; skill `lernapps-quiz` "How the quiz works" | Without JavaScript the quiz page is a worksheet with its answer key | quiz bb-quiz-rendering, dec-quiz-worksheet, qg-quiz-readable-without-js | high | — |
+| `runtime/quiz/e2e.ts` header | quizTests check the page without JavaScript in every language | quiz qs-quiz-without-js | high | — |
+| tooling `check/rules/explainer-readable-without-js.ts` header; skill `lernapps-explainer` rule explainer-readable-without-js | lernapps check verifies only explainer pages without JavaScript; the quiz's is checked by its own tests | explainer qs-explainer-without-js; quiz risk-quiz-no-js-not-in-check; ch.5 bb-lernapps-check | high | — |
+| skill `lernapps-quiz` rule quiz-only-data | The quiz's creator writes only src/quiz.json | quiz bb-quiz-bank, dec-quiz-only-bank; ch.2 con-runtime-unchanged | high | — |
+| skill `lernapps-explainer` rules explainer-only-content, prefer-built-in-block, vue-component-*; "Data files"; "Components" | The explainer's creator writes YAML content, data files and Vue components only where no block fits, each within 20 kB gzip | explainer bb-explainer-content, bb-explainer-data, bb-explainer-components, dec-explainer-only-content | high | — |
+| `runtime/explainer/plugin.ts`, `render.ts`, `load.ts`, `explainer.ts`, `islands.ts`, `generated.ts`, `e2e.ts`, `outline.ts` headers | The explainer's rendering (pages, blocks, islands at build), validation, client, islands, generated exercises and tests | explainer ch.5, ch.6 | high | — |
+| `runtime/explainer/components.ts:57` (SIZE_BUDGET = 20_000); `plugin.ts:293-309` | The explainer's build fails a component over 20 kB gzip | explainer risk-explainer-component-budget | high | OPEN: does "no size limit" cover the explainer's 20 kB budget per component? |
+| skill `lernapps-explainer` line 38 ("The explainer stores nothing"); `runtime/explainer/explainer.ts:17,184` | The skill and the runtime differ: the client keeps the chosen way to the tutor on the device | explainer risk-explainer-storage-doc; ch.5 bb-small-storage | high | — (a fix of the skill, not an owner question) |
+| `explainer/src/`, `quiz/src/`, `interactive/src/` (template folders) | Paths of the extensions' blocks, relative to each template folder (the root of each validation) | extensions ch.5 | high | — |
+| agent inference | Extension deployment nodes (`dn-<archetype>-build` below the CI runner, `dn-<archetype>-page` below the learner's browser) host the extension's blocks; the build node also stands for the creator's machine | extensions ch.7 | medium | — |
+| agent inference | `if-archetype-content` on the abstract archetype part stands for what the creator writes; each extension's content interface realises it | ch.5, ch.3 | medium | — |
+| agent inference | `if-lernapps-check` as an interface the creator's assistant requires | ch.3 actor-creator-assistant, ch.5 | medium | OPEN (narrowed): an interface for `vp build` and `vp dev` |
+
+### Ignore directives
+
+| Rule | Element | Reason |
+| --- | --- | --- |
+| W002 | bb-not-found-page | reached through the static files for any unknown address; calls no interface |
+| W002 | bb-loading-indicator | not built; would only show the loading of a page |
+| W002 | bb-settings | not built and not in scope; noted so a later dialog goes into the frame |
+| W006 | qg-privacy | two high-priority goals is the owner's decision (2026-10-16) |
+| W026 | every extension block whose parent is generic | the validator expects a child in its parent's file; extension blocks live in their own files by design |
+
+### Moved and renamed ids (from the interactive architecture)
+
+| Before | After |
+| --- | --- |
+| bb-app | bb-archetype (abstract, generic) |
+| bb-description, bb-main, bb-core, bb-ui, bb-data, bb-messages, bb-playthroughs | bb-interactive-description, -main, -core, -ui, -data, -messages, -playthroughs (interactive extension) |
+| bb-start-page, bb-app-page | bb-interactive-start-page, bb-interactive-app-page below bb-static-description (interactive extension) |
+| bb-app-validation | bb-interactive-validation (interactive extension) |
+| bb-core-check, bb-build-playthroughs, bb-input-router, bb-clock, bb-hash-router, bb-seed, bb-browser-playthroughs | interactive extension; the shell's mount and state became bb-state-holder |
+| if-start-page, if-app-description, if-app-data, if-start-interactive, if-interactive-tests | if-pages (generic), if-interactive-description, if-interactive-data, if-start (generic), if-e2e-tests (generic) |
+| concept-core-and-shell, concept-playthroughs, concept-hash-routes, concept-low-stimulation | interactive extension |
+| dec-one-archetype, dec-runtime-owns-state, dec-keys-as-input, dec-start-seed-route, dec-playthroughs-as-data | interactive extension |
+| qs-deterministic-core, qs-playthrough-in-browser | interactive extension |
+| risk-time-not-replayed, risk-size-budget-left, risk-no-core-property-tests | interactive extension |
+| term-core, term-app-page, term-route, term-tick, term-playthrough | interactive extension |
+
+## Sources inventoried (the interactive architecture before the split)
 
 | Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
 | --- | --- | --- | --- | --- |
@@ -34,7 +94,7 @@ validator does not parse it. Owner decisions count as evidence.
 | `ORGANIZATION.md`, "Apps and the app overview" | An app connects to the platform only through its entry in the app overview | ch.1 / 1.1 | high | — |
 | owner, 2026-10-16, review | Optional tutor as a handoff to the learner's own assistant, no model in the browser | ch.1 / 1.1 | high | — |
 | owner, 2026-10-16, review | Quality goals qg-privacy, qg-checkable, qg-accessibility, qg-understandable and their order | ch.1 / 1.2 | high | — |
-| coordinator's proposal | Priorities: qg-privacy high, qg-checkable high, qg-accessibility medium, qg-understandable medium | ch.1 / 1.2, ch.10 | low | OPEN: confirm priorities (pending the owner) |
+| coordinator's proposal; owner, 2026-10-16, confirmed | Priorities: qg-privacy high, qg-checkable high, qg-accessibility medium, qg-understandable medium | ch.1 / 1.2, ch.10 | high | — (resolved: confirmed by the owner, 2026-10-16) |
 | `ORGANIZATION.md` lines 3, 13-21, 35-40 | Stakeholders: learners, creators (and their AI assistant), owner Oliver Jägle, teachers and parents; listing decided by the owner | ch.1 / 1.3 | high | — |
 | tooling `scripts/verdict.ts` header; ORGANIZATION.md line 51 | Reviewers: a review agent before listing; the owner decides the listing | ch.1 / 1.3 | medium | — |
 
@@ -217,7 +277,7 @@ validator does not parse it. Owner decisions count as evidence.
 | Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
 | --- | --- | --- | --- | --- |
 | owner, 2026-10-16, review | The four goals qg-privacy, qg-checkable, qg-accessibility, qg-understandable; qg-small dropped with qs-size-budget and qs-storage-quota | ch.10 / all quality goals | high | — |
-| coordinator's proposal | Priorities high, high, medium, medium | ch.10 / all quality goals | low | OPEN: confirm priorities (pending the owner) |
+| coordinator's proposal; owner, 2026-10-16, confirmed | Priorities high, high, medium, medium | ch.10 / all quality goals | high | — (resolved: confirmed by the owner, 2026-10-16) |
 | `tooling check/rules/no-request-before-click.ts`; `check/visit.ts` | Requests to other hosts during page load are blocked, recorded, errors | ch.10 / qs-no-request-before-click | high | — |
 | `tooling lint/rules/storage-through-wrapper.ts`, `vue-component-no-network.ts`; `archetypes/shared/storage.ts` prefix lernapps:<app>: | Direct storage, cookies and network calls reported; storage through createStorage under the app prefix | ch.10 / qs-state-on-device | high | — |
 | `runtime/interactive/plugin.ts` lines 16, 145-152 | Playthroughs played twice; differing states fail the build | ch.10 / qs-deterministic-core | high | — |
