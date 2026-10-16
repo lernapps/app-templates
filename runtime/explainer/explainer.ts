@@ -5,36 +5,20 @@
 // answer or "Lösung zeigen" (startQuestion of the quiz runtime with retry). A question of one of the quiz's types gets
 // the quiz's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
 // shows the same after the answer. A generated exercise gets a live task: from the seed in the address when the
-// address names it (?seed=<n>#<exercise>), else from a new one; the quiz's controls, checker and feedback through its
-// comparator, the message of a typical mistake, and "Neue Aufgabe", which draws the next task and writes its seed into
-// the address. Its worked tasks, with their solutions, show below the live task once the learner has solved it or
-// asked for its solution. Nothing is stored.
+// address names it (?seed=<n>#<exercise>), else from a task number of 1 to TASK_NUMBERS (tasks.ts); "Aufgabe Nr. <n>"
+// above it; the quiz's controls, checker and feedback through its comparator, the message of a typical mistake, and
+// "Neue Aufgabe", which moves to the next task number and writes it into the address. Its worked tasks, with their
+// solutions, show below the live task once the learner has solved it or asked for its solution. Nothing is stored.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { startQuestion } from "../quiz/engine.ts";
 import { renderQuestion } from "../quiz/render.ts";
 import { questionId } from "../quiz/quiz.ts";
 import type { ExerciseData } from "./exercises.ts";
-import {
-  diagnose,
-  figureOf,
-  generate,
-  hintOf,
-  nextSeed,
-  questionFor,
-  stepsOf,
-  taskKey,
-  taskText,
-} from "./generated.ts";
+import { diagnose, figureOf, generate, hintOf, questionFor, stepsOf, taskKey, taskText } from "./generated.ts";
+import { addressOf, nextTaskNumber, randomTaskNumber, seedFromAddress, TASK_NUMBERS } from "./tasks.ts";
 
 const escape = (text: string) =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-/** The seed the address gives the exercise `id` (?seed=<n>#<id>), if it names it. */
-function seedFromAddress(id: string): number | undefined {
-  const url = new URL(location.href);
-  const seed = Number(url.searchParams.get("seed"));
-  return decodeURIComponent(url.hash.slice(1)) === id && Number.isInteger(seed) && seed > 0 ? seed : undefined;
-}
 
 /** Makes a generated exercise live: a task from a seed, checked by the quiz runtime, and "Neue Aufgabe". */
 function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind: "generated" }>): void {
@@ -47,7 +31,7 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   const showWorked = () => {
     for (const part of worked) part.hidden = false;
   };
-  let seed = seedFromAddress(spec.id) ?? 1 + Math.floor(Math.random() * 999_983);
+  let seed = seedFromAddress(location.href, spec.id) ?? randomTaskNumber();
 
   const show = (focus: boolean) => {
     const task = generate(spec, seed, data.data);
@@ -57,6 +41,7 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
     const steps = stepsOf(spec, task, lang, templates);
     live.innerHTML = [
       `<p class="explainer-practice">${escape(texts.practice)}</p>`,
+      `<p class="explainer-task-number">${escape(texts.taskNumber.replace("{n}", String(seed)))}</p>`,
       figure === undefined ? "" : `<div class="explainer-task-figure">${figure}</div>`,
       renderQuestion(question, {
         lang,
@@ -86,14 +71,11 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
     }
     live.querySelector(".explainer-new-task")?.addEventListener("click", () => {
       const before = taskKey(spec, task, lang, templates);
-      for (let tries = 0; tries < 20; tries++) {
-        seed = nextSeed(seed);
+      for (let tries = 0; tries < TASK_NUMBERS; tries++) {
+        seed = nextTaskNumber(seed);
         if (taskKey(spec, generate(spec, seed, data.data), lang, templates) !== before) break;
       }
-      const url = new URL(location.href);
-      url.searchParams.set("seed", String(seed));
-      url.hash = spec.id;
-      history.replaceState(history.state, "", url);
+      history.replaceState(history.state, "", addressOf(location.href, spec.id, seed));
       show(true);
     });
   };

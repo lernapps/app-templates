@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // A figure whose parts the learner labels: a pyramid of numbered levels, a choice of the labels for each level, and
-// "Prüfen". Its logic is in AssignLabels.ts; it reports the answer with answered, and the explainer gives the feedback.
-import { computed, onMounted, ref } from "vue";
+// "Prüfen", for the task of the number seed. Its logic is in AssignLabels.ts; it reports the answer with answered, and
+// the explainer gives the feedback, the task number and "Neue Aufgabe".
+import { computed, ref } from "vue";
 import { check, generate, type Answer } from "./AssignLabels.ts";
 
 const props = defineProps<{
@@ -15,12 +16,14 @@ const props = defineProps<{
   button: string;
   /** The labels of the levels, from the top: the right answer. */
   parts: string[];
+  /** The task number, which the explainer gives. */
+  seed: number;
 }>();
 const emit = defineEmits<{ answered: [{ correct: boolean }] }>();
 
 const HEIGHT = 180;
-// the first render, on the server and when hydrating, from a fixed seed; a new order once mounted
-const task = ref(generate(1, props));
+// the task of the number the explainer gives; "Neue Aufgabe" mounts the component afresh with another
+const task = computed(() => generate(props.seed, props));
 const answer = ref<Answer>(props.parts.map(() => -1));
 const done = ref(false);
 
@@ -35,10 +38,6 @@ const levels = computed(() =>
     };
   }),
 );
-
-onMounted(() => {
-  task.value = generate(1 + Math.floor(Math.random() * 999_983), props);
-});
 
 function submit(): void {
   done.value = true;

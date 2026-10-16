@@ -599,3 +599,44 @@ figcaption p {
   display: block;
   margin: 0.25rem 0 0;
 }
+
+/* The task number of a seeded exercise ("Aufgabe Nr. 7"), which a learner can name to a tutor, and the controls of an
+   exercise component: its number and "Neue Aufgabe", shown once it hydrates */
+.explainer-task-number {
+  margin: 0 0 0.25rem;
+  color: var(--explainer-muted);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.explainer-task-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.explainer-task-controls[hidden] {
+  display: none;
+}
+
+.explainer-task-controls .explainer-task-number {
+  margin: 0;
+}
+
+.explainer-task-controls button {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--explainer-accent);
+  border-radius: 0.375rem;
+  background: var(--explainer-background);
+  color: var(--explainer-accent);
+  cursor: pointer;
+}
+
+.explainer-task-controls button:focus-visible {
+  outline: 3px solid var(--explainer-text);
+  outline-offset: 2px;
+}

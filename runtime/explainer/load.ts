@@ -6,8 +6,9 @@
 // every page has an exercise, a question of the quiz's types passes the quiz's validation in every declared language,
 // a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), the check
 // of each exercise judges its examples as they are listed, a vue-component block names a component of src/components/
-// that passes its checks (components.ts), its props match the component's prop types, it has its nojs text and, for an
-// exercise component, its examples (which the build step runs, plugin.ts), and src/ holds nothing else. Each problem is one line: the file,
+// that passes its checks (components.ts), its props match the component's prop types, it has its nojs text (an exercise
+// component's is generated from its describe) and, for an exercise component, its examples (which the build step
+// runs, plugin.ts) and an anchor once on the page (its id, or its name in kebab case), and src/ holds nothing else. Each problem is one line: the file,
 // its line, the place in the file, the language where it matters, and what to do.
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -211,9 +212,6 @@ function readYaml(root: string, file: string, problems: Problems): YamlFile | un
 function missing(property: string, object: unknown): string {
   const type = isObject(object) ? object["type"] : undefined;
   if (property === "origin") return "origin is missing; a quote names who said or wrote it, where and when";
-  if (property === "nojs") {
-    return "nojs is missing; a vue-component says in nojs, for readers without JavaScript, what it shows, and gives its content (vue-component-nojs)";
-  }
   if ((property === "licence" || property === "source") && type === "quote") {
     return `${property} is missing; a quote names its source and its licence`;
   }
@@ -620,6 +618,21 @@ function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: P
     );
     return;
   }
+  if (block.nojs === undefined && !component.exercise) {
+    problems.at(
+      yaml,
+      at,
+      "nojs is missing; a vue-component that is no exercise says in nojs, for readers without JavaScript, what it shows, and gives its content (vue-component-nojs)",
+    );
+  }
+  // the anchor of an exercise component, which its task's address names (?seed=<n>#<id>): its id, or its name
+  let id = block.id;
+  if (id === undefined && component.exercise) {
+    const base = kebab(component.name);
+    id = base;
+    for (let n = 2; check.exercises.has(id); n++) id = `${base}-${n}`;
+  }
+  if (id !== undefined) checkExerciseId(check, id, at);
   const found = propsProblems(block.props, component);
   for (const problem of found) problems.at(yaml, [...at, "props", ...problem.path], problem.message);
   if (found.length > 0) return;
@@ -651,6 +664,7 @@ function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: P
   check.uses.push({
     block,
     component,
+    ...(id === undefined ? {} : { id }),
     place: place(at),
     examples: {
       accepted: (examples?.accepted ?? []).map((_example, index) => place([...at, "examples", "accepted", index])),
@@ -658,6 +672,9 @@ function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: P
     },
   });
 }
+
+/** A component's name in kebab case, its default anchor: AssignLabels as assign-labels. */
+const kebab = (name: string): string => name.replace(/(?<=[a-z0-9])(?=[A-Z])/g, "-").toLowerCase();
 
 /** An exercise's id is an anchor of its page: once on the page. */
 function checkExerciseId(check: PageCheck, id: string, at: Path): void {

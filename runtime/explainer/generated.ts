@@ -1085,7 +1085,4 @@ export function taskKey(spec: Generated, task: Task, lang: string, templates: Te
 /** The seeds of the worked tasks a page shows without JavaScript. */
 export const WORKED_SEEDS: readonly number[] = [1, 2, 3];
 
-/** A seed after `seed`, for "Neue Aufgabe": deterministic, never the same. */
-export const nextSeed = (seed: number): number => 1 + ((seed * 7919 + 13) % 999_983);
-
 export type { Value };

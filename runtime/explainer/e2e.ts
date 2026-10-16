@@ -18,8 +18,10 @@
 // it rejects a wrong one (a mistake, with its message), shows its solution and the worked tasks on "Lösung zeigen",
 // "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
 // console error, folds a nojs text it keeps, and an exercise component's answered gives the feedback, once for each
-// answer, with the reason of a wrong one, in view with the focus. Without JavaScript, each component's nojs text is
-// visible and not empty, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
+// answer, with the reason of a wrong one, in view with the focus; at its address ?seed=<n>#<id> it gets the task
+// number n and shows "Aufgabe Nr. n", and "Neue Aufgabe" moves to the next number in the address and on the page.
+// Without JavaScript, each component's nojs text is visible and not empty, an exercise component's with its task of
+// number 1 and the solution folded, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type Page } from "playwright/test";
 import {
@@ -35,7 +37,7 @@ import { answerQuestion, expectFeedbackInView } from "../quiz/e2e.ts";
 import { messagesIn } from "../quiz/render.ts";
 import { answerFor, fill, generate, plainText, questionFor, taskKey, taskText } from "./generated.ts";
 import { message as messageOf } from "./messages.ts";
-import { outline, type ExerciseOutline, type PageOutline } from "./outline.ts";
+import { outline, type ComponentOutline, type ExerciseOutline, type PageOutline } from "./outline.ts";
 
 /** The seed of the deep link the tests open a generated exercise with. */
 const SEED = 7;
@@ -79,7 +81,7 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
   ).toEqual(expected.map(({ id, texts }) => ({ id, texts })));
   // a click on each summary, as a learner opens a <details> (its own behaviour, no script of the page)
   await main
-    .locator("details.explainer-solution > summary")
+    .locator(".explainer-exercise details.explainer-solution > summary")
     .evaluateAll((summaries) => summaries.forEach((summary) => (summary as HTMLElement).click()));
   const after = await read();
   for (const [index, exercise] of expected.entries()) {
@@ -104,8 +106,16 @@ async function expectNojs(page: Page, item: PageOutline): Promise<void> {
     const nojs = element.locator(":scope > .explainer-nojs");
     await expect(nojs, `${item.url}: the nojs text of ${component.name}`).toBeVisible();
     expect((await nojs.innerText()).trim(), `${item.url}: the nojs text of ${component.name}`).not.toBe("");
-    await expect(nojs).toHaveText(component.nojs);
+    if (component.nojs !== "") await expect(nojs).toContainText(component.nojs);
+    if (component.exercise) {
+      // the task of number 1, as the component's describe states it, with its solution folded
+      await expect(nojs.locator(".explainer-task-number"), `${item.url}: ${component.name}, task 1`).toHaveText(
+        messageOf(item.lang, "taskNumber", { n: "1" }),
+      );
+      await expect(nojs.locator("details.explainer-solution")).not.toHaveAttribute("open");
+    }
     await expect(element.locator(":scope > .explainer-island")).toBeHidden();
+    await expect(element.locator(":scope > .explainer-task-controls")).toBeHidden();
   }
 }
 
@@ -135,11 +145,7 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     // the component's own answered, as it emits it, with each result: one feedback, in view with the focus
     const feedback = element.locator(":scope > .quiz-feedback");
     for (const correct of [true, false]) {
-      await element.evaluate((node, value) => {
-        type Instance = { emit(event: string, payload: unknown): void };
-        const island = node.querySelector(".explainer-island") as unknown as { _vnode?: { component?: Instance } };
-        island._vnode?.component?.emit("answered", { correct: value });
-      }, correct);
+      await element.evaluate(emitAnswered, { correct });
       await expect(feedback, `${component.name}: the feedback on answered`).toHaveText(
         messagesIn("de")[correct ? "right" : "wrong"],
       );
@@ -147,17 +153,55 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       await expect(feedback).toBeInViewport();
     }
     // a wrong answer with its reason: the reason under the feedback
-    await element.evaluate((node) => {
-      type Instance = { emit(event: string, payload: unknown): void };
-      const island = node.querySelector(".explainer-island") as unknown as { _vnode?: { component?: Instance } };
-      island._vnode?.component?.emit("answered", { correct: false, reason: "Der Grund." });
-    });
+    await element.evaluate(emitAnswered, { correct: false, reason: "Der Grund." });
     await expect(feedback.locator(".quiz-diagnosis"), `${component.name}: the reason of a wrong answer`).toHaveText(
       "Der Grund.",
     );
     await expect(element.locator(".quiz-feedback"), "one feedback").toHaveCount(1);
+    await checkTaskNumber(page, item, component);
   }
   expect(errors, `${item.url}: no console error`).toEqual([]);
+}
+
+/** The instance of the component in an island: the child of the explainer's wrapper for an exercise component. */
+type Instance = { emit(event: string, payload: unknown): void; props: Record<string, unknown> };
+type Mounted = { _vnode?: { component?: Instance & { subTree?: { component?: Instance } } } };
+
+/** Emits answered with `payload` from the component in the island of `node`, as the component itself does. */
+function emitAnswered(node: Element, payload: { correct: boolean; reason?: string }): void {
+  const island = node.querySelector(".explainer-island") as unknown as Mounted;
+  const wrapper = island._vnode?.component;
+  (wrapper?.subTree?.component ?? wrapper)?.emit("answered", payload);
+}
+
+/** The task number the component in the island of `node` was given, as its prop seed. */
+function seedOf(node: Element): unknown {
+  const island = node.querySelector(".explainer-island") as unknown as Mounted;
+  return island._vnode?.component?.subTree?.component?.props["seed"];
+}
+
+/**
+ * An exercise component at its address ?seed=<n>#<id>: it gets the task number n as its prop seed and shows "Aufgabe
+ * Nr. n"; "Neue Aufgabe" moves to the next number, in the address and on the page, with the focus on it.
+ */
+async function checkTaskNumber(page: Page, item: PageOutline, component: ComponentOutline): Promise<void> {
+  if (component.id === undefined) return;
+  const seed = 3;
+  await page.goto(`./${item.url}?seed=${seed}#${component.id}`);
+  const element = page.locator(`[id="${component.id}"]`);
+  await expect(element, `${component.name}: hydrates at its address`).toHaveAttribute("data-hydrated", "");
+  const number = element.locator(":scope > .explainer-task-controls .explainer-task-number");
+  await expect(number, `${component.name}: the task number of the address`).toHaveText(
+    messageOf("de", "taskNumber", { n: String(seed) }),
+  );
+  await expect.poll(() => element.evaluate(seedOf), `${component.name}: gets seed ${seed}`).toBe(seed);
+  await element.locator(":scope > .explainer-task-controls .explainer-new-task").click();
+  const next = Number(new URL(page.url()).searchParams.get("seed"));
+  expect(next, `${component.name}: the next task number in the address`).toBe(seed + 1);
+  expect(new URL(page.url()).hash).toBe(`#${component.id}`);
+  await expect(number).toHaveText(messageOf("de", "taskNumber", { n: String(next) }));
+  await expect(number).toBeFocused();
+  await expect.poll(() => element.evaluate(seedOf), `${component.name}: gets seed ${next}`).toBe(next);
 }
 
 /** The feedback of the question `id` says `text`. */
@@ -327,7 +371,11 @@ export function explainerTests(root = "."): void {
               await expect(heading, `section ${section.id}`).toBeVisible();
               await expect(heading).toHaveText(section.title);
             }
-            await expect(main.locator("math"), "one <math> per formula").toHaveCount(item.formulas);
+            // the formulas of the content; an exercise component's no-JS task, from its describe, is not content
+            const formulas = await main
+              .locator("math")
+              .evaluateAll((elements) => elements.filter((math) => !math.closest(".explainer-described")).length);
+            expect(formulas, "one <math> per formula").toBe(item.formulas);
             for (const name of item.figures) {
               await expect(main.getByRole("img", { name, exact: true }).first(), `the figure "${name}"`).toBeVisible();
             }
