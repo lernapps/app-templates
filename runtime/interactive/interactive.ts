@@ -8,15 +8,25 @@
 //
 // On the app page it keeps the core's state (contract.ts): it starts it with the seed of the address (?seed=<n>, else
 // a random one) and the route of the address (#<id>, else the first route), gives every key typed on the page to
-// step (not a key typed on a link, button or form field, which is theirs, nor one with Ctrl, Alt or Meta), and calls
-// tick every TICK ms when the core has it. A key that changes the state loses its default (the space bar does not
-// scroll). A new route in the address starts the core again with it. It mounts the app's root component into the
-// page with the props state (the core's state) and lang (the page's language), and steps every key the component
-// emits as input (a button that stands for a key). The start page loads no script; the build removes it there.
+// step as a key input (not a key typed on a link, button or form field, which is theirs, nor one with Ctrl, Alt or
+// Meta), and calls tick every TICK ms when the core has it (the end-to-end tests step the ticks themselves:
+// CLOCK_PROPERTY). A key that changes the state loses its default (the space bar does not scroll). A new route in the
+// address starts the core again with it. It mounts the app's root component into the page with the props state (the
+// core's state) and lang (the page's language), and steps every input the component emits as input (an action of a
+// button or a tap, or a key it stands for). The start page loads no script; the build removes it there.
 import { createApp, h, shallowRef, type Component } from "vue";
-import { STATE_PROPERTY, TICK, type Core } from "./contract.ts";
+import { CLOCK_PROPERTY, STATE_PROPERTY, TICK, type Core, type Input } from "./contract.ts";
 
-export { TICK, type Core, type Playthrough, type PlaythroughStep } from "./contract.ts";
+export {
+  TICK,
+  type ActionInput,
+  type Core,
+  type Input,
+  type Json,
+  type KeyInput,
+  type Playthrough,
+  type PlaythroughStep,
+} from "./contract.ts";
 
 /** Where a key belongs to the page's own controls, not to the app. */
 const CONTROLS = "a[href], button, input, select, textarea, summary, [contenteditable]";
@@ -46,9 +56,9 @@ export function startInteractive<S>(core: Core<S>, root: Component): void {
     }
   };
   markRoute();
-  /** Gives `key` to the core; whether it changed the state. */
-  const input = (key: string): boolean => {
-    const next = core.step(state.value, key);
+  /** Gives `given` to the core; whether it changed the state. */
+  const input = (given: Input): boolean => {
+    const next = core.step(state.value, given);
     if (next === state.value) return false;
     set(next);
     return true;
@@ -56,7 +66,7 @@ export function startInteractive<S>(core: Core<S>, root: Component): void {
   document.addEventListener("keydown", (event) => {
     if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing) return;
     if (event.target instanceof Element && event.target.closest(CONTROLS) !== null) return;
-    if (input(event.key)) event.preventDefault();
+    if (input({ kind: "key", key: event.key })) event.preventDefault();
   });
   addEventListener("hashchange", () => {
     if (routeOf() === route) return;
@@ -64,7 +74,16 @@ export function startInteractive<S>(core: Core<S>, root: Component): void {
     set(core.start(seed, route));
     markRoute();
   });
-  if (core.tick !== undefined) setInterval(() => set(core.tick?.(state.value, TICK) ?? state.value), TICK);
+  const tick = (): void => set(core.tick?.(state.value, TICK) ?? state.value);
+  const clock: unknown = Reflect.get(globalThis, CLOCK_PROPERTY);
+  if (typeof clock === "object" && clock !== null) {
+    // the end-to-end tests' clock: no time passes but the ticks they step
+    Object.assign(clock, {
+      tick: (count: number) => {
+        for (let at = 0; at < count; at++) tick();
+      },
+    });
+  } else if (core.tick !== undefined) setInterval(tick, TICK);
   const lang = document.documentElement.lang || "de";
   createApp({ render: () => h(root, { state: state.value, lang, onInput: input }) }).mount(host);
   host.dataset["mounted"] = "";

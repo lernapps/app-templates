@@ -10,14 +10,17 @@
 // and loads no script; the app page shows the title, the note with a link back to the start page, and an element
 // with each route's id; each page has its language, its alternates, a language switch and the archetype marker. With
 // JavaScript, in German: the app page mounts the app without a console error, and every playthrough plays at its
-// address (app/?seed=<seed>#<route>): its keys pressed one after the other with the focus on the page, after each
-// step the state it expects (the fields it names, read from the runtime) and the announcement it expects (the polite
-// live region of @lernapps/tooling/a11y). The tests run in parallel, with reduced motion; the preset runs them at
-// desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
+// address (app/?seed=<seed>#<route>) on the tests' clock (CLOCK_PROPERTY), on which no time passes but the ticks a
+// step names, as in the build: each step's inputs one after the other, a key pressed on the keyboard with the focus
+// on the page, an action emitted as input by the app's root component, as the component itself does; then its ticks,
+// stepped through the runtime's own tick; after each step the state it expects (the fields it names, read from the
+// runtime) and the announcement it expects (the polite live region of @lernapps/tooling/a11y). The tests run in
+// parallel, with reduced motion; the preset runs them at desktop width and at 360 px; `lernapps check` adds axe and
+// the width on the pages it visits.
 import { expect, test, type Page } from "playwright/test";
 import { inLanguage } from "../shared/languages.ts";
 import { languageRoot } from "../shared/pages.ts";
-import { mismatch, STATE_PROPERTY } from "./contract.ts";
+import { CLOCK_PROPERTY, doingText, inputsOf, mismatch, STATE_PROPERTY } from "./contract.ts";
 import { loadInteractive } from "./load.ts";
 import { message } from "./messages.ts";
 import { APP_PAGE } from "./render.ts";
@@ -44,6 +47,22 @@ function consoleErrors(page: Page): string[] {
   });
   page.on("pageerror", (error) => errors.push(error.message));
   return errors;
+}
+
+/** The instance of a component, as Vue mounts it. */
+type Instance = { emit(event: string, payload: unknown): void; subTree?: { component?: Instance } };
+
+/** Emits `input` (an Input) as input from the app's root component in `host`, as the component itself does. */
+function emitInput(host: Element, input: unknown): void {
+  const wrapper = (host as unknown as { _vnode?: { component?: Instance } })._vnode?.component;
+  const root = wrapper?.subTree?.component;
+  if (root === undefined) throw new Error("the app's root component is not mounted");
+  root.emit("input", input);
+}
+
+/** Steps `count` ticks on the tests' clock of the page, the global `property`. */
+function stepTicks({ count, property }: { count: number; property: string }): void {
+  (Reflect.get(globalThis, property) as { tick(count: number): void }).tick(count);
 }
 
 /** The interactive app's tests, for the app in `root`. */
@@ -124,16 +143,23 @@ export function interactiveTests(root = "."): void {
 
       for (const { yaml, playthrough } of playthroughs) {
         const route = playthrough.route ?? routes[0]?.id;
-        test(`${yaml.file}: played with the keyboard`, async ({ page }) => {
+        test(`${yaml.file}: played with its inputs and ticks`, async ({ page }) => {
           const errors = consoleErrors(page);
+          // before the client module runs: the runtime then starts no interval, and time passes only by stepTicks
+          await page.addInitScript((property) => Reflect.set(globalThis, property, {}), CLOCK_PROPERTY);
           await page.goto(`./${APP_PAGE}?seed=${playthrough.seed}${route === undefined ? "" : `#${route}`}`);
           const host = page.locator(".interactive-app");
           await expect(host).toHaveAttribute("data-mounted", "");
           // the polite live region of @lernapps/tooling/a11y, which announce() fills
           const live = page.locator('body > [aria-live="polite"]');
           for (const [index, step] of playthrough.steps.entries()) {
-            for (const key of step.keys) await page.keyboard.press(key);
-            const where = `${yaml.file}: steps[${index}] after ${step.keys.map((key) => JSON.stringify(key)).join(", ")}`;
+            for (const input of inputsOf(step)) {
+              if (input.kind === "key") await page.keyboard.press(input.key);
+              else await host.evaluate(emitInput, input as unknown);
+            }
+            if (step.ticks !== undefined)
+              await page.evaluate(stepTicks, { count: step.ticks, property: CLOCK_PROPERTY });
+            const where = `${yaml.file}: steps[${index}] after ${doingText(step).join(", ")}`;
             if (step.state !== undefined) {
               const state = await host.evaluate(
                 (element, property) => (element as unknown as Record<string, unknown>)[property],
