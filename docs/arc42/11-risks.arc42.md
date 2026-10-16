@@ -99,7 +99,8 @@ mitigation: Build the handoff with the exercise contract and task numbers from t
 ## arc42 Checks Not Wired
 
 The architecture is meant to be kept current by `arc42 diff --staged --strict` before a commit and `arc42 validate` in
-`lernapps check`; neither is wired into an app yet, so architecture and code can drift unnoticed.
+`lernapps check`; neither is wired into an app yet, so architecture and code can drift unnoticed. In
+`lernapps/app-templates` the generic part and its extensions are validated in the pre-commit hook and in CI.
 
 ```arc42
 :::risk
@@ -110,3 +111,19 @@ mitigation: Planned in the sketch (tooling step 2); until then the review reads 
 :::
 ```
 
+## Size Budgets Left in the Build
+
+The frame limits no app's size (`dec-no-size-limit`), but `runtime/interactive/plugin.ts` still fails the build when
+an interactive app's own code is over `SIZE_BUDGET` = 100 kB gzip, and the explainer's build fails a component whose
+own code is over 20 kB gzip (`vue-component-size`), so a large app or component cannot be built today.
+
+OPEN: Does the decision "no size limit" also cover the explainer's 20 kB budget per component, or does the budget stay?
+
+```arc42
+:::risk
+id: risk-size-budget-left
+title: Size budgets still in the build
+severity: low
+mitigation: Technical debt; remove SIZE_BUDGET and its check from runtime/interactive/plugin.ts. The explainer's budget per component is kept until the owner decides; a component that needs more is split or asks for a built-in block.
+:::
+```

@@ -3,7 +3,55 @@
 Traceability of the facts of the generic architecture (`docs/arc42/`) and its three extensions
 (`quiz/docs/arc42/`, `explainer/docs/arc42/`, `interactive/docs/arc42/`) to their sources. Not an arc42 chapter; the
 validator does not parse it. Owner decisions count as evidence. An app's workspace is the generic files plus its
-archetype's extension; each combination is validated with `--root` at the template folder.
+archetype's extension; `scripts/arc42.ts` validates each combination with `arc42 validate --strict` and `--root` at the
+repo root (see "Strict validation, paths and input" below).
+
+## Strict validation, paths and input (owner, 2026-10-16)
+
+| Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
+| --- | --- | --- | --- | --- |
+| owner, 2026-10-16, decision 1 (relayed by the coordinator) | Input is more than keys and mouse: the core's `step(state, input)` takes a typed, extensible input (a key, a pointer or touch action, …); playthroughs record inputs; components translate any device input into inputs | interactive dec-typed-input (supersedes dec-keys-as-input), concept-core-and-shell, concept-playthroughs, if-core-contract, if-root-component, bb-shell, scenario-play, scenario-browser-playthroughs, qs-deterministic-core, term-core, term-playthrough, term-input; ch.3 actor-learner | high | — |
+| `runtime/interactive/contract.ts:15-18,26-31` (`step(state: S, key: string)`, `PlaythroughStep.keys`); `runtime/interactive/interactive.ts:49-59,69` (keydown, `onInput: input` with a key) | The runtime passes only keys today: technical debt against dec-typed-input | interactive risk-input-only-keys | high | — |
+| owner, 2026-10-16, decisions 2 and 3, corrected twice (relayed by the coordinator) | Paths are static and relative to the repo root: runtime blocks at `runtime/...`; blocks and interfaces in a template folder get no path, with an ignore directive ("the template is copied into each app; this block's path is the app's own and is set in the app's architecture"); tooling helpers at their installed location; no placeholders | all ch.5 files | high | OPEN: how an app maps these paths (tooling step) |
+| `arc42 validate` E011 (`pathIsKnown` over `git ls-files`); `.gitignore` (node_modules/) | A path under `node_modules/@lernapps/tooling` is an error: the validator knows only tracked files. So the tooling helpers carry no path; an ignore directive per element names the location | ch.5 bb-tooling and its six interfaces | high | OPEN: reported to the owner instead of a workaround |
+| owner, 2026-10-16, decision 3 | Strict: 0 errors, 0 warnings, 0 hints per combination; ignore directives only for documented exceptions (table below) | all chapters | high | — |
+| `@doctc/arc42` 0.36.1 rules W026, W027 (a part and an interface in their parent's or provider's file), H017, H018 (one parent with its parts per diagram) | Extension blocks cannot be parts of generic blocks without an ignore each, and a third level cannot be drawn without a hint; so the generic roots are `bb-runtime` and `bb-tooling`, each extension defines `bb-archetype-runtime` with its parts and the creator's parts as roots, and interfaces that cross a root are provided or required by a root or a sibling | ch.5, ch.4 System decomposition, ch.8 concept-archetype-extension | high | — (agent design under the owner's strict rule) |
+| `@doctc/arc42` 0.36.1 rules H015, H016, W019 (per chapter-5 file: at least one diagram, covering every block and interface of the workspace) | The generic chapter-5 file cannot name an extension's blocks; `scripts/arc42.ts` therefore appends each extension's chapter file to the generic one of the same chapter (as an app's single architecture would hold them) and reports findings at their original place | scripts/arc42.ts; ch.5 | high | OPEN: whether apps get the combined files the same way (tooling step) |
+| `git ls-files runtime/` ; `arc42 validate` H021 (coverage of sibling paths) | `runtime/quiz`, `runtime/explainer`, `runtime/interactive` are left out in `.arc42ignore`: each is claimed in its own combination, the others are siblings of `runtime/shared` there | .arc42ignore | high | — |
+| `runtime/*/` imports (`grep from runtime/*/*.ts`) | The interactive build imports the explainer's component rules (`../explainer/components.ts`); the explainer imports the quiz's question types, rendering, engine and checker (`../quiz/quiz.ts`, `render.ts`, `engine.ts`, `validate.ts`); the plugins import `@lernapps/tooling/preset` | interactive bb-component-rules; explainer bb-question-types; bb-archetype-runtime requires if-preset | high | — |
+| `runtime/interactive/contract.ts:20-24` (TICK, STATE_PROPERTY) | The state property is defined next to the core contract | interactive if-state-property, ignore H020 | high | — |
+| owner, 2026-10-16, decision 4 | The architecture check runs in this repo's pre-commit hook when `*.arc42.md` or `.arc42ignore` files are staged, and in CI; `@doctc/arc42` pinned as a devDependency (0.36.1, the tooling's version) | vite.config.ts staged, .github/workflows/check.yml job architecture, package.json; ch.2 con-architecture-current, ch.9 dec-arc42-in-app, ch.11 risk-arc42-checks-not-wired | high | — |
+| agent inference | Removed as blocks: the main.ts glue (thin, kept as generated; named in if-start), the loading indicator and settings (not built, kept in dec-no-size-limit and dec-no-settings), the skills per archetype (one interface if-skills of bb-tooling), low stimulation as a concept (no block implements it; now in risk-interactive-skill-missing) | ch.5, ch.8, interactive ch.11 | medium | — |
+
+### Ignore directives
+
+| Rule | Element | Reason |
+| --- | --- | --- |
+| H014 | bb-tooling, if-preset, if-lernapps-check, if-skills, if-device-storage, if-a11y, if-translator | @lernapps/tooling is installed in the untracked node_modules; a path there is E011 |
+| H014 | quiz bb-quiz-bank; explainer bb-explainer-content, bb-explainer-data, bb-explainer-components, if-data-files, if-vue-component, if-exercise-logic; interactive bb-interactive-description, -core, -ui, -data, -messages, -playthroughs, if-interactive-data, if-messages | the template is copied into each app; the path is the app's own and is set in the app's architecture (owner, 2026-10-16) |
+| H014 | interactive if-root-component | no file of its own: its props are set in runtime/interactive/interactive.ts, which carries if-start |
+| H020 | interactive if-core-contract | it and if-state-property are both defined in runtime/interactive/contract.ts |
+| H006 | con-bundled-licences, con-imprint-privacy | organisation rules verified by lernapps check or met by the runtime's footer; no decision responds to them |
+| H001 | dec-no-settings | a scoping decision of the owner; serves no quality goal |
+| H007 | quiz risk-quiz-no-js-not-in-check | accepted without a decision; the quiz's own end-to-end tests check the worksheet |
+| H007 | explainer risk-explainer-storage-doc | a sentence to correct in the skill, not an architecture decision |
+| W006 | qg-privacy | two high-priority goals is the owner's decision (2026-10-16) |
+| H021 | `.arc42ignore`: runtime/quiz, runtime/explainer, runtime/interactive | another archetype's runtime, claimed in its own combination |
+
+### Ids moved or removed in this step
+
+| Before | After |
+| --- | --- |
+| bb-archetype (abstract), if-quiz-bank, if-explainer-content, if-interactive-description | removed; each extension's content block provides `if-archetype-content` |
+| bb-static-description, bb-page-tree, bb-not-found-page, bb-build-checks, bb-examples-check, bb-loading-indicator, bb-settings | `bb-render` (each extension), `bb-runtime` (shared runtime: page trees, 404 page, examples check); loading indicator and settings not modelled |
+| bb-quiz-rendering, bb-quiz-validation, bb-quiz-engine, bb-quiz-tests; bb-explainer-rendering, -validation, -client, -tests; bb-interactive-start-page, -app-page, -validation, bb-core-check, bb-build-playthroughs, bb-browser-playthroughs | `bb-render`, `bb-validation`, `bb-shell`, `bb-e2e`, `bb-build` in each extension, parts of `bb-archetype-runtime` |
+| bb-state-holder, bb-input-router, bb-clock, bb-hash-router, bb-seed | interactive `bb-shell` (one file, runtime/interactive/interactive.ts) |
+| bb-preset, bb-lint-rules, bb-lernapps-check, bb-playwright-config, bb-small-storage, bb-a11y, bb-i18n, bb-skill-app, bb-skill-quiz, bb-skill-explainer, bb-skill-interactive; if-lint-plugin, if-playwright-config, if-skill-* | `bb-tooling` with if-preset, if-lernapps-check, if-skills, if-device-storage, if-a11y, if-translator |
+| bb-quiz-main, bb-explainer-main, bb-interactive-main; if-static-files | removed (main.ts named in if-start; GitHub Pages requires if-pages) |
+| bb-exercise-contract, if-exercise-description, if-question-exports (explainer) | explainer if-exercise-logic (exercise contract), bb-question-types with if-question-types |
+| concept-tutor, actor-learner-assistant, scenario-tutor | explainer extension (08, 03, 06) |
+| risk-size-budget-left (interactive), risk-explainer-component-budget | generic risk-size-budget-left |
+| dec-keys-as-input | superseded by interactive dec-typed-input |
 
 ## Generic architecture and extensions (owner, 2026-10-16)
 
@@ -32,20 +80,12 @@ per archetype. Rows below this section name ids as they were before the split; t
 | `runtime/explainer/plugin.ts`, `render.ts`, `load.ts`, `explainer.ts`, `islands.ts`, `generated.ts`, `e2e.ts`, `outline.ts` headers | The explainer's rendering (pages, blocks, islands at build), validation, client, islands, generated exercises and tests | explainer ch.5, ch.6 | high | — |
 | `runtime/explainer/components.ts:57` (SIZE_BUDGET = 20_000); `plugin.ts:293-309` | The explainer's build fails a component over 20 kB gzip | explainer risk-explainer-component-budget | high | OPEN: does "no size limit" cover the explainer's 20 kB budget per component? |
 | skill `lernapps-explainer` line 38 ("The explainer stores nothing"); `runtime/explainer/explainer.ts:17,184` | The skill and the runtime differ: the client keeps the chosen way to the tutor on the device | explainer risk-explainer-storage-doc; ch.5 bb-small-storage | high | — (a fix of the skill, not an owner question) |
-| `explainer/src/`, `quiz/src/`, `interactive/src/` (template folders) | Paths of the extensions' blocks, relative to each template folder (the root of each validation) | extensions ch.5 | high | — |
+| `explainer/src/`, `quiz/src/`, `interactive/src/` (template folders) | Superseded (owner, 2026-10-16): template blocks carry no path | extensions ch.5 | high | — |
 | agent inference | Extension deployment nodes (`dn-<archetype>-build` below the CI runner, `dn-<archetype>-page` below the learner's browser) host the extension's blocks; the build node also stands for the creator's machine | extensions ch.7 | medium | — |
-| agent inference | `if-archetype-content` on the abstract archetype part stands for what the creator writes; each extension's content interface realises it | ch.5, ch.3 | medium | — |
+| agent inference | `if-archetype-content`, defined by each extension on its content block, stands for what the creator writes | ch.5, ch.3 | medium | — |
 | agent inference | `if-lernapps-check` as an interface the creator's assistant requires | ch.3 actor-creator-assistant, ch.5 | medium | OPEN (narrowed): an interface for `vp build` and `vp dev` |
 
-### Ignore directives
-
-| Rule | Element | Reason |
-| --- | --- | --- |
-| W002 | bb-not-found-page | reached through the static files for any unknown address; calls no interface |
-| W002 | bb-loading-indicator | not built; would only show the loading of a page |
-| W002 | bb-settings | not built and not in scope; noted so a later dialog goes into the frame |
-| W006 | qg-privacy | two high-priority goals is the owner's decision (2026-10-16) |
-| W026 | every extension block whose parent is generic | the validator expects a child in its parent's file; extension blocks live in their own files by design |
+Earlier ignore directives (W002 for bb-not-found-page, bb-loading-indicator, bb-settings; W026 for every extension block with a generic parent) were removed with the restructuring above.
 
 ### Moved and renamed ids (from the interactive architecture)
 

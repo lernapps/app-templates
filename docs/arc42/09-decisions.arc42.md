@@ -117,15 +117,15 @@ id: dec-small-storage
 title: localStorage through the wrapper with a 100 kB quota
 status: accepted
 date: 2026-10-16
-addresses: con-state-on-device, con-storage-quota, qg-privacy, risk-shared-origin-storage
+addresses: con-state-on-device, con-storage-quota, con-frontend-only, qg-privacy, risk-shared-origin-storage, risk-storage-quota-not-built
 :::
 ```
 
 ## No Size Limit, the Size in the Entry
 
 The app's size is not limited by the frame; it is stated in the app's catalog entry (its fact sheet), and a page may
-show an optional loading indicator while it loads. Rejected: a size budget for every app, which would keep large
-interactive apps out.
+show an optional loading indicator while it loads (not built). Rejected: a size budget for every app, which would keep
+large interactive apps out.
 
 ```arc42
 :::decision
@@ -133,7 +133,7 @@ id: dec-no-size-limit
 title: No size limit; the size in the entry, an optional loading indicator
 status: accepted
 date: 2026-10-16
-addresses: qg-accessibility
+addresses: qg-accessibility, risk-size-budget-left
 :::
 ```
 
@@ -150,16 +150,18 @@ id: dec-accessibility-default
 title: Accessibility as default with declared limits
 status: accepted
 date: 2026-10-16
-addresses: con-accessibility-default, qg-accessibility
+addresses: con-accessibility-default, qg-accessibility, risk-accessibility-limits-not-built
 :::
 ```
 
 ## No Settings Now
 
 A settings dialog (time limit off, less motion, sound, pause) is not in scope now; an app that needs one later adds it
-to the frame (`bb-settings`) rather than on its own.
+to the frame rather than on its own.
 
 ```arc42
+:::ignore H001 a scoping decision of the owner (2026-10-16): it leaves something out and serves no quality goal of its own
+:::
 :::decision
 id: dec-no-settings
 title: No settings dialog for now
@@ -175,7 +177,8 @@ writes an architecture part of its own, below its extension's blocks, English an
 writes none, because its archetype's notation (the question bank, the content schema) fixes its structure. Checked
 is only what arc42 checks itself (`arc42 diff --staged --strict` before a commit, `arc42 validate` in
 `lernapps check`); whether the code keeps to the responsibilities is not checked. Rejected: framework-specific
-conformance checks. Both checks are not wired yet.
+conformance checks. Both checks are not wired into an app yet; `lernapps/app-templates` validates each combination of
+the generic part and one extension strictly in its pre-commit hook and in CI (`scripts/arc42.ts`).
 
 ```arc42
 :::decision
@@ -183,7 +186,7 @@ id: dec-arc42-in-app
 title: arc42 in the app; only interactive apps add their own part
 status: accepted
 date: 2026-10-16
-addresses: con-architecture-current, qg-understandable
+addresses: con-architecture-current, con-language, qg-understandable, risk-arc42-checks-not-wired
 :::
 ```
 
@@ -207,7 +210,8 @@ addresses: qg-understandable
 
 The optional tutor is a handoff to the learner's own assistant: after a click, a prompt (copied or passed to a chosen
 provider) and static `tutor.md` and `llms.txt` files give it the task on the learner's screen. Rejected: a model
-running in the browser. Built for the explainer; not built for the quiz and interactive apps.
+running in the browser. Built for the explainer (its extension models it); not built for the quiz and interactive
+apps.
 
 ```arc42
 :::decision

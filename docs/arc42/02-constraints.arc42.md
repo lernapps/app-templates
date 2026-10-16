@@ -180,6 +180,8 @@ the allowlist of the `dependency-licence` check (MIT, Apache-2.0, BSD and simila
 third-party content keeps its licence and is named next to it.
 
 ```arc42
+:::ignore H006 an organisation rule that lernapps check verifies (dependency-licence); no architecture decision responds to it
+:::
 :::constraint
 id: con-bundled-licences
 title: Bundled libraries under accepted licences
@@ -194,6 +196,8 @@ Every page links to the imprint and the privacy notice of lernapps.net; the runt
 of its pages.
 
 ```arc42
+:::ignore H006 an organisation rule the runtime meets in the footer of its pages; no architecture decision responds to it
+:::
 :::constraint
 id: con-imprint-privacy
 title: Links to imprint and privacy notice
@@ -208,10 +212,8 @@ The architecture lives in the arc42 DSL: this generic part at the root of `lerna
 per archetype in its template folder. An app gets both in its `docs/arc42/`; only an interactive app, whose code is
 free, adds a part of its own and keeps it current with each increment. `arc42 diff --staged --strict` before a commit
 and `arc42 validate` in `lernapps check` are decided but not wired into the app's hooks and check yet; the copying of
-the architecture into an app is not built yet either.
-
-OPEN: Confirm that the arc42 pre-commit hook and the `arc42 validate` step for apps are not built yet (a search of
-the tooling found them only in the plan and in the tooling's own build).
+the architecture into an app is not built yet either. In `lernapps/app-templates` itself, `scripts/arc42.ts` validates
+the generic part with each extension strictly, in the pre-commit hook and in CI.
 
 ```arc42
 :::constraint

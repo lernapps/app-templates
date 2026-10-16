@@ -91,31 +91,32 @@ with which a creator and their AI assistant build a learning app.
 ## Architecture
 
 Every archetype follows one architecture, because they share its quality goals: the generic part in
-[`docs/arc42/`](docs/arc42/) (the frame: static description, page trees and 404 page, build checks, shell, end-to-end
-tests, tooling helpers, the optional tutor handoff, task numbers and exercise contract), and one extension per
-archetype in its folder, with only the blocks it adds below the generic ones. An app's architecture is both together.
+[`docs/arc42/`](docs/arc42/) (the shared runtime with page trees, 404 page and examples check, and the tooling
+helpers), and one extension per archetype in its folder, which adds the archetype's runtime (build step, validation,
+rendering, shell, end-to-end tests) and the parts its creator writes. An app's architecture is both together.
 
 - **Quiz** ([`quiz/docs/arc42/`](quiz/docs/arc42/)): the quiz rendering writes the bank into a worksheet page, the
   bank validation checks `src/quiz.json`, the quiz engine checks answers with the question types' checker and keeps
   only the last result on the device when the bank asks; no tutor.
 - **Explainer** ([`explainer/docs/arc42/`](explainer/docs/arc42/)): the page rendering writes the YAML pages and the
-  component islands at build, the content validation and the examples check guard the content, the client module and
-  the islands check answers in the browser and keep only the chosen way to the tutor; the tutor handoff, task numbers
-  and exercise contract are built for it.
+  component islands at build, the content validation guards the content, the client module and the islands check
+  answers in the browser and keep only the chosen way to the tutor; the tutor handoff and task numbers are built for
+  it.
 - **Interactive** ([`interactive/docs/arc42/`](interactive/docs/arc42/)): the start page and app page render from
-  `src/app.yaml`, the core contract check and both playthrough players check the core, the shell mounts the root
-  component and feeds the core keys, ticks, route and seed; the app's own storage goes through the small storage; no
-  tutor yet. Only an interactive app adds an architecture part of its own.
+  `src/app.yaml`, the build checks the core and plays the playthroughs, the shell mounts the root component and feeds
+  the core inputs (today keys), ticks, route and seed; no tutor yet. Only an interactive app adds an architecture part
+  of its own.
 
-Validate an archetype's architecture by copying the files of `docs/arc42/` and of its extension into one folder and
-running `arc42 validate` there with `--root <template folder>`.
+`node scripts/arc42.ts` validates the generic part with each extension (`arc42 validate --strict`, `--root` at the
+repo root) and fails on any finding; the pre-commit hook runs it when an `*.arc42.md` or `.arc42ignore` file is staged,
+and CI on every change.
 
 ## Contributing
 
 `npm ci`, then the steps of the workflow [`check.yml`](.github/workflows/check.yml): the runtime's checks at the root
 (with `npm run check:vue`, the type check of the fixtures' `.vue` files) and `lernapps check` in every template folder
 and in `test/fixtures/question-page/`. `npm ci` also installs this repo's git hooks ([`.vite-hooks/`](.vite-hooks/)):
-the pre-commit hook formats and fixes the staged files (`vp staged`); the pre-push hook
+the pre-commit hook formats and fixes the staged files and checks a staged architecture (`vp staged`); the pre-push hook
 ([`scripts/pre-push.ts`](scripts/pre-push.ts)) checks nothing for a push of only the plan (`.vibe/**`) or only docs
 (`docs/**/*.md`, the change scope of `lernapps changes`, whose classifier the hook fetches once at the commit check.yml
 uses), and otherwise runs the root checks and `lernapps check --pre-push` in each template folder the push affects.

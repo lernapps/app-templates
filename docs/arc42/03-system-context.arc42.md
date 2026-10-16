@@ -2,9 +2,9 @@
 
 The system is one lernapps app of any archetype: the frame runtime, the tooling helpers and the archetype part,
 built into static pages. Outside it are the people who use or write the app and the few systems it meets: the host
-that serves it, the app overview that links to it and, for the optional tutor, the learner's own assistant. Each
-actor requires an interface of chapter 5: the pages, the built static files, the tutor files or, for the creator's
-assistant, what the archetype lets it write, the check command and the skills.
+that serves it, the app overview that links to it and, where an archetype has the optional tutor, the learner's own
+assistant (in that archetype's extension). Each actor requires an interface of chapter 5: the pages or, for the
+creator's assistant, what the archetype lets it write, the check command and the skills.
 
 ## Context diagram
 
@@ -26,26 +26,21 @@ flowchart LR
     actor-creator-assistant["Creator and their AI assistant"]
     actor-github-pages["GitHub Pages"]
     actor-app-overview["lernapps.net app overview"]
-    actor-learner-assistant["Learner's own AI assistant"]
     subgraph system["lernapps app"]
-        bb-page-tree["Language page trees"]
-        bb-build["Build step"]
-        bb-archetype["Archetype part"]
-        bb-tutor-handoff["Tutor handoff"]
-        bb-lernapps-check["lernapps check"]
-        bb-skill-app["Skill lernapps-app"]
+        bb-render["Page rendering (the archetype's)"]
+        bb-tooling["Tooling helpers"]
     end
     actor-learner -->|"if-pages: reads and learns on the pages"| system
     actor-teacher-parent -->|"if-pages: reads the pages"| system
-    actor-creator-assistant -->|"if-archetype-content, if-lernapps-check, if-skill-app: writes, checks, follows the skills"| system
-    actor-github-pages -->|"if-static-files: serves the built static files"| system
+    actor-creator-assistant -->|"if-archetype-content, if-lernapps-check, if-skills: writes, checks, follows the skills"| system
+    actor-github-pages -->|"if-pages: serves the built pages"| system
     actor-app-overview -->|"if-pages: links to the pages and deep links"| system
-    actor-learner-assistant -->|"if-tutor-files: gets the task after the learner's click (explainer only)"| system
 ```
 
 ## Learner
 
-Adults and students, often in German schools, who learn in the browser, with keys and pointer, without an account;
+Adults and students, often in German schools, who learn in the browser, with keyboard, pointer, touch or other
+input, without an account;
 what the app remembers stays on their device.
 
 ```arc42
@@ -86,22 +81,22 @@ id: actor-creator-assistant
 title: Creator and their AI assistant
 type: system
 description: Writes the archetype's content, runs lernapps check and follows the skills
-requires: if-archetype-content, if-lernapps-check, if-skill-app
+requires: if-archetype-content, if-lernapps-check, if-skills
 :::
 ```
 
 ## GitHub Pages
 
-The app is static files published from its repo's `gh-pages` branch to `lernapps.net/<repo>/`; there is no server of
-the app's own, and pull requests get a preview.
+The app is static files published from its repo's `gh-pages` branch to `lernapps.net/<repo>/`: the pages the build
+rendered and the bundle; there is no server of the app's own, and pull requests get a preview.
 
 ```arc42
 :::actor
 id: actor-github-pages
 title: GitHub Pages
 type: system
-description: Serves the built static files of the app at lernapps.net/<repo>/
-requires: if-static-files
+description: Serves the built pages and bundle of the app at lernapps.net/<repo>/
+requires: if-pages
 :::
 ```
 
@@ -118,21 +113,5 @@ title: lernapps.net app overview
 type: system
 description: Lists the app with one entry whose URL and topic links point to its pages and deep links
 requires: if-pages
-:::
-```
-
-## Learner's own AI assistant
-
-The optional tutor is this assistant, which the learner brings and controls; no model runs in the browser. After the
-learner's click, the app hands it the current task through the tutor prompt and the static tutor files. Built for
-the explainer, not built for the quiz and interactive apps.
-
-```arc42
-:::actor
-id: actor-learner-assistant
-title: Learner's own AI assistant
-type: system
-description: Receives the task through the tutor prompt and the tutor files after the learner's click
-requires: if-tutor-files
 :::
 ```
