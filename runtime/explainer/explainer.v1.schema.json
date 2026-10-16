@@ -181,13 +181,35 @@
           }
         },
         "tutor": {
-          "description": "Optional: what the app adds for a KI tutor, an assistant the learner brings. The build writes, per language tree, llms.txt with a part of generic rules for a tutor (link concrete tasks, ask for the task number, never reveal a solution before the learner has committed to an answer, the app reports nothing back) and a tutor file next to every page (<chapter>/<page>/tutor.md: its sections, every exercise with task, answer format, solution, hint and typical mistakes, and for a seeded exercise the tasks of the numbers 1 to 20 with their solutions and links ?seed=<n>#<id>).",
+          "description": "Optional: what the app adds for a KI tutor, an assistant the learner brings. The build writes, per language tree, tutor.md (a ready prompt for a tutor: its role and approach, the app's pages as a checklist, the rules for the app's links), a section \"Mit einem KI-Tutor lernen\" on the start page (a button that copies the prompt, a link per provider that opens the assistant with it, nothing loaded before a click), llms.txt with a part of generic rules for a tutor (link concrete tasks, ask for the task number, never reveal a solution before the learner has committed to an answer, the app reports nothing back) and a tutor file next to every page (<chapter>/<page>/tutor.md: its sections, every exercise with task, answer format, solution, hint and typical mistakes, and for a seeded exercise the tasks of the numbers 1 to 20 with their solutions and links ?seed=<n>#<id>).",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "rules": {
               "description": "The app's own rules for a tutor, after the generic ones in llms.txt: what matters in this subject, e.g. \"Rechenwege auf Papier, das Ergebnis in die App\". Restricted Markdown, in the app's languages.",
               "$ref": "#/$defs/markdown"
+            },
+            "providers": {
+              "description": "The assistants the start page offers to open with the prompt, in this order. Without it: Claude (https://claude.ai/new?q={prompt}); an empty list offers only the button that copies the prompt. A link carries the whole prompt while its address stays within 8000 characters, else a short prompt that points to tutor.md, and the page copies the whole prompt as well.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "url"],
+                "properties": {
+                  "name": {
+                    "description": "The assistant's name, as the link says it: \"Mit <name> öffnen\".",
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "url": {
+                    "description": "The address that opens the assistant, https, with {prompt} where the prompt goes (URL-encoded), e.g. https://claude.ai/new?q={prompt}; without {prompt} the link opens the assistant and the page copies the prompt.",
+                    "type": "string",
+                    "pattern": "^https://\\S+$"
+                  }
+                }
+              }
             }
           }
         }

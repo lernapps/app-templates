@@ -5,7 +5,8 @@
 // messages the app shows, and for a seeded exercise (generated, exercise component) the tasks of the numbers 1 to
 // TASK_NUMBERS, each with its solution and its link ./?seed=<n>#<id>, which opens exactly that task live. An exercise
 // component contributes its about and its describe (plugin.ts). examples stay out: they are test cases. llms.txt gets
-// a part with the generic rules for a tutor, the app's own (tutor.rules in app.yaml) and the links to the tutor files.
+// a part with the generic rules for a tutor, the app's own (tutor.rules in app.yaml), the link to the tutor prompt
+// (prompt.ts) and the links to the tutor files.
 // Every link of llms.txt and of the tutor files is checked against the pages and anchors the build writes
 // (linkProblems). The app itself collects nothing and sends nothing: the files only help a tutor guide.
 import { questionIn, type Question } from "../quiz/quiz.ts";
@@ -58,6 +59,7 @@ interface Words {
   rulesTitle: string;
   rules: string[];
   appRules: string;
+  prompt: string;
   files: string;
 }
 
@@ -113,6 +115,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Ein kleiner Schritt pro Antwort. Prüfe Verständnis mit einer Aufgabe, nicht mit „Verstanden?“.",
     ],
     appRules: "Regeln dieser App",
+    prompt: "Ein fertiger Prompt für einen KI-Tutor (Rolle, Vorgehen, Checkliste der Seiten)",
     files: "Tutor-Dateien der Seiten (Aufbau, Übungen, Aufgaben nach Nummer mit Lösungen)",
   },
   en: {
@@ -166,6 +169,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "One small step per answer. Check understanding with a task, not with “Got it?”.",
     ],
     appRules: "Rules of this app",
+    prompt: "A ready prompt for an AI tutor (role, approach, checklist of the pages)",
     files: "The pages' tutor files (structure, exercises, tasks by number with solutions)",
   },
 };
@@ -190,7 +194,7 @@ export function llmsTutorPart(site: Site, lang: string): string[] {
   if (site.app.tutor?.rules !== undefined) {
     lines.push(`### ${words.appRules}`, "", inLanguage(site.app.tutor.rules, lang).trim(), "");
   }
-  lines.push(`### ${words.files}`, "");
+  lines.push(`### ${words.prompt}`, "", `- [${TUTOR_FILE}](${TUTOR_FILE})`, "", `### ${words.files}`, "");
   for (const page of contentPages(site)) lines.push(`- [${line(inLanguage(page.title, lang))}](${tutorFileOf(page)})`);
   return [...lines, ""];
 }
