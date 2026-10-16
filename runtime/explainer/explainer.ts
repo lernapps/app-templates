@@ -128,6 +128,8 @@ interface TutorData {
   prompt: string;
   short: string;
   base: string;
+  /** The root of the language tree, relative to this page. */
+  root: string;
   max: number;
   storage: string;
   /** The page's tutor file, relative to the page; none on the start page. */
@@ -199,8 +201,8 @@ function startTutor(root: Document): void {
   const plain = section.querySelector<HTMLElement>(".explainer-tutor-plain");
   if (plain) plain.hidden = true;
 
-  // the start page is the root of its language tree
-  const tree = new URL(".", root.location.href).href;
+  // the prompt's links start at the root of the language tree, whichever page the section is on
+  const tree = new URL(data.root, root.location.href).href;
   const resolve = (text: string) => text.split(data.base).join(tree);
   /** The whole prompt and the short one, with the page and its tasks when the section is on a page. */
   const build = async (): Promise<{ full: string; short: string }> => {

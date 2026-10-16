@@ -204,3 +204,21 @@ describe("404.html finds the app's root from any missing address and moves on to
     expect(await movesTo("/a/b/", [])).toBeUndefined();
   });
 });
+
+test("the tutor section of a page gives the root of its language tree as the base of the prompt's links", () => {
+  const site = loadSite(app(join(import.meta.dirname, "fixtures/explainer-all-blocks")));
+  const rootOf = (lang: string, local: string) => {
+    const route = routes(site).find((candidate) => candidate.lang === lang && candidate.local === local);
+    if (route === undefined) throw new Error(`no page ${local} in ${lang}`);
+    const body = renderPage(site, route).body;
+    const data = /<script type="application\/json" class="explainer-tutor-prompt">(.*?)<\/script>/s.exec(body)?.[1];
+    if (data === undefined) throw new Error(`no tutor section on ${local} in ${lang}`);
+    const json = JSON.parse(data.replace(/\\u003c/g, "<")) as { root: string };
+    // where the browser puts the prompt's links, from the page's own address
+    return new URL(json.root, `https://app.example/${route.path}`).pathname;
+  };
+  expect(rootOf("de", "")).toBe("/");
+  expect(rootOf("de", "formen/formen-01/")).toBe("/");
+  expect(rootOf("en", "")).toBe("/en/");
+  expect(rootOf("en", "formen/formen-01/")).toBe("/en/");
+});
