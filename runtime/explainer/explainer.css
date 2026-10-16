@@ -657,3 +657,31 @@ figcaption p {
   outline: 3px solid var(--explainer-text);
   outline-offset: 2px;
 }
+
+/* "Mit einem KI-Tutor lernen" on the start page: the button that copies the prompt, a link per provider */
+.explainer-tutor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.explainer-tutor-copy {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--explainer-accent);
+  border-radius: 0.375rem;
+  background: var(--explainer-accent);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.explainer-tutor-copy[hidden] {
+  display: none;
+}
+
+.explainer-tutor-copy:focus-visible {
+  outline: 3px solid var(--explainer-text);
+  outline-offset: 2px;
+}

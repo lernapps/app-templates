@@ -407,6 +407,20 @@ export function explainerTests(root = "."): void {
             await expect(page.locator("main h1")).toHaveText(item.title);
             await expectAnchors(page);
             await expectLanguages(page, item, app.languages);
+            if (item.kind === "start") {
+              // the tutor section without JavaScript: no copy button, plain links to the assistants and to tutor.md
+              const tutor = page.locator(".explainer-tutor");
+              await expect(tutor.locator(".explainer-tutor-copy")).toBeHidden();
+              for (const href of await tutor
+                .locator("a.explainer-tutor-provider")
+                .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""))) {
+                expect(href, "a provider link without the prompt").not.toMatch(/\{prompt\}|%7Bprompt%7D/i);
+              }
+              const prompt = await tutor
+                .locator("a.explainer-tutor-text")
+                .evaluate((link) => (link as HTMLAnchorElement).href);
+              expect(prompt, "the link to the prompt as text").toBe(new URL("tutor.md", page.url()).href);
+            }
           });
         }
 
@@ -468,6 +482,28 @@ export function explainerTests(root = "."): void {
           expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual([]);
         });
       }
+    });
+
+    test("the start page copies the tutor prompt, with the app's addresses in its links", async ({ page }) => {
+      // the clipboard of the page, recorded: nothing leaves the browser
+      await page.addInitScript(() => {
+        const copied: string[] = [];
+        Object.assign(window, { copied });
+        Object.defineProperty(navigator, "clipboard", {
+          configurable: true,
+          value: { writeText: (text: string) => (copied.push(text), Promise.resolve()) },
+        });
+      });
+      await page.goto("./");
+      const tutor = page.locator(".explainer-tutor");
+      await tutor.getByRole("button", { name: messageOf("de", "tutorCopy") }).click();
+      await expect(tutor.locator(".explainer-tutor-status")).toHaveText(messageOf("de", "tutorCopied"));
+      const copied = await page.evaluate(() => (window as unknown as { copied: string[] }).copied);
+      expect(copied, "one prompt copied").toHaveLength(1);
+      expect(copied[0], "the prompt links llms.txt at the app's address").toContain(
+        new URL("llms.txt", page.url()).href,
+      );
+      expect(copied[0]).not.toContain("⟦base⟧");
     });
 
     test("nothing is stored on the device", async ({ page, context }) => {

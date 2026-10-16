@@ -60,7 +60,10 @@ with which a creator and their AI assistant build a learning app.
   (`<chapter>/<page>/tutor.md`: its sections, every exercise with task, answer format, solution, hint and typical
   mistakes, and for a seeded exercise all its task numbers with their tasks and solutions and links
   `./?seed=<n>#<id>`), and in `llms.txt` generic rules for a tutor, the app's own (`tutor.rules` in `app.yaml`) and
-  links to the tutor files; the build checks every link and anchor of these files. A page opened with `von=tutor`
+  links to the tutor files, and `tutor.md` at the root, a ready tutor prompt (role, approach, the pages as a checklist,
+  the rules); the build checks every link and anchor of these files. The start page offers "Mit einem KI-Tutor
+  lernen": a button that copies the prompt, and a plain link per assistant (`tutor.providers` in `app.yaml`, Claude by
+  default) that gets the prompt on the click ([`prompt.ts`](runtime/explainer/prompt.ts)). A page opened with `von=tutor`
   shows "Zurück zum Tutor", which closes the tab ([`tutor.ts`](runtime/explainer/tutor.ts)).
 - Every exercise may carry `examples: { accepted, rejected }`, test cases that learners never see: the other correct
   answers its text allows, and typical wrong ones. The build runs each through the same check the page uses (the

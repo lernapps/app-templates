@@ -32,6 +32,7 @@ import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { llmsTutorPart } from "./tutor.ts";
+import { BASE, MAX_URL, plainAddress, PROMPT_FILE, providersOf, shortPrompt, tutorPrompt } from "./prompt.ts";
 
 /**
  * Whether the bundled image `image` has no size of its own: an SVG whose root has neither a width nor a height (only a
@@ -405,6 +406,7 @@ function main(context: Context): string {
         `<div class="explainer-intro">${context.markdown(site.app.intro)}</div>`,
         `<nav class="explainer-contents" aria-labelledby="inhalt"><h2 id="inhalt">${plain(context.t("contents"))}</h2>${contents}</nav>`,
         glossary,
+        tutorSection(context),
         sources,
       ].join("\n");
     }
@@ -440,6 +442,40 @@ function main(context: Context): string {
       return [title, pageContents(context, page.blocks), renderBlocks(context, page.blocks, 1)].join("\n");
     }
   }
+}
+
+/**
+ * "Mit einem KI-Tutor lernen" on the start page: the button that copies the prompt (hidden until the client module
+ * runs), a plain link per provider (the client module puts the prompt into it on the click), the link to tutor.md,
+ * a status line, and the prompt with BASE before its links (prompt.ts).
+ */
+function tutorSection(context: Context): string {
+  const { site, lang } = context;
+  const providers = providersOf(site)
+    .map(
+      (provider) =>
+        `<a class="explainer-tutor-provider" href="${plain(plainAddress(provider.url))}" data-url="${plain(provider.url)}" rel="noopener" target="_blank">${plain(context.t("tutorOpenWith", { name: provider.name }))}</a>`,
+    )
+    .join(" ");
+  const data = {
+    prompt: tutorPrompt(site, lang),
+    short: shortPrompt(site, lang),
+    base: BASE,
+    max: MAX_URL,
+    copied: context.t("tutorCopied"),
+    copiedShort: context.t("tutorCopiedShort"),
+    failed: context.t("tutorCopyFailed"),
+  };
+  return [
+    `<section class="explainer-tutor" aria-labelledby="ki-tutor">`,
+    `<h2 id="ki-tutor">${plain(context.t("tutorTitle"))}</h2>`,
+    `<p>${plain(context.t("tutorIntro"))}</p>`,
+    `<p class="explainer-tutor-actions"><button type="button" class="explainer-tutor-copy" hidden>${plain(context.t("tutorCopy"))}</button> ${providers}</p>`,
+    `<p class="explainer-tutor-status" role="status" aria-live="polite"></p>`,
+    `<p><a class="explainer-tutor-text" href="${context.to(PROMPT_FILE)}">${plain(context.t("tutorText"))}</a></p>`,
+    `<script type="application/json" class="explainer-tutor-prompt">${json(data)}</script>`,
+    `</section>`,
+  ].join("\n");
 }
 
 function head(context: Context): string {
