@@ -469,6 +469,8 @@ function tutorSection(context: Context): string {
     prompt: tutorPrompt(site, lang),
     short: shortPrompt(site, lang),
     base: BASE,
+    // the root of the language tree, from this page: the base of the prompt's links is never the page's own folder
+    root: context.to(""),
     max: MAX_URL,
     storage: site.storage ?? "explainer",
     ...(route.kind === "page" ? { file: TUTOR_FILE } : {}),
