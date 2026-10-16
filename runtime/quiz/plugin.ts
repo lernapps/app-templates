@@ -16,6 +16,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite-plus";
+import { appName } from "../shared/appname.ts";
 import type { Text } from "../shared/languages.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
@@ -27,19 +28,6 @@ export const BANK = "src/quiz.json";
 const MARKER = "<!-- quiz -->";
 
 const escapeAttribute = (text: string) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-
-/** The app's name from its package.json: the prefix of what it stores on the device. */
-function appName(root: string): string {
-  try {
-    const manifest: unknown = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-    if (typeof manifest === "object" && manifest !== null && "name" in manifest && typeof manifest.name === "string") {
-      return manifest.name;
-    }
-  } catch {
-    // no package.json: the default name
-  }
-  return "quiz";
-}
 
 /** The bank, in all its languages, and the name of the app's storage when the quiz keeps the last result. */
 interface Bank {
@@ -90,7 +78,7 @@ export function quiz(): Plugin {
       throw new Error(`${BANK} is missing: the quiz's questions belong there (schema quiz.v1.schema.json)`);
     }
     const quiz = readBank(text, BANK);
-    return quiz.rememberLastResult === true ? { quiz, storage: appName(root) } : { quiz };
+    return quiz.rememberLastResult === true ? { quiz, storage: appName(root, "quiz") } : { quiz };
   };
   return {
     name: "lernapps-quiz",

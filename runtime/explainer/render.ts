@@ -31,7 +31,7 @@ import { plain, renderInline, renderMarkdown } from "./markdown.ts";
 import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
-import { llmsTutorPart } from "./tutor.ts";
+import { llmsTutorPart, TUTOR_FILE } from "./tutor.ts";
 import { BASE, MAX_URL, plainAddress, PROMPT_FILE, providersOf, shortPrompt, tutorPrompt } from "./prompt.ts";
 
 /**
@@ -445,32 +445,50 @@ function main(context: Context): string {
 }
 
 /**
- * "Mit einem KI-Tutor lernen" on the start page: the button that copies the prompt (hidden until the client module
- * runs), a plain link per provider (the client module puts the prompt into it on the click), the link to tutor.md,
- * a status line, and the prompt with BASE before its links (prompt.ts).
+ * "Mit einem KI-Tutor lernen" on the start page and at the end of each page: the way to the tutor (a button with a select
+ * beside it: an assistant, or copying the prompt; hidden until the client module runs), a plain link per assistant
+ * for readers without JavaScript, the link to tutor.md, a status line, and the prompt with BASE before its links
+ * (prompt.ts). On a page, the client module adds the page and the tasks of its address to the prompt (tutorpage.ts).
  */
 function tutorSection(context: Context): string {
-  const { site, lang } = context;
-  const providers = providersOf(site)
+  const { site, lang, route } = context;
+  const providers = providersOf(site);
+  const plainLinks = providers
     .map(
       (provider) =>
-        `<a class="explainer-tutor-provider" href="${plain(plainAddress(provider.url))}" data-url="${plain(provider.url)}" rel="noopener" target="_blank">${plain(context.t("tutorOpenWith", { name: provider.name }))}</a>`,
+        `<a class="explainer-tutor-provider" href="${plain(plainAddress(provider.url))}" rel="noopener" target="_blank">${plain(context.t("tutorOpenWith", { name: provider.name }))}</a>`,
     )
     .join(" ");
+  const options = [
+    ...providers.map((provider, index) => `<option value="${index}">${plain(provider.name)}</option>`),
+    `<option value="copy">${plain(context.t("tutorCopy"))}</option>`,
+  ].join("");
+  const first = providers[0];
+  const go = first === undefined ? context.t("tutorCopy") : context.t("tutorGo", { name: first.name });
   const data = {
     prompt: tutorPrompt(site, lang),
     short: shortPrompt(site, lang),
     base: BASE,
     max: MAX_URL,
+    storage: site.storage ?? "explainer",
+    ...(route.kind === "page" ? { file: TUTOR_FILE } : {}),
+    ways: providers.map((provider) => ({ name: provider.name, url: provider.url })),
+    go: context.t("tutorGo"),
+    copy: context.t("tutorCopy"),
     copied: context.t("tutorCopied"),
     copiedShort: context.t("tutorCopiedShort"),
     failed: context.t("tutorCopyFailed"),
+    pageHeading: context.t("tutorPageHeading"),
+    pageNow: context.t("tutorPageNow"),
+    pageFile: context.t("tutorPageFile"),
+    shortNote: context.t("tutorShortNote"),
   };
+  const intro = route.kind === "page" ? context.t("tutorPageIntro") : context.t("tutorIntro");
   return [
-    `<section class="explainer-tutor" aria-labelledby="ki-tutor">`,
+    `<section class="explainer-tutor${route.kind === "page" ? " explainer-tutor-page" : ""}" aria-labelledby="ki-tutor">`,
     `<h2 id="ki-tutor">${plain(context.t("tutorTitle"))}</h2>`,
-    `<p>${plain(context.t("tutorIntro"))}</p>`,
-    `<p class="explainer-tutor-actions"><button type="button" class="explainer-tutor-copy" hidden>${plain(context.t("tutorCopy"))}</button> ${providers}</p>`,
+    `<p>${plain(intro)}</p>`,
+    `<p class="explainer-tutor-actions"><span class="explainer-tutor-way" hidden><button type="button" class="explainer-tutor-go">${plain(go)}</button> <select class="explainer-tutor-select" aria-label="${plain(context.t("tutorWay"))}">${options}</select></span> <span class="explainer-tutor-plain">${plainLinks}</span></p>`,
     `<p class="explainer-tutor-status" role="status" aria-live="polite"></p>`,
     `<p><a class="explainer-tutor-text" href="${context.to(PROMPT_FILE)}">${plain(context.t("tutorText"))}</a></p>`,
     `<script type="application/json" class="explainer-tutor-prompt">${json(data)}</script>`,
@@ -515,6 +533,8 @@ export function renderPage(
     `<main class="explainer" id="inhalt-der-seite">`,
     main(context),
     `</main>`,
+    // the tutor of a page is no part of its content: after main, so that the page's outline stays its own
+    route.kind === "page" ? tutorSection(context) : "",
     pager(context),
     footer(context),
   ]

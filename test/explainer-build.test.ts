@@ -143,8 +143,11 @@ describe("one build writes every page", () => {
           `<a class="explainer-tutor-text" href="${lang === "de" ? "" : `../${lang}/`}tutor.md">`,
         );
         expect(start).toContain(
-          '<a class="explainer-tutor-provider" href="https://claude.ai/new" data-url="https://claude.ai/new?q={prompt}" rel="noopener" target="_blank">',
+          '<a class="explainer-tutor-provider" href="https://claude.ai/new" rel="noopener" target="_blank">',
         );
+        // the way to the tutor: a button with a select beside it, Claude first, copying last
+        expect(start).toContain('<select class="explainer-tutor-select"');
+        expect(start).toMatch(/<option value="0">Claude<\/option><option value="copy">/);
       }
     },
     60_000,

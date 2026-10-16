@@ -108,6 +108,8 @@ export interface Site {
   images: ReadonlyMap<string, string>;
   /** Each vue-component block, with its component and where it is. */
   components: readonly ComponentUse[];
+  /** The app's name for what it keeps on the device (its package.json name; @lernapps/tooling/storage). */
+  storage?: string;
 }
 
 // What the build reads of a component (components.ts). Declared here, not there: the client module reaches this file,
