@@ -7,7 +7,6 @@ import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { build } from "vite-plus";
 import { describedProblems, exampleProblems, propertyProblems } from "../runtime/explainer/components.ts";
-import { TASK_NUMBERS } from "../runtime/explainer/tasks.ts";
 import { explainer } from "../runtime/explainer/plugin.ts";
 
 const FIXTURE = join(import.meta.dirname, "fixtures/explainer-history");
@@ -86,7 +85,7 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "an exercise component without the prop seed",
     (root) => edit(root, VUE, "  /** The task number, which the explainer gives. */\n  seed: number;\n", ""),
-    'src/components/AssignLabels.vue: it emits answered, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)',
+    'src/components/AssignLabels.vue: it emits answered, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component the seed of its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)',
   ],
   [
     "a block that gives an exercise component its seed",
@@ -258,8 +257,11 @@ describe("what an exercise component's logic describes", () => {
     const { description, problems } = describedProblems(logic, props, ["de", "en"]);
     expect(problems).toEqual([]);
     expect(description?.about).toBe(logic.about);
-    expect(description?.tasks["de"]).toHaveLength(TASK_NUMBERS);
+    // three labels in any order but their own: five distinct tasks, numbered 1 to 5
+    expect(description?.seeds).toHaveLength(5);
+    expect(description?.tasks["de"]).toHaveLength(5);
     expect(description?.tasks["en"]?.[0]).toEqual({
+      number: 1,
       seed: 1,
       ...logic.describe(logic.generate(1, props("en")), props("en"), "en"),
     });

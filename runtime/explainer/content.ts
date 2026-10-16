@@ -130,7 +130,7 @@ export interface ComponentInfo {
   path: string;
   /** The props a block gives: every declared prop but seed, which the explainer gives an exercise component. */
   props: Readonly<Record<string, Field>>;
-  /** Whether it emits answered: an exercise, which gets its task number as the prop seed. */
+  /** Whether it emits answered: an exercise, which gets the seed of its task number as the prop seed. */
   exercise: boolean;
   /** Whether it keeps its nojs text, folded as a text description, once it runs, rather than replacing it. */
   caption: boolean;
@@ -182,6 +182,8 @@ export interface ComponentAbout {
 
 /** A task of an exercise component, as its describe(task, props, lang) states it: restricted Markdown each. */
 export interface DescribedTask {
+  /** Its task number, from 1. */
+  number: number;
   seed: number;
   task: string;
   solution: string;
@@ -190,7 +192,9 @@ export interface DescribedTask {
 /** What the build learnt from an exercise component's logic for one block: its about, and its tasks by language. */
 export interface ComponentDescription {
   about: ComponentAbout;
-  /** The tasks of the seeds 1 to TASK_NUMBERS, in each language. */
+  /** The seed of each task number, from 1: the seeds of its distinct tasks (distinctSeeds of tasks.ts). */
+  seeds: readonly number[];
+  /** The task of each number, in each language. */
   tasks: Readonly<Record<string, readonly DescribedTask[]>>;
 }
 

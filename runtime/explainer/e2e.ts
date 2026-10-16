@@ -14,12 +14,12 @@
 // per page, whose solution shows only once it is answered: a question of the quiz's types accepts its right answer
 // and then shows its solution; it rejects a wrong one with the most specific reason it has, stays open for another
 // try, and shows its solution on "Lösung zeigen"; the feedback each time in view with the focus. A generated exercise
-// shows, at its deep link ?seed=<n>#<id>, the task the notation gives for that seed, its worked tasks still hidden;
+// shows, at its deep link ?seed=<n>#<id>, the task of number n (the seed of its table of distinct tasks), its worked tasks still hidden;
 // it rejects a wrong one (a mistake, with its message), shows its solution and the worked tasks on "Lösung zeigen",
 // "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
 // console error, folds a nojs text it keeps, and an exercise component's answered gives the feedback, once for each
-// answer, with the reason of a wrong one, in view with the focus; at its address ?seed=<n>#<id> it gets the task
-// number n and shows "Aufgabe Nr. n", and "Neue Aufgabe" moves to the next number in the address and on the page.
+// answer, with the reason of a wrong one, in view with the focus; at its address ?seed=<n>#<id> it shows "Aufgabe
+// Nr. n" and gets the seed of task number n from its table, and "Neue Aufgabe" moves to the next number in the address and on the page.
 // Without JavaScript, each component's nojs text is visible and not empty, an exercise component's with its task of
 // number 1 and the solution folded, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
@@ -36,10 +36,12 @@ import {
 import { answerQuestion, expectFeedbackInView } from "../quiz/e2e.ts";
 import { messagesIn } from "../quiz/render.ts";
 import { answerFor, fill, generate, plainText, questionFor, taskKey, taskText } from "./generated.ts";
+import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
+import { nextTaskNumber, taskNumber } from "./tasks.ts";
 import { outline, type ComponentOutline, type ExerciseOutline, type PageOutline } from "./outline.ts";
 
-/** The seed of the deep link the tests open a generated exercise with. */
+/** The task number of the deep link the tests open a generated exercise with. */
 const SEED = 7;
 
 /**
@@ -186,22 +188,28 @@ function seedOf(node: Element): unknown {
  */
 async function checkTaskNumber(page: Page, item: PageOutline, component: ComponentOutline): Promise<void> {
   if (component.id === undefined) return;
-  const seed = 3;
-  await page.goto(`./${item.url}?seed=${seed}#${component.id}`);
+  await page.goto(`./${item.url}?seed=3#${component.id}`);
   const element = page.locator(`[id="${component.id}"]`);
   await expect(element, `${component.name}: hydrates at its address`).toHaveAttribute("data-hydrated", "");
+  // the seed of each task number, as the build ships it
+  const seeds = JSON.parse((await element.getAttribute("data-seeds")) ?? "[1]") as number[];
+  const shown = taskNumber(3, seeds.length);
   const number = element.locator(":scope > .explainer-task-controls .explainer-task-number");
   await expect(number, `${component.name}: the task number of the address`).toHaveText(
-    messageOf("de", "taskNumber", { n: String(seed) }),
+    messageOf("de", "taskNumber", { n: String(shown) }),
   );
-  await expect.poll(() => element.evaluate(seedOf), `${component.name}: gets seed ${seed}`).toBe(seed);
+  await expect
+    .poll(() => element.evaluate(seedOf), `${component.name}: gets the seed of number ${shown}`)
+    .toBe(seeds[shown - 1]);
   await element.locator(":scope > .explainer-task-controls .explainer-new-task").click();
   const next = Number(new URL(page.url()).searchParams.get("seed"));
-  expect(next, `${component.name}: the next task number in the address`).toBe(seed + 1);
+  expect(next, `${component.name}: the next task number in the address`).toBe(nextTaskNumber(shown, seeds.length));
   expect(new URL(page.url()).hash).toBe(`#${component.id}`);
   await expect(number).toHaveText(messageOf("de", "taskNumber", { n: String(next) }));
   await expect(number).toBeFocused();
-  await expect.poll(() => element.evaluate(seedOf), `${component.name}: gets seed ${next}`).toBe(next);
+  await expect
+    .poll(() => element.evaluate(seedOf), `${component.name}: gets the seed of number ${next}`)
+    .toBe(seeds[next - 1]);
 }
 
 /** The feedback of the question `id` says `text`. */
@@ -261,7 +269,10 @@ async function checkGenerated(
   exercise: Extract<ExerciseOutline, { kind: "generated" }>,
 ): Promise<void> {
   const { spec, data, templates } = exercise;
-  const task = generate(spec, SEED, data);
+  // the deep link names a task number; its seed comes from the exercise's table of distinct tasks
+  const seeds = taskSeeds(spec, data);
+  const seedOfNumber = (n: number) => seeds[taskNumber(n, seeds.length) - 1] ?? n;
+  const task = generate(spec, seedOfNumber(SEED), data);
   const question = questionFor(spec, task, "de", templates);
   const address = `./${url}?seed=${SEED}#${exercise.id}`;
   const legend = page.locator(`[id="${questionId(question)}"] legend`);
@@ -284,13 +295,17 @@ async function checkGenerated(
   await expect(worked, `${exercise.id}: the worked tasks with the solution`).toBeVisible();
   // "Neue Aufgabe": another task, its seed in the address; its right answer counts
   await page.locator(`[id="${exercise.id}"] .explainer-new-task`).click();
-  const seed = Number(new URL(page.url()).searchParams.get("seed"));
-  expect(seed, "the new task's seed in the address").not.toBe(SEED);
-  const next = generate(spec, seed, data);
+  const number = Number(new URL(page.url()).searchParams.get("seed"));
+  expect(number, "the next task number in the address").toBe(
+    nextTaskNumber(taskNumber(SEED, seeds.length), seeds.length),
+  );
+  const next = generate(spec, seedOfNumber(number), data);
   const nextQuestion = questionFor(spec, next, "de", templates);
   const nextLegend = page.locator(`[id="${questionId(nextQuestion)}"] legend`);
   await expect(nextLegend).toHaveText(plainText(taskText(spec, next, "de", templates)));
-  expect(taskKey(spec, next, "de", templates), "a new task").not.toBe(taskKey(spec, task, "de", templates));
+  if (seeds.length > 1) {
+    expect(taskKey(spec, next, "de", templates), "a new task").not.toBe(taskKey(spec, task, "de", templates));
+  }
   await expect(nextLegend).toBeFocused();
   await answerQuestion(page, nextQuestion, rightAnswer(nextQuestion));
   await expect(feedback(page, questionId(nextQuestion))).toContainText(messagesIn("de").right);
