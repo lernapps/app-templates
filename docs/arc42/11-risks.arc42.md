@@ -111,19 +111,16 @@ mitigation: Planned in the sketch (tooling step 2); until then the review reads 
 :::
 ```
 
-## Size Budgets Left in the Build
+## Size Budget Left in the Build
 
 The frame limits no app's size (`dec-no-size-limit`), but `runtime/interactive/plugin.ts` still fails the build when
-an interactive app's own code is over `SIZE_BUDGET` = 100 kB gzip, and the explainer's build fails a component whose
-own code is over 20 kB gzip (`vue-component-size`), so a large app or component cannot be built today.
-
-OPEN: Does the decision "no size limit" also cover the explainer's 20 kB budget per component, or does the budget stay?
+an interactive app's own code is over its `SIZE_BUDGET`, so a large interactive app cannot be built today.
 
 ```arc42
 :::risk
 id: risk-size-budget-left
-title: Size budgets still in the build
+title: A size budget still in the interactive build
 severity: low
-mitigation: Technical debt; remove SIZE_BUDGET and its check from runtime/interactive/plugin.ts. The explainer's budget per component is kept until the owner decides; a component that needs more is split or asks for a built-in block.
+mitigation: Technical debt; remove SIZE_BUDGET and its check from runtime/interactive/plugin.ts.
 :::
 ```
