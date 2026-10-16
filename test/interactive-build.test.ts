@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { expect, test } from "vite-plus/test";
 import { build } from "vite-plus";
 import { interactive } from "../runtime/interactive/plugin.ts";
-import { interactiveApp } from "./interactive-app.ts";
+import { edit, interactiveApp, withDependency } from "./interactive-app.ts";
 
 const read = (root: string, file: string) => readFileSync(join(root, "dist", file), "utf8");
 
@@ -71,4 +71,32 @@ test("a bilingual app: German at the root, English below en/, each with its lang
   expect(enApp).toContain('<li id="grundreihe"><a href="#grundreihe">Home row</a></li>');
   expect(existsSync(join(root, "dist/en/app", /src="([^"]+\.js)"/.exec(enApp)?.[1] ?? "-"))).toBe(true);
   expect(read(root, "app/index.html")).toContain('<a href="../en/app/" hreflang="en" lang="en">English</a>');
+}, 60_000);
+
+test("a component imports a library in the dependencies of package.json, and the build bundles it", async () => {
+  const root = interactiveApp();
+  withDependency(root);
+  edit(
+    root,
+    "ui/App.vue",
+    'import de from "../messages/de.json";\n',
+    'import de from "../messages/de.json";\nimport { stringify } from "yaml";\n',
+  );
+  edit(
+    root,
+    "ui/App.vue",
+    "const t = translator(de);\n",
+    "const t = translator(de);\nconst lessonText = computed(() => stringify({ route: props.state.route }));\n",
+  );
+  edit(
+    root,
+    "ui/App.vue",
+    '<p class="prompt">',
+    '<p class="lesson" hidden>{{ lessonText }}</p>\n      <p class="prompt">',
+  );
+  await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [interactive()] });
+  const app = read(root, "app/index.html");
+  const script = /<script type="module" crossorigin src="([^"]+)"/.exec(app)?.[1] ?? "";
+  // the library is in the app's own bundle, not loaded from elsewhere
+  expect(readFileSync(join(root, "dist/app", script), "utf8")).not.toMatch(/from\s*["']yaml["']/);
 }, 60_000);

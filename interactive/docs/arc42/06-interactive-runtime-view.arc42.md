@@ -6,11 +6,10 @@ The interactive archetype's own scenarios, besides the generic ones.
 
 The learner opens `app/`, possibly with `?seed=<n>` and `#<route>`. `src/main.ts` calls `startInteractive`, which
 takes the seed from the address (else a random one) and the route from the hash (else the first route), starts the
-core and mounts the root component with the state and the page's language. Decided: components translate any device
-input (keys, pointer, touch, …) into typed inputs for `step` (`dec-typed-input`). Today every input is a key
-(`risk-input-only-keys`): the shell gives every key typed on the page to `step`, except keys on links, buttons and
-form fields or with Ctrl, Alt or Meta, and steps every key the root component emits as `input`; a key that changes the
-state loses its default. When the core
+core and mounts the root component with the state and the page's language. Components translate any device input
+(pointer, touch, …) into typed inputs for `step` (`dec-typed-input`): the shell gives every key typed on the page to
+`step` as a key input, except keys on links, buttons and form fields or with Ctrl, Alt or Meta, and steps every input
+the root component emits as `input`; a key that changes the state loses its default. When the core
 has `tick`, the shell calls it every 20 ms. A new route in the hash starts the core again with the same seed and marks
 the current route link. The components only show the state, take their texts through the translator and announce
 changes through the live region.
@@ -28,7 +27,7 @@ involves: bb-render, bb-shell, bb-interactive-core, bb-interactive-data, bb-inte
 
 The `interactive()` plugin validates `src/app.yaml` and the playthroughs, runs the component rules on the UI, loads
 the core in a Vite server of its own, checks its exports and that every route starts, and plays every playthrough
-twice without ticks, comparing the two plays and the expected states, before it writes the start page and the app
+twice, each step's inputs and then its ticks, comparing the two plays and the expected states, before it writes the start page and the app
 page with the runtime's texts.
 
 ```arc42
@@ -43,8 +42,8 @@ involves: bb-build, bb-validation, bb-component-rules, bb-interactive-descriptio
 ## Browser playthroughs
 
 `interactiveTests()` checks the start page and the app page without JavaScript in every language, then opens each
-playthrough at `app/?seed=<seed>#<route>`, gives its inputs (today keys, pressed on the keyboard) and compares, after
-each step, the state read from `lernappsState` and the announcement of the polite live region.
+playthrough at `app/?seed=<seed>#<route>` on the test clock, gives its inputs (keys pressed on the keyboard, actions
+emitted by the root component) and its ticks, and compares, after each step, the state read from `lernappsState` and the announcement of the polite live region.
 
 ```arc42
 :::runtime-scenario

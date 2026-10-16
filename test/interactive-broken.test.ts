@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { build } from "vite-plus";
 import { interactive } from "../runtime/interactive/plugin.ts";
-import { edit, interactiveApp } from "./interactive-app.ts";
+import { edit, interactiveApp, withDependency } from "./interactive-app.ts";
 
 /** The problem lines of a failed build; none when it builds. */
 async function problems(root: string): Promise<string[]> {
@@ -135,6 +135,33 @@ const cases: [string, (root: string) => void, string][] = [
         'const t = translator(de);\nvoid fetch("https://example.org/log");\n',
       ),
     "src/ui/App.vue:15:6: fetch: a component makes no network request; give it what it needs through its props (vue-component-no-network)",
+  ],
+  [
+    "a component that imports a library from a URL",
+    (root) => {
+      withDependency(root);
+      edit(root, "ui/App.vue", "const t = translator(de);\n", 'const t = translator(de);\nvoid parse("a: 1");\n');
+      edit(
+        root,
+        "ui/App.vue",
+        'import de from "../messages/de.json";\n',
+        'import de from "../messages/de.json";\nimport { parse } from "https://esm.sh/yaml@2";\n',
+      );
+    },
+    "src/ui/App.vue:11:1: an import from https://esm.sh/yaml@2; a component loads nothing from the network, so bundle what it needs (vue-component-no-network)",
+  ],
+  [
+    "a component that imports a library the app does not depend on",
+    (root) => {
+      edit(root, "ui/App.vue", "const t = translator(de);\n", 'const t = translator(de);\nvoid parse("a: 1");\n');
+      edit(
+        root,
+        "ui/App.vue",
+        'import de from "../messages/de.json";\n',
+        'import de from "../messages/de.json";\nimport { parse } from "yaml";\n',
+      );
+    },
+    "src/ui/App.vue:11:1: an import from yaml; a component imports only from vue, @lernapps/app-templates, @lernapps/tooling/storage, @lernapps/tooling/i18n, @lernapps/tooling/a11y and the app's own files in src/ or a library in the dependencies of package.json (vue-component-imports)",
   ],
   [
     "a core, imported by a component, that touches window",
