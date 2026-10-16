@@ -84,6 +84,7 @@
     "yaml": "2.9.1"
   },
   "devDependencies": {
+    "@doctc/arc42": "0.36.1",
     "@types/node": "22.20.5",
     "typescript": "6.0.3",
     "vite-plus": "1.0.0",
