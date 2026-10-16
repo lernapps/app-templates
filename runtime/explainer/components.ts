@@ -7,10 +7,12 @@
 // runtime @lernapps/app-templates, @lernapps/tooling/storage, i18n and a11y and the component's own folder, and browser
 // globals (window, document, localStorage, …) only inside onMounted and the hooks that run after it, because the build
 // renders the component without a browser. A component that emits answered is an exercise (answered { correct,
-// reason? }, reason the text of what went wrong in a wrong answer, shown under the feedback): its logic module <Name>.ts
-// exports generate(seed, props), check(task, answer), solution(task) and wrong(task), which the build tests over fixed
-// seeds (propertyProblems). A component keeps its nojs text, folded as a text description under it, when it declares
-// defineOptions({ nojs: "caption" }); by default it replaces it.
+// reason? }, reason the text of what went wrong in a wrong answer, shown under the feedback): it declares the prop
+// seed: number, the task number the explainer gives it (tasks.ts), and shows the task generate(seed, props); its logic
+// module <Name>.ts exports generate(seed, props), check(task, answer), solution(task), wrong(task), which the build
+// tests over fixed seeds (propertyProblems), describe(task, props, lang), the task and its solution as a learner reads
+// them, and about, what the exercise is, for a tutor (describedProblems). A component keeps its nojs text, folded as a
+// text description under it, when it declares defineOptions({ nojs: "caption" }); by default it replaces it.
 //
 // The props of a block are checked against the component's prop types (defineProps<…>()), which the SFC compiler
 // resolves, as Vue itself does for its runtime props, rather than vue-component-meta, which needs TypeScript's
@@ -24,9 +26,19 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import type { Node, Program } from "@babel/types";
 import type { SourceMapConsumer as Consumer } from "source-map-js";
-import { inLanguage, type Text } from "../shared/languages.ts";
+import { inLanguage, textLanguages, type Text } from "../shared/languages.ts";
 import { verdict } from "../shared/examples.ts";
-import type { ComponentExamples, ComponentInfo, Field, PropType } from "./content.ts";
+import type {
+  ComponentAbout,
+  ComponentDescription,
+  ComponentExamples,
+  ComponentInfo,
+  DescribedTask,
+  Field,
+  PropType,
+} from "./content.ts";
+import { inspect } from "./markdown.ts";
+import { distinctSeeds, MAX_TASKS, SEED_TRIES } from "./tasks.ts";
 
 type Sfc = typeof import("vue/compiler-sfc");
 type TypeResolveContext = Parameters<Sfc["resolveTypeElements"]>[0];
@@ -77,7 +89,10 @@ const BROWSER = new Set([
 const BROWSER_HOOKS = new Set(["onMounted", "onBeforeUnmount", "onUnmounted"]);
 const HTML = new Set(["innerHTML", "outerHTML", "insertAdjacentHTML"]);
 const GLOBAL_OBJECTS = new Set(["window", "self", "globalThis"]);
-const EXERCISE = ["generate", "check", "solution", "wrong"];
+const EXERCISE = ["generate", "check", "solution", "wrong", "describe", "about"];
+/** The exports of an exercise component's logic module, for a message. */
+export const CONTRACT =
+  "generate(seed, props), check(task, answer), solution(task), wrong(task), describe(task, props, lang) and about";
 
 /** A line of a problem in `file`, at `place` when it is known. */
 const line = (file: string, place: Place | undefined, message: string) =>
@@ -593,9 +608,22 @@ export function readComponents(root: string): {
     const props = propTypes(file, path, setup.content, setup.loc.start.line);
     problems.push(...props.problems);
     let logic: string | undefined;
+    const blockProps: Record<string, Field> = { ...props.props };
     if (exercise) {
+      // the task number comes from the explainer, not from a block
+      const seed = blockProps["seed"];
+      delete blockProps["seed"];
+      if (seed?.type.kind !== "number" || seed.optional) {
+        problems.push(
+          line(
+            file,
+            undefined,
+            `it emits answered, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component the seed of its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)`,
+          ),
+        );
+      }
       logic = join(dir, `${component}.ts`);
-      const contract = "generate(seed, props), check(task, answer), solution(task) and wrong(task)";
+      const contract = CONTRACT;
       if (!existsSync(logic)) {
         problems.push(
           line(
@@ -625,7 +653,7 @@ export function readComponents(root: string): {
       name: component,
       file,
       path,
-      props: props.props,
+      props: blockProps,
       exercise,
       caption,
       ...(logic === undefined ? {} : { logic }),
@@ -802,12 +830,123 @@ export function propsIn(props: unknown, component: ComponentInfo, lang: string):
   return localize(props ?? {}, { kind: "object", fields: component.props }, lang) as Record<string, unknown>;
 }
 
-/** The logic module of an exercise component. */
+/** The logic module of an exercise component; describe and about, which readComponents requires, for describedProblems. */
 export interface ExerciseLogic {
   generate(seed: number, props: unknown): unknown;
   check(task: unknown, answer: unknown): unknown;
   solution(task: unknown): unknown;
   wrong(task: unknown): unknown;
+  describe?(task: unknown, props: unknown, lang: string): unknown;
+  about?: unknown;
+}
+
+const ABOUT: readonly (keyof ComponentAbout)[] = ["task", "answer", "correct", "mistakes"];
+
+/** The problems of one text of about, at `path` (about.task, about.mistakes[0]). */
+function aboutTextProblems(value: unknown, path: string, languages: readonly string[]): string[] {
+  if (!isText(value) || Object.values(typeof value === "string" ? [value] : value).some((text) => text.trim() === "")) {
+    return [
+      `${path} is ${JSON.stringify(value) ?? "missing"}; give a text, or a map of texts by language: { de: …, en: … }`,
+    ];
+  }
+  return textLanguages(value, languages).problems.map(({ lang, message }) => `${path} (${lang}): ${message}`);
+}
+
+/**
+ * What an exercise component's logic says about itself, for each block: about (what the learner does, the answer's
+ * format, what counts as right, the typical mistakes; texts in each of `languages`), its task numbers (the seeds of
+ * its distinct tasks, generate(seed, props) compared as JSON with the props of the first language, up to `max` of
+ * `tries` seeds; distinctSeeds), and describe(task, props, lang) for the task of each number in each language, with
+ * the block's props in that language (`propsIn`): the task and its solution, each restricted Markdown that is not
+ * empty. The description, or the problems (the first of describe).
+ */
+export function describedProblems(
+  logic: ExerciseLogic,
+  propsIn: (lang: string) => unknown,
+  languages: readonly string[],
+  max = MAX_TASKS,
+  tries = SEED_TRIES,
+): { description?: ComponentDescription; problems: string[] } {
+  const problems: string[] = [];
+  const about = logic.about;
+  if (typeof about !== "object" || about === null || Array.isArray(about)) {
+    problems.push(
+      `about is ${JSON.stringify(about) ?? "missing"}; export const about = { task, answer, correct, mistakes }: what the learner does, the answer's format, what counts as right, and the typical mistakes, each a text (a map by language when the app has more than one)`,
+    );
+  } else {
+    const fields = about as Record<string, unknown>;
+    for (const key of Object.keys(fields)) {
+      if (!(ABOUT as readonly string[]).includes(key))
+        problems.push(`about has no field ${key}; its fields are ${ABOUT.join(", ")}`);
+    }
+    for (const key of ABOUT) {
+      const value = fields[key];
+      if (key !== "mistakes") problems.push(...aboutTextProblems(value, `about.${key}`, languages));
+      else if (!Array.isArray(value)) {
+        problems.push(
+          `about.mistakes is ${JSON.stringify(value) ?? "missing"}; give a list of the typical mistakes, each a text`,
+        );
+      } else
+        value.forEach((text, index) =>
+          problems.push(...aboutTextProblems(text, `about.mistakes[${index}]`, languages)),
+        );
+    }
+  }
+  if (typeof logic.describe !== "function") {
+    problems.push("describe is no function; export function describe(task, props, lang) giving { task, solution }");
+    return { problems };
+  }
+  const first = propsIn(languages[0] ?? "de");
+  const seeds = distinctSeeds(
+    (seed) => {
+      try {
+        return JSON.stringify(logic.generate(seed, first));
+      } catch {
+        return undefined;
+      }
+    },
+    max,
+    tries,
+  );
+  const tasks: Record<string, DescribedTask[]> = {};
+  for (const lang of languages) {
+    const props = propsIn(lang);
+    const list: DescribedTask[] = [];
+    for (const [index, seed] of seeds.entries()) {
+      const call = `describe(task, props, "${lang}")`;
+      let described: unknown;
+      try {
+        described = logic.describe(logic.generate(seed, props), props, lang);
+      } catch (error) {
+        problems.push(`for seed ${seed} ${call} throws: ${error instanceof Error ? error.message : String(error)}`);
+        return { problems };
+      }
+      const { task, solution } = (typeof described === "object" && described !== null ? described : {}) as Record<
+        string,
+        unknown
+      >;
+      if (typeof task !== "string" || task.trim() === "" || typeof solution !== "string" || solution.trim() === "") {
+        problems.push(
+          `for seed ${seed} ${call} is ${JSON.stringify(described) ?? "undefined"}; describe returns { task, solution }: the task as the learner sees it and its solution, each a text in the page's language`,
+        );
+        return { problems };
+      }
+      for (const [part, text] of [
+        ["task", task],
+        ["solution", solution],
+      ] as const) {
+        const [problem] = inspect(text).problems;
+        if (problem !== undefined) {
+          problems.push(`for seed ${seed} the ${part} of ${call}: ${problem.message}`);
+          return { problems };
+        }
+      }
+      list.push({ number: index + 1, seed, task, solution });
+    }
+    tasks[lang] = list;
+  }
+  if (problems.length > 0) return { problems };
+  return { description: { about: about as ComponentAbout, seeds, tasks }, problems };
 }
 
 /**

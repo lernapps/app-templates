@@ -61,9 +61,12 @@ export type Block =
   | { type: "section"; id: string; title: Text; blocks: readonly Block[] }
   | {
       type: "vue-component";
+      /** Its anchor; an exercise component without one has its name in kebab case (assign-labels). */
+      id?: string;
       component: string;
       props?: Readonly<Record<string, unknown>>;
-      nojs: Text;
+      /** Required for a component that is no exercise; an exercise component's no-JS text is generated from describe. */
+      nojs?: Text;
       examples?: ComponentExamples;
     }
   | Exercise;
@@ -125,8 +128,9 @@ export interface ComponentInfo {
   file: string;
   /** The .vue file's absolute path. */
   path: string;
+  /** The props a block gives: every declared prop but seed, which the explainer gives an exercise component. */
   props: Readonly<Record<string, Field>>;
-  /** Whether it emits answered: an exercise. */
+  /** Whether it emits answered: an exercise, which gets the seed of its task number as the prop seed. */
   exercise: boolean;
   /** Whether it keeps its nojs text, folded as a text description, once it runs, rather than replacing it. */
   caption: boolean;
@@ -150,6 +154,8 @@ export interface ComponentExamples {
 export interface ComponentUse {
   block: BlockOf<"vue-component">;
   component: ComponentInfo;
+  /** Its anchor on the page, for an exercise component or a block with an id: the block's id or the default. */
+  id?: string;
   /** Where the block is, as a problem line starts: src/<chapter>/<page>.yaml:<line>: blocks[0].blocks[3] */
   place: string;
   /** Where each of its examples is, as a problem line starts, by kind. */
@@ -160,6 +166,36 @@ export interface ComponentUse {
 export function timelineEvents(site: Site, block: BlockOf<"timeline">): readonly Event[] {
   if (block.events !== undefined) return block.events;
   return (site.data[block.data ?? ""] ?? []) as unknown as readonly Event[];
+}
+
+/**
+ * What an exercise component says about itself (the export about of its logic module), for a tutor: what the learner
+ * does, the answer's format, what counts as right, and the typical mistakes. Each a text, a map by language when the
+ * app has more than one.
+ */
+export interface ComponentAbout {
+  task: Text;
+  answer: Text;
+  correct: Text;
+  mistakes: readonly Text[];
+}
+
+/** A task of an exercise component, as its describe(task, props, lang) states it: restricted Markdown each. */
+export interface DescribedTask {
+  /** Its task number, from 1. */
+  number: number;
+  seed: number;
+  task: string;
+  solution: string;
+}
+
+/** What the build learnt from an exercise component's logic for one block: its about, and its tasks by language. */
+export interface ComponentDescription {
+  about: ComponentAbout;
+  /** The seed of each task number, from 1: the seeds of its distinct tasks (distinctSeeds of tasks.ts). */
+  seeds: readonly number[];
+  /** The task of each number, in each language. */
+  tasks: Readonly<Record<string, readonly DescribedTask[]>>;
 }
 
 /** Whether a block is an exercise. */
