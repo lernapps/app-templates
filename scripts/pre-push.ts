@@ -44,11 +44,13 @@ export const TEMPLATE_PATHS: Record<Template, readonly string[]> = {
 };
 
 /**
- * The paths no template's check needs: the root checks cover them (the tests and their fixtures, this hook) or only
- * CI reads them (the workflows; the fixture jobs). Not a gate, any path off TEMPLATE_PATHS runs the root checks only;
- * listed so that test/pre-push.test.ts can tell a new folder, which must be put on one of the two lists, from a known one.
+ * The paths no template's check needs: the generic architecture (docs/), what the root checks cover (the tests and
+ * their fixtures, this hook), or what only CI reads (the workflows; the fixture jobs). Not a gate, any path off
+ * TEMPLATE_PATHS runs the root checks only; listed so that test/pre-push.test.ts can tell a new folder, which must be
+ * put on one of the two lists, from a known one.
  */
 export const ROOT_ONLY = [
+  "docs/",
   "test/",
   "scripts/",
   ".vite-hooks/",

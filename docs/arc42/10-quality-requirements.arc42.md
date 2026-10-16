@@ -1,10 +1,9 @@
 # Quality Requirements
 
-The four quality goals of chapter 1, in its order, each made testable by scenarios from the runtime, the tooling and
-the decided sketch. Scenarios marked "not built yet" describe a decided check that does not exist today. The set is
-the owner's; the priorities are the coordinator's proposal.
-
-OPEN: Confirm the priorities of the quality goals.
+The four quality goals every lernapps app shares, in the order of chapter 1, each made testable by scenarios. The
+set and the priorities are the owner's (2026-10-16). Each extension adds its archetype's scenarios; the quiz and the
+explainer add readability without JavaScript as a goal of their own. Scenarios marked "not built yet" describe a
+decided check that does not exist today.
 
 ## 10.1 Quality Goals
 
@@ -14,6 +13,8 @@ The app sends nothing anywhere and requests nothing from another server before a
 learner's device. The privacy notice of lernapps.net promises this for every app.
 
 ```arc42
+:::ignore W006 two high-priority goals is the owner's decision (2026-10-16): privacy and checkable high
+:::
 :::quality-goal
 id: qg-privacy
 title: Privacy
@@ -23,8 +24,8 @@ priority: high
 
 ## Checkable
 
-The rules an app keeps are verified by machine, at build and in the browser, so that an assistant can change free code
-and still learn at once when it breaks the frame.
+The rules an app keeps are verified by machine, at build and in the browser, so that an assistant can change content
+or code and still learn at once when it breaks the frame.
 
 ```arc42
 :::quality-goal
@@ -36,8 +37,8 @@ priority: high
 
 ## Accessibility
 
-A default with declared limits: start page and app page meet WCAG 2.1 AA and work at 360 px, and an app that cannot
-declares its limits in its entry.
+A default with declared limits: the pages meet WCAG 2.1 AA and work at 360 px, and an app that cannot declares its
+limits in its entry.
 
 ```arc42
 :::quality-goal
@@ -49,8 +50,8 @@ priority: medium
 
 ## Understandable
 
-A reviewer or the creator's agent understands an app's structure from its architecture, written in English and
-minimal and kept current with the code.
+A reviewer or the creator's agent understands an app's structure from its architecture, the generic part plus its
+archetype's extension, written in English and minimal and kept current with the code.
 
 ```arc42
 :::quality-goal
@@ -93,34 +94,18 @@ metric: 0 findings; all storage goes through createStorage under the prefix lern
 :::
 ```
 
-## The same keys play the same twice
+## Broken content fails the build
 
-At build, every playthrough is played against the core twice, without ticks; a core that draws from `Math.random` or
-the clock gives different states.
-
-```arc42
-:::quality-scenario
-id: qs-deterministic-core
-title: The same keys give the same states
-quality: qg-checkable
-stimulus: The build plays a playthrough's seed, route and keys against the core twice
-response: The build fails with one line naming the first step whose state differs, or whose state differs from the expected one
-metric: Both plays give identical states at every step and match every expected state, else the build fails
-:::
-```
-
-## Playthroughs in the browser
-
-`interactiveTests()` plays every playthrough at its address in the browser, at desktop width and at 360 px.
+What the creator wrote is validated against the archetype's schema or contract before any page is written.
 
 ```arc42
 :::quality-scenario
-id: qs-playthrough-in-browser
-title: Playthroughs play the same in the browser
+id: qs-build-fails-per-line
+title: A broken question bank, content or description fails the build
 quality: qg-checkable
-stimulus: lernapps check --pre-push runs the e2e tests on the built app
-response: Each playthrough opens app/?seed=<seed>#<route>, presses its keys and compares the state and the polite announcement after each step
-metric: Every expected state and announcement matches, with no console error, at desktop width and 360 px
+stimulus: The creator's assistant writes data that breaks the archetype's schema or a rule the schema cannot say
+response: The build fails with one line per problem naming the file, the place and what to change
+metric: 0 pages written from invalid data; every problem named in one line
 :::
 ```
 
@@ -134,7 +119,7 @@ the finding should become a warning; that is not built yet, so it is an error fo
 id: qs-axe-clean
 title: axe finds no WCAG 2.1 A or AA violation
 quality: qg-accessibility
-stimulus: lernapps check visits the start page and the app page of the built app
+stimulus: lernapps check visits the pages of the built app
 response: Each axe violation is reported as an error of accessible, naming the page and element
 metric: 0 axe violations of WCAG 2.1 A or AA on every page
 :::
@@ -142,7 +127,7 @@ metric: 0 axe violations of WCAG 2.1 A or AA on every page
 
 ## Usable at 360 px
 
-`lernapps check` measures each page in a 360 px wide window; the start page meets it in any case.
+`lernapps check` measures each page in a 360 px wide window.
 
 ```arc42
 :::quality-scenario
@@ -158,7 +143,7 @@ metric: Page width at most 360 px on every page
 ## Code no block claims
 
 Not built yet (decided sketch, step 12, section 4): before a commit, `arc42 diff --staged --strict` compares the staged
-code with the architecture.
+code with the architecture; it matters for interactive apps, whose code is free.
 
 ```arc42
 :::quality-scenario

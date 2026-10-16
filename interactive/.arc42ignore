@@ -1,9 +1,3 @@
-.gitignore
-.npmrc
-e2e
-index.html
-package.json
-playwright.config.ts
-tsconfig.json
-vite.config.ts
-docs
+# Paths the architecture does not claim (arc42 H021), relative to this template folder.
+# Type declarations for Vite and Vue single-file components, configuration rather than architecture.
+src/env.d.ts
