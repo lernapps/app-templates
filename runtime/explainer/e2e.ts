@@ -544,6 +544,10 @@ export function explainerTests(root = "."): void {
         await expect(tutor.locator(".explainer-tutor-status")).toHaveText(messageOf("de", "tutorCopied"));
         const copied = await page.evaluate(() => (window as unknown as { copied: string[] }).copied);
         expect(copied[0], "the prompt names the page's address").toContain(page.url());
+        // the links of the prompt start at the root of the language tree, not at the page's folder
+        const tree = new URL("../".repeat(item.url.split("/").filter((part) => part !== "").length), page.url());
+        expect(copied[0], "llms.txt at the root of the tree").toContain(new URL("llms.txt", tree).href);
+        expect(copied[0]).not.toContain(new URL("llms.txt", page.url()).href);
         expect(copied[0], "and the task of the exercise, with its solution").toContain(`${first}=${after.get(first)}`);
         // the way is the default from then on
         await page.reload();
