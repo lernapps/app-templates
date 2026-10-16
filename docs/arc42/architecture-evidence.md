@@ -78,7 +78,7 @@ per archetype. Rows below this section name ids as they were before the split; t
 | skill `lernapps-quiz` rule quiz-only-data | The quiz's creator writes only src/quiz.json | quiz bb-quiz-bank, dec-quiz-only-bank; ch.2 con-runtime-unchanged | high | — |
 | skill `lernapps-explainer` rules explainer-only-content, prefer-built-in-block, vue-component-*; "Data files"; "Components" | The explainer's creator writes YAML content, data files and Vue components only where no block fits, each within 20 kB gzip | explainer bb-explainer-content, bb-explainer-data, bb-explainer-components, dec-explainer-only-content | high | — |
 | `runtime/explainer/plugin.ts`, `render.ts`, `load.ts`, `explainer.ts`, `islands.ts`, `generated.ts`, `e2e.ts`, `outline.ts` headers | The explainer's rendering (pages, blocks, islands at build), validation, client, islands, generated exercises and tests | explainer ch.5, ch.6 | high | — |
-| `runtime/explainer/components.ts:57` (SIZE_BUDGET = 20_000); `plugin.ts:293-309` | The explainer's build fails a component over 20 kB gzip | explainer risk-explainer-component-budget | high | OPEN: does "no size limit" cover the explainer's 20 kB budget per component? |
+| `runtime/explainer/components.ts:57` (SIZE_BUDGET = 20_000); `plugin.ts:293-309` | The explainer's build fails a component over 20 kB gzip | explainer ch.9 / dec-explainer-component-size | high | — (resolved: owner, 2026-10-16, a fixed size per component; the figure is an implementation detail) |
 | skill `lernapps-explainer` line 38 ("The explainer stores nothing"); `runtime/explainer/explainer.ts:17,184` | The skill and the runtime differ: the client keeps the chosen way to the tutor on the device | explainer risk-explainer-storage-doc; ch.5 bb-small-storage | high | — (a fix of the skill, not an owner question) |
 | `explainer/src/`, `quiz/src/`, `interactive/src/` (template folders) | Superseded (owner, 2026-10-16): template blocks carry no path | extensions ch.5 | high | — |
 | agent inference | Extension deployment nodes (`dn-<archetype>-build` below the CI runner, `dn-<archetype>-page` below the learner's browser) host the extension's blocks; the build node also stands for the creator's machine | extensions ch.7 | medium | — |
@@ -356,3 +356,9 @@ Earlier ignore directives (W002 for bb-not-found-page, bb-loading-indicator, bb-
 | `runtime/interactive/plugin.ts:18-20`; `e2e.ts:7-11` | Start page without script from app.yaml; app page loads the client module, noscript note links back | ch.12 / term-start-page, term-app-page | high | — |
 | `runtime/interactive/contract.ts:5-7,26-38` | Playthrough: seed, route, steps of keys with expected state or announcement | ch.12 / term-playthrough | high | — |
 | owner, 2026-10-16, review | Tutor: the learner's own assistant, handed the task after a click | ch.12 / term-tutor | high | — |
+
+## Owner, 2026-10-16, size per component
+
+| Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
+| --- | --- | --- | --- | --- |
+| owner, 2026-10-16, conversation | The explainer keeps a fixed size per component; the figure (20 kB) is an implementation detail and stays out of the architecture | explainer ch.9 / dec-explainer-component-size; ch.11 / risk-size-budget-left | high | — |

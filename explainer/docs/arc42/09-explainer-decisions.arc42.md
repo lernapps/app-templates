@@ -37,6 +37,22 @@ addresses: qg-explainer-readable-without-js, qg-accessibility
 :::
 ```
 
+## A Fixed Size per Component
+
+A component stays within a fixed size of its own code, with Vue loaded once per page, so that a text-heavy page stays
+quick to load; a component that needs more is split or becomes a built-in block. The figure is an implementation
+detail of the runtime's build check. Rejected: no limit, which suits interactive apps but not pages read like text.
+
+```arc42
+:::decision
+id: dec-explainer-component-size
+title: A fixed size per component
+status: accepted
+date: 2026-10-16
+addresses: con-component-rules, qg-explainer-readable-without-js
+:::
+```
+
 ## Task Numbers in the Address
 
 Every seeded exercise numbers its distinct tasks, and the address holds the number of each exercise of the page, so a

@@ -507,7 +507,8 @@ protocol: YAML records
 ## Vue components
 
 Optional, not in the template: `src/components/<Name>.vue` with its test, for what no block can express, under the
-component rules and within 20 kB gzip each (`risk-size-budget-left`); an exercise component adds its logic module.
+component rules and within a fixed size each (`dec-explainer-component-size`); an exercise component adds its logic
+module.
 
 ```arc42
 :::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture

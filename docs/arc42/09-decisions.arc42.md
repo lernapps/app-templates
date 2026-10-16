@@ -124,8 +124,9 @@ addresses: con-state-on-device, con-storage-quota, con-frontend-only, qg-privacy
 ## No Size Limit, the Size in the Entry
 
 The app's size is not limited by the frame; it is stated in the app's catalog entry (its fact sheet), and a page may
-show an optional loading indicator while it loads (not built). Rejected: a size budget for every app, which would keep
-large interactive apps out.
+show an optional loading indicator while it loads (not built). An archetype may still fix the size of its own parts,
+as the explainer does for each component. Rejected: a size budget for every app, which would keep large interactive
+apps out.
 
 ```arc42
 :::decision
