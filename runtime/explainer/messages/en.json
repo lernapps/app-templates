@@ -29,5 +29,7 @@
   "gridAlt": "A hundred grid with {{figure.filled}} squares shaded.",
   "barAlt": "A strip for {{figure.whole}}, {{figure.part}} of it shaded.",
   "textDescription": "Text description",
-  "taskNumber": "Task no. {n}"
+  "taskNumber": "Task no. {n}",
+  "backToTutor": "Back to the tutor",
+  "backToTutorOpen": "Close this tab and go back to the chat with your tutor."
 }

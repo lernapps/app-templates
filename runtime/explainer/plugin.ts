@@ -9,7 +9,8 @@
 // entry: Vite builds the one hashed client module (src/main.ts) and stylesheet from it. The built index.html is then
 // the shell of every page: each page is the shell with its language, its head and its body where it says
 // <!-- explainer -->, written into its folder, with the shell's relative asset URLs (./assets/…) rewritten for its
-// depth. The bundled images go to images/, llms.txt to the root of each language tree, and 404.html, which leads
+// depth. The bundled images go to images/, llms.txt to the root of each language tree with a tutor file next to each
+// page (tutor.ts; every link of both checked), and 404.html, which leads
 // every address the app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same
 // pages, rendered on each request.
 //
@@ -40,6 +41,8 @@ import type { Block, ComponentDescription, Site } from "./content.ts";
 import { ContentError, loadSite } from "./load.ts";
 import { llmsTxt, renderSite, type Descriptions, type Islands, type RenderedPage } from "./render.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
+import { contentPages, routes } from "./routes.ts";
+import { anchorsOf, linkProblems, tutorFile, tutorFileOf } from "./tutor.ts";
 
 const MARKER = "<!-- explainer -->";
 const ISLANDS = "\0lernapps-explainer-islands";
@@ -267,13 +270,32 @@ export function explainer(): Plugin[] {
       for (const [image, file] of content.images) {
         this.emitFile({ type: "asset", fileName: image, source: readFileSync(file) });
       }
+      const problems: string[] = [];
       for (const lang of content.app.languages) {
-        this.emitFile({ type: "asset", fileName: `${languageRoot(lang)}llms.txt`, source: llmsTxt(content, lang) });
+        // llms.txt and the tutor files, each link checked against the pages and anchors of the language tree
+        const written = new Map<string, string>([["llms.txt", llmsTxt(content, lang)]]);
+        for (const page of contentPages(content)) {
+          written.set(tutorFileOf(page), tutorFile(content, page, lang, descriptions));
+        }
+        const files = new Set([
+          ...written.keys(),
+          ...routes(content)
+            .filter((route) => route.lang === lang)
+            .map((route) => route.local),
+        ]);
+        const anchors = new Map(
+          contentPages(content).map((page) => [`${page.chapter}/${page.id}/`, anchorsOf(content, page)]),
+        );
+        for (const [file, text] of written) {
+          problems.push(
+            ...linkProblems(file, text, files, anchors).map((problem) => `${languageRoot(lang)}${problem}`),
+          );
+          this.emitFile({ type: "asset", fileName: `${languageRoot(lang)}${file}`, source: text });
+        }
       }
       // each component's own code: its chunk and the chunks of its folder that it imports, gzipped
       const chunks = Object.values(bundle).flatMap((output) => (output.type === "chunk" ? [output] : []));
       const folder = join(root, "src/components");
-      const problems: string[] = [];
       for (const component of new Map(content.components.map((use) => [use.component.name, use.component])).values()) {
         const chunk = chunks.find((candidate) => candidate.facadeModuleId === component.path);
         if (chunk === undefined) continue;
