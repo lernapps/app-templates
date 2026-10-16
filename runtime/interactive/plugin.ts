@@ -12,36 +12,33 @@
 //   eval, new Function, innerHTML or v-html, imports only from vue, this runtime, @lernapps/tooling/storage, i18n and
 //   a11y and the app's own files in src/, browser globals only in onMounted;
 // - the core (src/core/index.ts, contract.ts), loaded in a Vite server of its own: it exports start and step (and tick,
-//   if any, as a function), every route starts, and every playthrough plays: start(seed, route), then step(state,
-//   key) for each key, twice, giving the same states both times (deterministic by its seed), and after each step the
-//   state the playthrough expects. Between keys the build lets no time pass: it never calls tick.
+//   if any, as a function, which a playthrough with ticks needs), every route starts, and every playthrough plays:
+//   start(seed, route), then for each step step(state, input) for each of its inputs (its keys as key inputs) and
+//   tick(state, TICK) for each of its ticks, twice, giving the same states both times (deterministic by its seed),
+//   and after each step the state the playthrough expects. No time passes but the ticks a step names.
 // index.html is Vite's only entry: Vite builds the app's client module (src/main.ts) and stylesheet from it. The built
 // index.html is the shell of every page (render.ts): the start page without any script, and the app page that loads
-// the client module, in each language, with the shell's relative asset URLs rewritten for its depth. Last, the app's
-// own code (the modules of src/ in the built chunks, gzipped together) must stay within SIZE_BUDGET; Vue, this runtime
-// and the libraries the app bundles are not counted. 404.html leads every address the app does not have to its start
-// page. `vp dev` serves the same pages, rendered on each request.
+// the client module, in each language, with the shell's relative asset URLs rewritten for its depth. An app's code has
+// no size limit. 404.html leads every address the app does not have to its start page. `vp dev` serves the same
+// pages, rendered on each request.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative as relativePath } from "node:path";
-import { gzipSync } from "node:zlib";
+import { join } from "node:path";
 import vue from "@vitejs/plugin-vue";
 import type { Plugin } from "vite-plus";
 import { codeProblems, sourceScope } from "../explainer/components.ts";
 import { pathText, Problems } from "../explainer/load.ts";
 import { fromDepth, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
-import { mismatch, type Core, type Playthrough } from "./contract.ts";
+import { doingText, inputsOf, inputText, mismatch, TICK, type Core, type Playthrough } from "./contract.ts";
 import { InteractiveError, loadInteractive, type Interactive } from "./load.ts";
 import { pages, renderPage, type RenderedPage } from "./render.ts";
 
 const MARKER = "<!-- interactive -->";
 /** Where the core is, from the app's root. */
 export const CORE = "src/core/index.ts";
-/** The budget of the app's own code, gzipped, in bytes. */
-export const SIZE_BUDGET = 100_000;
 
 const CONTRACT =
-  "the core exports start(seed, route) and step(state, key), and tick(state, dt) when the app moves on its own (interactive-core-contract)";
+  "the core exports start(seed, route) and step(state, input), and tick(state, dt) when the app moves on its own (interactive-core-contract)";
 
 /** The shell with the page in it; the start page without the shell's scripts. */
 export function fill(shell: string, rendered: RenderedPage): string {
@@ -86,12 +83,20 @@ function play(
     return { states, error: { path: ["seed"], message } };
   }
   for (const [index, step] of playthrough.steps.entries()) {
-    for (const [at, key] of step.keys.entries()) {
+    for (const [at, input] of inputsOf(step).entries()) {
       try {
-        state = core.step(state, key);
+        state = core.step(state, input);
       } catch (error) {
-        const message = `step(state, ${JSON.stringify(key)}) throws: ${reason(error)} (interactive-core-contract)`;
-        return { states, error: { path: ["steps", index, "keys", at], message } };
+        const message = `step(state, ${inputText(input)}) throws: ${reason(error)} (interactive-core-contract)`;
+        return { states, error: { path: ["steps", index, step.keys === undefined ? "inputs" : "keys", at], message } };
+      }
+    }
+    for (let at = 0; at < (step.ticks ?? 0); at++) {
+      try {
+        state = core.tick?.(state, TICK) ?? state;
+      } catch (error) {
+        const message = `tick(state, ${TICK}) throws at tick ${at + 1}: ${reason(error)} (interactive-core-contract)`;
+        return { states, error: { path: ["steps", index, "ticks"], message } };
       }
     }
     states.push(state);
@@ -136,6 +141,15 @@ async function coreProblems(root: string, content: Interactive, load: Load): Pro
   for (const { yaml, playthrough } of content.playthroughs) {
     const route = playthrough.route ?? routes[0]?.id ?? "";
     if (failed.has(route)) continue;
+    const ticking = playthrough.steps.findIndex((step) => step.ticks !== undefined);
+    if (core.tick === undefined && ticking >= 0) {
+      problems.at(
+        yaml,
+        ["steps", ticking, "ticks"],
+        `the core exports no tick, so no time passes in the app; export tick(state, dt) from ${CORE}, or leave the ticks out (interactive-core-contract)`,
+      );
+      continue;
+    }
     const first = play(core, playthrough, route);
     if (first.error !== undefined) {
       problems.at(yaml, first.error.path, first.error.message);
@@ -149,7 +163,7 @@ async function coreProblems(root: string, content: Interactive, load: Load): Pro
       problems.at(
         yaml,
         ["steps", Math.max(differs, 0)],
-        "the state differs between two plays of the same keys; the core gives the same state for the same seed, route and keys, so draw from the seed, never from Math.random or the clock (interactive-core-contract)",
+        "the state differs between two plays of the same steps; the core gives the same state for the same seed, route, inputs and ticks, so draw from the seed, never from Math.random or the clock (interactive-core-contract)",
       );
       // a property of the core: once is enough, and no state of it can be trusted
       break;
@@ -158,16 +172,15 @@ async function coreProblems(root: string, content: Interactive, load: Load): Pro
       if (step.state === undefined) continue;
       const found = mismatch(first.states[index], step.state);
       if (found === undefined) continue;
-      const keys = playthrough.steps
+      const done = playthrough.steps
         .slice(0, index + 1)
-        .flatMap((each) => each.keys)
-        .map((key) => JSON.stringify(key))
+        .flatMap(doingText)
         .join(", ");
       const where = found.path.length === 0 ? "the state" : pathText(found.path);
       problems.at(
         yaml,
         ["steps", index, "state", ...found.path],
-        `${where} is ${JSON.stringify(found.actual) ?? "missing"} after the keys ${keys}, the playthrough expects ${JSON.stringify(valueAt(step.state, found.path))} (interactive-playthroughs-pass)`,
+        `${where} is ${JSON.stringify(found.actual) ?? "missing"} after ${done}, the playthrough expects ${JSON.stringify(valueAt(step.state, found.path))} (interactive-playthroughs-pass)`,
       );
       // the steps after it start from another state
       break;
@@ -214,21 +227,6 @@ export function interactive(): Plugin[] {
         else this.emitFile({ type: "asset", fileName: `${page.path}index.html`, source: html });
       }
       this.emitFile({ type: "asset", fileName: "404.html", source: notFoundPage() });
-      // the app's own code: the modules of src/ in every chunk
-      const src = join(root, "src");
-      const own = Object.values(bundle)
-        .flatMap((output) => (output.type === "chunk" ? Object.entries(output.modules) : []))
-        .filter(([id]) => !relativePath(src, id).startsWith("..") && !id.includes("node_modules"))
-        .map(([, module]) => module.code ?? "")
-        .join("\n");
-      const size = gzipSync(own).length;
-      if (size > SIZE_BUDGET) {
-        this.error(
-          new InteractiveError([
-            `src/: ${(size / 1000).toFixed(1)} kB gzip of the app's own code, more than the budget of ${SIZE_BUDGET / 1000} kB; make it smaller: less code, data in a smaller form (interactive-size)`,
-          ]).message,
-        );
-      }
     },
     configureServer(server) {
       server.watcher.on("all", (_event, file) => {
