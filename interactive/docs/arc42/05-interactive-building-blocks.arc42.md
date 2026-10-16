@@ -8,8 +8,8 @@ creator writes the description, the core, the UI, the data, the messages and the
 calls `startInteractive`. It reuses the explainer's component rules; the tutor handoff, task numbers, exercise contract
 and the examples check are not built for it (its playthroughs take the examples' role). Only the start page reads
 without JavaScript. An interactive app adds its own blocks below `bb-interactive-core`, `bb-interactive-ui` and
-`bb-interactive-data`, in an architecture part of its own; the skill `lernapps-interactive` is not written yet
-(`risk-interactive-skill-missing`).
+`bb-interactive-data`, in an architecture part of its own. The creator's assistant follows the skill `lernapps-interactive` (`if-skills`),
+provided in a tooling pull request that is not merged yet (`risk-interactive-skill-missing`).
 
 ## Level 1 (interactive app)
 

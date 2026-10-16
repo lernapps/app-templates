@@ -194,7 +194,7 @@ addresses: con-architecture-current, con-language, qg-understandable, risk-arc42
 ## The Skill as the Interface to the Creator's Assistant
 
 The guidance for the creator's assistant is a skill per archetype plus `lernapps-app` for every app: Markdown the
-assistant loads and follows, modelled as an interface of a tooling block. Advice that no check can make (how to write
+assistant loads and follows, modelled as the interface `if-skills` of the skills block `bb-skills`. Advice that no check can make (how to write
 a good question, low stimulation) lives there, not in the runtime.
 
 ```arc42

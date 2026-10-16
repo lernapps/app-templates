@@ -29,6 +29,7 @@ flowchart LR
     subgraph system["lernapps app"]
         bb-render["Page rendering (the archetype's)"]
         bb-tooling["Tooling helpers"]
+        bb-skills["Skills"]
     end
     actor-learner -->|"if-pages: reads and learns on the pages"| system
     actor-teacher-parent -->|"if-pages: reads the pages"| system

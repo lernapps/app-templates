@@ -67,7 +67,7 @@ id: dn-creator-machine
 title: Creator's machine
 type: device
 parent: env-development
-hosts: bb-tooling, bb-runtime, bb-build, bb-validation, bb-render, bb-runtime-texts, bb-e2e
+hosts: bb-tooling, bb-skills, bb-runtime, bb-build, bb-validation, bb-render, bb-runtime-texts, bb-e2e
 :::
 ```
 

@@ -27,7 +27,7 @@ repo root (see "Strict validation, paths and input" below).
 
 | Rule | Element | Reason |
 | --- | --- | --- |
-| H014 | bb-tooling, if-preset, if-lernapps-check, if-skills, if-device-storage, if-a11y, if-translator | @lernapps/tooling is installed in the untracked node_modules; a path there is E011 |
+| H014 | bb-tooling, if-preset, if-lernapps-check, if-device-storage, if-a11y, if-translator | @lernapps/tooling is installed in the untracked node_modules; a path there is E011 |
 | H014 | quiz bb-quiz-bank; explainer bb-explainer-content, bb-explainer-data, bb-explainer-components, if-data-files, if-vue-component, if-exercise-logic; interactive bb-interactive-description, -core, -ui, -data, -messages, -playthroughs, if-interactive-data, if-messages | the template is copied into each app; the path is the app's own and is set in the app's architecture (owner, 2026-10-16) |
 | H014 | interactive if-root-component | no file of its own: its props are set in runtime/interactive/interactive.ts, which carries if-start |
 | H020 | interactive if-core-contract | it and if-state-property are both defined in runtime/interactive/contract.ts |
@@ -35,7 +35,10 @@ repo root (see "Strict validation, paths and input" below).
 | H001 | dec-no-settings | a scoping decision of the owner; serves no quality goal |
 | H007 | quiz risk-quiz-no-js-not-in-check | accepted without a decision; the quiz's own end-to-end tests check the worksheet |
 | H007 | explainer risk-explainer-storage-doc | a sentence to correct in the skill, not an architecture decision |
-| W006 | qg-privacy | two high-priority goals is the owner's decision (2026-10-16) |
+| H014 | bb-skills, if-skills | the skills are committed in each app under .agents/skills; this repository has none (owner, 2026-10-16) |
+| W006 | qg-privacy, from the interactive extension (moved to the top of chapter 10 by `scripts/arc42.ts`) | two high-priority goals in the interactive combination is the owner's decision (2026-10-16); quiz and explainer have three, so the directive would be stale there |
+| W014 | quiz qg-quiz-readable-without-js, explainer qg-explainer-readable-without-js | the extension's high goal follows the generic medium goals in the combined chapter 10 |
+| H010 | quiz qg-quiz-readable-without-js, explainer qg-explainer-readable-without-js | the generic solution strategy cannot name an archetype's goal (an error in the other combinations); the archetype's decisions address it |
 | H021 | `.arc42ignore`: runtime/quiz, runtime/explainer, runtime/interactive | another archetype's runtime, claimed in its own combination |
 
 ### Ids moved or removed in this step
@@ -53,6 +56,19 @@ repo root (see "Strict validation, paths and input" below).
 | risk-size-budget-left (interactive), risk-explainer-component-budget | generic risk-size-budget-left |
 | dec-keys-as-input | superseded by interactive dec-typed-input |
 
+## Skills as a building block (owner, 2026-10-16)
+
+| Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
+| --- | --- | --- | --- | --- |
+| owner, 2026-10-16, decision (relayed by the coordinator) | The skills are a building block of their own behind `if-skills`: in an app they are committed under `.agents/skills/`, one folder per skill (lernapps-app, the archetype's skill, the content skills, lernapps-listing, the app's own app-content), installed and replaced by `lernapps update`; the tooling's source is its `skills/` folder | ch.5 bb-skills, if-skills (provider moved from bb-tooling); ch.3 actor-creator-assistant; ch.4; ch.6 scenario-skills; ch.7 dn-creator-machine; ch.9 dec-skill-interface | high | — |
+| `git ls-files .agents` in this repository (empty) | This repository has no `.agents/skills`, so `bb-skills` and `if-skills` carry no path; an ignore directive names the reason | ch.5 bb-skills, if-skills (H014) | high | — |
+| tooling `generator/update.ts:12-14,72-76`; tooling `skills/` (`lernapps-app`, `-quiz`, `-explainer`, `-listing`, `-content-research`, `-exercise-patterns`, `-content-growth`) | `lernapps update` replaces the app's `lernapps-*` skills with the tooling's and keeps the app's own (app-content) | ch.5 bb-skills; ch.6 scenario-skills | high | — |
+| `@doctc/arc42` 0.36.1 W026, W027 (a part and an interface in their parent's or provider's file) | `bb-skills` is a third generic root rather than a part of `bb-tooling`, so that no extra diagram is needed; it and `if-skills` are in the same file | ch.5 | medium | — |
+| owner, 2026-10-16, decision; [lernapps/tooling#90](https://github.com/lernapps/tooling/pull/90) | Low stimulation is advice of the skills (no flashing, calm motion, sound off by default, and why); the skill `lernapps-interactive` gives it, provided in tooling#90; the risk of the missing skill stays until it merges | ch.8 concept-low-stimulation (implemented by bb-skills); interactive risk-interactive-skill-missing | high | — |
+| owner, 2026-10-16, correction | The skill keeps only the general principles: no recipes per kind of app | interactive dec-one-archetype (no longer "kinds as recipes"), risk-interactive-skill-missing | high | — |
+| owner, 2026-10-16, decision | `qg-quiz-readable-without-js` and `qg-explainer-readable-without-js` have priority high (both archetypes are text-heavy) | quiz and explainer ch.10 | high | — (resolved) |
+| owner, 2026-10-16, decision | No creator checkpoint for the architecture: the agent keeps the app's architecture current and validated with every change | ch.2 con-architecture-current | high | — |
+
 ## Generic architecture and extensions (owner, 2026-10-16)
 
 The architecture was first written for the interactive archetype (rows from "Sources inventoried" on). By the owner's
@@ -64,7 +80,7 @@ per archetype. Rows below this section name ids as they were before the split; t
 | owner, 2026-10-16, decision (relayed by the coordinator) | One architecture for every archetype; quiz, explainer and interactive stay separate archetypes and follow it because they share its quality goals; generic part at `docs/arc42/`, one extension per archetype in its template folder that adds only its own blocks (below the generic ones via `parent`), interfaces, decisions, risks and terms, and defines no generic id again | all chapters; dec-generic-plus-extensions; concept-archetype-extension | high | — |
 | owner, 2026-10-16, decision | Only interactive apps write an architecture part of their own; the quiz's and the explainer's notation fixes their structure | ch.2 con-architecture-current; ch.9 dec-arc42-in-app; quiz dec-quiz-only-bank; explainer dec-explainer-only-content | high | — |
 | owner, 2026-10-16, decision | Quality goal priorities confirmed: privacy and checkable high, accessibility and understandable medium | ch.1, ch.10 | high | — (resolved) |
-| owner, 2026-10-16, decision | Readable without JavaScript is a quality goal of the quiz and the explainer (text-heavy), not of the generic architecture and not of interactive apps (only their start page reads without JavaScript) | quiz qg-quiz-readable-without-js, explainer qg-explainer-readable-without-js; ch.8 concept-readable-without-js; ch.6 scenario-pages | high | OPEN: priority of both goals (medium proposed by the agent) |
+| owner, 2026-10-16, decision | Readable without JavaScript is a quality goal of the quiz and the explainer (text-heavy), not of the generic architecture and not of interactive apps (only their start page reads without JavaScript) | quiz qg-quiz-readable-without-js, explainer qg-explainer-readable-without-js; ch.8 concept-readable-without-js; ch.6 scenario-pages | high | — (resolved: owner, 2026-10-16, priority high for both, because both archetypes are text-heavy) |
 | owner, 2026-10-16, earlier review (kept in force) | No model in the browser; no IndexedDB; no size limit, the size in the entry and an optional loading indicator; the skill as an interface used by the creator's assistant | ch.5 bb-tutor-handoff, bb-small-storage, bb-loading-indicator, bb-skill-app; ch.9 dec-tutor-variant, dec-small-storage, dec-no-size-limit, dec-skill-interface | high | — |
 | `runtime/shared/pages.ts` header | Page trees per language and 404.html are shared by the archetypes' build steps | ch.5 bb-page-tree, bb-not-found-page | high | — |
 | `runtime/shared/examples.ts` header; `runtime/quiz/validate.ts` header | The examples check runs for the quiz's questions and the explainer's exercises; interactive apps have none | ch.5 bb-examples-check | high | — |

@@ -8,13 +8,17 @@ A quiz is text-heavy, so its questions, solutions, background and links read wit
 can: as a worksheet with its answer key, not as a quiz answered one question at a time. Realised by the quiz
 rendering and checked by the quiz's end-to-end tests (`dec-quiz-worksheet`).
 
-OPEN: Confirm the priority (medium is a proposal).
+High priority, because the archetype is text-heavy (owner, 2026-10-16).
 
 ```arc42
+:::ignore W014 the extension's goal follows the generic goals in the combined chapter; the generic part cannot hold it
+:::
+:::ignore H010 the generic solution strategy cannot name an archetype's goal; the quiz's rendering realises it, see the decisions that address it
+:::
 :::quality-goal
 id: qg-quiz-readable-without-js
 title: Readable without JavaScript (quiz)
-priority: medium
+priority: high
 :::
 ```
 

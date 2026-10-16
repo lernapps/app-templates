@@ -2,6 +2,13 @@
 
 The interactive archetype's scenarios, besides the generic ones.
 
+<!-- at the top of the generic chapter -->
+```arc42
+:::ignore W006 two high-priority goals is the owner's decision (2026-10-16): privacy and checkable high; the interactive archetype adds no goal of its own
+:::
+```
+<!-- end -->
+
 ## The same inputs play the same twice
 
 At build, every playthrough is played against the core twice, without ticks; a core that draws from `Math.random` or
