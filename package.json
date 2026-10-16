@@ -74,13 +74,13 @@
     "check:vue": "vue-tsc --noEmit -p tsconfig.vue.json"
   },
   "dependencies": {
-    "@vitejs/plugin-vue": "6.0.9",
+    "@vitejs/plugin-vue": "6.0.10",
     "ajv": "8.20.0",
     "highlight.js": "11.12.0",
     "marked": "18.0.14",
     "source-map-js": "1.2.2",
     "temml": "0.14.0",
-    "vue": "3.5.43",
+    "vue": "3.5.44",
     "yaml": "2.9.1"
   },
   "devDependencies": {
@@ -88,7 +88,7 @@
     "@types/node": "22.20.5",
     "typescript": "6.0.3",
     "vite-plus": "1.0.0",
-    "vue-tsc": "3.3.11"
+    "vue-tsc": "3.3.13"
   },
   "peerDependencies": {
     "@lernapps/tooling": "*",
