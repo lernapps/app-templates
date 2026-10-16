@@ -14,6 +14,9 @@
 // them, and about, what the exercise is, for a tutor (describedProblems). A component keeps its nojs text, folded as a
 // text description under it, when it declares defineOptions({ nojs: "caption" }); by default it replaces it.
 //
+// The interactive archetype runs the same code checks on its components (codeProblems, with sourceScope): they may
+// import any of the app's own files in src/ instead of their own folder only.
+//
 // The props of a block are checked against the component's prop types (defineProps<…>()), which the SFC compiler
 // resolves, as Vue itself does for its runtime props, rather than vue-component-meta, which needs TypeScript's
 // language service: the types a block can give from YAML are data, which the compiler's type resolution reads in
@@ -23,7 +26,7 @@
 // component gets it in the page's language.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { dirname, join, posix } from "node:path";
 import type { Node, Program } from "@babel/types";
 import type { SourceMapConsumer as Consumer } from "source-map-js";
 import { inLanguage, textLanguages, type Text } from "../shared/languages.ts";
@@ -61,7 +64,8 @@ interface Place {
 
 const NAME = /^[A-Z][A-Za-z0-9]*$/;
 const TOOLING = ["@lernapps/tooling/storage", "@lernapps/tooling/i18n", "@lernapps/tooling/a11y"];
-const IMPORTS = `vue, @lernapps/app-templates, ${TOOLING.join(", ")} and its own folder`;
+/** The packages a component may import, for a message. */
+const PACKAGES = `vue, @lernapps/app-templates, ${TOOLING.join(", ")}`;
 const NETWORK = new Set(["fetch", "XMLHttpRequest", "WebSocket", "EventSource"]);
 const BROWSER = new Set([
   "window",
@@ -150,8 +154,15 @@ function imports(program: Program): { source: string; node: Node }[] {
   return found;
 }
 
-/** What the code of `program` may not do, and its imports from the component's folder. */
-function findings(program: Program): { found: Finding[]; locals: { source: string; node: Node }[] } {
+/**
+ * What the code of `program` may not do, and its imports of the app's own modules (`isLocal`); `own` names these for
+ * a message.
+ */
+function findings(
+  program: Program,
+  isLocal: (source: string) => boolean,
+  own: string,
+): { found: Finding[]; locals: { source: string; node: Node }[] } {
   const found: Finding[] = [];
   const locals: { source: string; node: Node }[] = [];
   for (const { source, node } of imports(program)) {
@@ -160,7 +171,7 @@ function findings(program: Program): { found: Finding[]; locals: { source: strin
         node,
         message: `an import from ${source}; a component loads nothing from the network, so bundle what it needs (vue-component-no-network)`,
       });
-    } else if (source.startsWith("./") && !source.slice(2).includes("/")) locals.push({ source, node });
+    } else if (isLocal(source)) locals.push({ source, node });
     else if (
       source !== "vue" &&
       source !== "@lernapps/app-templates" &&
@@ -169,7 +180,7 @@ function findings(program: Program): { found: Finding[]; locals: { source: strin
     ) {
       found.push({
         node,
-        message: `an import from ${source}; a component imports only from ${IMPORTS} (vue-component-imports)`,
+        message: `an import from ${source}; a component imports only from ${PACKAGES} and ${own} (vue-component-imports)`,
       });
     }
   }
@@ -265,6 +276,142 @@ function placed(file: string, found: readonly Finding[], place: (node: Node) => 
   }
   for (const message of new Set(without)) if (!withPlace.has(message)) lines.push(line(file, undefined, message));
   return lines;
+}
+
+/**
+ * Which imports of a component's code are the app's own modules: `resolve` gives, for an import of `source` in `file`
+ * (both from the app's root), the module it names, or the problem when it names none a component may import, or
+ * undefined when the import is not one of the app's own. `own` names the app's own modules for a message.
+ */
+export interface CodeScope {
+  own: string;
+  resolve(file: string, source: string): { file: string } | { problem: string } | undefined;
+}
+
+/** The scope of an explainer's components: the files of src/components/ itself. */
+const componentsScope = (root: string): CodeScope => ({
+  own: "its own folder",
+  resolve(_file, source) {
+    if (!source.startsWith("./") || source.slice(2).includes("/")) return undefined;
+    return existsSync(join(root, "src/components", source.slice(2)))
+      ? { file: `src/components/${source.slice(2)}` }
+      : { problem: `${source} does not exist in src/components/; import a file of the folder, with its extension` };
+  },
+});
+
+/** The scope of an app whose components may import any of its files in src/ (the interactive archetype). */
+export const sourceScope = (root: string): CodeScope => ({
+  own: "the app's own files in src/",
+  resolve(file, source) {
+    if (!source.startsWith("./") && !source.startsWith("../")) return undefined;
+    const target = posix.normalize(posix.join(dirname(file), source));
+    if (!target.startsWith("src/")) {
+      return { problem: `${source} is outside src/; a component imports only the app's own files in src/` };
+    }
+    return existsSync(join(root, target))
+      ? { file: target }
+      : { problem: `${source} does not exist; import a file of src/, with its extension` };
+  },
+});
+
+/** A single-file component as the compiler reads it; undefined, with its problems, when it has none to check. */
+function readSfc(
+  root: string,
+  file: string,
+  problems: string[],
+):
+  | {
+      descriptor: ReturnType<Sfc["parse"]>["descriptor"];
+      setup: NonNullable<ReturnType<Sfc["parse"]>["descriptor"]["scriptSetup"]>;
+    }
+  | undefined {
+  const source = readFileSync(join(root, file), "utf8");
+  const { descriptor, errors } = sfc().parse(source, { filename: join(root, file), sourceMap: true });
+  for (const error of errors) {
+    const loc = "loc" in error ? error.loc : undefined;
+    problems.push(line(file, loc ? { line: loc.start.line, column: loc.start.column } : undefined, error.message));
+  }
+  if (errors.length > 0) return undefined;
+  const setup = descriptor.scriptSetup;
+  if (setup === null || setup.lang !== "ts") {
+    problems.push(line(file, undefined, `a component has <script setup lang="ts">`));
+    return undefined;
+  }
+  return { descriptor, setup };
+}
+
+/**
+ * The checks of components' code, each problem into `problems`: `compile` compiles a component's <script setup> with
+ * its template and checks the output, `module` checks a TypeScript module; each follows the imports of the app's own
+ * TypeScript modules (`scope`) and checks each module once.
+ */
+function codeChecker(root: string, scope: CodeScope, problems: string[]) {
+  const { SourceMapConsumer } = require("source-map-js") as typeof import("source-map-js");
+  const checked = new Set<string>();
+  const check = (file: string, program: Program): Finding[] => {
+    const { found, locals } = findings(program, (source) => scope.resolve(file, source) !== undefined, scope.own);
+    for (const { source, node } of locals) {
+      const target = scope.resolve(file, source);
+      if (target === undefined) continue;
+      if ("problem" in target) found.push({ node, message: target.problem });
+      else if (target.file.endsWith(".ts")) module(target.file);
+    }
+    return found;
+  };
+  const module = (file: string): void => {
+    if (checked.has(file)) return;
+    checked.add(file);
+    problems.push(
+      ...placed(file, check(file, parse(readFileSync(join(root, file), "utf8"))), (node) =>
+        node.loc ? { line: node.loc.start.line, column: node.loc.start.column + 1 } : undefined,
+      ),
+    );
+  };
+  const compile = (
+    file: string,
+    descriptor: ReturnType<Sfc["parse"]>["descriptor"],
+  ): { program: Program; consumer: Consumer | undefined } | undefined => {
+    let compiled: ReturnType<Sfc["compileScript"]>;
+    try {
+      compiled = sfc().compileScript(descriptor, {
+        id: file.replace(/^.*\//, "").replace(/\.vue$/, ""),
+        inlineTemplate: true,
+        sourceMap: true,
+        isProd: true,
+        fs: { fileExists: existsSync, readFile: (name) => readFileSync(name, "utf8") },
+      });
+    } catch (error) {
+      const loc = (error as { loc?: { start: { line: number; column: number } } }).loc;
+      const message = (error instanceof Error ? error.message : String(error)).split("\n")[0] ?? "";
+      problems.push(line(file, loc ? { line: loc.start.line, column: loc.start.column } : undefined, message));
+      return undefined;
+    }
+    const program = parse(compiled.content);
+    const consumer: Consumer | undefined = compiled.map ? new SourceMapConsumer(compiled.map) : undefined;
+    problems.push(
+      ...placed(file, check(file, program), (node) => {
+        if (!node.loc || consumer === undefined) return undefined;
+        const original = consumer.originalPositionFor({ line: node.loc.start.line, column: node.loc.start.column });
+        return original.line === null ? undefined : { line: original.line, column: original.column + 1 };
+      }),
+    );
+    return { program, consumer };
+  };
+  return { module, compile };
+}
+
+/**
+ * The checks of the components' code for the single-file components `files` (from the app's root) and the app's own
+ * TypeScript modules they import (`scope`): one line per problem, with the file and its place.
+ */
+export function codeProblems(root: string, files: readonly string[], scope: CodeScope): string[] {
+  const problems: string[] = [];
+  const code = codeChecker(root, scope, problems);
+  for (const file of files) {
+    const read = readSfc(root, file, problems);
+    if (read !== undefined) code.compile(file, read.descriptor);
+  }
+  return problems;
 }
 
 /** The names a module exports. */
@@ -480,33 +627,7 @@ export function readComponents(root: string): {
       );
     }
   }
-  const { parse: parseSfc, compileScript } = sfc();
-  const { SourceMapConsumer } = require("source-map-js") as typeof import("source-map-js");
-  const checked = new Set<string>();
-  /** The checks of the module `name` of the folder, once, with the modules it imports. */
-  const checkModule = (name: string): void => {
-    if (checked.has(name)) return;
-    checked.add(name);
-    problems.push(
-      ...placed(`src/components/${name}`, check(parse(readFileSync(join(dir, name), "utf8"))), (node) =>
-        node.loc ? { line: node.loc.start.line, column: node.loc.start.column + 1 } : undefined,
-      ),
-    );
-  };
-  /** The findings of `program`; the modules of the folder that it imports are checked in turn. */
-  const check = (program: Program): Finding[] => {
-    const { found, locals } = findings(program);
-    for (const { source, node } of locals) {
-      const name = source.slice(2);
-      if (!existsSync(join(dir, name))) {
-        found.push({
-          node,
-          message: `${source} does not exist in src/components/; import a file of the folder, with its extension`,
-        });
-      } else if (name.endsWith(".ts")) checkModule(name);
-    }
-    return found;
-  };
+  const code = codeChecker(root, componentsScope(root), problems);
   for (const name of files.filter((candidate) => candidate.endsWith(".vue"))) {
     const component = name.slice(0, -".vue".length);
     if (!NAME.test(component)) continue;
@@ -514,18 +635,9 @@ export function readComponents(root: string): {
     const file = `src/components/${name}`;
     const path = join(dir, name);
     const before = problems.length;
-    const source = readFileSync(path, "utf8");
-    const { descriptor, errors } = parseSfc(source, { filename: path, sourceMap: true });
-    for (const error of errors) {
-      const loc = "loc" in error ? error.loc : undefined;
-      problems.push(line(file, loc ? { line: loc.start.line, column: loc.start.column } : undefined, error.message));
-    }
-    if (errors.length > 0) continue;
-    const setup = descriptor.scriptSetup;
-    if (setup === null || setup.lang !== "ts") {
-      problems.push(line(file, undefined, `a component has <script setup lang="ts">`));
-      continue;
-    }
+    const read = readSfc(root, file, problems);
+    if (read === undefined) continue;
+    const { descriptor, setup } = read;
     if (!existsSync(join(dir, `${component}.test.ts`))) {
       problems.push(
         line(
@@ -535,30 +647,9 @@ export function readComponents(root: string): {
         ),
       );
     }
-    let compiled: ReturnType<Sfc["compileScript"]>;
-    try {
-      compiled = compileScript(descriptor, {
-        id: component,
-        inlineTemplate: true,
-        sourceMap: true,
-        isProd: true,
-        fs: { fileExists: existsSync, readFile: (name) => readFileSync(name, "utf8") },
-      });
-    } catch (error) {
-      const loc = (error as { loc?: { start: { line: number; column: number } } }).loc;
-      const message = (error instanceof Error ? error.message : String(error)).split("\n")[0] ?? "";
-      problems.push(line(file, loc ? { line: loc.start.line, column: loc.start.column } : undefined, message));
-      continue;
-    }
-    const program = parse(compiled.content);
-    const consumer: Consumer | undefined = compiled.map ? new SourceMapConsumer(compiled.map) : undefined;
-    problems.push(
-      ...placed(file, check(program), (node) => {
-        if (!node.loc || consumer === undefined) return undefined;
-        const original = consumer.originalPositionFor({ line: node.loc.start.line, column: node.loc.start.column });
-        return original.line === null ? undefined : { line: original.line, column: original.column + 1 };
-      }),
-    );
+    const compiled = code.compile(file, descriptor);
+    if (compiled === undefined) continue;
+    const { program, consumer } = compiled;
     // what the compiled component declares: its emits and its options
     let exercise = false;
     let caption = false;
@@ -634,7 +725,7 @@ export function readComponents(root: string): {
         );
       } else {
         // the build runs it, so it is checked as the component's code even when the component does not import it
-        checkModule(`${component}.ts`);
+        code.module(`src/components/${component}.ts`);
         const names = exported(parse(readFileSync(logic, "utf8")));
         const lacking = EXERCISE.filter((function_) => !names.has(function_));
         if (lacking.length > 0) {

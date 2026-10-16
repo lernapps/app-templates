@@ -1,7 +1,7 @@
 {
   "name": "@lernapps/app-templates",
   "version": "0.0.0",
-  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and each question on its own for other archetypes; the explainer: build step, client module with its exercises, the islands of its Vue components, styles, end-to-end tests, the schema of its content)",
+  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and each question on its own for other archetypes; the explainer: build step, client module with its exercises, the islands of its Vue components, styles, end-to-end tests, the schema of its content; the interactive archetype: build step, the start page and the app page around the app's own Vue components and core, its playthroughs, styles, end-to-end tests, the schemas of its start page and its playthroughs)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -49,7 +49,24 @@
     "./explainer/style.css": "./runtime/explainer/explainer.css",
     "./explainer/messages/de.json": "./runtime/explainer/messages/de.json",
     "./explainer/messages/en.json": "./runtime/explainer/messages/en.json",
-    "./explainer/explainer.v1.schema.json": "./runtime/explainer/explainer.v1.schema.json"
+    "./explainer/explainer.v1.schema.json": "./runtime/explainer/explainer.v1.schema.json",
+    "./interactive": {
+      "types": "./runtime/interactive/interactive.ts",
+      "default": "./dist/interactive.mjs"
+    },
+    "./interactive/plugin": {
+      "types": "./runtime/interactive/plugin.ts",
+      "default": "./dist/interactive-plugin.mjs"
+    },
+    "./interactive/e2e": {
+      "types": "./runtime/interactive/e2e.ts",
+      "default": "./dist/interactive-e2e.mjs"
+    },
+    "./interactive/style.css": "./runtime/interactive/interactive.css",
+    "./interactive/messages/de.json": "./runtime/interactive/messages/de.json",
+    "./interactive/messages/en.json": "./runtime/interactive/messages/en.json",
+    "./interactive/interactive.v1.schema.json": "./runtime/interactive/interactive.v1.schema.json",
+    "./interactive/playthrough.v1.schema.json": "./runtime/interactive/playthrough.v1.schema.json"
   },
   "scripts": {
     "prepare": "vp pack && vp config --no-agent",

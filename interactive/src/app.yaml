@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/interactive/interactive.v1.schema.json
+title: Buchstaben tippen
+description: |
+  Ein Buchstabe erscheint, du tippst ihn auf der Tastatur. Für jeden hast du fünf Sekunden.
+  Zum Üben der Grundreihe und der oberen Reihe, ab Klasse 3.
+howto: |
+  - Tippe den Buchstaben, der groß in der Mitte steht.
+  - Richtig getippt gibt einen Punkt, und der nächste Buchstabe kommt.
+  - Ein falscher Buchstabe oder zu langes Warten zählt als Fehler.
+  - Nach zehn Buchstaben ist die Runde vorbei. Mit Enter spielst du die nächste.
+competencies:
+  - Ich kann die Buchstaben der Grundreihe auf der Tastatur finden.
+  - Ich kann die Buchstaben der oberen Reihe tippen.
+languages: [de]
+routes:
+  - id: grundreihe
+    title: Grundreihe
+    description: a s d f j k l
+  - id: obere-reihe
+    title: Obere Reihe
+    description: q w e r t z u i o p
+sections:
+  - id: zehn-finger
+    title: Warum die Grundreihe?
+    text: |
+      Auf der Grundreihe liegen deine Finger, wenn du nicht tippst: links auf a, s, d, f, rechts auf j, k, l.
+      Von dort erreicht jeder Finger seine Tasten. Wer die Grundreihe sicher findet, muss beim Tippen nicht mehr auf
+      die Tastatur schauen.

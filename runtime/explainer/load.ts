@@ -66,7 +66,7 @@ const SOURCE_URL = /^https?:\/\/\S+$/;
 type Path = readonly (string | number)[];
 
 /** A YAML file of the content, parsed, with its line positions. */
-interface YamlFile {
+export interface YamlFile {
   file: string;
   doc: Document;
   lines: LineCounter;
@@ -167,7 +167,7 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** Collects the problems, one line each, without repeating one. */
-class Problems {
+export class Problems {
   readonly lines: string[] = [];
   add(line: string): void {
     if (!this.lines.includes(line)) this.lines.push(line);
@@ -197,7 +197,7 @@ function lineOf(yaml: YamlFile, path: Path, offset: number): number | undefined 
   return undefined;
 }
 
-function readYaml(root: string, file: string, problems: Problems): YamlFile | undefined {
+export function readYaml(root: string, file: string, problems: Problems): YamlFile | undefined {
   const lines = new LineCounter();
   const doc = parseDocument(readFileSync(join(root, file), "utf8"), { lineCounter: lines, prettyErrors: false });
   if (doc.errors.length > 0) {
@@ -224,7 +224,7 @@ function missing(property: string, object: unknown): string {
 }
 
 /** The schema's errors as problems: one per cause, the branches of texts and blocks folded. */
-function schemaProblems(yaml: YamlFile, errors: readonly ErrorObject[], problems: Problems): void {
+export function schemaProblems(yaml: YamlFile, errors: readonly ErrorObject[], problems: Problems): void {
   const pathOf = (pointer: string): Path =>
     pointer
       .split("/")
@@ -339,7 +339,7 @@ interface Link {
 }
 
 /** The checks of the texts: languages, raw HTML, Markdown, formulas. */
-class Texts {
+export class Texts {
   readonly links: Link[] = [];
   readonly languages: readonly string[];
   private readonly problems: Problems;
