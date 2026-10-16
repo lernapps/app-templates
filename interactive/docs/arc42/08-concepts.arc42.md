@@ -1,52 +1,180 @@
 # Cross-cutting Concepts
 
-## Deterministic core
+The concepts every interactive app implements. The first eleven are the ones chapter 5's blocks name; the last is
+advice only.
 
-All randomness comes from the seed; the core never reads time, the DOM or storage. The same seed, route and keys give
-the same states, at build and in the browser.
+## Core and shell
 
-```arc42
-:::concept
-id: concept-deterministic-core
-title: Deterministic core
-category: testability
-:::
-```
-
-## State in the runtime
-
-The runtime holds the one state; components receive it as a prop and send keys back. Nothing else keeps game state.
+The core is the app's logic in pure TypeScript without DOM, its state plain JSON, exported as `start(seed, route)`,
+`step(state, key)` and optionally `tick(state, dt)`. The shell keeps the state, feeds it keys and ticks and hands it to
+the components, which only show it, so the same core runs in Node at build and in the browser.
 
 ```arc42
 :::concept
-id: concept-state-in-runtime
-title: State in the runtime
+id: concept-core-and-shell
+title: Core and shell
 category: structure
 :::
 ```
 
-## Small storage
+## Determinism by the seed
 
-Progress and preferences go through the wrapper of `@lernapps/tooling/storage` under the app's prefix, within the
-quota. When an app needs more, a second wrapper is added to this architecture.
+The core is deterministic by its seed: the same seed, route and keys give the same states. The seed comes from
+`?seed=<n>` (else a random one), so a round can be replayed at its address, and the build plays every playthrough
+twice to catch a core that is not deterministic.
 
 ```arc42
 :::concept
-id: concept-small-storage
-title: Small storage on the device
-category: privacy
+id: concept-determinism
+title: Determinism by the seed
+category: testing
 :::
 ```
 
-## No request before a click
+## Playthroughs
 
-Everything is bundled. Anything from another server, the tutor's assistant too, is reached only after the learner
-clicks for it.
+A playthrough is data: a seed, a route and steps of keys, each with the state (a part of it) or the announcement
+expected after them. The build plays it against the core without ticks, the end-to-end tests play the same keys in the
+browser, so behaviour is specified once and checked in both places. The core's property tests over fixed seeds from the
+decided sketch are not built yet.
 
 ```arc42
 :::concept
-id: concept-no-request-before-click
-title: No request before a click
-category: privacy
+id: concept-playthroughs
+title: Playthroughs as data
+category: testing
+:::
+```
+
+## Readable without JavaScript
+
+The start page is static HTML with no script, and the app page says with a `<noscript>` note and a link back that the
+app needs JavaScript; links, routes and the language switch are plain links. The end-to-end tests check both pages
+without JavaScript in every language.
+
+```arc42
+:::concept
+id: concept-readable-without-js
+title: Readable without JavaScript
+category: accessibility
+:::
+```
+
+## Languages
+
+Every page exists once per declared language, German at the root and others below `/<language>/`, and an app may
+declare only languages the runtime has texts for. Learner texts live in `src/messages` by language and reach the UI
+through the translator, never as strings in code.
+
+```arc42
+:::concept
+id: concept-languages
+title: Languages
+category: i18n
+:::
+```
+
+## Accessibility by default
+
+Pages meet WCAG 2.1 AA and work at 360 px by default; an app that cannot declares its limits in its entry, and only
+then would its findings become warnings (not built yet: they are errors for every app today). The UI announces changes
+through the polite live region and moves focus with the a11y helpers, keys on the page's own controls stay theirs, and
+`lernapps check` runs axe and the width check on the built pages.
+
+```arc42
+:::concept
+id: concept-accessibility
+title: Accessibility by default, deviations declared
+category: accessibility
+:::
+```
+
+## Component rules
+
+The app's components and the modules they import are checked on the SFC compiler's output at build and by lint
+rules: no network, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from Vue, the runtime, the
+storage, i18n and a11y helpers and `src/`, browser globals only once mounted. Fixing Vue makes these rules hold for
+every app.
+
+```arc42
+:::concept
+id: concept-component-rules
+title: Component rules
+category: security
+:::
+```
+
+## Device storage
+
+What an app remembers goes through the storage wrapper into `localStorage`, under the prefix `lernapps:<app>:`,
+because all apps share one origin; every access is wrapped, so blocked or full storage means the app remembers
+nothing and keeps working. The quota of 100 kB per app is decided, not built; an IndexedDB wrapper comes only when an
+app needs more.
+
+```arc42
+:::concept
+id: concept-device-storage
+title: Device storage
+category: persistence
+:::
+```
+
+## Hash routes
+
+Modes and levels are routes declared in `src/app.yaml`, reached as `app/#<id>` from anchor links on the start page and
+the app page. The shell starts the core with the route of the address (else the first) and again on every new route,
+so an entry's topics can point to a route and `entry-links-resolve` can check it.
+
+```arc42
+:::concept
+id: concept-hash-routes
+title: Hash routes
+category: navigation
+:::
+```
+
+## Size budget
+
+The app's own code, the modules of `src/` in the built chunks gzipped together, must stay within 100 kB or the build
+fails, so apps load fast on school devices. Vue, the runtime and bundled libraries are not counted today.
+
+OPEN: The decided sketch puts bundled libraries inside "a size budget for the whole app", while the build counts only
+the app's own code. Which holds?
+
+```arc42
+:::concept
+id: concept-size-budget
+title: Size budget
+category: performance
+:::
+```
+
+## Tutor
+
+Optional and not built for interactive apps. Whatever form it takes, nothing leaves the device before the learner's
+click; the explainer's form is a handoff of a prompt and static tutor files to the learner's own assistant.
+
+OPEN: Is the "client-side AI tutor" a handoff to the learner's own assistant (as in the explainer) or a model running
+in the browser?
+
+```arc42
+:::concept
+id: concept-tutor
+title: Tutor
+category: learning
+:::
+```
+
+## Low stimulation (advice)
+
+Advice, not a rule or check: the skill of the interactive archetype is to recommend no flashing, calm motion and sound
+off by default, and say why; that skill is not written yet. No building block implements it; a settings dialog (less
+motion, sound, pause) is not in scope now.
+
+```arc42
+:::concept
+id: concept-low-stimulation
+title: Low stimulation (advice)
+category: accessibility
 :::
 ```
