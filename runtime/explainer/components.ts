@@ -38,7 +38,7 @@ import type {
   PropType,
 } from "./content.ts";
 import { inspect } from "./markdown.ts";
-import { TASK_NUMBERS } from "./tasks.ts";
+import { distinctSeeds, MAX_TASKS, SEED_TRIES } from "./tasks.ts";
 
 type Sfc = typeof import("vue/compiler-sfc");
 type TypeResolveContext = Parameters<Sfc["resolveTypeElements"]>[0];
@@ -618,7 +618,7 @@ export function readComponents(root: string): {
           line(
             file,
             undefined,
-            `it emits answered, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)`,
+            `it emits answered, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component the seed of its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)`,
           ),
         );
       }
@@ -854,15 +854,18 @@ function aboutTextProblems(value: unknown, path: string, languages: readonly str
 
 /**
  * What an exercise component's logic says about itself, for each block: about (what the learner does, the answer's
- * format, what counts as right, the typical mistakes; texts in each of `languages`), and describe(task, props, lang)
- * for the tasks of the seeds 1 to `seeds` in each language, with the block's props in that language (`propsIn`): the
- * task and its solution, each restricted Markdown that is not empty. The description, or the problems (the first of describe).
+ * format, what counts as right, the typical mistakes; texts in each of `languages`), its task numbers (the seeds of
+ * its distinct tasks, generate(seed, props) compared as JSON with the props of the first language, up to `max` of
+ * `tries` seeds; distinctSeeds), and describe(task, props, lang) for the task of each number in each language, with
+ * the block's props in that language (`propsIn`): the task and its solution, each restricted Markdown that is not
+ * empty. The description, or the problems (the first of describe).
  */
 export function describedProblems(
   logic: ExerciseLogic,
   propsIn: (lang: string) => unknown,
   languages: readonly string[],
-  seeds = TASK_NUMBERS,
+  max = MAX_TASKS,
+  tries = SEED_TRIES,
 ): { description?: ComponentDescription; problems: string[] } {
   const problems: string[] = [];
   const about = logic.about;
@@ -893,11 +896,23 @@ export function describedProblems(
     problems.push("describe is no function; export function describe(task, props, lang) giving { task, solution }");
     return { problems };
   }
+  const first = propsIn(languages[0] ?? "de");
+  const seeds = distinctSeeds(
+    (seed) => {
+      try {
+        return JSON.stringify(logic.generate(seed, first));
+      } catch {
+        return undefined;
+      }
+    },
+    max,
+    tries,
+  );
   const tasks: Record<string, DescribedTask[]> = {};
   for (const lang of languages) {
     const props = propsIn(lang);
     const list: DescribedTask[] = [];
-    for (let seed = 1; seed <= seeds; seed++) {
+    for (const [index, seed] of seeds.entries()) {
       const call = `describe(task, props, "${lang}")`;
       let described: unknown;
       try {
@@ -926,12 +941,12 @@ export function describedProblems(
           return { problems };
         }
       }
-      list.push({ seed, task, solution });
+      list.push({ number: index + 1, seed, task, solution });
     }
     tasks[lang] = list;
   }
   if (problems.length > 0) return { problems };
-  return { description: { about: about as ComponentAbout, tasks }, problems };
+  return { description: { about: about as ComponentAbout, seeds, tasks }, problems };
 }
 
 /**

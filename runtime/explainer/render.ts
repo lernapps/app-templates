@@ -279,7 +279,7 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
       ? ""
       : [
           `<div class="explainer-described">`,
-          `<p class="explainer-task-number">${number(first.seed)}</p>`,
+          `<p class="explainer-task-number">${number(first.number)}</p>`,
           `<div class="explainer-task">${renderMarkdown(first.task, context.resolve)}</div>`,
           `<details class="explainer-solution"><summary>${plain(messages.solution)}</summary>${renderMarkdown(first.solution, context.resolve)}</details>`,
           `</div>`,
@@ -291,7 +291,10 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
   const attributes = [
     ...(use.id === undefined ? [] : [`id="${use.id}"`]),
     `data-component="${component.name}"`,
-    ...(component.exercise ? ["data-exercise"] : []),
+    // the seed of each task number, which the islands draw the task from
+    ...(component.exercise
+      ? [`data-exercise data-seeds="${JSON.stringify(context.descriptions.get(block)?.seeds ?? [1])}"`]
+      : []),
     ...(component.caption ? [`data-nojs="caption" data-caption="${plain(context.t("textDescription"))}"`] : []),
   ];
   return [

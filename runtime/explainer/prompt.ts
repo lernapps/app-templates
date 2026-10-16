@@ -8,7 +8,7 @@
 // before a click.
 import { inLanguage, type Site, type Text } from "./content.ts";
 import { contentPages, hiddenChapter } from "./routes.ts";
-import { TASK_NUMBERS } from "./tasks.ts";
+import { MAX_TASKS } from "./tasks.ts";
 import { TUTOR_FILE, tutorFileOf, tutorRules } from "./tutor.ts";
 
 /** The prompt's file at the root of each language tree: named as a page's tutor file, one folder up. */
@@ -98,7 +98,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     done: "Eine Seite ist abgehakt, wenn drei Aufgaben der Seite in der App richtig waren und die lernende Person eine davon erklären kann.",
     rulesTitle: "App-Regeln",
     readFirst:
-      "Lies zuerst {llms}: alle Seiten mit ihren Abschnitten und die Regeln. Die Tutor-Datei jeder Seite enthält ihre Übungen mit Aufgaben, Lösungen und typischen Fehlern, für Aufgaben mit Zufallszahlen die Nummern 1 bis {n}.",
+      "Lies zuerst {llms}: alle Seiten mit ihren Abschnitten und die Regeln. Die Tutor-Datei jeder Seite enthält ihre Übungen mit Aufgaben, Lösungen und typischen Fehlern, für Aufgaben mit Zufallszahlen alle ihre Nummern (höchstens {n}, jede eine andere Aufgabe).",
     appRules: "Regeln dieser App:",
     startTitle: "Start",
     start: [
@@ -139,7 +139,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     done: "A page is done when three of its tasks were right in the app and the learner can explain one of them.",
     rulesTitle: "Rules for the app",
     readFirst:
-      "First read {llms}: every page with its sections, and the rules. Each page's tutor file holds its exercises with tasks, solutions and typical mistakes, for tasks with random numbers the numbers 1 to {n}.",
+      "First read {llms}: every page with its sections, and the rules. Each page's tutor file holds its exercises with tasks, solutions and typical mistakes, for tasks with random numbers all their numbers (at most {n}, each a different task).",
     appRules: "Rules of this app:",
     startTitle: "Start",
     start: [
@@ -165,7 +165,7 @@ export function tutorPrompt(site: Site, lang: string): string {
       .replace("{app}", own(site.app.title))
       .replace("{intro}", own(site.app.intro))
       .replace("{llms}", `${BASE}llms.txt`)
-      .replace("{n}", String(TASK_NUMBERS));
+      .replace("{n}", String(MAX_TASKS));
   const lines = [`# ${words.title}: ${own(site.app.title)}`, "", `## 1. ${words.roleTitle}`, ""];
   lines.push(...words.role.map(fill), "", `## 2. ${words.approachTitle}`, "");
   lines.push(

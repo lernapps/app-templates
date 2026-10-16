@@ -39,9 +39,11 @@ import {
 } from "./components.ts";
 import type { Block, ComponentDescription, Site } from "./content.ts";
 import { ContentError, loadSite } from "./load.ts";
+import { dataOf, taskSeeds } from "./exercises.ts";
+import { MAX_TASKS } from "./tasks.ts";
 import { llmsTxt, renderSite, type Descriptions, type Islands, type RenderedPage } from "./render.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
-import { contentPages, routes } from "./routes.ts";
+import { allBlocks, contentPages, routes } from "./routes.ts";
 import { anchorsOf, linkProblems, tutorFile, tutorFileOf } from "./tutor.ts";
 import { PROMPT_FILE, tutorPrompt, withBase } from "./prompt.ts";
 
@@ -179,7 +181,8 @@ async function renderComponents(
     for (const lang of site.app.languages) {
       const app = createSSRApp(definition, {
         ...propsIn(block.props, component, lang),
-        ...(component.exercise ? { seed: 1 } : {}),
+        // the task of number 1, as the islands hydrate it
+        ...(component.exercise ? { seed: descriptions.get(block)?.seeds[0] ?? 1 } : {}),
       });
       const warnings = new Set<string>();
       app.config.warnHandler = (message) => warnings.add(message);
@@ -296,6 +299,25 @@ export function explainer(): Plugin[] {
           );
           this.emitFile({ type: "asset", fileName: `${languageRoot(lang)}${file}`, source: text });
         }
+      }
+      // the exercises with fewer distinct tasks than the numbers allow: noted, no problem
+      const few = [
+        ...contentPages(content).flatMap((page) =>
+          [...allBlocks(page.blocks)].flatMap((block) =>
+            block.type === "generated"
+              ? [[block.id, taskSeeds(block, dataOf(block, content.data)).length] as const]
+              : [],
+          ),
+        ),
+        ...content.components.flatMap((use) => {
+          const seeds = descriptions.get(use.block)?.seeds;
+          return seeds === undefined || use.id === undefined ? [] : [[use.id, seeds.length] as const];
+        }),
+      ].filter(([, count]) => count < MAX_TASKS);
+      if (few.length > 0) {
+        this.info(
+          `lernapps explainer: ${few.length} exercise${few.length === 1 ? " has" : "s have"} fewer than ${MAX_TASKS} distinct tasks, numbered 1 to N: ${few.map(([id, count]) => `${id} (${count})`).join(", ")}`,
+        );
       }
       // each component's own code: its chunk and the chunks of its folder that it imports, gzipped
       const chunks = Object.values(bundle).flatMap((output) => (output.type === "chunk" ? [output] : []));

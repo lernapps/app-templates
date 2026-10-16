@@ -41,21 +41,24 @@ with which a creator and their AI assistant build a learning app.
   `onMounted`, and 20 kB gzip of the component's own code. Once it runs, it replaces its `nojs` text, or keeps it
   folded as a text description under it with `defineOptions({ nojs: "caption" })`. A component that emits
   `answered { correct, reason? }` is an exercise (`reason`: what went wrong in a wrong answer, shown with the
-  feedback): it declares the prop `seed: number`, its task number, which the explainer gives it with "Aufgabe Nr."
+  feedback): it declares the prop `seed: number`, the seed of its task number, which the explainer gives it with "Aufgabe Nr."
   and "Neue Aufgabe" and keeps in the address (`?seed=<n>#<id>`, the id of its block or its name in kebab case), and
   its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
   `wrong(task)`, which the build tests over 50 fixed seeds per block, `describe(task, props, lang)`, the task and its
   solution as a learner reads them (`{ task, solution }`, restricted Markdown), and `about`, what the exercise is for a
-  tutor (`{ task, answer, correct, mistakes }`). The build checks `describe` for the task numbers 1 to 20 in every
+  tutor (`{ task, answer, correct, mistakes }`). The build checks `describe` for every task number in every
   language and writes the no-JS text of an exercise component from it: the task of number 1 with its solution folded,
   so it needs no `nojs` ([`components.ts`](runtime/explainer/components.ts)).
-- Every seeded exercise (generated, exercise component) shows its task number, "Aufgabe Nr. <n>": its seed. The live
-  exercises draw numbers from 1 to `TASK_NUMBERS` (20, [`tasks.ts`](runtime/explainer/tasks.ts)), "Neue Aufgabe"
-  moves to the next and writes it into the address, and `?seed=<n>#<id>` opens task n.
+- Every seeded exercise (generated, exercise component) numbers its distinct tasks: the build walks the seeds 1, 2,
+  3, … through its generator, keeps each seed whose task differs from all before, up to 67, and the page shows
+  "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:
+  `?seed=<n>#<id>` opens task number n (a number above N wraps around), "Neue Aufgabe" moves to the next and writes it
+  into the address; the build ships each exercise's table of seeds. An exercise with fewer than 67 distinct tasks is
+  noted in the build output.
 - For a KI tutor, an assistant the learner brings and controls, the explainer writes static files only (a chat
   assistant that fetches a URL runs no JavaScript): per language tree a tutor file next to every page
   (`<chapter>/<page>/tutor.md`: its sections, every exercise with task, answer format, solution, hint and typical
-  mistakes, and for a seeded exercise the tasks of the numbers 1 to 20 with their solutions and links
+  mistakes, and for a seeded exercise all its task numbers with their tasks and solutions and links
   `./?seed=<n>#<id>`), and in `llms.txt` generic rules for a tutor, the app's own (`tutor.rules` in `app.yaml`) and
   links to the tutor files, and `tutor.md` at the root, a ready tutor prompt (role, approach, the pages as a checklist,
   the rules); the build checks every link and anchor of these files. The start page offers "Mit einem KI-Tutor
