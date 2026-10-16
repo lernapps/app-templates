@@ -131,8 +131,7 @@ source: Decided sketch, step 12, section 4; @lernapps/tooling archetypes/shared/
 ## Small Storage with a Quota
 
 All apps share the 5 MiB of `localStorage` of the one origin lernapps.net, so each app may keep at most 100 kB and
-`save` refuses beyond it. Larger data needs an IndexedDB wrapper, which is built only when an app needs it and then
-added to the architecture. The quota is decided but not built yet: the wrapper has no limit today.
+`save` refuses beyond it. The quota is decided but not built yet: the wrapper has no limit today.
 
 ```arc42
 :::constraint
@@ -186,24 +185,6 @@ id: con-bundled-licences
 title: Bundled libraries under accepted licences
 category: organizational
 source: Decided sketch, step 12, section 2; ORGANIZATION.md "License"; lernapps check rule dependency-licence
-:::
-```
-
-## Size Budget
-
-The app's own code (the modules of `src/` in the built chunks, gzipped together) must stay within 100 kB, or the
-build fails; Vue, the runtime and bundled libraries are not counted today. This keeps apps fast on school devices and
-pushes large content into compact data.
-
-OPEN: The decided sketch puts bundled libraries inside "a size budget for the whole app", while the build counts only
-the app's own code. Which holds: should Vue, the runtime and bundled libraries count against a budget too?
-
-```arc42
-:::constraint
-id: con-size-budget
-title: Size budget of 100 kB gzip for the app's own code
-category: technical
-source: runtime/interactive/plugin.ts SIZE_BUDGET; decided sketch, step 12, section 2
 :::
 ```
 
