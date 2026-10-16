@@ -685,3 +685,104 @@ figcaption p {
   outline: 3px solid var(--explainer-text);
   outline-offset: 2px;
 }
+
+/* Usability: sections and exercises must be told apart at a glance. */
+
+/* A section starts with a rule and room; a subsection is lighter */
+.explainer > section.explainer-section,
+.explainer-main > section.explainer-section {
+  margin-top: 2.5rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid var(--explainer-border);
+}
+
+.explainer section.explainer-section > h2 {
+  margin: 0.75rem 0 0.75rem;
+  font-size: 1.5rem;
+}
+
+.explainer section.explainer-section section.explainer-section {
+  margin-top: 1.75rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.explainer section.explainer-section section.explainer-section > h3 {
+  padding-left: 0.6rem;
+  border-left: 4px solid var(--explainer-accent);
+  font-size: 1.2rem;
+}
+
+/* An exercise is a card of its own with a label on top, apart from the explanation around it */
+.explainer-exercise {
+  padding: 0 1rem 1rem;
+  border: 2px solid var(--explainer-accent);
+  border-radius: 0.75rem;
+  background: var(--explainer-background);
+}
+
+.explainer-exercise-label {
+  margin: 0 -1rem 1rem;
+  padding: 0.4rem 1rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: var(--explainer-accent);
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.explainer-exercise-label::before {
+  content: "✎ ";
+}
+
+/* a long task text wraps inside its frame instead of over its border */
+.explainer-exercise legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.explainer-exercise legend + * {
+  clear: both;
+}
+
+/* The solution is the part of an exercise one looks for: its own colour, a label that says what is behind it */
+.explainer-exercise details.explainer-solution {
+  margin: 0.75rem 0;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--explainer-right);
+  border-left-width: 5px;
+  background: var(--explainer-right-background);
+  color: var(--explainer-right);
+}
+
+.explainer-exercise details.explainer-solution > summary::before {
+  content: "✔ ";
+}
+
+.explainer-exercise details.explainer-solution[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.explainer-exercise details.explainer-solution p,
+.explainer-exercise details.explainer-solution li {
+  color: var(--explainer-text);
+}
+
+/* the hint is lighter than the solution */
+.explainer-exercise details.explainer-hint {
+  border-style: dashed;
+}
+
+.explainer-worked-task {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--explainer-border);
+}
+
+.explainer-worked-task:last-child {
+  border-bottom: 0;
+}
