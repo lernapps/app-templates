@@ -47,6 +47,8 @@ import {
 import { htmlTag, inspect } from "./markdown.ts";
 import { MESSAGES } from "./messages.ts";
 import { allBlocks } from "./routes.ts";
+import { RESERVED_PARAMS } from "./tasks.ts";
+import { appName } from "../shared/appname.ts";
 import { languageListProblems, textLanguages } from "../shared/languages.ts";
 
 export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/explainer.v1.schema.json";
@@ -625,7 +627,7 @@ function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: P
       "nojs is missing; a vue-component that is no exercise says in nojs, for readers without JavaScript, what it shows, and gives its content (vue-component-nojs)",
     );
   }
-  // the anchor of an exercise component, which its task's address names (?seed=<n>#<id>): its id, or its name
+  // the anchor of an exercise component, which its task's address names (?<id>=<n>): its id, or its name
   let id = block.id;
   if (id === undefined && component.exercise) {
     const base = kebab(component.name);
@@ -678,7 +680,13 @@ const kebab = (name: string): string => name.replace(/(?<=[a-z0-9])(?=[A-Z])/g, 
 
 /** An exercise's id is an anchor of its page: once on the page. */
 function checkExerciseId(check: PageCheck, id: string, at: Path): void {
-  if (check.exercises.has(id)) {
+  if (RESERVED_PARAMS.includes(id)) {
+    check.problems.at(
+      check.yaml,
+      [...at, "id"],
+      `${id} is a parameter of the page's address (${RESERVED_PARAMS.join(", ")}), and the address holds the task number of each exercise under its id; give the exercise another id`,
+    );
+  } else if (check.exercises.has(id)) {
     check.problems.at(check.yaml, [...at, "id"], `${id} is the id of another exercise on this page; give each its own`);
   } else check.exercises.set(id, at);
 }
@@ -1093,7 +1101,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   if (problems.lines.length > 0) return { problems: problems.lines };
   const data: Record<string, DataRecord[]> = {};
   for (const [id, yaml] of dataFiles) data[id] = yaml.value as DataRecord[];
-  return { site: { app, chapters, data, images, components: uses }, problems: [] };
+  return { site: { app, chapters, data, images, components: uses, storage: appName(root, "explainer") }, problems: [] };
 }
 
 /**

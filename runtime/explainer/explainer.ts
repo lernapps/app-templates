@@ -5,20 +5,23 @@
 // answer or "Lösung zeigen" (startQuestion of the quiz runtime with retry). A question of one of the quiz's types gets
 // the quiz's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
 // shows the same after the answer. A generated exercise gets a live task: from the seed in the address when the
-// address names its task number (?seed=<n>#<exercise>), else from a random one; its seed from the exercise's table
+// address names its task number (?<exercise>=<n>), else from a random one; its seed from the exercise's table
 // of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the quiz's controls, checker and feedback through its
-// comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number and writes it
-// into the address. Its worked tasks, with their solutions, show below the live task once the learner has solved it or
-// asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
+// comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
+// always holds the task number of every exercise of the page. Its worked tasks, with their solutions, show below the
+// live task once the learner has solved it or asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
 // which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
-// with it on a click. Nothing is stored.
+// with it on a click (a page's button also gives it the tasks of the page's address); the learner's chosen way to the
+// tutor is the only thing kept on the device.
 import { moveFocus } from "@lernapps/tooling/a11y";
+import { createStorage } from "@lernapps/tooling/storage";
 import { startQuestion } from "../quiz/engine.ts";
 import { renderQuestion } from "../quiz/render.ts";
 import { questionId } from "../quiz/quiz.ts";
 import type { ExerciseData } from "./exercises.ts";
 import { diagnose, figureOf, generate, hintOf, questionFor, stepsOf, taskText } from "./generated.ts";
 import { message } from "./messages.ts";
+import { pageTutorText } from "./tutorpage.ts";
 import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
 
 const escape = (text: string) =>
@@ -39,6 +42,8 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   const count = Math.max(seeds.length, 1);
   const from = numberFromAddress(location.href, spec.id);
   let number = from === undefined ? randomTaskNumber(count) : taskNumber(from, count);
+  // the address always names the task shown: it is the link to share
+  history.replaceState(history.state, "", addressOf(location.href, spec.id, number));
 
   const show = (focus: boolean) => {
     const task = generate(spec, seeds[number - 1] ?? number, data.data);
@@ -118,15 +123,25 @@ function startBackToTutor(root: Document, main: HTMLElement): void {
   main.prepend(box);
 }
 
-/** What the start page's tutor section gives the client module (render.ts, prompt.ts). */
+/** What the tutor section of a page gives the client module (render.ts, prompt.ts). */
 interface TutorData {
   prompt: string;
   short: string;
   base: string;
   max: number;
+  storage: string;
+  /** The page's tutor file, relative to the page; none on the start page. */
+  file?: string;
+  ways: { name: string; url: string }[];
+  go: string;
+  copy: string;
   copied: string;
   copiedShort: string;
   failed: string;
+  pageHeading: string;
+  pageNow: string;
+  pageFile: string;
+  shortNote: string;
 }
 
 /** Whether `text` is now on the clipboard. */
@@ -139,10 +154,19 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
+/** The key the chosen way to the tutor is kept under on the device: an assistant's name, or COPY. */
+const WAY_KEY = "tutor-way";
+const COPY = "copy";
+const isText = (value: unknown): value is string => typeof value === "string";
+
 /**
- * "Mit einem KI-Tutor lernen" on the start page: the button copies the prompt with the app's addresses in its links;
- * a provider link gets the prompt in its address on the click, or, when that address would be too long, a short prompt
- * that points to tutor.md, and the whole prompt is copied as well. Nothing goes over the network but the click's link.
+ * "Mit einem KI-Tutor lernen": one button with a select beside it. The select holds the assistants of the app and
+ * "Prompt kopieren"; the first assistant is the default, and a way the learner picks is kept on the device
+ * (@lernapps/tooling/storage) and is the default from then on. The button does the chosen way: it opens the assistant
+ * with the prompt in its address, or, when that address would be too long, with a short prompt that points to the tutor
+ * files, and the whole prompt is copied as well; or it only copies the prompt. On a page the prompt gets the page
+ * and the tasks its address names (tutorpage.ts). Nothing goes over the network but the click's own page, the page's
+ * tutor file (the app's own static file) and the assistant that opens.
  */
 function startTutor(root: Document): void {
   const section = root.querySelector<HTMLElement>(".explainer-tutor");
@@ -153,33 +177,86 @@ function startTutor(root: Document): void {
   const say = (text: string) => {
     if (status) status.textContent = text;
   };
+  const way = section.querySelector<HTMLElement>(".explainer-tutor-way");
+  const go = section.querySelector<HTMLButtonElement>(".explainer-tutor-go");
+  const select = section.querySelector<HTMLSelectElement>(".explainer-tutor-select");
+  if (!way || !go || !select) return;
+  const storage = createStorage(data.storage);
+  const stored = storage.load(WAY_KEY, isText);
+  const names = [...data.ways.map((provider) => provider.name), COPY];
+  select.selectedIndex = stored !== undefined && names.includes(stored) ? names.indexOf(stored) : 0;
+  const chosen = () => data.ways[select.selectedIndex];
+  const label = () => {
+    const provider = chosen();
+    go.textContent = provider === undefined ? data.copy : data.go.replace("{name}", provider.name);
+  };
+  label();
+  select.addEventListener("change", () => {
+    storage.save(WAY_KEY, names[select.selectedIndex] ?? COPY);
+    label();
+  });
+  way.hidden = false;
+  const plain = section.querySelector<HTMLElement>(".explainer-tutor-plain");
+  if (plain) plain.hidden = true;
+
   // the start page is the root of its language tree
-  const base = new URL(".", root.location.href).href;
-  const full = data.prompt.split(data.base).join(base);
-  const short = data.short.split(data.base).join(base);
-  const button = section.querySelector<HTMLButtonElement>(".explainer-tutor-copy");
-  if (button) {
-    button.hidden = false;
-    button.addEventListener("click", () => {
-      void copyText(full).then((done) => say(done ? data.copied : data.failed));
-    });
-  }
-  for (const link of section.querySelectorAll<HTMLAnchorElement>(".explainer-tutor-provider")) {
-    link.addEventListener("click", () => {
-      const template = link.dataset["url"] ?? link.href;
-      const withPrompt = (prompt: string) => template.split("{prompt}").join(encodeURIComponent(prompt));
-      if (!template.includes("{prompt}")) {
-        void copyText(full).then((done) => say(done ? data.copied : data.failed));
+  const tree = new URL(".", root.location.href).href;
+  const resolve = (text: string) => text.split(data.base).join(tree);
+  /** The whole prompt and the short one, with the page and its tasks when the section is on a page. */
+  const build = async (): Promise<{ full: string; short: string }> => {
+    const full = resolve(data.prompt);
+    const short = resolve(data.short);
+    if (data.file === undefined) return { full, short: `${short}\n${data.shortNote}` };
+    const href = root.location.href;
+    const file = new URL(data.file, href).href;
+    let text: string | undefined;
+    try {
+      const response = await fetch(file);
+      if (response.ok) text = await response.text();
+    } catch {
+      // the page's tutor file is not reachable: the prompt names it instead
+    }
+    const now = `${data.pageNow} ${href}`;
+    const page = [
+      "",
+      `## ${data.pageHeading}`,
+      "",
+      now,
+      "",
+      text === undefined ? `${data.pageFile} ${file}` : pageTutorText(text, href),
+    ];
+    return {
+      full: `${full}${page.join("\n")}\n`,
+      short: [short, now, `${data.pageFile} ${file}`, data.shortNote].join("\n"),
+    };
+  };
+  go.addEventListener("click", () => {
+    const provider = chosen();
+    const template = provider?.url;
+    // the window opens at the click, which a browser allows; the address follows once the prompt is built
+    const opened = template === undefined ? null : root.defaultView?.open("", "_blank");
+    if (opened) opened.opener = null;
+    void build().then(async ({ full, short }) => {
+      const done = (copied: boolean, text: string) => say(copied ? text : data.failed);
+      const withPrompt = (prompt: string) => (template ?? "").split("{prompt}").join(encodeURIComponent(prompt));
+      if (template === undefined || !template.includes("{prompt}")) {
+        done(await copyText(full), data.copied);
+        if (template !== undefined) {
+          if (opened) opened.location.href = template;
+          else root.defaultView?.open(template, "_blank", "noopener");
+        }
         return;
       }
       let address = withPrompt(full);
       if (address.length > data.max) {
+        // the assistant gets the short prompt; the whole one is on the clipboard for the learner to paste
         address = withPrompt(short);
-        void copyText(full).then((done) => say(done ? data.copiedShort : data.failed));
-      }
-      link.href = address;
+        done(await copyText(full), data.copiedShort);
+      } else say("");
+      if (opened) opened.location.href = address;
+      else root.defaultView?.open(address, "_blank", "noopener");
     });
-  }
+  });
 }
 
 /** Starts the explainer on the page. */
