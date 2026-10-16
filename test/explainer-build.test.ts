@@ -97,7 +97,7 @@ describe("one build writes every page", () => {
           // an exercise component: its anchor, its task number with "Neue Aufgabe" for JavaScript, and without it
           // the task of number 1 as its describe states it, with the solution folded
           expect(html).toContain(
-            '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise>',
+            '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise data-seeds="[1,2,5,7,10]">',
           );
           expect(html).toMatch(
             /<p class="explainer-task-controls" hidden><span class="explainer-task-number"[^>]*>(Aufgabe Nr\.|Task no\.) 1<\/span>/,
