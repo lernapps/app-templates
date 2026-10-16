@@ -1,0 +1,9 @@
+.gitignore
+.npmrc
+e2e
+index.html
+package.json
+playwright.config.ts
+tsconfig.json
+vite.config.ts
+docs
