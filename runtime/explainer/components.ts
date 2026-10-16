@@ -15,7 +15,9 @@
 // text description under it, when it declares defineOptions({ nojs: "caption" }); by default it replaces it.
 //
 // The interactive archetype runs the same code checks on its components (codeProblems, with sourceScope): they may
-// import any of the app's own files in src/ instead of their own folder only.
+// import any of the app's own files in src/ instead of their own folder only, and the libraries the app lists in the
+// dependencies of its package.json (a bare import of such a package, bundled by the build; their licences are
+// lernapps check's dependency-licence). An import from a URL stays forbidden.
 //
 // The props of a block are checked against the component's prop types (defineProps<…>()), which the SFC compiler
 // resolves, as Vue itself does for its runtime props, rather than vue-component-meta, which needs TypeScript's
@@ -154,14 +156,22 @@ function imports(program: Program): { source: string; node: Node }[] {
   return found;
 }
 
+/** The package a bare import specifier names: "yaml" for "yaml/util", "@scope/name" for "@scope/name/sub". */
+const packageOf = (source: string): string =>
+  source
+    .split("/")
+    .slice(0, source.startsWith("@") ? 2 : 1)
+    .join("/");
+
 /**
  * What the code of `program` may not do, and its imports of the app's own modules (`isLocal`); `own` names these for
- * a message.
+ * a message, `packages` are the libraries it may import besides.
  */
 function findings(
   program: Program,
   isLocal: (source: string) => boolean,
   own: string,
+  packages: readonly string[] = [],
 ): { found: Finding[]; locals: { source: string; node: Node }[] } {
   const found: Finding[] = [];
   const locals: { source: string; node: Node }[] = [];
@@ -176,7 +186,8 @@ function findings(
       source !== "vue" &&
       source !== "@lernapps/app-templates" &&
       !source.startsWith("@lernapps/app-templates/") &&
-      !TOOLING.includes(source)
+      !TOOLING.includes(source) &&
+      !packages.includes(packageOf(source))
     ) {
       found.push({
         node,
@@ -281,10 +292,12 @@ function placed(file: string, found: readonly Finding[], place: (node: Node) => 
 /**
  * Which imports of a component's code are the app's own modules: `resolve` gives, for an import of `source` in `file`
  * (both from the app's root), the module it names, or the problem when it names none a component may import, or
- * undefined when the import is not one of the app's own. `own` names the app's own modules for a message.
+ * undefined when the import is not one of the app's own. `own` names the app's own modules (and the packages) for a
+ * message; `packages` are the libraries a component may import besides, by their package names.
  */
 export interface CodeScope {
   own: string;
+  packages?: readonly string[];
   resolve(file: string, source: string): { file: string } | { problem: string } | undefined;
 }
 
@@ -299,9 +312,21 @@ const componentsScope = (root: string): CodeScope => ({
   },
 });
 
-/** The scope of an app whose components may import any of its files in src/ (the interactive archetype). */
+/** The libraries in the dependencies of the app's package.json, by their package names. */
+function dependencies(root: string): string[] {
+  const file = join(root, "package.json");
+  if (!existsSync(file)) return [];
+  const manifest = JSON.parse(readFileSync(file, "utf8")) as { dependencies?: Record<string, string> };
+  return Object.keys(manifest.dependencies ?? {});
+}
+
+/**
+ * The scope of an app whose components may import any of its files in src/ and the libraries in the dependencies of
+ * its package.json (the interactive archetype).
+ */
 export const sourceScope = (root: string): CodeScope => ({
-  own: "the app's own files in src/",
+  own: "the app's own files in src/ or a library in the dependencies of package.json",
+  packages: dependencies(root),
   resolve(file, source) {
     if (!source.startsWith("./") && !source.startsWith("../")) return undefined;
     const target = posix.normalize(posix.join(dirname(file), source));
@@ -349,7 +374,12 @@ function codeChecker(root: string, scope: CodeScope, problems: string[]) {
   const { SourceMapConsumer } = require("source-map-js") as typeof import("source-map-js");
   const checked = new Set<string>();
   const check = (file: string, program: Program): Finding[] => {
-    const { found, locals } = findings(program, (source) => scope.resolve(file, source) !== undefined, scope.own);
+    const { found, locals } = findings(
+      program,
+      (source) => scope.resolve(file, source) !== undefined,
+      scope.own,
+      scope.packages,
+    );
     for (const { source, node } of locals) {
       const target = scope.resolve(file, source);
       if (target === undefined) continue;

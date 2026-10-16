@@ -1,6 +1,8 @@
 // The game's logic: a round of letters from the lesson of the route, drawn from the seed; each letter typed right
-// scores, a wrong key or a letter not typed in time is a miss. Pure TypeScript without DOM; the runtime keeps the state
-// and calls start, step and tick (@lernapps/app-templates/interactive).
+// scores, a wrong key or a letter not typed in time is a miss; after the round, Enter or the action "again" (the button
+// of the component) starts the next. Pure TypeScript without DOM; the runtime keeps the state and calls start, step
+// and tick (@lernapps/app-templates/interactive).
+import type { Input } from "@lernapps/app-templates/interactive";
 import lessons from "../data/lessons.json" with { type: "json" };
 
 /** A lesson of src/data/lessons.json: the letters it draws from, how many a round has, the seconds for each. */
@@ -78,10 +80,15 @@ function advance(state: State, change: Partial<State>): State {
   };
 }
 
-export function step(state: State, key: string): State {
-  if (state.done) return key === "Enter" ? start(state.seed + 1, state.route) : state;
-  // Shift, Tab and the other named keys are no letters
-  if (key.length !== 1) return state;
+/** Whether `input` asks for the next round: Enter, or the component's action "again". */
+const again = (input: Input): boolean =>
+  (input.kind === "key" && input.key === "Enter") || (input.kind === "action" && input.name === "again");
+
+export function step(state: State, input: Input): State {
+  if (state.done) return again(input) ? start(state.seed + 1, state.route) : state;
+  // only a typed letter counts: no Shift, Tab or other named key, no action
+  if (input.kind !== "key" || input.key.length !== 1) return state;
+  const key = input.key;
   if (key.toLowerCase() === state.letters[state.index]) return advance(state, { score: state.score + 1, last: "hit" });
   return { ...state, misses: state.misses + 1, last: "miss" };
 }

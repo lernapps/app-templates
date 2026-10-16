@@ -1,15 +1,16 @@
 <script setup lang="ts">
 // The game: the letter to type, the time left for it, the score; after the round the result and a button for the
 // next round. It announces every change for screen readers. The runtime gives it the core's state and steps every
-// key typed on the page; the button stands for the key Enter.
+// key typed on the page; the button emits the action "again" as input.
 import { computed, watch } from "vue";
 import { announce } from "@lernapps/tooling/a11y";
 import { translator } from "@lernapps/tooling/i18n";
+import type { Input } from "@lernapps/app-templates/interactive";
 import { lessonOf, type State } from "../core/index.ts";
 import de from "../messages/de.json";
 
 const props = defineProps<{ state: State; lang: string }>();
-const emit = defineEmits<{ input: [key: string] }>();
+const emit = defineEmits<{ input: [input: Input] }>();
 const t = translator(de);
 
 const letter = computed(() => props.state.letters[props.state.index] ?? "");
@@ -35,7 +36,9 @@ watch(
     </template>
     <template v-else>
       <p class="result">{{ t("done", { score: state.score, total }) }}</p>
-      <button type="button" class="again" @click="emit('input', 'Enter')">{{ t("again") }}</button>
+      <button type="button" class="again" @click="emit('input', { kind: 'action', name: 'again' })">
+        {{ t("again") }}
+      </button>
     </template>
     <p class="score">{{ t("score", { score: state.score, total }) }} · {{ t("misses", { misses: state.misses }) }}</p>
   </section>

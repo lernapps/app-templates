@@ -29,3 +29,11 @@ export function edit(root: string, file: string, from: string, to: string): void
   if (!text.includes(from)) throw new Error(`${file} has no ${JSON.stringify(from)}`);
   writeFileSync(path, text.replace(from, to));
 }
+
+/** Gives the app a package.json whose dependencies list yaml, a library in this repo's node_modules. */
+export function withDependency(root: string): void {
+  writeFileSync(
+    join(root, "package.json"),
+    `${JSON.stringify({ name: "app", private: true, type: "module", dependencies: { yaml: "2.9.1" } }, null, 2)}\n`,
+  );
+}
