@@ -13,8 +13,6 @@ The app sends nothing anywhere and requests nothing from another server before a
 learner's device. The privacy notice of lernapps.net promises this for every app.
 
 ```arc42
-:::ignore W006 two high-priority goals is the owner's decision (2026-10-16): privacy and checkable high
-:::
 :::quality-goal
 id: qg-privacy
 title: Privacy

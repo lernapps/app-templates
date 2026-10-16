@@ -8,13 +8,17 @@ An explainer is text-heavy, so every page is complete without JavaScript: text, 
 every exercise with its solution and every component's `nojs` text (`dec-explainer-complete-without-js`); realised by
 the page rendering and checked by `lernapps check` and the explainer's end-to-end tests.
 
-OPEN: Confirm the priority (medium is a proposal).
+High priority, because the archetype is text-heavy (owner, 2026-10-16).
 
 ```arc42
+:::ignore W014 the extension's goal follows the generic goals in the combined chapter; the generic part cannot hold it
+:::
+:::ignore H010 the generic solution strategy cannot name an archetype's goal; the explainer's rendering realises it, see the decisions that address it
+:::
 :::quality-goal
 id: qg-explainer-readable-without-js
 title: Readable without JavaScript (explainer)
-priority: medium
+priority: high
 :::
 ```
 

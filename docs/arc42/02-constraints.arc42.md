@@ -210,7 +210,8 @@ source: ORGANIZATION.md "Every page, in every repo"; decided sketch, step 12, se
 
 The architecture lives in the arc42 DSL: this generic part at the root of `lernapps/app-templates` and one extension
 per archetype in its template folder. An app gets both in its `docs/arc42/`; only an interactive app, whose code is
-free, adds a part of its own and keeps it current with each increment. `arc42 diff --staged --strict` before a commit
+free, adds a part of its own; the creator's assistant updates and validates it with every change, without a
+checkpoint with the creator. `arc42 diff --staged --strict` before a commit
 and `arc42 validate` in `lernapps check` are decided but not wired into the app's hooks and check yet; the copying of
 the architecture into an app is not built yet either. In `lernapps/app-templates` itself, `scripts/arc42.ts` validates
 the generic part with each extension strictly, in the pre-commit hook and in CI.

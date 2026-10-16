@@ -1,7 +1,7 @@
 # Runtime View
 
-Five scenarios every app shares: opening its pages, learning in the browser, an error path of the device storage,
-building with the checks, and the end-to-end tests before a push and in CI. Each extension adds its archetype's own
+Six scenarios every app shares: opening its pages, learning in the browser, an error path of the device storage,
+the assistant working with the skills, building with the checks, and the end-to-end tests before a push and in CI. Each extension adds its archetype's own
 scenarios (the explainer's include asking the tutor).
 
 ## Opening the pages
@@ -48,6 +48,21 @@ id: scenario-device-storage
 title: Remembering on the device, storage blocked or full
 trigger: The archetype's code loads or saves a value
 involves: bb-shell, bb-tooling
+:::
+```
+
+## Working with the skills
+
+The creator's assistant loads the skills the app commits under `.agents/skills/` (`lernapps-app`, the archetype's
+skill, the content skills and the app's own `app-content`), writes what the archetype lets it write and runs
+`lernapps check`. `lernapps update` replaces the `lernapps-*` skills with those of the tooling.
+
+```arc42
+:::runtime-scenario
+id: scenario-skills
+title: Working with the skills
+trigger: The creator's assistant starts work on the app
+involves: bb-skills, bb-tooling
 :::
 ```
 

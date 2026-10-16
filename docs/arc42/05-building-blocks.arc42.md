@@ -1,7 +1,7 @@
 # Building Blocks
 
-The generic part has two roots that every app shares, whatever its archetype: the shared runtime of
-`@lernapps/app-templates` and the tooling helpers of `@lernapps/tooling`. Each archetype's extension adds the rest of
+The generic part has three roots that every app shares, whatever its archetype: the shared runtime of
+`@lernapps/app-templates`, the tooling helpers of `@lernapps/tooling` and the skills the app commits. Each archetype's extension adds the rest of
 level 1 (`quiz/docs/arc42/`, `explainer/docs/arc42/`, `interactive/docs/arc42/`): its runtime `bb-archetype-runtime`
 with the parts `bb-build`, `bb-validation`, `bb-render`, `bb-shell`, `bb-e2e` and `bb-runtime-texts`, which every
 extension defines under these ids, and the parts the creator writes, one of which provides `if-archetype-content`.
@@ -27,6 +27,7 @@ notation: mermaid
 flowchart TB
     bb-runtime["Shared runtime (runtime/shared)"]
     bb-tooling["Tooling helpers (@lernapps/tooling)"]
+    bb-skills["Skills (.agents/skills)"]
 ```
 
 ## Shared runtime
@@ -71,8 +72,8 @@ German, no request before a click, storage through the wrapper, the Vue componen
 accessible, usable at 360 px, no request before a click, no tracking, links and entry links resolve, and the
 end-to-end tests before a push); the Playwright configuration (`archetypes/shared/playwright.ts`: Chromium at desktop
 width and 360 px on a free port); the small storage (`archetypes/shared/storage.ts`); the announcer and focus helpers
-(`archetypes/shared/a11y.ts`); i18n (`archetypes/shared/i18n.ts`); and the skills (`skills/`: `lernapps-app` for every
-app and one per archetype, which its extension names). A large storage (IndexedDB) is left out (`dec-small-storage`).
+(`archetypes/shared/a11y.ts`); and i18n (`archetypes/shared/i18n.ts`). The skills are a block of their own
+(`bb-skills`), which the tooling's `skills/` folder is the source of. A large storage (IndexedDB) is left out (`dec-small-storage`).
 
 ```arc42
 :::ignore H014 @lernapps/tooling is installed in node_modules (node_modules/@lernapps/tooling), which git does not track, and the validator resolves paths only among tracked files (E011)
@@ -114,22 +115,6 @@ id: if-lernapps-check
 title: lernapps check command
 provider: bb-tooling
 protocol: CLI, validation report
-:::
-```
-
-### Skills
-
-The creator's assistant loads `lernapps-app` when it starts work on an app, and its archetype's skill before it writes
-what the archetype lets it write; advice no check can make lives there (`dec-skill-interface`).
-
-```arc42
-:::ignore H014 the interface is in @lernapps/tooling, installed in the untracked node_modules (skills/)
-:::
-:::interface
-id: if-skills
-title: Skill texts (lernapps-app and the archetype's skill)
-provider: bb-tooling
-protocol: Markdown (SKILL.md) loaded by the assistant
 :::
 ```
 
@@ -177,5 +162,42 @@ id: if-translator
 title: translator(messages)
 provider: bb-tooling
 protocol: TypeScript import, @lernapps/tooling/i18n
+:::
+```
+
+## Skills
+
+Built in the tooling, one folder per skill. An app commits its skills under `.agents/skills/`: `lernapps-app` for
+every app; the archetype's skill (`lernapps-quiz`, `lernapps-explainer`, or `lernapps-interactive` once its
+tooling pull request is merged); the content
+skills (`lernapps-content-research`, `lernapps-exercise-patterns`, `lernapps-content-growth`); `lernapps-listing`;
+and the app's own content guide `app-content`. `lernapps update` installs and replaces the `lernapps-*` skills from
+the tooling's `skills/` folder and leaves the app's own alone. They hold the guidance no check can make
+(`dec-skill-interface`).
+
+```arc42
+:::ignore H014 the skills are committed in each app under .agents/skills; this repository has none
+:::
+:::building-block
+id: bb-skills
+title: Skills
+technology: Markdown skills (SKILL.md), from the skills/ folder of @lernapps/tooling
+implements: concept-low-stimulation
+:::
+```
+
+### Skills interface
+
+The creator's assistant loads `lernapps-app` when it starts work on an app, and its archetype's skill and the content
+skills before it writes what the archetype lets it write.
+
+```arc42
+:::ignore H014 the skills are committed in each app under .agents/skills; this repository has none
+:::
+:::interface
+id: if-skills
+title: Skill texts (lernapps-app, the archetype's skill, the content skills, app-content)
+provider: bb-skills
+protocol: Markdown (SKILL.md) loaded by the assistant
 :::
 ```

@@ -12,6 +12,11 @@
 // architecture would be: a chapter's extension file is appended to the generic file of the same chapter (without its
 // own title), because the validator expects a building block's parts, its interfaces and the diagrams that show them
 // in one file. Findings are reported at their place in the original files.
+//
+// An ignore directive whose finding the validator reports at a generic element, but only in some combinations (W006,
+// the count of high-priority goals, at the first of them), goes into the extension that needs it, between the lines
+// `<!-- at the top of the generic chapter -->` and `<!-- end -->`: those lines are moved to the top of the combined
+// chapter, below its title, so the directive comes before the generic elements.
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -22,6 +27,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ARCHETYPES = ["quiz", "explainer", "interactive"] as const;
 const GENERIC = "docs/arc42";
 const CLI = join(ROOT, "node_modules", ".bin", "arc42");
+/** The lines of an extension's chapter between these two go to the top of the combined chapter. */
+const TOP = "<!-- at the top of the generic chapter -->";
+const END = "<!-- end -->";
 
 /** Where a line of a combined file comes from. */
 interface Origin {
@@ -50,12 +58,20 @@ function combine(archetype: string, workspace: string): Map<string, Origin[]> {
   for (const name of chapterFiles(GENERIC)) {
     const lines: string[] = [];
     const from: Origin[] = [];
+    const top: { text: string; origin: Origin }[] = [];
     const add = (file: string, skipTitle: boolean) => {
+      let atTop = false;
       readFileSync(join(ROOT, file), "utf8")
         .replace(/\n$/, "")
         .split("\n")
         .forEach((text, index) => {
           if (skipTitle && index === 0 && text.startsWith("# ")) return;
+          if (skipTitle && text === TOP) atTop = true;
+          if (atTop) {
+            if (text === END) atTop = false;
+            else if (text !== TOP) top.push({ text, origin: { file, line: index + 1 } });
+            return;
+          }
           lines.push(text);
           from.push({ file, line: index + 1 });
         });
@@ -66,6 +82,9 @@ function combine(archetype: string, workspace: string): Map<string, Origin[]> {
       from.push({ file: `${extension}/${own}`, line: 0 });
       add(`${extension}/${own}`, true);
     }
+    // below the generic chapter's title
+    lines.splice(1, 0, "", ...top.map(({ text }) => text));
+    from.splice(1, 0, { file: `${GENERIC}/${name}`, line: 1 }, ...top.map(({ origin }) => origin));
     writeFileSync(join(workspace, name), `${lines.join("\n")}\n`);
     origins.set(join(workspace, name), from);
   }

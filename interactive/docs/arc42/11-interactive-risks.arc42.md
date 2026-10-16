@@ -48,18 +48,20 @@ mitigation: Planned; until then the build checks determinism with every playthro
 :::
 ```
 
-## Skill lernapps-interactive Not Written
+## Skill lernapps-interactive Not Merged
 
-The guidance for an interactive app is not written yet: the kinds of apps as recipes and the advice on low stimulation
-(no flashing, calm motion, sound off by default, and why), which is advice for the creator's assistant, not a rule or
-check. Until then the skill `lernapps-app` applies alone; a settings dialog (less motion, sound, pause) is not in scope
+The skill `lernapps-interactive` is provided in the tooling pull request
+[lernapps/tooling#90](https://github.com/lernapps/tooling/pull/90): the principles of an interactive app's code, the
+advice on low stimulation (no flashing, calm motion, sound off by default, and why), which is advice for the
+creator's assistant, not a rule or check, and what is not built yet. Until it is merged, the skill `lernapps-app`
+applies alone; the risk ends when it merges. A settings dialog (less motion, sound, pause) is not in scope
 (`dec-no-settings`).
 
 ```arc42
 :::risk
 id: risk-interactive-skill-missing
-title: Skill lernapps-interactive not written
+title: Skill lernapps-interactive not merged yet
 severity: low
-mitigation: Write skills/lernapps-interactive in @lernapps/tooling with the recipes and the advice on low stimulation; until then lernapps-app applies.
+mitigation: Merge lernapps/tooling#90, which provides skills/lernapps-interactive; then remove this risk. Until then lernapps-app applies.
 :::
 ```

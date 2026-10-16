@@ -107,3 +107,17 @@ title: Device storage
 category: persistence
 :::
 ```
+
+## Low stimulation (advice)
+
+Advice, not a rule or check: the skills recommend no flashing, calm motion and sound off by default, and say why
+(children, attention, seizures); the creator's assistant follows them. Today the skill `lernapps-interactive` gives
+this advice. A settings dialog (less motion, sound, pause) is not in scope now (`dec-no-settings`).
+
+```arc42
+:::concept
+id: concept-low-stimulation
+title: Low stimulation (advice)
+category: accessibility
+:::
+```

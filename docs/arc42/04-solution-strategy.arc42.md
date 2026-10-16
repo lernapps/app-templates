@@ -23,8 +23,9 @@ addresses: qg-privacy, qg-checkable, qg-accessibility, qg-understandable
 
 ## System decomposition
 
-Two generic roots, the shared runtime (`bb-runtime`: page trees, languages, examples check, Vue at build) and the
-tooling helpers (`bb-tooling`: preset, lint rules, `lernapps check`, storage, i18n, a11y, the skills); each
+Three generic roots, the shared runtime (`bb-runtime`: page trees, languages, examples check, Vue at build), the
+tooling helpers (`bb-tooling`: preset, lint rules, `lernapps check`, storage, i18n, a11y) and the skills the app
+commits (`bb-skills`); each
 archetype's extension adds its runtime (`bb-archetype-runtime`, which builds the pages, runs the build checks, starts
 the archetype's code in the browser in `bb-shell` and brings the end-to-end tests) and the parts the creator writes,
 each a root of its own, so that an interactive app can add its own blocks below them.

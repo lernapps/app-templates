@@ -7,13 +7,13 @@ canvas or DOM).
 ## One Archetype for All Kinds
 
 Typing game, Kniffel trainer and proofreading app run differently (frame loop, turns, tasks) but share frame and
-rules. One archetype carries them all and the kinds become recipes in its skill. Rejected: one archetype per kind. An
+rules. One archetype carries them all, and its skill gives the principles they share. Rejected: one archetype per kind. An
 app that needs explanation pages is an explainer with a component instead.
 
 ```arc42
 :::decision
 id: dec-one-archetype
-title: One interactive archetype, the kinds as recipes
+title: One interactive archetype for every kind of app
 status: accepted
 date: 2026-10-16
 addresses: con-runtime-unchanged, qg-understandable, risk-interactive-skill-missing
