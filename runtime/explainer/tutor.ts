@@ -3,7 +3,8 @@
 // language tree, the build writes a tutor file for each page (<chapter>/<page>/tutor.md, plain Markdown): the page's
 // sections, and each exercise with its id, type, task, answer format, solution, hint, typical mistakes with the
 // messages the app shows, and for a seeded exercise (generated, exercise component) the tasks of the numbers 1 to
-// TASK_NUMBERS, each with its solution and its link ./?seed=<n>#<id>, which opens exactly that task live. An exercise
+// N (its distinct tasks, at most MAX_TASKS; tasks.ts), each with its solution and its link ./?seed=<n>#<id>, which
+// opens exactly that task live. An exercise
 // component contributes its about and its describe (plugin.ts). examples stay out: they are test cases. llms.txt gets
 // a part with the generic rules for a tutor, the app's own (tutor.rules in app.yaml), the link to the tutor prompt
 // (prompt.ts) and the links to the tutor files.
@@ -20,11 +21,11 @@ import {
   type Site,
   type Text,
 } from "./content.ts";
-import { dataOf, templatesOf } from "./exercises.ts";
+import { dataOf, taskSeeds, templatesOf } from "./exercises.ts";
 import type { Descriptions } from "./render.ts";
 import { fillSource, generate, kindOf, label, plainText, questionFor, type Generated } from "./generated.ts";
 import { allBlocks, contentPages } from "./routes.ts";
-import { TASK_NUMBERS } from "./tasks.ts";
+import { MAX_TASKS } from "./tasks.ts";
 
 /** The name of a page's tutor file, in the page's folder. */
 export const TUTOR_FILE = "tutor.md";
@@ -86,7 +87,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     template: "(Vorlage: {{…}} sind die Werte der Aufgabe)",
     right: "✓",
     wrong: "✗",
-    tasks: "Aufgaben nach Nummer (die App zeigt „Aufgabe Nr. …“)",
+    tasks: "Aufgaben nach Nummer, 1 bis {n}: jede eine andere (die App zeigt „Aufgabe Nr. …“)",
     taskNumber: "Aufgabe Nr.",
     component: "interaktive Übung",
     does: "Was zu tun ist",
@@ -108,7 +109,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Die App ist das Arbeitsblatt, der Chat das Gespräch darüber. Gelöst wird in der App: Sie prüft die Ergebnisse, du erklärst.",
       "Verlinke immer eine konkrete Aufgabe, nie nur die Startseite. Jede Übung hat einen Anker (`#<id>`); eine Aufgabe mit Nummer öffnest du mit `<seite>?seed=<nummer>#<id>`. Die Links stehen in der Tutor-Datei jeder Seite.",
       "Häng `von=tutor` an jeden Link, den du schickst, vor dem `#`: `<seite>?seed=7&von=tutor#<id>`. Dann zeigt die Seite einen Knopf „Zurück zum Tutor“.",
-      "Jede Aufgabe mit Zufallszahlen hat eine Nummer: „Aufgabe Nr. 7“. Frag nach der Nummer, die auf dem Bildschirm steht, und schlag die Aufgabe in der Tutor-Datei der Seite nach. Dort stehen die Nummern 1 bis {n} mit Aufgabe und Lösung; dieselbe Nummer zeigt in der App dieselbe Aufgabe.",
+      "Jede Aufgabe mit Zufallszahlen hat eine Nummer: „Aufgabe Nr. 7“. Frag nach der Nummer, die auf dem Bildschirm steht, und schlag die Aufgabe in der Tutor-Datei der Seite nach. Dort stehen alle Nummern jeder Übung, von 1 bis höchstens {n}, jede mit Aufgabe und Lösung; jede Nummer ist eine andere Aufgabe, und dieselbe Nummer zeigt in der App dieselbe Aufgabe.",
       "Verrate keine Lösung, bevor sich die lernende Person auf eine Antwort festgelegt hat. Die Tutor-Dateien enthalten die Lösungen: Nutze sie, um Fehler zu erkennen und gezielt Tipps zu geben, nicht um vorzusagen.",
       "Bei jeder Übung stehen typische Fehler mit der Meldung der App. Benenne die Idee hinter einem Fehler, nicht nur „falsch“.",
       "Die App sammelt nichts, sendet nichts und meldet dir nichts zurück. Ergebnisse kennst du nur, wenn die lernende Person sie dir sagt: Frag nach jeder verlinkten Aufgabe, was herauskam.",
@@ -140,7 +141,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     template: "(template: {{…}} are the task's values)",
     right: "✓",
     wrong: "✗",
-    tasks: "Tasks by number (the app shows “Task no. …”)",
+    tasks: "Tasks by number, 1 to {n}: each a different one (the app shows “Task no. …”)",
     taskNumber: "Task no.",
     component: "interactive exercise",
     does: "What to do",
@@ -162,7 +163,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "The app is the worksheet, the chat is the conversation about it. Tasks are solved in the app: it checks the results, you explain.",
       "Always link a concrete task, never just the start page. Every exercise has an anchor (`#<id>`); open a task by its number with `<page>?seed=<number>#<id>`. The links are in each page's tutor file.",
       "Add `von=tutor` to every link you send, before the `#`: `<page>?seed=7&von=tutor#<id>`. The page then shows a button “Back to the tutor”.",
-      "Every task with random numbers has a number: “Task no. 7”. Ask for the number on the screen and look the task up in the page's tutor file. It lists the numbers 1 to {n} with task and solution; the same number shows the same task in the app.",
+      "Every task with random numbers has a number: “Task no. 7”. Ask for the number on the screen and look the task up in the page's tutor file. It lists all numbers of each exercise, from 1 to at most {n}, each with task and solution; each number is a different task, and the same number shows the same task in the app.",
       "Never reveal a solution before the learner has committed to an answer. The tutor files contain the solutions: use them to spot mistakes and give targeted hints, not to give answers away.",
       "Each exercise lists typical mistakes with the app's message. Name the idea behind a mistake, not just “wrong”.",
       "The app collects nothing, sends nothing and reports nothing back to you. You know results only when the learner tells you: after each linked task, ask what came out.",
@@ -181,7 +182,7 @@ const line = (text: string) => text.replace(/\s+/g, " ").trim();
 
 /** The generic rules for a tutor, in `lang`. */
 export function tutorRules(lang: string): string[] {
-  return wordsIn(lang).rules.map((rule) => rule.replace("{n}", String(TASK_NUMBERS)));
+  return wordsIn(lang).rules.map((rule) => rule.replace("{n}", String(MAX_TASKS)));
 }
 
 /** The address of a page's tutor file within its language tree. */
@@ -249,10 +250,11 @@ function generatedPart(spec: Generated, site: Site, lang: string, words: Words, 
       ...spec.steps.map((step) => `  - ${line(inLanguage(step, lang))}`),
     );
   }
-  lines.push(`- ${words.tasks}:`);
   const data = dataOf(spec, site.data);
+  lines.push(`- ${words.tasks.replace("{n}", String(taskSeeds(spec, data).length))}:`);
   const templates = templatesOf(spec, [lang]);
-  for (let seed = 1; seed <= TASK_NUMBERS; seed++) {
+  for (const [index, seed] of taskSeeds(spec, data).entries()) {
+    const number = index + 1;
     const task = generate(spec, seed, data);
     const text = line(fillSource(spec.task.text, spec, task, lang));
     const question = questionFor(spec, task, lang, templates);
@@ -262,7 +264,7 @@ function generatedPart(spec: Generated, site: Site, lang: string, words: Words, 
         : "";
     const answer = line(plainText(answerText(question, lang)));
     lines.push(
-      `  - [${words.taskNumber} ${seed}](./?seed=${seed}#${id}): ${text}${options} → ${words.solution}: ${answer}`,
+      `  - [${words.taskNumber} ${number}](./?seed=${number}#${id}): ${text}${options} → ${words.solution}: ${answer}`,
     );
     (spec.mistakes ?? []).forEach((mistake, index) => {
       const value = shown(task.mistakes[index] ?? "", lang);
@@ -286,10 +288,10 @@ function componentPart(description: ComponentDescription, lang: string, words: W
   if (about.mistakes.length > 0) {
     lines.push(`- ${words.mistakes}:`, ...about.mistakes.map((mistake) => `  - ${t(mistake)}`));
   }
-  lines.push(`- ${words.tasks}:`);
+  lines.push(`- ${words.tasks.replace("{n}", String(description.seeds.length))}:`);
   for (const task of description.tasks[lang] ?? []) {
     lines.push(
-      `  - [${words.taskNumber} ${task.seed}](./?seed=${task.seed}#${id}): ${line(task.task)} → ${words.solution}: ${line(task.solution)}`,
+      `  - [${words.taskNumber} ${task.number}](./?seed=${task.number}#${id}): ${line(task.task)} → ${words.solution}: ${line(task.solution)}`,
     );
   }
   return lines;

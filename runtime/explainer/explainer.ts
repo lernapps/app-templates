@@ -5,20 +5,21 @@
 // answer or "Lösung zeigen" (startQuestion of the quiz runtime with retry). A question of one of the quiz's types gets
 // the quiz's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
 // shows the same after the answer. A generated exercise gets a live task: from the seed in the address when the
-// address names it (?seed=<n>#<exercise>), else from a task number of 1 to TASK_NUMBERS (tasks.ts); "Aufgabe Nr. <n>"
-// above it; the quiz's controls, checker and feedback through its comparator, the message of a typical mistake, and
-// "Neue Aufgabe", which moves to the next task number and writes it into the address. Its worked tasks, with their
-// solutions, show below the live task once the learner has solved it or asked for its solution. A page a tutor opened
-// (von=tutor in the address, beside any seed) gets "Zurück zum Tutor", which closes the tab; the start page's "Mit
-// einem KI-Tutor lernen" copies the tutor prompt or opens an assistant with it on a click. Nothing is stored.
+// address names its task number (?seed=<n>#<exercise>), else from a random one; its seed from the exercise's table
+// of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the quiz's controls, checker and feedback through its
+// comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number and writes it
+// into the address. Its worked tasks, with their solutions, show below the live task once the learner has solved it or
+// asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
+// which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
+// with it on a click. Nothing is stored.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { startQuestion } from "../quiz/engine.ts";
 import { renderQuestion } from "../quiz/render.ts";
 import { questionId } from "../quiz/quiz.ts";
 import type { ExerciseData } from "./exercises.ts";
-import { diagnose, figureOf, generate, hintOf, questionFor, stepsOf, taskKey, taskText } from "./generated.ts";
+import { diagnose, figureOf, generate, hintOf, questionFor, stepsOf, taskText } from "./generated.ts";
 import { message } from "./messages.ts";
-import { addressOf, nextTaskNumber, randomTaskNumber, seedFromAddress, TASK_NUMBERS } from "./tasks.ts";
+import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
 
 const escape = (text: string) =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -34,17 +35,20 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   const showWorked = () => {
     for (const part of worked) part.hidden = false;
   };
-  let seed = seedFromAddress(location.href, spec.id) ?? randomTaskNumber();
+  const { seeds } = data;
+  const count = Math.max(seeds.length, 1);
+  const from = numberFromAddress(location.href, spec.id);
+  let number = from === undefined ? randomTaskNumber(count) : taskNumber(from, count);
 
   const show = (focus: boolean) => {
-    const task = generate(spec, seed, data.data);
+    const task = generate(spec, seeds[number - 1] ?? number, data.data);
     const question = questionFor(spec, task, lang, templates);
     const figure = figureOf(spec, task, lang, templates);
     const hint = hintOf(spec, task, lang, templates);
     const steps = stepsOf(spec, task, lang, templates);
     live.innerHTML = [
       `<p class="explainer-practice">${escape(texts.practice)}</p>`,
-      `<p class="explainer-task-number">${escape(texts.taskNumber.replace("{n}", String(seed)))}</p>`,
+      `<p class="explainer-task-number">${escape(texts.taskNumber.replace("{n}", String(number)))}</p>`,
       figure === undefined ? "" : `<div class="explainer-task-figure">${figure}</div>`,
       renderQuestion(question, {
         lang,
@@ -73,12 +77,9 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
       if (focus && legend) moveFocus(legend);
     }
     live.querySelector(".explainer-new-task")?.addEventListener("click", () => {
-      const before = taskKey(spec, task, lang, templates);
-      for (let tries = 0; tries < TASK_NUMBERS; tries++) {
-        seed = nextTaskNumber(seed);
-        if (taskKey(spec, generate(spec, seed, data.data), lang, templates) !== before) break;
-      }
-      history.replaceState(history.state, "", addressOf(location.href, spec.id, seed));
+      // the tasks of the numbers are distinct: the next number is a new task
+      number = nextTaskNumber(number, count);
+      history.replaceState(history.state, "", addressOf(location.href, spec.id, number));
       show(true);
     });
   };

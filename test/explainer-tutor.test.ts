@@ -1,5 +1,5 @@
 // What an explainer gives a KI tutor (tutor.ts): the tutor file of each page with its sections and exercises, and for
-// each seeded exercise the tasks of the numbers 1 to TASK_NUMBERS with their solutions and links; the part of
+// each seeded exercise its distinct tasks, numbered 1 to N, with their solutions and links; the part of
 // llms.txt with the generic rules, the app's own and the links to the tutor files; and the check of their links.
 import { cpSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -10,7 +10,7 @@ import type { Block, ComponentDescription } from "../runtime/explainer/content.t
 import { loadSite } from "../runtime/explainer/load.ts";
 import { llmsTxt } from "../runtime/explainer/render.ts";
 import { contentPages } from "../runtime/explainer/routes.ts";
-import { TASK_NUMBERS } from "../runtime/explainer/tasks.ts";
+import { dataOf, taskSeeds } from "../runtime/explainer/exercises.ts";
 import {
   DEFAULT_PROVIDERS,
   plainAddress,
@@ -42,8 +42,15 @@ describe("the tutor file of a page", () => {
     expect(file).toContain(
       "  - [Aufgabe Nr. 1](./?seed=1#prozent-rechnen): Wie viel sind 1 % von 200? → Lösung: 2\n    - ✗ 200: Du hast nicht durch 100 geteilt.",
     );
-    expect(file).toContain(`[Aufgabe Nr. ${TASK_NUMBERS}](./?seed=${TASK_NUMBERS}#prozent-rechnen)`);
-    expect(file).not.toContain(`seed=${TASK_NUMBERS + 1}`);
+    // its distinct tasks, numbered 1 to N
+    const generated = [...page.blocks]
+      .flatMap((block) => (block.type === "section" ? block.blocks : [block]))
+      .find((block) => block.type === "generated");
+    if (generated?.type !== "generated") throw new Error("no generated exercise");
+    const count = taskSeeds(generated, dataOf(generated, site.data)).length;
+    expect(file).toContain(`Aufgaben nach Nummer, 1 bis ${count}: jede eine andere`);
+    expect(file).toContain(`[Aufgabe Nr. ${count}](./?seed=${count}#prozent-rechnen)`);
+    expect(file).not.toContain(`seed=${count + 1}#prozent-rechnen`);
     // the examples are test cases, never in a tutor file
     expect(file).not.toMatch(/accepted|rejected/);
     expect(tutorFile(site, page, "en", new Map())).toContain("[Task no. 1](./?seed=1#prozent-rechnen)");
@@ -69,7 +76,7 @@ describe("the tutor file of a page", () => {
     expect(file).toContain("  - Eine Beschriftung zweimal gewählt.");
     const first = description?.tasks["de"]?.[0];
     expect(file).toContain(`  - [Aufgabe Nr. 1](./?seed=1#assign-labels): ${first?.task} → Lösung: ${first?.solution}`);
-    expect(file.split("](./?seed=").length - 1).toBe(TASK_NUMBERS);
+    expect(file.split("](./?seed=").length - 1).toBe(description?.seeds.length);
   });
 });
 
