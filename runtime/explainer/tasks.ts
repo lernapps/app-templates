@@ -41,17 +41,31 @@ export const nextTaskNumber = (n: number, count: number): number => (n % count) 
 /** A task number to start with when the address names none. */
 export const randomTaskNumber = (count: number): number => 1 + Math.floor(Math.random() * count);
 
-/** The task number the address `href` gives the exercise `id` (?seed=<n>#<id>), if it names one. */
+/** Address parameters that are no exercise's: an exercise id must not be one of them (the build checks). */
+export const RESERVED_PARAMS: readonly string[] = ["seed", "von"];
+
+/**
+ * The task number the address `href` gives the exercise `id`: the parameter named by its id (?<id>=<n>, one per
+ * exercise, so that the address holds the task of every exercise of the page), or, as before, ?seed=<n>#<id>.
+ */
 export function numberFromAddress(href: string, id: string): number | undefined {
   const url = new URL(href);
-  const n = Number(url.searchParams.get("seed"));
-  return decodeURIComponent(url.hash.slice(1)) === id && Number.isInteger(n) && n > 0 ? n : undefined;
+  const asNumber = (text: string | null) => {
+    const n = Number(text);
+    return text !== null && Number.isInteger(n) && n > 0 ? n : undefined;
+  };
+  const own = asNumber(url.searchParams.get(id));
+  if (own !== undefined) return own;
+  return decodeURIComponent(url.hash.slice(1)) === id ? asNumber(url.searchParams.get("seed")) : undefined;
 }
 
-/** The address `href` of the task number `n` of the exercise `id`, its other parameters kept: ?…&seed=<n>#<id>. */
+/**
+ * The address `href` with the task number `n` of the exercise `id`: ?…&<id>=<n>, its other parameters and its anchor
+ * kept. A ?seed=<n> that named this exercise's task (it is the anchor) becomes the exercise's own parameter.
+ */
 export function addressOf(href: string, id: string, n: number): string {
   const url = new URL(href);
-  url.searchParams.set("seed", String(n));
-  url.hash = id;
+  if (decodeURIComponent(url.hash.slice(1)) === id) url.searchParams.delete("seed");
+  url.searchParams.set(id, String(n));
   return url.href;
 }

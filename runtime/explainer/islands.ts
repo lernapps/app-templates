@@ -6,7 +6,7 @@
 // the island shows the quiz's feedback for it, with the reason of a wrong answer under it, in view with the focus.
 // An exercise component gets the seed of its task number as the prop seed, from the table of its distinct tasks the
 // build ships (data-seeds; tasks.ts): the build rendered task number 1, it hydrates with it, and then moves to the
-// number the address names (?seed=<n>#<id>, wrapped into 1 to N) or to a random one; "Aufgabe Nr. <n>" shows above
+// number the address names (?<id>=<n>, wrapped into 1 to N) or to a random one; "Aufgabe Nr. <n>" shows above
 // it, and "Neue Aufgabe" moves to the next number, writes it into the address and mounts the component afresh. Nothing is stored.
 import { createSSRApp, h, ref, type Component } from "vue";
 import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
@@ -65,6 +65,7 @@ async function hydrate(element: HTMLElement, load: () => Promise<{ default: Comp
     const id = element.id;
     const from = numberFromAddress(location.href, id);
     let current = from === undefined ? randomTaskNumber(count) : taskNumber(from, count);
+    history.replaceState(history.state, "", addressOf(location.href, id, current));
     const controls = element.querySelector<HTMLElement>(":scope > .explainer-task-controls");
     const number = controls?.querySelector<HTMLElement>(".explainer-task-number");
     const show = () => {

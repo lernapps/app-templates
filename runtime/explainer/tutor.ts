@@ -3,7 +3,7 @@
 // language tree, the build writes a tutor file for each page (<chapter>/<page>/tutor.md, plain Markdown): the page's
 // sections, and each exercise with its id, type, task, answer format, solution, hint, typical mistakes with the
 // messages the app shows, and for a seeded exercise (generated, exercise component) the tasks of the numbers 1 to
-// N (its distinct tasks, at most MAX_TASKS; tasks.ts), each with its solution and its link ./?seed=<n>#<id>, which
+// N (its distinct tasks, at most MAX_TASKS; tasks.ts), each with its solution and its link ./?<id>=<n>#<id>, which
 // opens exactly that task live. An exercise
 // component contributes its about and its describe (plugin.ts). examples stay out: they are test cases. llms.txt gets
 // a part with the generic rules for a tutor, the app's own (tutor.rules in app.yaml), the link to the tutor prompt
@@ -68,7 +68,7 @@ const WORDS: Readonly<Record<string, Words>> = {
   de: {
     tutorFile: "Tutor-Datei",
     forTutor:
-      "Diese Datei ist für einen KI-Tutor. Sie enthält die Lösungen: Nutze sie, um anzuleiten und Fehler zu erkennen, nicht um vorzusagen. Die Regeln stehen in llms.txt.",
+      "Diese Datei ist für einen KI-Tutor. Sie enthält die Lösungen: Nutze sie, um anzuleiten und Fehler zu erkennen, nicht um vorzusagen. Die Regeln stehen in llms.txt. Kannst du eine Datei der App nicht abrufen, bitte die lernende Person, den Text der Seite oder diese Datei einzufügen oder anzuhängen.",
     app: "App",
     page: "Seite",
     sections: "Abschnitte",
@@ -107,9 +107,10 @@ const WORDS: Readonly<Record<string, Words>> = {
     rulesTitle: "Hinweise für einen KI-Tutor",
     rules: [
       "Die App ist das Arbeitsblatt, der Chat das Gespräch darüber. Gelöst wird in der App: Sie prüft die Ergebnisse, du erklärst.",
-      "Verlinke immer eine konkrete Aufgabe, nie nur die Startseite. Jede Übung hat einen Anker (`#<id>`); eine Aufgabe mit Nummer öffnest du mit `<seite>?seed=<nummer>#<id>`. Die Links stehen in der Tutor-Datei jeder Seite.",
-      "Häng `von=tutor` an jeden Link, den du schickst, vor dem `#`: `<seite>?seed=7&von=tutor#<id>`. Dann zeigt die Seite einen Knopf „Zurück zum Tutor“.",
+      "Verlinke immer eine konkrete Aufgabe, nie nur die Startseite. Jede Übung hat einen Anker (`#<id>`); eine Aufgabe mit Nummer öffnest du mit `<seite>?<id>=<nummer>#<id>`. Die Links stehen in der Tutor-Datei jeder Seite.",
+      "Häng `von=tutor` an jeden Link, den du schickst, vor dem `#`: `<seite>?<id>=7&von=tutor#<id>`. Dann zeigt die Seite einen Knopf „Zurück zum Tutor“.",
       "Jede Aufgabe mit Zufallszahlen hat eine Nummer: „Aufgabe Nr. 7“. Frag nach der Nummer, die auf dem Bildschirm steht, und schlag die Aufgabe in der Tutor-Datei der Seite nach. Dort stehen alle Nummern jeder Übung, von 1 bis höchstens {n}, jede mit Aufgabe und Lösung; jede Nummer ist eine andere Aufgabe, und dieselbe Nummer zeigt in der App dieselbe Aufgabe.",
+      "Die Adresse einer Seite hält die Aufgabennummer jeder Übung: `<seite>?<id1>=3&<id2>=12`. Wer den Link der Seite teilt, teilt genau diese Aufgaben. Willst du wissen, welche Aufgaben die lernende Person gerade vor sich hat, bitte sie um die Adresse aus ihrem Browser und lies die Nummern daraus.",
       "Verrate keine Lösung, bevor sich die lernende Person auf eine Antwort festgelegt hat. Die Tutor-Dateien enthalten die Lösungen: Nutze sie, um Fehler zu erkennen und gezielt Tipps zu geben, nicht um vorzusagen.",
       "Bei jeder Übung stehen typische Fehler mit der Meldung der App. Benenne die Idee hinter einem Fehler, nicht nur „falsch“.",
       "Die App sammelt nichts, sendet nichts und meldet dir nichts zurück. Ergebnisse kennst du nur, wenn die lernende Person sie dir sagt: Frag nach jeder verlinkten Aufgabe, was herauskam.",
@@ -122,7 +123,7 @@ const WORDS: Readonly<Record<string, Words>> = {
   en: {
     tutorFile: "tutor file",
     forTutor:
-      "This file is for an AI tutor. It contains the solutions: use them to guide and to spot mistakes, not to give answers away. The rules are in llms.txt.",
+      "This file is for an AI tutor. It contains the solutions: use them to guide and to spot mistakes, not to give answers away. The rules are in llms.txt. If you cannot fetch a file of the app, ask the learner to paste or attach the page's text or this file.",
     app: "App",
     page: "Page",
     sections: "Sections",
@@ -161,9 +162,10 @@ const WORDS: Readonly<Record<string, Words>> = {
     rulesTitle: "Notes for an AI tutor",
     rules: [
       "The app is the worksheet, the chat is the conversation about it. Tasks are solved in the app: it checks the results, you explain.",
-      "Always link a concrete task, never just the start page. Every exercise has an anchor (`#<id>`); open a task by its number with `<page>?seed=<number>#<id>`. The links are in each page's tutor file.",
-      "Add `von=tutor` to every link you send, before the `#`: `<page>?seed=7&von=tutor#<id>`. The page then shows a button “Back to the tutor”.",
+      "Always link a concrete task, never just the start page. Every exercise has an anchor (`#<id>`); open a task by its number with `<page>?<id>=<number>#<id>`. The links are in each page's tutor file.",
+      "Add `von=tutor` to every link you send, before the `#`: `<page>?<id>=7&von=tutor#<id>`. The page then shows a button “Back to the tutor”.",
       "Every task with random numbers has a number: “Task no. 7”. Ask for the number on the screen and look the task up in the page's tutor file. It lists all numbers of each exercise, from 1 to at most {n}, each with task and solution; each number is a different task, and the same number shows the same task in the app.",
+      "A page's address holds the task number of each exercise: `<page>?<id1>=3&<id2>=12`. Whoever shares the page's link shares exactly these tasks. To learn which tasks the learner has in front of them, ask for the address from their browser and read the numbers from it.",
       "Never reveal a solution before the learner has committed to an answer. The tutor files contain the solutions: use them to spot mistakes and give targeted hints, not to give answers away.",
       "Each exercise lists typical mistakes with the app's message. Name the idea behind a mistake, not just “wrong”.",
       "The app collects nothing, sends nothing and reports nothing back to you. You know results only when the learner tells you: after each linked task, ask what came out.",
@@ -264,7 +266,7 @@ function generatedPart(spec: Generated, site: Site, lang: string, words: Words, 
         : "";
     const answer = line(plainText(answerText(question, lang)));
     lines.push(
-      `  - [${words.taskNumber} ${number}](./?seed=${number}#${id}): ${text}${options} → ${words.solution}: ${answer}`,
+      `  - [${words.taskNumber} ${number}](./?${id}=${number}#${id}): ${text}${options} → ${words.solution}: ${answer}`,
     );
     (spec.mistakes ?? []).forEach((mistake, index) => {
       const value = shown(task.mistakes[index] ?? "", lang);
@@ -291,7 +293,7 @@ function componentPart(description: ComponentDescription, lang: string, words: W
   lines.push(`- ${words.tasks.replace("{n}", String(description.seeds.length))}:`);
   for (const task of description.tasks[lang] ?? []) {
     lines.push(
-      `  - [${words.taskNumber} ${task.number}](./?seed=${task.number}#${id}): ${line(task.task)} → ${words.solution}: ${line(task.solution)}`,
+      `  - [${words.taskNumber} ${task.number}](./?${id}=${task.number}#${id}): ${line(task.task)} → ${words.solution}: ${line(task.solution)}`,
     );
   }
   return lines;

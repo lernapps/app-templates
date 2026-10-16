@@ -42,7 +42,7 @@ with which a creator and their AI assistant build a learning app.
   folded as a text description under it with `defineOptions({ nojs: "caption" })`. A component that emits
   `answered { correct, reason? }` is an exercise (`reason`: what went wrong in a wrong answer, shown with the
   feedback): it declares the prop `seed: number`, the seed of its task number, which the explainer gives it with "Aufgabe Nr."
-  and "Neue Aufgabe" and keeps in the address (`?seed=<n>#<id>`, the id of its block or its name in kebab case), and
+  and "Neue Aufgabe" and keeps in the address (`?<id>=<n>`, the id of its block or its name in kebab case), and
   its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
   `wrong(task)`, which the build tests over 50 fixed seeds per block, `describe(task, props, lang)`, the task and its
   solution as a learner reads them (`{ task, solution }`, restricted Markdown), and `about`, what the exercise is for a
@@ -52,18 +52,24 @@ with which a creator and their AI assistant build a learning app.
 - Every seeded exercise (generated, exercise component) numbers its distinct tasks: the build walks the seeds 1, 2,
   3, … through its generator, keeps each seed whose task differs from all before, up to 67, and the page shows
   "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:
-  `?seed=<n>#<id>` opens task number n (a number above N wraps around), "Neue Aufgabe" moves to the next and writes it
-  into the address; the build ships each exercise's table of seeds. An exercise with fewer than 67 distinct tasks is
+  `?<id>=<n>` opens task number n of the exercise `<id>` (a number above N wraps around). The address holds one
+  parameter per exercise (`?a=3&b=12`), written on load and at every "Neue Aufgabe", so it is the page's state: a link
+  to share in class, a deep link, and what a tutor reads; `seed` and `von` are no exercise id, and `?seed=<n>#<id>`
+  still opens that exercise's task. The build ships each exercise's table of seeds. An exercise with fewer than 67 distinct tasks is
   noted in the build output.
 - For a KI tutor, an assistant the learner brings and controls, the explainer writes static files only (a chat
   assistant that fetches a URL runs no JavaScript): per language tree a tutor file next to every page
   (`<chapter>/<page>/tutor.md`: its sections, every exercise with task, answer format, solution, hint and typical
   mistakes, and for a seeded exercise all its task numbers with their tasks and solutions and links
-  `./?seed=<n>#<id>`), and in `llms.txt` generic rules for a tutor, the app's own (`tutor.rules` in `app.yaml`) and
+  `./?<id>=<n>#<id>`), and in `llms.txt` generic rules for a tutor, the app's own (`tutor.rules` in `app.yaml`) and
   links to the tutor files, and `tutor.md` at the root, a ready tutor prompt (role, approach, the pages as a checklist,
-  the rules); the build checks every link and anchor of these files. The start page offers "Mit einem KI-Tutor
-  lernen": a button that copies the prompt, and a plain link per assistant (`tutor.providers` in `app.yaml`, Claude by
-  default) that gets the prompt on the click ([`prompt.ts`](runtime/explainer/prompt.ts)). A page opened with `von=tutor`
+  the rules); the build checks every link and anchor of these files. The start page and the end of every page offer
+  "Mit einem KI-Tutor lernen": one button with a select beside it (the assistants of `tutor.providers` in `app.yaml`,
+  Claude first and the default, and "Prompt kopieren"); the way the learner picks is kept on the device
+  (`@lernapps/tooling/storage`) and is the default from then on. On a page the prompt also gets the page's address and,
+  from its tutor file, the tasks and solutions of the numbers in that address ([`tutorpage.ts`](runtime/explainer/tutorpage.ts));
+  a prompt too long for the assistant's address goes short, with the whole one on the clipboard
+  ([`prompt.ts`](runtime/explainer/prompt.ts)). Without JavaScript the section has a plain link per assistant. A page opened with `von=tutor`
   shows "Zurück zum Tutor", which closes the tab ([`tutor.ts`](runtime/explainer/tutor.ts)).
 - Every exercise may carry `examples: { accepted, rejected }`, test cases that learners never see: the other correct
   answers its text allows, and typical wrong ones. The build runs each through the same check the page uses (the
