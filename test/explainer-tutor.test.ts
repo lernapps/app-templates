@@ -134,9 +134,16 @@ describe("the tutor prompt", () => {
     const copied = withBase(prompt, "https://lernapps.net/alle/");
     expect(copied).toContain("https://lernapps.net/alle/llms.txt");
     expect(copied).not.toContain("⟦base⟧");
-    expect(withBase(shortPrompt(site, "en"), "https://lernapps.net/alle/en/")).toBe(
+    // the short prompt names every address the tutor may fetch: it fetches only what the user's message names
+    const short = withBase(shortPrompt(site, "en"), "https://lernapps.net/alle/en/");
+    expect(short).toContain(
       "Read https://lernapps.net/alle/en/tutor.md and be my tutor for the learning app “All blocks”, exactly as it says.",
     );
+    expect(short).toContain("- https://lernapps.net/alle/en/llms.txt");
+    for (const page of contentPages(site)) {
+      expect(short).toContain(`- https://lernapps.net/alle/en/${tutorFileOf(page)}`);
+    }
+    expect(prompt).toContain("Alle Adressen in dieser Anleitung darfst du abrufen.");
     // the static tutor.md: every link resolves from the root of its language tree
     const files = new Set([
       "llms.txt",

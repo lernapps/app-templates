@@ -206,7 +206,7 @@ function startTutor(root: Document): void {
   const build = async (): Promise<{ full: string; short: string }> => {
     const full = resolve(data.prompt);
     const short = resolve(data.short);
-    if (data.file === undefined) return { full, short: `${short}\n${data.shortNote}` };
+    if (data.file === undefined) return { full, short: `${short}\n\n${data.shortNote}` };
     const href = root.location.href;
     const file = new URL(data.file, href).href;
     let text: string | undefined;
@@ -227,7 +227,7 @@ function startTutor(root: Document): void {
     ];
     return {
       full: `${full}${page.join("\n")}\n`,
-      short: [short, now, `${data.pageFile} ${file}`, data.shortNote].join("\n"),
+      short: `${short}\n\n${[now, `${data.pageFile} ${file}`, data.shortNote].join("\n")}`,
     };
   };
   go.addEventListener("click", () => {
@@ -251,6 +251,8 @@ function startTutor(root: Document): void {
       if (address.length > data.max) {
         // the assistant gets the short prompt; the whole one is on the clipboard for the learner to paste
         address = withPrompt(short);
+        // an app with very many pages: the list of every tutor file goes, the first line and the page's files stay
+        if (address.length > data.max) address = withPrompt(short.replace(/\n\n[\s\S]*?(?=\n\n|$)/, ""));
         done(await copyText(full), data.copiedShort);
       } else say("");
       if (opened) opened.location.href = address;
