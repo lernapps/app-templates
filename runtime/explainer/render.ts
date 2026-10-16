@@ -4,7 +4,8 @@
 // breadcrumbs, previous and next, the contents of a page with three or more sections, the glossary, the language
 // switch). Without JavaScript the page is complete; the client module only adds. A vue-component block is its island:
 // the component's markup as the build rendered it (`hidden` until it hydrates), its nojs text, its props in the page's
-// language, and for an exercise the place of its feedback. Links to other sites are plain links with rel="noopener":
+// language, and for an exercise its anchor, its task number with "Neue Aufgabe", the task of number 1 as its describe
+// states it with the solution folded, and the place of its feedback. Links to other sites are plain links with rel="noopener":
 // nothing is loaded from another server before a click. The end-to-end tests rely on the classes, ids and rel
 // attributes written here.
 import { readFileSync } from "node:fs";
@@ -17,6 +18,7 @@ import {
   timelineEvents,
   type Block,
   type BlockOf,
+  type ComponentDescription,
   type Credit,
   type Event,
   type Site,
@@ -53,6 +55,8 @@ export interface RenderedPage {
 
 /** The markup of each vue-component block in each language, as the build rendered it (plugin.ts). */
 export type Islands = ReadonlyMap<Block, ReadonlyMap<string, string>>;
+/** What the logic of each exercise component's block describes (plugin.ts): its about, and its tasks by language. */
+export type Descriptions = ReadonlyMap<Block, ComponentDescription>;
 
 const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
 
@@ -62,12 +66,14 @@ class Context {
   readonly site: Site;
   readonly route: Route;
   readonly islands: Islands;
+  readonly descriptions: Descriptions;
   /** Whether a component was rendered. */
   hasIslands = false;
-  constructor(site: Site, route: Route, islands: Islands) {
+  constructor(site: Site, route: Route, islands: Islands, descriptions: Descriptions) {
     this.site = site;
     this.route = route;
     this.islands = islands;
+    this.descriptions = descriptions;
     this.locale = LOCALES[route.lang] ?? route.lang;
   }
   get lang(): string {
@@ -249,7 +255,11 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
 
 const json = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
-/** A vue-component block: its island, hidden until it hydrates, its nojs text, its props and its feedback. */
+/**
+ * A vue-component block: its island, hidden until it hydrates, its nojs text, its props and its feedback. An exercise
+ * component has its anchor, its task number with "Neue Aufgabe" (hidden until it hydrates), and as its no-JS text the
+ * task of number 1 as its describe states it, with the solution folded, under the block's own nojs text if it has one.
+ */
 function renderComponent(context: Context, block: BlockOf<"vue-component">): string {
   const use = context.site.components.find((candidate) => candidate.block === block);
   if (use === undefined) return "";
@@ -260,10 +270,33 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
   const feedback = component.exercise
     ? `<p class="quiz-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
     : "";
+  const first = context.descriptions.get(block)?.tasks[context.lang]?.[0];
+  const number = (seed: number) => plain(context.t("taskNumber", { n: String(seed) }));
+  const described =
+    first === undefined
+      ? ""
+      : [
+          `<div class="explainer-described">`,
+          `<p class="explainer-task-number">${number(first.seed)}</p>`,
+          `<div class="explainer-task">${renderMarkdown(first.task, context.resolve)}</div>`,
+          `<details class="explainer-solution"><summary>${plain(messages.solution)}</summary>${renderMarkdown(first.solution, context.resolve)}</details>`,
+          `</div>`,
+        ].join("");
+  const nojs = (block.nojs === undefined ? "" : context.markdown(block.nojs)) + described;
+  const controls = component.exercise
+    ? `<p class="explainer-task-controls" hidden><span class="explainer-task-number" tabindex="-1" data-template="${plain(context.t("taskNumber"))}">${number(1)}</span> <button type="button" class="explainer-new-task">${plain(context.t("newTask"))}</button></p>`
+    : "";
+  const attributes = [
+    ...(use.id === undefined ? [] : [`id="${use.id}"`]),
+    `data-component="${component.name}"`,
+    ...(component.exercise ? ["data-exercise"] : []),
+    ...(component.caption ? [`data-nojs="caption" data-caption="${plain(context.t("textDescription"))}"`] : []),
+  ];
   return [
-    `<div class="explainer-component" data-component="${component.name}"${component.caption ? ` data-nojs="caption" data-caption="${plain(context.t("textDescription"))}"` : ""}>`,
+    `<div class="explainer-component" ${attributes.join(" ")}>`,
+    controls,
     `<div class="explainer-island" hidden>${markup}</div>`,
-    `<div class="explainer-nojs">${context.markdown(block.nojs)}</div>`,
+    `<div class="explainer-nojs">${nojs}</div>`,
     feedback,
     `<script type="application/json" class="explainer-component-props">${json(propsIn(block.props, component, context.lang))}</script>`,
     `</div>`,
@@ -429,8 +462,13 @@ function footer(context: Context): string {
 }
 
 /** One page of the app, with the markup of its components as the build rendered them. */
-export function renderPage(site: Site, route: Route, islands: Islands = new Map()): RenderedPage {
-  const context = new Context(site, route, islands);
+export function renderPage(
+  site: Site,
+  route: Route,
+  islands: Islands = new Map(),
+  descriptions: Descriptions = new Map(),
+): RenderedPage {
+  const context = new Context(site, route, islands, descriptions);
   const body = [
     header(context),
     breadcrumbs(context),
@@ -446,8 +484,12 @@ export function renderPage(site: Site, route: Route, islands: Islands = new Map(
 }
 
 /** Every page of the app, in every language. */
-export function renderSite(site: Site, islands: Islands = new Map()): RenderedPage[] {
-  return routes(site).map((route) => renderPage(site, route, islands));
+export function renderSite(
+  site: Site,
+  islands: Islands = new Map(),
+  descriptions: Descriptions = new Map(),
+): RenderedPage[] {
+  return routes(site).map((route) => renderPage(site, route, islands, descriptions));
 }
 
 /** llms.txt of a language tree: the app, its pages with their sections as deep links, from that tree's root. */

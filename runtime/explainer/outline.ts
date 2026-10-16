@@ -29,7 +29,9 @@ export interface PageOutline {
 /** A vue-component block of a page, in the page's language. */
 export interface ComponentOutline {
   name: string;
-  /** Its nojs text, as plain text. */
+  /** Its anchor, for an exercise component. */
+  id?: string;
+  /** Its own nojs text, as plain text; empty when it has none (an exercise component's no-JS task comes from describe). */
   nojs: string;
   /** Whether it emits answered, an exercise. */
   exercise: boolean;
@@ -125,10 +127,12 @@ function walk(
         break;
       case "vue-component": {
         const use = site.components.find((candidate) => candidate.block === block);
-        into.formulas += inspect(text(block.nojs)).formulas.length;
+        const nojs = block.nojs === undefined ? "" : text(block.nojs);
+        into.formulas += inspect(nojs).formulas.length;
         into.components.push({
           name: block.component,
-          nojs: plainText(renderMarkdown(text(block.nojs), (href) => href)),
+          ...(use?.id === undefined ? {} : { id: use.id }),
+          nojs: plainText(renderMarkdown(nojs, (href) => href)),
           exercise: use?.component.exercise ?? false,
           caption: use?.component.caption ?? false,
         });

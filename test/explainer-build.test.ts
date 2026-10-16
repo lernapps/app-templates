@@ -94,12 +94,27 @@ describe("one build writes every page", () => {
         expect(vue, `${route.path}: ships Vue`).toBe(withComponents.includes(route.path));
         if (withComponents.includes(route.path)) {
           expect(html).toMatch(/<div class="explainer-island" hidden><div class="assign-labels"[^>]*><svg /);
+          // an exercise component: its anchor, its task number with "Neue Aufgabe" for JavaScript, and without it
+          // the task of number 1 as its describe states it, with the solution folded
+          expect(html).toContain(
+            '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise>',
+          );
+          expect(html).toMatch(
+            /<p class="explainer-task-controls" hidden><span class="explainer-task-number"[^>]*>(Aufgabe Nr\.|Task no\.) 1<\/span>/,
+          );
+          const nojs = html.split('<div class="explainer-nojs">')[1]?.split('<p class="quiz-feedback"')[0] ?? "";
+          expect(nojs).toContain(route.lang === "de" ? "Aufgabe Nr. 1" : "Task no. 1");
+          expect(nojs).toContain(
+            route.lang === "de" ? "Zur Wahl stehen, in dieser Reihenfolge:" : "The choices, in this order:",
+          );
+          expect(nojs).toMatch(/<details class="explainer-solution"><summary>[^<]+<\/summary><p>(Stufe|Level) 1: /);
         }
         // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
         if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
         for (const generated of html.split('class="explainer-exercise explainer-generated"').slice(1)) {
           const exercise = generated.split('class="explainer-exercise-data"')[0] ?? "";
           expect(exercise.split('class="explainer-worked-task"').length - 1).toBe(3);
+          expect(exercise).toMatch(/<p class="explainer-task-number">(Aufgabe Nr\.|Task no\.) 3<\/p>/);
           expect(exercise.split('<details class="explainer-solution">').length - 1).toBe(3);
         }
       }

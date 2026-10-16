@@ -41,8 +41,17 @@ with which a creator and their AI assistant build a learning app.
   `onMounted`, and 20 kB gzip of the component's own code. Once it runs, it replaces its `nojs` text, or keeps it
   folded as a text description under it with `defineOptions({ nojs: "caption" })`. A component that emits
   `answered { correct, reason? }` is an exercise (`reason`: what went wrong in a wrong answer, shown with the
-  feedback): its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
-  `wrong(task)`, which the build tests over 50 fixed seeds per block ([`components.ts`](runtime/explainer/components.ts)).
+  feedback): it declares the prop `seed: number`, its task number, which the explainer gives it with "Aufgabe Nr."
+  and "Neue Aufgabe" and keeps in the address (`?seed=<n>#<id>`, the id of its block or its name in kebab case), and
+  its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
+  `wrong(task)`, which the build tests over 50 fixed seeds per block, `describe(task, props, lang)`, the task and its
+  solution as a learner reads them (`{ task, solution }`, restricted Markdown), and `about`, what the exercise is for a
+  tutor (`{ task, answer, correct, mistakes }`). The build checks `describe` for the task numbers 1 to 20 in every
+  language and writes the no-JS text of an exercise component from it: the task of number 1 with its solution folded,
+  so it needs no `nojs` ([`components.ts`](runtime/explainer/components.ts)).
+- Every seeded exercise (generated, exercise component) shows its task number, "Aufgabe Nr. <n>": its seed. The live
+  exercises draw numbers from 1 to `TASK_NUMBERS` (20, [`tasks.ts`](runtime/explainer/tasks.ts)), "Neue Aufgabe"
+  moves to the next and writes it into the address, and `?seed=<n>#<id>` opens task n.
 - Every exercise may carry `examples: { accepted, rejected }`, test cases that learners never see: the other correct
   answers its text allows, and typical wrong ones. The build runs each through the same check the page uses (the
   quiz's checker, a generated exercise's comparator for every seed, an exercise component's `check`) and fails on an

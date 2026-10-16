@@ -2,8 +2,8 @@
 // the quiz runtime's per-question exports (its controls, and a <details> "Lösung" with the right answer, the
 // background of every option, the explanation and the links); and a generated exercise: its templates rendered once
 // per language (restricted Markdown, formulas as MathML, the placeholders as tokens), the place of the live task, and
-// three worked tasks from fixed seeds each with a <details> "Lösung" (with JavaScript they show once the live task is
-// solved). Each exercise carries the data its live part
+// three worked tasks from fixed seeds, each with its task number and a <details> "Lösung" (with JavaScript they show
+// once the live task is solved). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
 import { questionIn, type Question } from "../quiz/quiz.ts";
 import { answerText, messagesIn, renderQuestion, renderSolution } from "../quiz/render.ts";
@@ -35,7 +35,7 @@ export type ExerciseData =
       spec: Generated;
       templates: Templates;
       data: Data;
-      texts: { newTask: string; practice: string; hint: string; solution: string };
+      texts: { newTask: string; practice: string; hint: string; solution: string; taskNumber: string };
     };
 
 /** The templates of a generated exercise in each of `languages`; links inside them through `resolve`. */
@@ -135,6 +135,7 @@ function generatedExercise(
   const worked = workedTasks(spec, data, templates, lang).map((item) =>
     [
       `<li class="explainer-worked-task">`,
+      `<p class="explainer-task-number">${plain(message(lang, "taskNumber", { n: String(item.seed) }))}</p>`,
       `<p class="explainer-task">${item.task}</p>`,
       item.figure === undefined ? "" : `<div class="explainer-task-figure">${item.figure}</div>`,
       item.hint === undefined
@@ -164,6 +165,8 @@ function generatedExercise(
       practice: message(lang, "practice"),
       hint: message(lang, "hint"),
       solution,
+      // with {n} kept for the client module
+      taskNumber: message(lang, "taskNumber"),
     },
   };
   return [
