@@ -494,6 +494,17 @@ export function fill(
   });
 }
 
+/**
+ * A template as its author wrote it (restricted Markdown, formulas as $…$) with each placeholder replaced by its value
+ * as the learner reads it, in `lang`: the text a tutor file gives (tutor.ts).
+ */
+export function fillSource(text: Text, spec: Generated, task: Task, lang: string): string {
+  return inLanguage(text, lang).replace(
+    PLACEHOLDER,
+    (whole, path: string) => placeholderValue(spec, task, path, lang)?.text ?? whole,
+  );
+}
+
 const templatesIn = (templates: Templates, lang: string): LanguageTemplates =>
   templates[lang] ?? templates["de"] ?? { task: "", steps: [], messages: [] };
 

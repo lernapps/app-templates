@@ -24,6 +24,8 @@ export interface App {
   languages: readonly string[];
   chapters: readonly string[];
   sources?: readonly Source[];
+  /** What the app adds for a KI tutor: its own rules (restricted Markdown), after the generic ones in llms.txt. */
+  tutor?: { rules?: Text };
 }
 
 export interface Credit {

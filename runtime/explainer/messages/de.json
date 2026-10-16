@@ -29,5 +29,7 @@
   "gridAlt": "Ein Hunderterfeld, {{figure.filled}} Kästchen sind gefärbt.",
   "barAlt": "Ein Streifen für {{figure.whole}}, davon {{figure.part}} gefärbt.",
   "textDescription": "Beschreibung als Text",
-  "taskNumber": "Aufgabe Nr. {n}"
+  "taskNumber": "Aufgabe Nr. {n}",
+  "backToTutor": "Zurück zum Tutor",
+  "backToTutorOpen": "Schließ diesen Tab und kehr zum Chat mit deinem Tutor zurück."
 }

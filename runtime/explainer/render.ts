@@ -31,6 +31,7 @@ import { plain, renderInline, renderMarkdown } from "./markdown.ts";
 import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
+import { llmsTutorPart } from "./tutor.ts";
 
 /**
  * Whether the bundled image `image` has no size of its own: an SVG whose root has neither a width nor a height (only a
@@ -495,7 +496,10 @@ export function renderSite(
   return routes(site).map((route) => renderPage(site, route, islands, descriptions));
 }
 
-/** llms.txt of a language tree: the app, its pages with their sections as deep links, from that tree's root. */
+/**
+ * llms.txt of a language tree: the app, its pages with their sections as deep links, from that tree's root, and the
+ * part for a KI tutor (tutor.ts): the generic rules, the app's own, and the links to the pages' tutor files.
+ */
 export function llmsTxt(site: Site, lang: string): string {
   const t = (key: keyof Messages) => message(lang, key);
   const own = (text: Text) => inLanguage(text, lang).replace(/\s+/g, " ").trim();
@@ -530,5 +534,6 @@ export function llmsTxt(site: Site, lang: string): string {
     lines.push("");
   }
   if (terms(site).length > 0) lines.push(`## ${t("glossary")}`, "", `- [${t("glossary")}](glossar/)`, "");
+  lines.push(...llmsTutorPart(site, lang));
   return `${lines.join("\n").trimEnd()}\n`;
 }

@@ -8,14 +8,16 @@
 // address names its task number (?seed=<n>#<exercise>), else from a random one; its seed from the exercise's table
 // of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the quiz's controls, checker and feedback through its
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number and writes it
-// into the address. Its worked tasks, with their
-// solutions, show below the live task once the learner has solved it or asked for its solution. Nothing is stored.
+// into the address. Its worked tasks, with their solutions, show below the live task once the learner has solved it or
+// asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
+// which closes the tab. Nothing is stored.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { startQuestion } from "../quiz/engine.ts";
 import { renderQuestion } from "../quiz/render.ts";
 import { questionId } from "../quiz/quiz.ts";
 import type { ExerciseData } from "./exercises.ts";
 import { diagnose, figureOf, generate, hintOf, questionFor, stepsOf, taskText } from "./generated.ts";
+import { message } from "./messages.ts";
 import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
 
 const escape = (text: string) =>
@@ -83,9 +85,43 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   show(false);
 }
 
+/** Whether a tutor opened the page: von=tutor in its address, exactly so. */
+export const fromTutor = (href: string): boolean => new URL(href).searchParams.get("von") === "tutor";
+
+/** How long the page waits after window.close() before it tells the learner to close the tab. */
+const CLOSE_WAIT_MS = 300;
+
+/**
+ * "Zurück zum Tutor" at the top of a page a tutor opened (von=tutor): it closes the tab, which the tutor's chat
+ * opened; where the browser keeps it open (a tab the learner opened), a line says to close it. Nothing is sent.
+ */
+function startBackToTutor(root: Document, main: HTMLElement): void {
+  const lang = root.documentElement.lang;
+  const box = root.createElement("p");
+  box.className = "explainer-back";
+  const button = root.createElement("button");
+  button.type = "button";
+  button.textContent = message(lang, "backToTutor");
+  const status = root.createElement("span");
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  button.addEventListener("click", () => {
+    status.textContent = "";
+    const view = root.defaultView;
+    view?.close();
+    setTimeout(() => {
+      if (!view?.closed) status.textContent = message(lang, "backToTutorOpen");
+    }, CLOSE_WAIT_MS);
+  });
+  box.append(button, " ", status);
+  main.prepend(box);
+}
+
 /** Starts the explainer on the page. */
 export function startExplainer(root: Document = document): void {
   root.documentElement.classList.add("explainer-js");
+  const main = root.querySelector<HTMLElement>("main");
+  if (main && fromTutor(root.location.href)) startBackToTutor(root, main);
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;
     if (!element) continue;

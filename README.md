@@ -55,6 +55,13 @@ with which a creator and their AI assistant build a learning app.
   `?seed=<n>#<id>` opens task number n (a number above N wraps around), "Neue Aufgabe" moves to the next and writes it
   into the address; the build ships each exercise's table of seeds. An exercise with fewer than 67 distinct tasks is
   noted in the build output.
+- For a KI tutor, an assistant the learner brings and controls, the explainer writes static files only (a chat
+  assistant that fetches a URL runs no JavaScript): per language tree a tutor file next to every page
+  (`<chapter>/<page>/tutor.md`: its sections, every exercise with task, answer format, solution, hint and typical
+  mistakes, and for a seeded exercise all its task numbers with their tasks and solutions and links
+  `./?seed=<n>#<id>`), and in `llms.txt` generic rules for a tutor, the app's own (`tutor.rules` in `app.yaml`) and
+  links to the tutor files; the build checks every link and anchor of these files. A page opened with `von=tutor`
+  shows "Zurück zum Tutor", which closes the tab ([`tutor.ts`](runtime/explainer/tutor.ts)).
 - Every exercise may carry `examples: { accepted, rejected }`, test cases that learners never see: the other correct
   answers its text allows, and typical wrong ones. The build runs each through the same check the page uses (the
   quiz's checker, a generated exercise's comparator for every seed, an exercise component's `check`) and fails on an
