@@ -1,19 +1,26 @@
 // Validates a question bank at build time: against its JSON Schema (quiz.v1.schema.json), then what a schema
-// cannot say (one correct option in a single choice, unique ids, ...). Each problem names the question and what to
+// cannot say (one correct option in a single choice, unique ids, ...), and that the check judges each of a question's
+// examples as it is listed: accepted or rejected. Each problem names the question and what to
 // change, for the assistant that wrote the bank. One question validates on its own too (validateQuestion), with the
 // same messages, for another archetype that embeds the quiz's questions; the bank validates each of its questions so.
 // A bank in several languages declares them (languages, German first): each of its learner texts must then be a map
 // with each of them and no other, with the messages of the explainer's language check; so must a link's address that
 // is a map by language (a single address is the same in every language).
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
+import { verdict } from "../shared/examples.ts";
 import { languageListProblems, textLanguages, type Text } from "../shared/languages.ts";
 import schema from "./quiz.v1.schema.json" with { type: "json" };
 import {
+  isComplete,
+  isCorrect,
+  parseNumber,
   questionAddresses,
   questionIn,
   questionTexts,
   quizIn,
   quizLanguages,
+  type Answer,
+  type Examples,
   type Question,
   type Quiz,
 } from "./quiz.ts";
@@ -242,6 +249,133 @@ function questionProblems(question: Question): QuestionProblem[] {
   return problems;
 }
 
+/** An example's answer, or what is wrong with it. */
+type ExampleAnswer = { answer: Answer } | { problem: string };
+
+/** The index of an option, item or entry given as its index from 0 or as its text in German; or what is wrong. */
+function indexOf(value: unknown, texts: readonly string[], what: string): number | string {
+  if (typeof value === "number" && Number.isInteger(value) && value >= 0 && value < texts.length) return value;
+  if (typeof value === "string" && texts.includes(value)) return texts.indexOf(value);
+  const given = typeof value === "string" ? `"${value}"` : JSON.stringify(value);
+  return `${given} is not ${what}; give its index from 0 to ${texts.length - 1}, or its text as written (in German)`;
+}
+
+/** Indices of `values`, each in `texts`; or the first problem. */
+function indicesOf(values: readonly unknown[], texts: readonly string[], what: string): number[] | string {
+  const found = values.map((value) => indexOf(value, texts, what));
+  const problem = found.find((value) => typeof value === "string");
+  return typeof problem === "string" ? problem : (found as number[]);
+}
+
+/**
+ * An example as the checker receives a learner's answer to `question` (in German): single choice an option, multiple
+ * choice a list of options, true/false a boolean, number a number or the text a learner types, ordering the items in
+ * the learner's order, matching a list of pairs [left, right]; an option, item or entry by its index from 0 or its
+ * text. A complete answer, as the page only checks one.
+ */
+function exampleAnswer(question: Question, example: unknown): ExampleAnswer {
+  const expect = (what: string) => ({ problem: `give ${what}` });
+  let answer: Answer;
+  switch (question.type) {
+    case "single-choice": {
+      const index = indexOf(
+        example,
+        question.options.map((option) => option.text),
+        "an option",
+      );
+      if (typeof index === "string") return { problem: index };
+      answer = index;
+      break;
+    }
+    case "multiple-choice": {
+      if (!Array.isArray(example)) return expect("the chosen options as a list: [0, 2]");
+      const indices = indicesOf(
+        example,
+        question.options.map((option) => option.text),
+        "an option",
+      );
+      if (typeof indices === "string") return { problem: indices };
+      answer = [...new Set(indices)].sort((a, b) => a - b);
+      break;
+    }
+    case "true-false":
+      if (typeof example !== "boolean") return expect("true or false");
+      answer = example;
+      break;
+    case "number":
+      if (typeof example === "number") answer = String(example);
+      else if (typeof example === "string" && parseNumber(example, question.unit) !== undefined) answer = example;
+      else return expect('a number, or the text a learner types, e.g. "12,5"');
+      break;
+    case "ordering": {
+      if (!Array.isArray(example)) return expect("the items in the learner's order as a list");
+      const order = indicesOf(example, question.items, "an item");
+      if (typeof order === "string") return { problem: order };
+      if (new Set(order).size !== question.items.length || order.length !== question.items.length) {
+        return expect(`each of the ${question.items.length} items once, in the learner's order`);
+      }
+      // for each item (in the right order), the place the learner gave it
+      answer = question.items.map((_item, index) => order.indexOf(index));
+      break;
+    }
+    case "matching": {
+      const pairs = Array.isArray(example) ? (example as unknown[]) : [];
+      if (!Array.isArray(example) || pairs.some((pair) => !Array.isArray(pair) || pair.length !== 2)) {
+        return expect("a list of pairs [left, right]");
+      }
+      const lefts = indicesOf(
+        pairs.map((pair) => (pair as unknown[])[0]),
+        question.pairs.map((pair) => pair.left),
+        "a left entry",
+      );
+      if (typeof lefts === "string") return { problem: lefts };
+      const rights = indicesOf(
+        pairs.map((pair) => (pair as unknown[])[1]),
+        question.pairs.map((pair) => pair.right),
+        "a right entry",
+      );
+      if (typeof rights === "string") return { problem: rights };
+      if (new Set(lefts).size !== question.pairs.length || lefts.length !== question.pairs.length) {
+        return expect(`one pair for each of the ${question.pairs.length} left entries`);
+      }
+      // for each left entry, the pair whose right entry the learner chose
+      answer = question.pairs.map((_pair, index) => rights[lefts.indexOf(index)] ?? -1);
+      break;
+    }
+  }
+  return isComplete(question, answer) ? { answer } : expect("a complete answer: the page checks only those");
+}
+
+/**
+ * Whether each example of `question` (in German) gets the verdict it is listed with from the same check the page
+ * uses: an accepted one passes, a rejected one fails. Each problem at the example's place.
+ */
+export function exampleProblems(question: Question, examples: Examples | undefined): QuestionProblem[] {
+  const problems: QuestionProblem[] = [];
+  for (const kind of ["accepted", "rejected"] as const) {
+    (examples?.[kind] ?? []).forEach((example, index) => {
+      const path = ["examples", kind, index];
+      const given = exampleAnswer(question, example);
+      if ("problem" in given) {
+        problems.push({ path, message: given.problem });
+        return;
+      }
+      const right = isCorrect(question, given.answer);
+      if (right === (kind === "accepted")) return;
+      problems.push({
+        path,
+        message: verdict(
+          JSON.stringify(example),
+          right,
+          "the check",
+          "change the question (e.g. another type, a tolerance) so that its check",
+        ),
+      });
+    });
+  }
+  return problems;
+}
+
 /**
  * The problems of a question that matches the schema, with their place in it: its texts complete in each of
  * `languages` and in no other (German first, with the messages of the explainer's language check), so its addresses
@@ -264,7 +398,8 @@ export function questionDetails(
       problems.push({ path, lang: problem.lang, message: problem.message });
     }
   }
-  return [...problems, ...questionProblems(questionIn(question, "de"))];
+  const german = questionIn(question, "de");
+  return [...problems, ...questionProblems(german), ...exampleProblems(german, question.examples)];
 }
 
 /** Whether `value` matches the schema of one question; its errors as messages at `at` otherwise. */
@@ -287,10 +422,11 @@ export function validateQuestion(
   const schemaProblems = questionSchemaProblems(value, at);
   if (schemaProblems.length > 0) return schemaProblems;
   const question = value as Question<Text>;
+  // an example is one of many: named by its place
   return questionDetails(question, languages, declaredIn).map((problem) =>
-    problem.lang === undefined
+    problem.lang === undefined && problem.path[0] !== "examples"
       ? `${at} (question "${question.id}"): ${problem.message}`
-      : `${at}${readable(problem.path.map(String))} (${problem.lang}) (question "${question.id}"): ${problem.message}`,
+      : `${at}${readable(problem.path.map(String))}${problem.lang === undefined ? "" : ` (${problem.lang})`} (question "${question.id}"): ${problem.message}`,
   );
 }
 

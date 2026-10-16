@@ -83,6 +83,8 @@ describe("one build writes every page", () => {
         const html = readFileSync(file, "utf8");
         expect(html).toContain(`<html lang="${route.lang}">`);
         expect(html).toContain(`<meta name="lernapps-archetype" content="explainer" />`);
+        // an exercise's examples are test cases for the build: never on the page
+        expect(html, `${route.path}: examples`).not.toContain('"examples"');
         const src = /<script type="module" crossorigin src="([^"]+)"/.exec(html)?.[1] ?? "";
         expect(existsSync(join(dirname(file), src)), `${route.path}: ${src}`).toBe(true);
         const href = /<link rel="stylesheet" crossorigin href="([^"]+)"/.exec(html)?.[1] ?? "";

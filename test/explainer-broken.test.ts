@@ -175,6 +175,23 @@ const cases: [string, (root: string) => void, string][] = [
     "src/kapitel/zwei.yaml:20: blocks[2].links[0].url (en): must be an https address",
   ],
   [
+    "an accepted example that the check rejects",
+    (root) =>
+      edit(root, "kapitel/zwei.yaml", "    options:\n", "    examples: { accepted: [Eine Linie] }\n    options:\n"),
+    'src/kapitel/zwei.yaml:21: blocks[2].examples.accepted[0]: the check rejects "Eine Linie", but it is listed as accepted; if the task\'s text allows it, change the question (e.g. another type, a tolerance) so that its check accepts it, else move it to rejected',
+  ],
+  [
+    "a rejected example that the check accepts",
+    (root) =>
+      edit(
+        root,
+        "kapitel/eins.yaml",
+        `answer: { value: "a + b"`,
+        `examples: { rejected: ["b + a"] }\n        answer: { value: "a + b"`,
+      ),
+    'src/kapitel/eins.yaml:29: blocks[1].blocks[0].examples.rejected[0]: for seed 1 (answer 12) the check accepts "12", but it is listed as rejected; if the task\'s text rules it out, change the exercise (e.g. another comparator, a tolerance) so that its check rejects it, else move it to accepted',
+  ],
+  [
     "a page without an exercise",
     (root) => {
       const file = join(root, "src/kapitel/zwei.yaml");

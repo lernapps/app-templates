@@ -131,6 +131,9 @@ blocks:
           - { left: { de: "Quadrat", en: "Square" }, right: { de: "vier", en: "four" } }
           - { left: { de: "Kreis", en: "Circle" }, right: { de: "keine", en: "none" } }
         explanation: { de: "Ein Kreis hat keine Ecken.", en: "A circle has no corners." }
+        examples:
+          accepted: [[[Kreis, keine], [Dreieck, drei], [Quadrat, vier]]]
+          rejected: [[[0, 1], [1, 0], [2, 2]]]
         links:
           - title: { de: "Kreis (Wikipedia)", en: "Circle (Wikipedia, German)" }
             url: https://de.wikipedia.org/wiki/Kreis_(Geometrie)
@@ -144,6 +147,7 @@ blocks:
         mistakes:
           - value: "[2, 4, 6]"
             message: { de: "8 ist auch gerade.", en: "8 is even too." }
+        examples: { accepted: ["reverse(answer)"], rejected: ["[1, 2, 4, 6, 8]"] }
       - type: generated
         id: symbole
         given:

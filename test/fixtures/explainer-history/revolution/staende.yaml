@@ -65,6 +65,12 @@ blocks:
               en: Second Estate, the nobility
             - de: Dritter Stand, alle anderen
               en: Third Estate, everyone else
+        examples:
+          accepted:
+            - answer: [0, 1, 2]
+          rejected:
+            - answer: [2, 1, 0]
+            - answer: [0, 0, 2]
         nojs:
           de: |
             Die Ständepyramide hat drei Stufen. Oben steht der Erste Stand, die Geistlichen, in der Mitte der Zweite
