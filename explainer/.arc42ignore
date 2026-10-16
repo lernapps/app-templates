@@ -1,0 +1,3 @@
+# Paths the architecture does not claim (arc42 H021), relative to this template folder.
+# The example chapter of the template: content the creator replaces, part of bb-explainer-content.
+src/prozent

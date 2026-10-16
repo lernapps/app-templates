@@ -55,8 +55,13 @@ export default defineConfig({
     dts: false,
   },
   staged: {
-    // The pre-commit hook (.vite-hooks/pre-commit) formats and fixes the staged files of the runtime package. A
-    // template folder's files are on the ignore list above: `lernapps check --pre-push` in that folder checks them.
+    // The pre-commit hook (.vite-hooks/pre-commit) formats and fixes the staged files of the runtime package and checks
+    // the architecture. A template folder's code is on the ignore list above: `lernapps check --pre-push` in that folder
+    // checks it.
     "*.{ts,json,vue}": "vp check --fix --no-error-on-unmatched-pattern",
+    // The architecture: the generic part with each archetype's extension, `arc42 validate --strict` (scripts/arc42.ts,
+    // about 3 s); any finding fails the commit. An app will run `arc42 diff --staged --strict` on its one architecture;
+    // this repo holds one per archetype, so the script is its gate. CI runs it too (job architecture).
+    "{*.arc42.md,.arc42ignore}": "node scripts/arc42.ts",
   },
 });
