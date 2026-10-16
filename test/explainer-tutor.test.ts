@@ -40,7 +40,7 @@ describe("the tutor file of a page", () => {
     expect(file).toContain("### prozent-von-200 (single-choice)");
     expect(file).toContain("  - ✗ 20 – Das sind 10 % von 200.");
     expect(file).toContain(
-      "  - [Aufgabe Nr. 1](./?seed=1#prozent-rechnen): Wie viel sind 1 % von 200? → Lösung: 2\n    - ✗ 200: Du hast nicht durch 100 geteilt.",
+      "  - [Aufgabe Nr. 1](./?prozent-rechnen=1#prozent-rechnen): Wie viel sind 1 % von 200? → Lösung: 2\n    - ✗ 200: Du hast nicht durch 100 geteilt.",
     );
     // its distinct tasks, numbered 1 to N
     const generated = [...page.blocks]
@@ -49,11 +49,11 @@ describe("the tutor file of a page", () => {
     if (generated?.type !== "generated") throw new Error("no generated exercise");
     const count = taskSeeds(generated, dataOf(generated, site.data)).length;
     expect(file).toContain(`Aufgaben nach Nummer, 1 bis ${count}: jede eine andere`);
-    expect(file).toContain(`[Aufgabe Nr. ${count}](./?seed=${count}#prozent-rechnen)`);
-    expect(file).not.toContain(`seed=${count + 1}#prozent-rechnen`);
+    expect(file).toContain(`[Aufgabe Nr. ${count}](./?prozent-rechnen=${count}#prozent-rechnen)`);
+    expect(file).not.toContain(`prozent-rechnen=${count + 1}#prozent-rechnen`);
     // the examples are test cases, never in a tutor file
     expect(file).not.toMatch(/accepted|rejected/);
-    expect(tutorFile(site, page, "en", new Map())).toContain("[Task no. 1](./?seed=1#prozent-rechnen)");
+    expect(tutorFile(site, page, "en", new Map())).toContain("[Task no. 1](./?prozent-rechnen=1#prozent-rechnen)");
   });
 
   test("an exercise component: its about, and each number's task and solution from its describe", () => {
@@ -75,8 +75,10 @@ describe("the tutor file of a page", () => {
     );
     expect(file).toContain("  - Eine Beschriftung zweimal gewählt.");
     const first = description?.tasks["de"]?.[0];
-    expect(file).toContain(`  - [Aufgabe Nr. 1](./?seed=1#assign-labels): ${first?.task} → Lösung: ${first?.solution}`);
-    expect(file.split("](./?seed=").length - 1).toBe(description?.seeds.length);
+    expect(file).toContain(
+      `  - [Aufgabe Nr. 1](./?assign-labels=1#assign-labels): ${first?.task} → Lösung: ${first?.solution}`,
+    );
+    expect(file.split("](./?assign-labels=").length - 1).toBe(description?.seeds.length);
   });
 });
 
@@ -108,7 +110,7 @@ describe("llms.txt for a tutor", () => {
     expect(
       linkProblems(
         "a/b/tutor.md",
-        "[ok](./?seed=3#uebung) [x](./#fehlt) [y](../c/) [z](https://example.org/)",
+        "[ok](./?uebung=3#uebung) [x](./#fehlt) [y](../c/) [z](https://example.org/)",
         files,
         anchors,
       ),

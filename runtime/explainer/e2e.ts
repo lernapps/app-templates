@@ -408,9 +408,9 @@ export function explainerTests(root = "."): void {
             await expectAnchors(page);
             await expectLanguages(page, item, app.languages);
             if (item.kind === "start") {
-              // the tutor section without JavaScript: no copy button, plain links to the assistants and to tutor.md
+              // the tutor section without JavaScript: no button with a select, plain links to the assistants and to tutor.md
               const tutor = page.locator(".explainer-tutor");
-              await expect(tutor.locator(".explainer-tutor-copy")).toBeHidden();
+              await expect(tutor.locator(".explainer-tutor-way")).toBeHidden();
               for (const href of await tutor
                 .locator("a.explainer-tutor-provider")
                 .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""))) {
@@ -496,6 +496,10 @@ export function explainerTests(root = "."): void {
       });
       await page.goto("./");
       const tutor = page.locator(".explainer-tutor");
+      // the first assistant is the default way; "Prompt kopieren" is picked from the select, and stays the way
+      await expect(tutor.locator(".explainer-tutor-go")).toHaveText(messageOf("de", "tutorGo", { name: "Claude" }));
+      expect(await page.evaluate(() => Object.keys(localStorage)), "nothing is kept before a choice").toEqual([]);
+      await tutor.locator(".explainer-tutor-select").selectOption({ label: messageOf("de", "tutorCopy") });
       await tutor.getByRole("button", { name: messageOf("de", "tutorCopy") }).click();
       await expect(tutor.locator(".explainer-tutor-status")).toHaveText(messageOf("de", "tutorCopied"));
       const copied = await page.evaluate(() => (window as unknown as { copied: string[] }).copied);
