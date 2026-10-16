@@ -184,8 +184,7 @@ function startTutor(root: Document): void {
   const storage = createStorage(data.storage);
   const stored = storage.load(WAY_KEY, isText);
   const names = [...data.ways.map((provider) => provider.name), COPY];
-  select.value = String(stored !== undefined && names.includes(stored) ? names.indexOf(stored) : 0);
-  if (select.selectedIndex < 0) select.selectedIndex = 0;
+  select.selectedIndex = stored !== undefined && names.includes(stored) ? names.indexOf(stored) : 0;
   const chosen = () => data.ways[select.selectedIndex];
   const label = () => {
     const provider = chosen();
