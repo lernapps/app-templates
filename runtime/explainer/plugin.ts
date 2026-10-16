@@ -23,12 +23,11 @@
 // (islands.ts) is a chunk of its own with Vue, and only the pages with a component load it; each component is a chunk
 // that its pages load when they hydrate it, and its own code, gzipped, must stay within the budget.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import type { Component } from "vue";
-import type { Alias, Plugin, ViteDevServer } from "vite-plus";
+import type { Plugin, ViteDevServer } from "vite-plus";
 import {
   describedProblems,
   exampleProblems,
@@ -43,6 +42,7 @@ import { dataOf, taskSeeds } from "./exercises.ts";
 import { MAX_TASKS } from "./tasks.ts";
 import { llmsTxt, renderSite, type Descriptions, type Islands, type RenderedPage } from "./render.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
+import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";
 import { anchorsOf, linkProblems, tutorFile, tutorFileOf } from "./tutor.ts";
 import { PROMPT_FILE, tutorPrompt, withBase } from "./prompt.ts";
@@ -58,13 +58,6 @@ export function fill(shell: string, page: RenderedPage, head = ""): string {
     .replace("</head>", `  ${page.head}${head === "" ? "" : `\n    ${head}`}\n  </head>`);
   return fromDepth(html, page.route.path).replace(MARKER, () => page.body);
 }
-
-const require = createRequire(import.meta.url);
-/** vue, and vue/<path>, resolved to the copy this runtime depends on. */
-const vueAlias = (): Alias[] => [{ find: /^vue(?=$|\/)/, replacement: dirname(require.resolve("vue/package.json")) }];
-/** The options of @vitejs/plugin-vue: a component's scope id from its file and source alone, the same in the build and
- * in the server that renders it. */
-const VUE_OPTIONS = { features: { componentIdGenerator: "filepath-source" } } as const;
 
 /** The islands module, next to this file: islands.ts in the source, explainer-islands.mjs in dist/. */
 const here = fileURLToPath(import.meta.url);
@@ -110,28 +103,6 @@ function vueWhenComponents(): Plugin {
       return { ...own, resolve: { ...own.resolve, alias: vueAlias() } };
     },
   } as Plugin;
-}
-
-type Load = (id: string) => Promise<Record<string, unknown>>;
-
-/** Loads modules of the app in `root` for Node in a Vite server of its own, with the components compiled for it. */
-async function withServer<T>(root: string, act: (load: Load) => Promise<T>): Promise<T> {
-  const [{ createServer }, { default: vue }] = await Promise.all([import("vite-plus"), import("@vitejs/plugin-vue")]);
-  const server = await createServer({
-    root,
-    configFile: false,
-    logLevel: "silent",
-    plugins: [vue(VUE_OPTIONS)],
-    resolve: { alias: vueAlias() },
-    appType: "custom",
-    server: { middlewareMode: true, hmr: false, ws: false, watch: null },
-    optimizeDeps: { noDiscovery: true, include: [] },
-  });
-  try {
-    return await act((id) => server.ssrLoadModule(id));
-  } finally {
-    await server.close();
-  }
 }
 
 const reason = (error: unknown) => (error instanceof Error ? error.message : String(error)).split("\n")[0] ?? "";

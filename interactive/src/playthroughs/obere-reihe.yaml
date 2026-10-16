@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/interactive/playthrough.v1.schema.json
+# The obere Reihe with seed 1, whose letters start with u q z p: three hits, then the space bar, a wrong key.
+route: obere-reihe
+seed: 1
+steps:
+  - keys: [u, q, z]
+    state: { route: obere-reihe, index: 3, score: 3 }
+    announce: Richtig. Tippe p.
+  - keys: [" "]
+    state: { index: 3, misses: 1 }
+    announce: Falsch. Tippe p.

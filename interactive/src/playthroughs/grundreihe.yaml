@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/interactive/playthrough.v1.schema.json
+# A round of the Grundreihe with seed 1, whose letters are j a f l l s j k d l: a hit, a wrong key, a capital letter
+# that counts, the rest of the round, and Enter for the next round.
+route: grundreihe
+seed: 1
+steps:
+  - keys: [j]
+    state: { index: 1, score: 1, misses: 0 }
+    announce: Richtig. Tippe a.
+  - keys: [x]
+    state: { index: 1, score: 1, misses: 1 }
+    announce: Falsch. Tippe a.
+  - keys: [A]
+    state: { index: 2, score: 2 }
+    announce: Richtig. Tippe f.
+  - keys: [f, l, l, s, j, k, d, l]
+    state: { score: 10, misses: 1, done: true }
+    announce: "Fertig: 10 von 10 richtig. Mit Enter spielst du noch eine Runde."
+  - keys: [Enter]
+    state: { seed: 2, letters: kdsfljfdka, index: 0, score: 0, misses: 0, done: false }
+    announce: Neue Runde. Tippe k.

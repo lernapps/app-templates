@@ -110,8 +110,8 @@ describe("what a push checks", () => {
   test("the explainer's runtime runs the explainer's check; the shared runtime runs both; other paths neither", () => {
     expect(templatesFor(["runtime/explainer/render.ts"])).toEqual(["explainer"]);
     expect(templatesFor(["explainer/src/app.yaml", "README.md"])).toEqual(["explainer"]);
-    expect(templatesFor(["runtime/shared/pages.ts"])).toEqual(["quiz", "explainer"]);
-    expect(templatesFor(["package-lock.json"])).toEqual(["quiz", "explainer"]);
+    expect(templatesFor(["runtime/shared/pages.ts"])).toEqual(["quiz", "explainer", "interactive"]);
+    expect(templatesFor(["package-lock.json"])).toEqual(["quiz", "explainer", "interactive"]);
     expect(templatesFor(["test/fixtures/quiz-bilingual.json", "scripts/pre-push.ts", "new-folder/x.ts"])).toEqual([]);
   });
 
@@ -128,6 +128,7 @@ describe("what a push checks", () => {
     const commands = ran.flat().map((step) => `${step.cwd}: ${step.command.join(" ")}`);
     expect(commands).toContain("quiz: lernapps check --pre-push");
     expect(commands).toContain("explainer: lernapps check --pre-push");
+    expect(commands).toContain("interactive: lernapps check --pre-push");
   });
 });
 
