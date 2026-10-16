@@ -2,8 +2,8 @@
 // the quiz runtime's per-question exports (its controls, and a <details> "Lösung" with the right answer, the
 // background of every option, the explanation and the links); and a generated exercise: its templates rendered once
 // per language (restricted Markdown, formulas as MathML, the placeholders as tokens), the place of the live task, and
-// three worked tasks from fixed seeds each with a <details> "Lösung" (with JavaScript they show once the live task is
-// solved). Each exercise carries the data its live part
+// three worked tasks, the task numbers 1 to 3 (taskSeeds), each with its task number and a <details> "Lösung" (with JavaScript they show
+// once the live task is solved). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
 import { questionIn, type Question } from "../quiz/quiz.ts";
 import { answerText, messagesIn, renderQuestion, renderSolution } from "../quiz/render.ts";
@@ -17,13 +17,15 @@ import {
   stepsOf,
   taskText,
   tokenize,
-  WORKED_SEEDS,
+  taskKey,
+  WORKED_TASKS,
   type Data,
   type Generated,
   type LanguageTemplates,
   type Templates,
 } from "./generated.ts";
 import { plain, renderInline } from "./markdown.ts";
+import { distinctSeeds } from "./tasks.ts";
 import { message } from "./messages.ts";
 
 /** What the browser reads from an exercise (script.explainer-exercise-data). */
@@ -35,7 +37,9 @@ export type ExerciseData =
       spec: Generated;
       templates: Templates;
       data: Data;
-      texts: { newTask: string; practice: string; hint: string; solution: string };
+      /** The seed of each task number, from 1 (taskSeeds). */
+      seeds: number[];
+      texts: { newTask: string; practice: string; hint: string; solution: string; taskNumber: string };
     };
 
 /** The templates of a generated exercise in each of `languages`; links inside them through `resolve`. */
@@ -75,8 +79,32 @@ export function dataOf(spec: Generated, all: Readonly<Record<string, readonly Da
   return Object.fromEntries(names.filter((name) => all[name] !== undefined).map((name) => [name, all[name] ?? []]));
 }
 
+const seedCache = new WeakMap<Generated, number[]>();
+
+/**
+ * The seed of each task number of a generated exercise, from 1: the seeds of its distinct tasks (what the learner sees
+ * of a task, in German), up to MAX_TASKS (tasks.ts); once per exercise.
+ */
+export function taskSeeds(spec: Generated, data: Data): number[] {
+  let seeds = seedCache.get(spec);
+  if (seeds === undefined) {
+    const templates = templatesOf(spec, ["de"]);
+    seeds = distinctSeeds((seed) => {
+      try {
+        return taskKey(spec, generate(spec, seed, data), "de", templates);
+      } catch {
+        return undefined;
+      }
+    });
+    seedCache.set(spec, seeds);
+  }
+  return seeds;
+}
+
 /** One worked task of a generated exercise: what the page shows without JavaScript, and what the tests expect. */
 export interface Worked {
+  /** Its task number. */
+  number: number;
   seed: number;
   /** The task as HTML. */
   task: string;
@@ -90,21 +118,24 @@ export interface Worked {
 
 /** The worked tasks of a generated exercise in `lang`. */
 export function workedTasks(spec: Generated, data: Data, templates: Templates, lang: string): Worked[] {
-  return WORKED_SEEDS.map((seed) => {
-    const task = generate(spec, seed, data);
-    const question = questionFor(spec, task, lang, templates);
-    const figure = figureOf(spec, task, lang, templates);
-    const hint = hintOf(spec, task, lang, templates);
-    return {
-      seed,
-      task: taskText(spec, task, lang, templates),
-      question,
-      steps: stepsOf(spec, task, lang, templates),
-      answer: answerText(question, lang),
-      ...(figure === undefined ? {} : { figure }),
-      ...(hint === undefined ? {} : { hint }),
-    };
-  });
+  return taskSeeds(spec, data)
+    .slice(0, WORKED_TASKS)
+    .map((seed, index) => {
+      const task = generate(spec, seed, data);
+      const question = questionFor(spec, task, lang, templates);
+      const figure = figureOf(spec, task, lang, templates);
+      const hint = hintOf(spec, task, lang, templates);
+      return {
+        number: index + 1,
+        seed,
+        task: taskText(spec, task, lang, templates),
+        question,
+        steps: stepsOf(spec, task, lang, templates),
+        answer: answerText(question, lang),
+        ...(figure === undefined ? {} : { figure }),
+        ...(hint === undefined ? {} : { hint }),
+      };
+    });
 }
 
 const json = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
@@ -135,6 +166,7 @@ function generatedExercise(
   const worked = workedTasks(spec, data, templates, lang).map((item) =>
     [
       `<li class="explainer-worked-task">`,
+      `<p class="explainer-task-number">${plain(message(lang, "taskNumber", { n: String(item.number) }))}</p>`,
       `<p class="explainer-task">${item.task}</p>`,
       item.figure === undefined ? "" : `<div class="explainer-task-figure">${item.figure}</div>`,
       item.hint === undefined
@@ -159,11 +191,14 @@ function generatedExercise(
     spec: shipped,
     templates,
     data,
+    seeds: taskSeeds(spec, data),
     texts: {
       newTask: message(lang, "newTask"),
       practice: message(lang, "practice"),
       hint: message(lang, "hint"),
       solution,
+      // with {n} kept for the client module
+      taskNumber: message(lang, "taskNumber"),
     },
   };
   return [

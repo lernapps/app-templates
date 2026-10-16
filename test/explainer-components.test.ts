@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { build } from "vite-plus";
-import { exampleProblems, propertyProblems } from "../runtime/explainer/components.ts";
+import { describedProblems, exampleProblems, propertyProblems } from "../runtime/explainer/components.ts";
 import { explainer } from "../runtime/explainer/plugin.ts";
 
 const FIXTURE = join(import.meta.dirname, "fixtures/explainer-history");
@@ -54,6 +54,7 @@ async function problems(root: string): Promise<string[]> {
 }
 
 const VUE = "components/AssignLabels.vue";
+const LOGIC = "components/AssignLabels.ts";
 
 const cases: [string, (root: string) => void, string][] = [
   [
@@ -62,13 +63,55 @@ const cases: [string, (root: string) => void, string][] = [
     "src/revolution/staende.yaml:59: blocks[0].blocks[3].props.level: AssignLabels declares level: string; give a text here (vue-component-props-valid)",
   ],
   [
-    "a vue-component without nojs",
+    "a vue-component that is no exercise without nojs",
     (root) => {
-      const file = join(root, "src/revolution/staende.yaml");
-      const text = readFileSync(file, "utf8");
-      writeFileSync(file, text.replace(/ {8}nojs:\n(?: {10}.*\n)+/, ""));
+      writeFileSync(
+        join(root, "src/components/Note.vue"),
+        `<script setup lang="ts">\ndefineProps<{ text: string }>();\n</script>\n\n<template>\n  <p>{{ text }}</p>\n</template>\n`,
+      );
+      writeFileSync(
+        join(root, "src/components/Note.test.ts"),
+        `import { test } from "vite-plus/test";\ntest("notes", () => {});\n`,
+      );
+      edit(
+        root,
+        "revolution/staende.yaml",
+        "      - type: vue-component\n        component: AssignLabels\n",
+        "      - type: vue-component\n        component: Note\n        props: { text: { de: Hallo, en: Hello } }\n      - type: vue-component\n        component: AssignLabels\n",
+      );
     },
-    "src/revolution/staende.yaml:50: blocks[0].blocks[3]: nojs is missing; a vue-component says in nojs, for readers without JavaScript, what it shows, and gives its content (vue-component-nojs)",
+    "src/revolution/staende.yaml:50: blocks[0].blocks[3]: nojs is missing; a vue-component that is no exercise says in nojs, for readers without JavaScript, what it shows, and gives its content (vue-component-nojs)",
+  ],
+  [
+    "an exercise component without the prop seed",
+    (root) => edit(root, VUE, "  /** The task number, which the explainer gives. */\n  seed: number;\n", ""),
+    'src/components/AssignLabels.vue: it emits answered, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component the seed of its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)',
+  ],
+  [
+    "a block that gives an exercise component its seed",
+    (root) =>
+      edit(
+        root,
+        "revolution/staende.yaml",
+        "          level: { de: Stufe, en: Level }\n",
+        "          level: { de: Stufe, en: Level }\n          seed: 3\n",
+      ),
+    "src/revolution/staende.yaml:60: blocks[0].blocks[3].props.seed: AssignLabels has no prop seed; its props are alt, question, level, button, parts (vue-component-props-valid)",
+  ],
+  [
+    "a logic module without describe",
+    (root) => edit(root, LOGIC, "export function describe(", "function describe("),
+    "src/components/AssignLabels.ts: exports no describe; the logic module of an exercise component exports generate(seed, props), check(task, answer), solution(task), wrong(task), describe(task, props, lang) and about (vue-component-exercise-contract)",
+  ],
+  [
+    "an about without a translation",
+    (root) => edit(root, LOGIC, `    en: "It is right only when every level has its own label.",\n`, ""),
+    "src/revolution/staende.yaml:50: blocks[0].blocks[3]: AssignLabels.ts: about.correct (en): the translation is missing (vue-component-exercise-contract)",
+  ],
+  [
+    "a describe that throws in one language",
+    (root) => edit(root, LOGIC, "?? GERMAN;\n", '?? GERMAN;\n  if (lang === "en") throw new Error("no English");\n'),
+    'src/revolution/staende.yaml:50: blocks[0].blocks[3]: AssignLabels.ts: for seed 1 describe(task, props, "en") throws: no English (vue-component-exercise-contract)',
   ],
   [
     "a missing test file",
@@ -80,14 +123,14 @@ const cases: [string, (root: string) => void, string][] = [
     (root) => {
       writeFileSync(
         join(root, "src/components/Tap.vue"),
-        `<script setup lang="ts">\nconst emit = defineEmits<{ answered: [{ correct: boolean }] }>();\n</script>\n\n<template>\n  <button type="button" @click="emit('answered', { correct: true })">Tippen</button>\n</template>\n`,
+        `<script setup lang="ts">\ndefineProps<{ seed: number }>();\nconst emit = defineEmits<{ answered: [{ correct: boolean }] }>();\n</script>\n\n<template>\n  <button type="button" @click="emit('answered', { correct: true })">Tippen</button>\n</template>\n`,
       );
       writeFileSync(
         join(root, "src/components/Tap.test.ts"),
         `import { test } from "vite-plus/test";\ntest("taps", () => {});\n`,
       );
     },
-    "src/components/Tap.vue: it emits answered, so it is an exercise, and its logic module src/components/Tap.ts is missing: export generate(seed, props), check(task, answer), solution(task) and wrong(task) from it (vue-component-exercise-contract)",
+    "src/components/Tap.vue: it emits answered, so it is an exercise, and its logic module src/components/Tap.ts is missing: export generate(seed, props), check(task, answer), solution(task), wrong(task), describe(task, props, lang) and about from it (vue-component-exercise-contract)",
   ],
   [
     "an exercise component that keeps its nojs text, with the solution, once it runs",
@@ -115,12 +158,12 @@ const cases: [string, (root: string) => void, string][] = [
     "a component that fetches",
     (root) =>
       edit(root, VUE, "  done.value = true;\n", '  done.value = true;\n  void fetch("https://example.org/log");\n'),
-    "src/components/AssignLabels.vue:45:8: fetch: a component makes no network request; give it what it needs through its props (vue-component-no-network)",
+    "src/components/AssignLabels.vue:44:8: fetch: a component makes no network request; give it what it needs through its props (vue-component-no-network)",
   ],
   [
     "a component that imports another package",
     (root) => edit(root, VUE, 'from "vue";\n', 'from "vue";\nimport { shuffle } from "lodash-es";\n'),
-    "src/components/AssignLabels.vue:5:1: an import from lodash-es; a component imports only from vue, @lernapps/app-templates, @lernapps/tooling/storage, @lernapps/tooling/i18n, @lernapps/tooling/a11y and its own folder (vue-component-imports)",
+    "src/components/AssignLabels.vue:6:1: an import from lodash-es; a component imports only from vue, @lernapps/app-templates, @lernapps/tooling/storage, @lernapps/tooling/i18n, @lernapps/tooling/a11y and its own folder (vue-component-imports)",
   ],
   [
     "a component that touches window outside onMounted",
@@ -131,7 +174,7 @@ const cases: [string, (root: string) => void, string][] = [
         "const done = ref(false);\n",
         "const done = ref(false);\nconst wide = window.innerWidth > 600;\n",
       ),
-    "src/components/AssignLabels.vue:26:14: window outside onMounted; the build renders the component where there is no window, so use it only inside onMounted (vue-component-browser-globals)",
+    "src/components/AssignLabels.vue:29:14: window outside onMounted; the build renders the component where there is no window, so use it only inside onMounted (vue-component-browser-globals)",
   ],
 ];
 
@@ -199,6 +242,43 @@ describe("the examples of an exercise component's block", () => {
         message:
           "for seed 7 check(task, answer) accepts [0,1,2], but it is listed as rejected; if the task's text rules it out, fix check so that it rejects it, else move it to accepted",
       },
+    ]);
+  });
+});
+
+describe("what an exercise component's logic describes", () => {
+  const props = (lang: string) => ({
+    parts: lang === "de" ? ["a", "b", "c"] : ["x", "y", "z"],
+    question: lang === "de" ? "Welche?" : "Which?",
+    level: lang === "de" ? "Stufe" : "Level",
+  });
+  test("about, and each task number's task and solution in each language", async () => {
+    const logic = await import("./fixtures/explainer-history/components/AssignLabels.ts");
+    const { description, problems } = describedProblems(logic, props, ["de", "en"]);
+    expect(problems).toEqual([]);
+    expect(description?.about).toBe(logic.about);
+    // three labels in any order but their own: five distinct tasks, numbered 1 to 5
+    expect(description?.seeds).toHaveLength(5);
+    expect(description?.tasks["de"]).toHaveLength(5);
+    expect(description?.tasks["en"]?.[0]).toEqual({
+      number: 1,
+      seed: 1,
+      ...logic.describe(logic.generate(1, props("en")), props("en"), "en"),
+    });
+    expect(description?.tasks["en"]?.[0]?.solution).toBe("Level 1: x; Level 2: y; Level 3: z");
+  });
+
+  test("a missing about, and a describe that gives what restricted Markdown does not allow", () => {
+    const logic = { generate: () => ({}), check: () => true, solution: () => 0, wrong: () => 1 };
+    expect(
+      describedProblems({ ...logic, describe: () => ({ task: "# Aufgabe", solution: "1" }) }, props, ["de"]).problems,
+    ).toEqual([
+      "about is missing; export const about = { task, answer, correct, mistakes }: what the learner does, the answer's format, what counts as right, and the typical mistakes, each a text (a map by language when the app has more than one)",
+      'for seed 1 the task of describe(task, props, "de"): a Markdown heading ("Aufgabe"); use a section block with the title "Aufgabe"',
+    ]);
+    const about = { task: "t", answer: "a", correct: "c", mistakes: [] };
+    expect(describedProblems({ ...logic, about, describe: () => ({ task: "t" }) }, props, ["de"]).problems).toEqual([
+      'for seed 1 describe(task, props, "de") is {"task":"t"}; describe returns { task, solution }: the task as the learner sees it and its solution, each a text in the page\'s language',
     ]);
   });
 });

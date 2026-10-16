@@ -71,15 +71,6 @@ blocks:
           rejected:
             - answer: [2, 1, 0]
             - answer: [0, 0, 2]
-        nojs:
-          de: |
-            Die Ständepyramide hat drei Stufen. Oben steht der Erste Stand, die Geistlichen, in der Mitte der Zweite
-            Stand, der Adel. Die breite Stufe unten ist der Dritte Stand, alle anderen: Er trägt die Pyramide. Mit
-            JavaScript ordnest du hier selbst jeder Stufe ihren Stand zu.
-          en: |
-            The pyramid of the estates has three levels. At the top is the First Estate, the clergy, in the middle the
-            Second Estate, the nobility. The wide level at the bottom is the Third Estate, everyone else: it carries
-            the pyramid. With JavaScript you assign each level its estate here yourself.
   - type: section
     id: generalstaende
     title:

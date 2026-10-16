@@ -4,8 +4,12 @@
 // nojs text goes, or, when the component declares defineOptions({ nojs: "caption" }), stays as a text description
 // folded into a <details> under it. An exercise component reports each answer with answered { correct, reason? };
 // the island shows the quiz's feedback for it, with the reason of a wrong answer under it, in view with the focus.
-// Nothing is stored.
-import { createSSRApp, type Component } from "vue";
+// An exercise component gets the seed of its task number as the prop seed, from the table of its distinct tasks the
+// build ships (data-seeds; tasks.ts): the build rendered task number 1, it hydrates with it, and then moves to the
+// number the address names (?seed=<n>#<id>, wrapped into 1 to N) or to a random one; "Aufgabe Nr. <n>" shows above
+// it, and "Neue Aufgabe" moves to the next number, writes it into the address and mounts the component afresh. Nothing is stored.
+import { createSSRApp, h, ref, type Component } from "vue";
+import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
 
 /** The components of the app by name, each loaded on first use. */
 export type Components = Readonly<Record<string, () => Promise<{ default: Component }>>>;
@@ -48,7 +52,38 @@ async function hydrate(element: HTMLElement, load: () => Promise<{ default: Comp
   const onAnswered = (event: { correct?: unknown; reason?: unknown }) => {
     if (feedback) showFeedback(feedback, event.correct === true, event.reason);
   };
-  createSSRApp(component, { ...props, onAnswered }).mount(island);
+  if (element.dataset["exercise"] === undefined) {
+    createSSRApp(component, { ...props, onAnswered }).mount(island);
+  } else {
+    // hydrates with the task of number 1, as the build rendered it, then shows the task of its own number
+    const seeds = JSON.parse(element.dataset["seeds"] ?? "[1]") as number[];
+    const count = Math.max(seeds.length, 1);
+    const seed = ref(seeds[0] ?? 1);
+    createSSRApp({ render: () => h(component, { ...props, seed: seed.value, key: seed.value, onAnswered }) }).mount(
+      island,
+    );
+    const id = element.id;
+    const from = numberFromAddress(location.href, id);
+    let current = from === undefined ? randomTaskNumber(count) : taskNumber(from, count);
+    const controls = element.querySelector<HTMLElement>(":scope > .explainer-task-controls");
+    const number = controls?.querySelector<HTMLElement>(".explainer-task-number");
+    const show = () => {
+      seed.value = seeds[current - 1] ?? current;
+      if (number) number.textContent = (number.dataset["template"] ?? "{n}").replace("{n}", String(current));
+    };
+    show();
+    if (controls) controls.hidden = false;
+    controls?.querySelector(".explainer-new-task")?.addEventListener("click", () => {
+      current = nextTaskNumber(current, count);
+      history.replaceState(history.state, "", addressOf(location.href, id, current));
+      show();
+      if (feedback) {
+        feedback.className = "quiz-feedback";
+        feedback.textContent = "";
+      }
+      number?.focus();
+    });
+  }
   island.hidden = false;
   if (nojs) {
     if (element.dataset["nojs"] === "caption") foldCaption(element, nojs);

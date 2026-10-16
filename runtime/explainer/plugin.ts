@@ -16,8 +16,9 @@
 // Components (src/components/<Name>.vue, components.ts): only when the app has them, the plugin compiles them with
 // @vitejs/plugin-vue and resolves vue to the copy this runtime depends on, so that the components and the islands
 // module share one Vue. Before the pages are written, it runs the property test of each exercise component's logic
-// module for every block that uses it, with the block's examples, and renders each block's component with Vue's server renderer in each
-// language, both in a Vite server of their own; a problem fails the build with its line. The islands module
+// module for every block that uses it, with the block's examples, reads what the logic describes (about, and describe
+// for each task number in each language, for the no-JS text and the tutor), and renders each block's component with
+// Vue's server renderer in each language, all in a Vite server of their own; a problem fails the build with its line. The islands module
 // (islands.ts) is a chunk of its own with Vue, and only the pages with a component load it; each component is a chunk
 // that its pages load when they hydrate it, and its own code, gzipped, must stay within the budget.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -27,10 +28,20 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import type { Component } from "vue";
 import type { Alias, Plugin, ViteDevServer } from "vite-plus";
-import { exampleProblems, propertyProblems, propsIn, SIZE_BUDGET, type ExerciseLogic } from "./components.ts";
-import type { Block, Site } from "./content.ts";
+import {
+  describedProblems,
+  exampleProblems,
+  propertyProblems,
+  propsIn,
+  SIZE_BUDGET,
+  type ExerciseLogic,
+} from "./components.ts";
+import type { Block, ComponentDescription, Site } from "./content.ts";
 import { ContentError, loadSite } from "./load.ts";
-import { llmsTxt, renderSite, type Islands, type RenderedPage } from "./render.ts";
+import { dataOf, taskSeeds } from "./exercises.ts";
+import { allBlocks, contentPages } from "./routes.ts";
+import { MAX_TASKS } from "./tasks.ts";
+import { llmsTxt, renderSite, type Descriptions, type Islands, type RenderedPage } from "./render.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 
 const MARKER = "<!-- explainer -->";
@@ -123,39 +134,53 @@ async function withServer<T>(root: string, act: (load: Load) => Promise<T>): Pro
 const reason = (error: unknown) => (error instanceof Error ? error.message : String(error)).split("\n")[0] ?? "";
 
 /**
- * The property test of each exercise component's logic with each block's props (`test`), and the markup of each
- * block's component in each language, rendered by Vue's server renderer; or the problems, one line each.
+ * The property test of each exercise component's logic with each block's props (`test`), what its logic describes
+ * (about, and describe for each task number in each language), and the markup of each block's component in each
+ * language, rendered by Vue's server renderer, an exercise component with the task number 1; or the problems, one
+ * line each.
  */
 async function renderComponents(
   site: Site,
   load: Load,
   test: boolean,
-): Promise<{ islands: Islands; problems: string[] }> {
+): Promise<{ islands: Islands; descriptions: Descriptions; problems: string[] }> {
   const problems: string[] = [];
   const islands = new Map<Block, Map<string, string>>();
-  if (site.components.length === 0) return { islands, problems };
+  const descriptions = new Map<Block, ComponentDescription>();
+  if (site.components.length === 0) return { islands, descriptions, problems };
   const { createSSRApp } = (await load("vue")) as unknown as typeof import("vue");
   const { renderToString } = (await load("vue/server-renderer")) as unknown as typeof import("vue/server-renderer");
   for (const { block, component, place, examples } of site.components) {
-    if (test && component.logic !== undefined) {
+    if (component.logic !== undefined) {
       const logic = (await load(`/${component.file.replace(/\.vue$/, ".ts")}`)) as unknown as ExerciseLogic;
       const props = propsIn(block.props, component, "de");
-      const contract = propertyProblems(logic, props);
+      const contract = test ? propertyProblems(logic, props) : [];
       for (const problem of contract) {
         problems.push(`${place}: ${component.name}.ts: ${problem} (vue-component-exercise-contract)`);
       }
-      if (contract.length === 0) {
+      if (test && contract.length === 0) {
         for (const { kind, index, message } of exampleProblems(logic, props, block.examples)) {
           problems.push(
             `${examples[kind][index] ?? place}: ${component.name}.ts: ${message} (vue-component-exercise-contract)`,
           );
         }
       }
+      if (contract.length === 0) {
+        const described = describedProblems(logic, (lang) => propsIn(block.props, component, lang), site.app.languages);
+        for (const problem of described.problems) {
+          problems.push(`${place}: ${component.name}.ts: ${problem} (vue-component-exercise-contract)`);
+        }
+        if (described.description !== undefined) descriptions.set(block, described.description);
+      }
     }
     const definition = (await load(`/${component.file}`))["default"] as Component;
     const markup = new Map<string, string>();
     for (const lang of site.app.languages) {
-      const app = createSSRApp(definition, propsIn(block.props, component, lang));
+      const app = createSSRApp(definition, {
+        ...propsIn(block.props, component, lang),
+        // the task of number 1, as the islands hydrate it
+        ...(component.exercise ? { seed: descriptions.get(block)?.seeds[0] ?? 1 } : {}),
+      });
       const warnings = new Set<string>();
       app.config.warnHandler = (message) => warnings.add(message);
       try {
@@ -169,7 +194,7 @@ async function renderComponents(
     }
     islands.set(block, markup);
   }
-  return { islands, problems };
+  return { islands, descriptions, problems };
 }
 
 /** The islands module of the app: the islands runtime, with each component the pages use, loaded on first use. */
@@ -193,6 +218,7 @@ export function explainer(): Plugin[] {
   let command: "build" | "serve" = "build";
   let site: Site | undefined;
   let islands: Islands = new Map();
+  let descriptions: Descriptions = new Map();
   let islandsChunk: string | undefined;
   let devServer: ViteDevServer | undefined;
   const load = () => (site ??= loadSite(root));
@@ -206,6 +232,7 @@ export function explainer(): Plugin[] {
     async buildStart() {
       site = undefined;
       islands = new Map();
+      descriptions = new Map();
       islandsChunk = undefined;
       let content: Site;
       try {
@@ -217,6 +244,7 @@ export function explainer(): Plugin[] {
       const rendered = await withServer(root, (loader) => renderComponents(content, loader, true));
       if (rendered.problems.length > 0) this.error(new ContentError(rendered.problems).message);
       islands = rendered.islands;
+      descriptions = rendered.descriptions;
       islandsChunk = this.emitFile({ type: "chunk", id: ISLANDS, name: "islands" });
     },
     resolveId(id) {
@@ -234,7 +262,7 @@ export function explainer(): Plugin[] {
         islandsChunk === undefined
           ? ""
           : `<script type="module" crossorigin src="./${this.getFileName(islandsChunk)}"></script>`;
-      for (const page of renderSite(content, islands)) {
+      for (const page of renderSite(content, islands, descriptions)) {
         const html = fill(shell, page, page.islands ? script : "");
         if (page.route.path === "") index.source = html;
         else this.emitFile({ type: "asset", fileName: `${page.route.path}index.html`, source: html });
@@ -245,6 +273,25 @@ export function explainer(): Plugin[] {
       }
       for (const lang of content.app.languages) {
         this.emitFile({ type: "asset", fileName: `${languageRoot(lang)}llms.txt`, source: llmsTxt(content, lang) });
+      }
+      // the exercises with fewer distinct tasks than the numbers allow: noted, no problem
+      const few = [
+        ...contentPages(content).flatMap((page) =>
+          [...allBlocks(page.blocks)].flatMap((block) =>
+            block.type === "generated"
+              ? [[block.id, taskSeeds(block, dataOf(block, content.data)).length] as const]
+              : [],
+          ),
+        ),
+        ...content.components.flatMap((use) => {
+          const seeds = descriptions.get(use.block)?.seeds;
+          return seeds === undefined || use.id === undefined ? [] : [[use.id, seeds.length] as const];
+        }),
+      ].filter(([, count]) => count < MAX_TASKS);
+      if (few.length > 0) {
+        this.info(
+          `lernapps explainer: ${few.length} exercise${few.length === 1 ? " has" : "s have"} fewer than ${MAX_TASKS} distinct tasks, numbered 1 to N: ${few.map(([id, count]) => `${id} (${count})`).join(", ")}`,
+        );
       }
       // each component's own code: its chunk and the chunks of its folder that it imports, gzipped
       const chunks = Object.values(bundle).flatMap((output) => (output.type === "chunk" ? [output] : []));
@@ -302,9 +349,9 @@ export function explainer(): Plugin[] {
         const dev = devServer;
         if (dev === undefined) return next();
         renderComponents(content, (id) => dev.ssrLoadModule(id), false)
-          .then(({ islands: rendered, problems }) => {
+          .then(({ islands: rendered, descriptions: described, problems }) => {
             if (problems.length > 0) throw new ContentError(problems);
-            const page = renderSite(content, rendered).find((candidate) => candidate.route.path === path);
+            const page = renderSite(content, rendered, described).find((candidate) => candidate.route.path === path);
             if (page === undefined) return next();
             const shell = readFileSync(join(root, "index.html"), "utf8");
             const head = page.islands
