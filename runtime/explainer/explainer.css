@@ -39,6 +39,7 @@ body {
 .explainer-header,
 .explainer-breadcrumbs,
 .explainer,
+.explainer-tutor-page,
 .explainer-pager,
 .explainer-footer {
   max-width: 44rem;
@@ -658,7 +659,7 @@ figcaption p {
   outline-offset: 2px;
 }
 
-/* "Mit einem KI-Tutor lernen" on the start page: the button that copies the prompt, a link per provider */
+/* "Mit einem KI-Tutor lernen": one button with a select beside it, a plain link per assistant without JavaScript */
 .explainer-tutor-actions {
   display: flex;
   flex-wrap: wrap;
@@ -666,24 +667,48 @@ figcaption p {
   gap: 0.5rem 1rem;
 }
 
-.explainer-tutor-copy {
+.explainer-tutor-way {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.explainer-tutor-way[hidden],
+.explainer-tutor-plain[hidden] {
+  display: none;
+}
+
+.explainer-tutor-go,
+.explainer-tutor-select {
   font: inherit;
   min-height: 2.75rem;
   padding: 0.5rem 1rem;
   border: 2px solid var(--explainer-accent);
-  border-radius: 0.375rem;
-  background: var(--explainer-accent);
-  color: #ffffff;
   cursor: pointer;
 }
 
-.explainer-tutor-copy[hidden] {
-  display: none;
+.explainer-tutor-go {
+  border-radius: 0.375rem 0 0 0.375rem;
+  background: var(--explainer-accent);
+  color: #ffffff;
 }
 
-.explainer-tutor-copy:focus-visible {
+.explainer-tutor-select {
+  border-left-width: 1px;
+  border-radius: 0 0.375rem 0.375rem 0;
+  padding-inline: 0.5rem;
+  background: var(--explainer-background);
+  color: var(--explainer-accent);
+}
+
+.explainer-tutor-go:focus-visible,
+.explainer-tutor-select:focus-visible {
   outline: 3px solid var(--explainer-text);
   outline-offset: 2px;
+}
+
+.explainer-tutor-page {
+  margin-top: 2rem;
+  border-top: 2px solid var(--explainer-border);
 }
 
 /* Usability: sections and exercises must be told apart at a glance. */

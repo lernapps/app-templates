@@ -439,12 +439,7 @@ function main(context: Context): string {
     case "page": {
       const page = route.page;
       if (page === undefined) return title;
-      return [
-        title,
-        pageContents(context, page.blocks),
-        renderBlocks(context, page.blocks, 1),
-        tutorSection(context),
-      ].join("\n");
+      return [title, pageContents(context, page.blocks), renderBlocks(context, page.blocks, 1)].join("\n");
     }
   }
 }
@@ -490,7 +485,7 @@ function tutorSection(context: Context): string {
   };
   const intro = route.kind === "page" ? context.t("tutorPageIntro") : context.t("tutorIntro");
   return [
-    `<section class="explainer-tutor" aria-labelledby="ki-tutor">`,
+    `<section class="explainer-tutor${route.kind === "page" ? " explainer-tutor-page" : ""}" aria-labelledby="ki-tutor">`,
     `<h2 id="ki-tutor">${plain(context.t("tutorTitle"))}</h2>`,
     `<p>${plain(intro)}</p>`,
     `<p class="explainer-tutor-actions"><span class="explainer-tutor-way" hidden><button type="button" class="explainer-tutor-go">${plain(go)}</button> <select class="explainer-tutor-select" aria-label="${plain(context.t("tutorWay"))}">${options}</select></span> <span class="explainer-tutor-plain">${plainLinks}</span></p>`,
@@ -538,6 +533,8 @@ export function renderPage(
     `<main class="explainer" id="inhalt-der-seite">`,
     main(context),
     `</main>`,
+    // the tutor of a page is no part of its content: after main, so that the page's outline stays its own
+    route.kind === "page" ? tutorSection(context) : "",
     pager(context),
     footer(context),
   ]

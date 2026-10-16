@@ -18,7 +18,7 @@
 // it rejects a wrong one (a mistake, with its message), shows its solution and the worked tasks on "Lösung zeigen",
 // "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
 // console error, folds a nojs text it keeps, and an exercise component's answered gives the feedback, once for each
-// answer, with the reason of a wrong one, in view with the focus; at its address ?seed=<n>#<id> it shows "Aufgabe
+// answer, with the reason of a wrong one, in view with the focus; at its address ?<id>=<n> it shows "Aufgabe
 // Nr. n" and gets the seed of task number n from its table, and "Neue Aufgabe" moves to the next number in the address and on the page.
 // Without JavaScript, each component's nojs text is visible and not empty, an exercise component's with its task of
 // number 1 and the solution folded, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
@@ -183,12 +183,12 @@ function seedOf(node: Element): unknown {
 }
 
 /**
- * An exercise component at its address ?seed=<n>#<id>: it gets the task number n as its prop seed and shows "Aufgabe
+ * An exercise component at its address ?<id>=<n>: it gets the task number n as its prop seed and shows "Aufgabe
  * Nr. n"; "Neue Aufgabe" moves to the next number, in the address and on the page, with the focus on it.
  */
 async function checkTaskNumber(page: Page, item: PageOutline, component: ComponentOutline): Promise<void> {
   if (component.id === undefined) return;
-  await page.goto(`./${item.url}?seed=3#${component.id}`);
+  await page.goto(`./${item.url}?${component.id}=3#${component.id}`);
   const element = page.locator(`[id="${component.id}"]`);
   await expect(element, `${component.name}: hydrates at its address`).toHaveAttribute("data-hydrated", "");
   // the seed of each task number, as the build ships it
@@ -202,7 +202,7 @@ async function checkTaskNumber(page: Page, item: PageOutline, component: Compone
     .poll(() => element.evaluate(seedOf), `${component.name}: gets the seed of number ${shown}`)
     .toBe(seeds[shown - 1]);
   await element.locator(":scope > .explainer-task-controls .explainer-new-task").click();
-  const next = Number(new URL(page.url()).searchParams.get("seed"));
+  const next = Number(new URL(page.url()).searchParams.get(component.id));
   expect(next, `${component.name}: the next task number in the address`).toBe(nextTaskNumber(shown, seeds.length));
   expect(new URL(page.url()).hash).toBe(`#${component.id}`);
   await expect(number).toHaveText(messageOf("de", "taskNumber", { n: String(next) }));
@@ -295,7 +295,7 @@ async function checkGenerated(
   await expect(worked, `${exercise.id}: the worked tasks with the solution`).toBeVisible();
   // "Neue Aufgabe": another task, its seed in the address; its right answer counts
   await page.locator(`[id="${exercise.id}"] .explainer-new-task`).click();
-  const number = Number(new URL(page.url()).searchParams.get("seed"));
+  const number = Number(new URL(page.url()).searchParams.get(exercise.id));
   expect(number, "the next task number in the address").toBe(
     nextTaskNumber(taskNumber(SEED, seeds.length), seeds.length),
   );
@@ -509,6 +509,47 @@ export function explainerTests(root = "."): void {
       );
       expect(copied[0]).not.toContain("⟦base⟧");
     });
+
+    for (const item of (app.pages["de"] ?? []).filter((candidate) =>
+      candidate.exercises.some((exercise) => exercise.kind === "generated"),
+    )) {
+      test(`${item.url}: the address holds the task of each exercise, and the tutor button gives them to the prompt`, async ({
+        page,
+      }) => {
+        await page.addInitScript(() => {
+          const copied: string[] = [];
+          Object.assign(window, { copied });
+          Object.defineProperty(navigator, "clipboard", {
+            configurable: true,
+            value: { writeText: (text: string) => (copied.push(text), Promise.resolve()) },
+          });
+        });
+        await page.goto(`./${item.url}`);
+        const ids = item.exercises.flatMap((exercise) => (exercise.kind === "generated" ? [exercise.id] : []));
+        // the task numbers are in the address as soon as the page runs; "Neue Aufgabe" changes only its exercise's
+        for (const id of ids) {
+          await expect.poll(() => new URL(page.url()).searchParams.get(id), `${id} is in the address`).not.toBeNull();
+        }
+        const first = ids[0];
+        if (first === undefined) return;
+        const before = new URL(page.url()).searchParams;
+        await page.locator(`[id="${first}"] .explainer-new-task`).click();
+        const after = new URL(page.url()).searchParams;
+        expect(after.get(first), "the exercise's task changes").not.toBe(before.get(first));
+        for (const id of ids.slice(1)) expect(after.get(id), `${id} stays`).toBe(before.get(id));
+        // the button copies the prompt with the page's address once "Prompt kopieren" is the way
+        const tutor = page.locator(".explainer-tutor");
+        await tutor.locator(".explainer-tutor-select").selectOption({ label: messageOf("de", "tutorCopy") });
+        await tutor.locator(".explainer-tutor-go").click();
+        await expect(tutor.locator(".explainer-tutor-status")).toHaveText(messageOf("de", "tutorCopied"));
+        const copied = await page.evaluate(() => (window as unknown as { copied: string[] }).copied);
+        expect(copied[0], "the prompt names the page's address").toContain(page.url());
+        expect(copied[0], "and the task of the exercise, with its solution").toContain(`${first}=${after.get(first)}`);
+        // the way is the default from then on
+        await page.reload();
+        await expect(tutor.locator(".explainer-tutor-go")).toHaveText(messageOf("de", "tutorCopy"));
+      });
+    }
 
     test("nothing is stored on the device", async ({ page, context }) => {
       const urls = app.languages.flatMap((lang) => [...(app.others[lang] ?? []), ...(app.pages[lang] ?? [])]);
