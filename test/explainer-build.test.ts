@@ -1,7 +1,8 @@
 // The explainer's build, end to end through Vite, on the template's content and on the fixtures: one build writes
 // every page in every language, each linking the one hashed client module and stylesheet that Vite builds from
 // index.html at its own depth, with its language and the archetype marker, and an exercise on every content page (a
-// generated one with three worked tasks); and llms.txt for each language tree. A page with a component also loads the
+// generated one with three worked tasks); and llms.txt for each language tree, with its part for a tutor and a tutor
+// file next to each page. A page with a component also loads the
 // islands module, which brings Vue; a page without one ships no Vue at all. Each language's page, complete without
 // JavaScript, credits its images and quotes and links further reading in its own language.
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -126,7 +127,12 @@ describe("one build writes every page", () => {
         const llms = readFileSync(join(root, "dist", lang === "de" ? "" : lang, "llms.txt"), "utf8");
         for (const route of all.filter((candidate) => candidate.kind === "page" && candidate.lang === "de")) {
           expect(llms).toContain(`](${route.local})`);
+          // the page's tutor file, linked from llms.txt
+          expect(llms).toContain(`](${route.local}tutor.md)`);
+          const tutor = readFileSync(join(root, "dist", lang === "de" ? "" : lang, route.local, "tutor.md"), "utf8");
+          expect(tutor).toMatch(/^# .+ – (Tutor-Datei|tutor file)\n/);
         }
+        expect(llms).toContain(lang === "de" ? "## Hinweise für einen KI-Tutor" : "## Notes for an AI tutor");
       }
     },
     60_000,

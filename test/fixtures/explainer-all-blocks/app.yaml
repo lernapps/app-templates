@@ -11,3 +11,7 @@ chapters: [zahlen, formen]
 sources:
   - title: { de: "Prozentrechnung (Wikipedia)", en: "Percentage (Wikipedia, German)" }
     url: https://de.wikipedia.org/wiki/Prozentrechnung
+tutor:
+  rules:
+    de: "Gerechnet wird auf Papier, das Ergebnis kommt in die App. Frag nach dem Rechenweg, bevor du einen Fehler erklärst."
+    en: "Working goes on paper, the result into the app. Ask for the working before you explain a mistake."

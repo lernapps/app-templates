@@ -948,6 +948,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   const texts = new Texts(app.languages, problems);
   texts.check(appYaml, ["title"], "plain");
   texts.check(appYaml, ["intro"], "markdown");
+  texts.check(appYaml, ["tutor", "rules"], "markdown");
   app.sources?.forEach((_source, index) => texts.check(appYaml, ["sources", index, "title"], "plain"));
   for (const yaml of dataFiles.values()) {
     (yaml.value as DataRecord[]).forEach((record, index) => {
