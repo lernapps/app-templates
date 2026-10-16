@@ -1,5 +1,6 @@
-# The pre-commit hook of this repo: formats and fixes the staged files (vp staged, with the staged section of
-# vite.config.ts), nothing more, so a commit stays fast; the pre-push hook and CI run the checks. Quiet, like the
+# The pre-commit hook of this repo: formats and fixes the staged files and, when an *.arc42.md or .arc42ignore file is
+# staged, validates the architecture strictly (vp staged, with the staged section of vite.config.ts), nothing more, so
+# a commit stays fast; the pre-push hook and CI run the other checks. Quiet, like the
 # pre-commit hook of every app (archetypes/shared/hooks/pre-commit of @lernapps/tooling): the step prints into the log
 # below; on a failure the hook prints one line with the step, its exit code and the log. npm ci installs both hooks
 # (the prepare script: vp config).
@@ -15,4 +16,4 @@ step() {
   echo "lernapps pre-commit: $name failed (exit $code); the full output is in $log" >&2
   exit "$code"
 }
-step "format and fix the staged files (vp staged)" vp staged
+step "format and fix the staged files, check the architecture (vp staged)" vp staged
