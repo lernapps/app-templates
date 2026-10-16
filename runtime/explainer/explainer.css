@@ -640,3 +640,20 @@ figcaption p {
   outline: 3px solid var(--explainer-text);
   outline-offset: 2px;
 }
+
+/* "Zurück zum Tutor", on a page a tutor opened (von=tutor) */
+.explainer-back button {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--explainer-accent);
+  border-radius: 0.375rem;
+  background: var(--explainer-background);
+  color: var(--explainer-accent);
+  cursor: pointer;
+}
+
+.explainer-back button:focus-visible {
+  outline: 3px solid var(--explainer-text);
+  outline-offset: 2px;
+}
