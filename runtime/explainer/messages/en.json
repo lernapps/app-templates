@@ -31,5 +31,13 @@
   "textDescription": "Text description",
   "taskNumber": "Task no. {n}",
   "backToTutor": "Back to the tutor",
-  "backToTutorOpen": "Close this tab and go back to the chat with your tutor."
+  "backToTutorOpen": "Close this tab and go back to the chat with your tutor.",
+  "tutorTitle": "Learn with an AI tutor",
+  "tutorIntro": "You can work through this app with an AI assistant of your choice. It gets instructions, the prompt, which explain the app, its pages and tasks. The app sends nothing anywhere. Only your click on an assistant opens it; what you write there goes to its provider.",
+  "tutorCopy": "Copy the prompt",
+  "tutorOpenWith": "Open with {name}",
+  "tutorText": "View the prompt as text",
+  "tutorCopied": "The prompt is copied. Paste it into the chat of your AI assistant.",
+  "tutorCopiedShort": "The prompt is copied as well. If the chat shows only a short sentence, paste it there.",
+  "tutorCopyFailed": "Copying did not work. Open the prompt as text and copy it from there."
 }

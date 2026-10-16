@@ -13,6 +13,8 @@ import { inspect, renderMarkdown } from "./markdown.ts";
 import { routes } from "./routes.ts";
 
 export interface PageOutline {
+  /** What page it is: the start page, a chapter, a content page, the glossary. */
+  kind: "start" | "chapter" | "page" | "glossary";
   /** Where the page is, from the app's root: "prozent/prozentwert/", "en/prozent/prozentwert/". */
   url: string;
   lang: string;
@@ -182,6 +184,7 @@ export function outline(root = "."): Outline {
   const others: Record<string, PageOutline[]> = {};
   for (const route of routes(site)) {
     const item: PageOutline = {
+      kind: route.kind,
       url: route.path,
       lang: route.lang,
       title: route.title,

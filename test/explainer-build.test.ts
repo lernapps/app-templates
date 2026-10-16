@@ -133,6 +133,18 @@ describe("one build writes every page", () => {
           expect(tutor).toMatch(/^# .+ – (Tutor-Datei|tutor file)\n/);
         }
         expect(llms).toContain(lang === "de" ? "## Hinweise für einen KI-Tutor" : "## Notes for an AI tutor");
+        // the tutor prompt next to llms.txt, linked from it and from the start page
+        expect(llms).toContain("](tutor.md)");
+        const prompt = readFileSync(join(root, "dist", lang === "de" ? "" : lang, "tutor.md"), "utf8");
+        expect(prompt).toMatch(/^# (KI-Tutor|AI tutor): /);
+        expect(prompt).not.toContain("⟦base⟧");
+        const start = readFileSync(join(root, "dist", lang === "de" ? "" : lang, "index.html"), "utf8");
+        expect(start).toContain(
+          `<a class="explainer-tutor-text" href="${lang === "de" ? "" : `../${lang}/`}tutor.md">`,
+        );
+        expect(start).toContain(
+          '<a class="explainer-tutor-provider" href="https://claude.ai/new" data-url="https://claude.ai/new?q={prompt}" rel="noopener" target="_blank">',
+        );
       }
     },
     60_000,

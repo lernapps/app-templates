@@ -10,7 +10,8 @@
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number and writes it
 // into the address. Its worked tasks, with their solutions, show below the live task once the learner has solved it or
 // asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
-// which closes the tab. Nothing is stored.
+// which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
+// with it on a click. Nothing is stored.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { startQuestion } from "../quiz/engine.ts";
 import { renderQuestion } from "../quiz/render.ts";
@@ -117,11 +118,76 @@ function startBackToTutor(root: Document, main: HTMLElement): void {
   main.prepend(box);
 }
 
+/** What the start page's tutor section gives the client module (render.ts, prompt.ts). */
+interface TutorData {
+  prompt: string;
+  short: string;
+  base: string;
+  max: number;
+  copied: string;
+  copiedShort: string;
+  failed: string;
+}
+
+/** Whether `text` is now on the clipboard. */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * "Mit einem KI-Tutor lernen" on the start page: the button copies the prompt with the app's addresses in its links;
+ * a provider link gets the prompt in its address on the click, or, when that address would be too long, a short prompt
+ * that points to tutor.md, and the whole prompt is copied as well. Nothing goes over the network but the click's link.
+ */
+function startTutor(root: Document): void {
+  const section = root.querySelector<HTMLElement>(".explainer-tutor");
+  const script = section?.querySelector("script.explainer-tutor-prompt");
+  if (!section || !script) return;
+  const data = JSON.parse(script.textContent ?? "{}") as TutorData;
+  const status = section.querySelector<HTMLElement>(".explainer-tutor-status");
+  const say = (text: string) => {
+    if (status) status.textContent = text;
+  };
+  // the start page is the root of its language tree
+  const base = new URL(".", root.location.href).href;
+  const full = data.prompt.split(data.base).join(base);
+  const short = data.short.split(data.base).join(base);
+  const button = section.querySelector<HTMLButtonElement>(".explainer-tutor-copy");
+  if (button) {
+    button.hidden = false;
+    button.addEventListener("click", () => {
+      void copyText(full).then((done) => say(done ? data.copied : data.failed));
+    });
+  }
+  for (const link of section.querySelectorAll<HTMLAnchorElement>(".explainer-tutor-provider")) {
+    link.addEventListener("click", () => {
+      const template = link.dataset["url"] ?? link.href;
+      const withPrompt = (prompt: string) => template.split("{prompt}").join(encodeURIComponent(prompt));
+      if (!template.includes("{prompt}")) {
+        void copyText(full).then((done) => say(done ? data.copied : data.failed));
+        return;
+      }
+      let address = withPrompt(full);
+      if (address.length > data.max) {
+        address = withPrompt(short);
+        void copyText(full).then((done) => say(done ? data.copiedShort : data.failed));
+      }
+      link.href = address;
+    });
+  }
+}
+
 /** Starts the explainer on the page. */
 export function startExplainer(root: Document = document): void {
   root.documentElement.classList.add("explainer-js");
   const main = root.querySelector<HTMLElement>("main");
   if (main && fromTutor(root.location.href)) startBackToTutor(root, main);
+  startTutor(root);
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;
     if (!element) continue;

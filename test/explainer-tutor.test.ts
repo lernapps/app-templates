@@ -11,6 +11,14 @@ import { loadSite } from "../runtime/explainer/load.ts";
 import { llmsTxt } from "../runtime/explainer/render.ts";
 import { contentPages } from "../runtime/explainer/routes.ts";
 import { dataOf, taskSeeds } from "../runtime/explainer/exercises.ts";
+import {
+  DEFAULT_PROVIDERS,
+  plainAddress,
+  providersOf,
+  shortPrompt,
+  tutorPrompt,
+  withBase,
+} from "../runtime/explainer/prompt.ts";
 import { anchorsOf, linkProblems, tutorFile, tutorFileOf } from "../runtime/explainer/tutor.ts";
 import * as assignLabels from "./fixtures/explainer-history/components/AssignLabels.ts";
 
@@ -83,6 +91,7 @@ describe("llms.txt for a tutor", () => {
     expect(llmsTxt(site, "en")).toContain("## Notes for an AI tutor");
     const files = new Set([
       "llms.txt",
+      "tutor.md",
       "",
       ...contentPages(site).flatMap((page) => [`${page.chapter}/${page.id}/`, tutorFileOf(page)]),
       "zahlen/",
@@ -107,5 +116,38 @@ describe("llms.txt for a tutor", () => {
       "a/b/tutor.md: the link ./#fehlt names the anchor #fehlt, which a/b/ does not have",
       "a/b/tutor.md: the link ../c/ leads to a/c/, which the build does not write",
     ]);
+  });
+});
+
+describe("the tutor prompt", () => {
+  test("role, approach, the pages as a checklist with links, the rules and the app's own, from a base", () => {
+    const site = fixture("explainer-all-blocks");
+    const prompt = tutorPrompt(site, "de");
+    expect(prompt).toMatch(/^# KI-Tutor: Alle Blöcke\n\n## 1\. Rolle\n/);
+    expect(prompt).toContain(
+      "1. Zahlen: Zahlen 1 – Seite 1 der Fixture mit allen Blöcken. ([Seite](⟦base⟧zahlen/zahlen-01/), [Tutor-Datei](⟦base⟧zahlen/zahlen-01/tutor.md))",
+    );
+    expect(prompt).toContain("Lies zuerst ⟦base⟧llms.txt");
+    expect(prompt).toContain("Regeln dieser App:\n\nGerechnet wird auf Papier");
+    const copied = withBase(prompt, "https://lernapps.net/alle/");
+    expect(copied).toContain("https://lernapps.net/alle/llms.txt");
+    expect(copied).not.toContain("⟦base⟧");
+    expect(withBase(shortPrompt(site, "en"), "https://lernapps.net/alle/en/")).toBe(
+      "Read https://lernapps.net/alle/en/tutor.md and be my tutor for the learning app “All blocks”, exactly as it says.",
+    );
+    // the static tutor.md: every link resolves from the root of its language tree
+    const files = new Set([
+      "llms.txt",
+      ...contentPages(site).flatMap((page) => [`${page.chapter}/${page.id}/`, tutorFileOf(page)]),
+    ]);
+    expect(linkProblems("tutor.md", withBase(prompt, ""), files, new Map())).toEqual([]);
+  });
+
+  test("the providers: Claude by default, a link without the prompt for readers without JavaScript", () => {
+    const site = fixture("explainer-all-blocks");
+    expect(providersOf(site)).toEqual(DEFAULT_PROVIDERS);
+    expect(plainAddress("https://claude.ai/new?q={prompt}")).toBe("https://claude.ai/new");
+    expect(plainAddress("https://example.org/chat?model=a&text={prompt}")).toBe("https://example.org/chat?model=a");
+    expect(plainAddress("https://example.org/chat")).toBe("https://example.org/chat");
   });
 });

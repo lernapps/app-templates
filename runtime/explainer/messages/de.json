@@ -31,5 +31,13 @@
   "textDescription": "Beschreibung als Text",
   "taskNumber": "Aufgabe Nr. {n}",
   "backToTutor": "Zurück zum Tutor",
-  "backToTutorOpen": "Schließ diesen Tab und kehr zum Chat mit deinem Tutor zurück."
+  "backToTutorOpen": "Schließ diesen Tab und kehr zum Chat mit deinem Tutor zurück.",
+  "tutorTitle": "Mit einem KI-Tutor lernen",
+  "tutorIntro": "Du kannst diese App mit einem KI-Assistenten deiner Wahl durcharbeiten. Er bekommt eine Anleitung, den Prompt: Er erklärt ihm die App, ihre Seiten und Aufgaben. Die App schickt dabei nichts weg. Erst dein Klick auf einen Assistenten öffnet ihn; was du dort schreibst, geht an seinen Anbieter.",
+  "tutorCopy": "Prompt kopieren",
+  "tutorOpenWith": "Mit {name} öffnen",
+  "tutorText": "Den Prompt als Text ansehen",
+  "tutorCopied": "Der Prompt ist kopiert. Füg ihn in den Chat deines KI-Assistenten ein.",
+  "tutorCopiedShort": "Der Prompt ist auch kopiert. Steht im Chat nur ein kurzer Satz, füg ihn dort ein.",
+  "tutorCopyFailed": "Kopieren ging nicht. Öffne den Prompt als Text und kopiere ihn von dort."
 }
