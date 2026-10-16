@@ -1,6 +1,6 @@
 # Runtime View
 
-The explainer's own scenario, besides the generic ones (the tutor handoff is one of them).
+The explainer's own scenarios, besides the generic ones.
 
 ## Practising on a page
 
@@ -16,6 +16,37 @@ gets its reason, the solution shows after the right answer or "Lösung zeigen", 
 id: scenario-explainer-practise
 title: Practising on a page of the explainer
 trigger: The learner opens a page or answers one of its exercises
-involves: bb-explainer-rendering, bb-explainer-client, bb-islands, bb-generated-exercises, bb-question-types, bb-task-numbers, bb-explainer-content, bb-explainer-components, bb-a11y
+involves: bb-render, bb-shell, bb-islands, bb-generated-exercises, bb-question-types, bb-task-numbers, bb-explainer-content, bb-explainer-data, bb-explainer-components, bb-runtime-texts, bb-tooling
+:::
+```
+
+## Building the explainer
+
+The `explainer()` plugin validates the content, its data files and its components, runs the component rules and the
+property test of each generated exercise and exercise component over fixed seeds, and writes the pages and, where the
+tutor is on, a `tutor.md` per page from each exercise's tasks by number and its `describe` and `about`.
+
+```arc42
+:::runtime-scenario
+id: scenario-explainer-build
+title: Building the explainer
+trigger: The creator, a git hook or CI runs the build
+involves: bb-build, bb-validation, bb-component-rules, bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-question-types, bb-explainer-content, bb-explainer-data, bb-explainer-components
+:::
+```
+
+## Asking the tutor
+
+The learner clicks "Mit einem KI-Tutor lernen": a button copies a ready prompt, or a provider link opens the learner's
+own assistant with it; static `tutor.md` and `llms.txt` files give the assistant the tasks and solutions the exercise
+contract describes, numbered by the task numbers, and nothing leaves the device before the click. No model runs in
+the browser.
+
+```arc42
+:::runtime-scenario
+id: scenario-tutor
+title: Asking the tutor
+trigger: The learner asks for help with a task
+involves: bb-shell, bb-tutor-handoff, bb-task-numbers, bb-explainer-components
 :::
 ```

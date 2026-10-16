@@ -23,12 +23,11 @@ addresses: qg-privacy, qg-checkable, qg-accessibility, qg-understandable
 
 ## System decomposition
 
-Three parts: the frame runtime (`bb-runtime`) builds the pages, runs the build checks, starts the archetype's code in
-the browser (`bb-shell`) and brings the end-to-end tests; the tooling helpers (`bb-tooling`) give preset, lint rules,
-`lernapps check`, storage, i18n, a11y and the skills; the archetype part (`bb-archetype`) is abstract and filled by the
-archetype's extension. Each extension places its blocks below the generic ones (its rendering below the static
-description, its validation below the build checks, its client below the shell, its tests below the end-to-end tests,
-what the creator writes below the archetype part).
+Two generic roots, the shared runtime (`bb-runtime`: page trees, languages, examples check, Vue at build) and the
+tooling helpers (`bb-tooling`: preset, lint rules, `lernapps check`, storage, i18n, a11y, the skills); each
+archetype's extension adds its runtime (`bb-archetype-runtime`, which builds the pages, runs the build checks, starts
+the archetype's code in the browser in `bb-shell` and brings the end-to-end tests) and the parts the creator writes,
+each a root of its own, so that an interactive app can add its own blocks below them.
 
 ## Technology and communication approach
 

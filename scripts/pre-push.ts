@@ -51,6 +51,7 @@ export const TEMPLATE_PATHS: Record<Template, readonly string[]> = {
  */
 export const ROOT_ONLY = [
   "docs/",
+  ".arc42ignore", // the paths the architecture leaves out (scripts/arc42.ts)
   "test/",
   "scripts/",
   ".vite-hooks/",

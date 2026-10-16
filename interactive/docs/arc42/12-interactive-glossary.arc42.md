@@ -11,7 +11,7 @@ own: the shell keeps it.
 :::glossary-term
 id: term-core
 title: Core
-definition: The app's logic, pure TypeScript without DOM, exporting start(seed, route), step(state, key) and optionally tick(state, dt); deterministic by its seed, its state plain JSON.
+definition: The app's logic, pure TypeScript without DOM, exporting start(seed, route), step(state, input) and optionally tick(state, dt); deterministic by its seed, its state plain JSON.
 :::
 ```
 
@@ -59,6 +59,18 @@ A YAML file in `src/playthroughs/`. Not a free-form test: it holds only data the
 :::glossary-term
 id: term-playthrough
 title: Playthrough
-definition: A seed, a route and a list of steps, each a list of keys followed by the state (a part of it) or the announcement expected after them; played by the build against the core and by the browser test.
+definition: A seed, a route and a list of steps, each a list of inputs followed by the state (a part of it) or the announcement expected after them; played by the build against the core and by the browser test.
+:::
+```
+
+## Input
+
+What the core's `step` takes. Today only a key (`risk-input-only-keys`).
+
+```arc42
+:::glossary-term
+id: term-input
+title: Input
+definition: A typed, extensible value the core's step takes: a key as the browser names it, a pointer or touch action, and other kinds later; the components translate any device input into inputs, and playthroughs record them.
 :::
 ```

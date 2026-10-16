@@ -31,15 +31,15 @@ architecture-beta
     group dn-github-pages(cloud)[GitHub Pages] in env-production
     group dn-pr-preview(cloud)[Pull request preview] in env-production
     group dn-learner-browser(internet)[Learner browser] in env-production
-    service bb-preset(server)[Preset and hooks] in dn-creator-machine
-    service bb-lernapps-check(server)[lernapps check] in dn-ci-runner
-    service bb-static-description(disk)[Static description] in dn-github-pages
-    service bb-page-tree(disk)[Page trees] in dn-pr-preview
+    service bb-tooling(server)[Preset, hooks and lernapps check] in dn-creator-machine
+    service bb-build(server)[Build step] in dn-ci-runner
+    service bb-render(disk)[Rendered pages] in dn-github-pages
+    service bb-runtime(disk)[Page trees] in dn-pr-preview
     service bb-shell(server)[Shell] in dn-learner-browser
-    bb-preset:R --> L:bb-lernapps-check
-    bb-lernapps-check:R --> L:bb-static-description
-    bb-lernapps-check:B --> T:bb-page-tree
-    bb-static-description:R --> L:bb-shell
+    bb-tooling:R --> L:bb-build
+    bb-build:R --> L:bb-render
+    bb-build:B --> T:bb-runtime
+    bb-render:R --> L:bb-shell
 ```
 
 ## Development
@@ -67,7 +67,7 @@ id: dn-creator-machine
 title: Creator's machine
 type: device
 parent: env-development
-hosts: bb-preset, bb-lint-rules, bb-lernapps-check, bb-playwright-config, bb-skill-app, bb-build, bb-static-description, bb-page-tree, bb-not-found-page, bb-build-checks, bb-component-rules, bb-examples-check, bb-question-types, bb-exercise-contract, bb-task-numbers, bb-tutor-handoff, bb-e2e, bb-archetype
+hosts: bb-tooling, bb-runtime, bb-build, bb-validation, bb-render, bb-runtime-texts, bb-e2e
 :::
 ```
 
@@ -95,7 +95,7 @@ id: dn-ci-runner
 title: GitHub Actions runner
 type: server
 parent: env-ci
-hosts: bb-preset, bb-lint-rules, bb-lernapps-check, bb-playwright-config, bb-skill-app, bb-build, bb-static-description, bb-page-tree, bb-not-found-page, bb-build-checks, bb-component-rules, bb-examples-check, bb-question-types, bb-exercise-contract, bb-task-numbers, bb-tutor-handoff, bb-e2e, bb-archetype
+hosts: bb-tooling, bb-runtime, bb-build, bb-validation, bb-render, bb-runtime-texts, bb-e2e
 :::
 ```
 
@@ -124,7 +124,7 @@ id: dn-github-pages
 title: GitHub Pages
 type: server
 parent: env-production
-hosts: bb-static-description, bb-page-tree, bb-not-found-page, bb-tutor-handoff
+hosts: bb-render, bb-runtime
 :::
 ```
 
@@ -139,7 +139,7 @@ id: dn-pr-preview
 title: Pull request preview
 type: server
 parent: env-production
-hosts: bb-static-description, bb-page-tree, bb-not-found-page, bb-tutor-handoff
+hosts: bb-render, bb-runtime
 :::
 ```
 
@@ -155,6 +155,6 @@ id: dn-learner-browser
 title: Learner's browser
 type: device
 parent: env-production
-hosts: bb-shell, bb-loading-indicator, bb-settings, bb-question-types, bb-task-numbers, bb-tutor-handoff, bb-archetype, bb-i18n, bb-a11y, bb-small-storage
+hosts: bb-shell, bb-tooling
 :::
 ```

@@ -16,7 +16,7 @@ id: dec-one-archetype
 title: One interactive archetype, the kinds as recipes
 status: accepted
 date: 2026-10-16
-addresses: con-runtime-unchanged, qg-understandable
+addresses: con-runtime-unchanged, qg-understandable, risk-interactive-skill-missing
 :::
 ```
 
@@ -39,18 +39,36 @@ addresses: qg-checkable, con-runtime-unchanged
 
 ## Keys Are the Core's Input
 
-The sketch names `step(state, input)`; the runtime made the input a key as the browser names it (`KeyboardEvent.key`).
-Pointer input reaches the core as a key the root component emits as `input`, and a key the core ignores keeps its
-default (Tab moves the focus). One input type makes a playthrough a list of keys, playable by the build and by the
-browser's keyboard alike.
+Superseded by `dec-typed-input`. The sketch named `step(state, input)`; the runtime made the input a key as the browser
+names it (`KeyboardEvent.key`), pointer input reaching the core as a key the root component emits as `input`, and a
+key the core ignores keeping its default (Tab moves the focus).
 
 ```arc42
 :::decision
 id: dec-keys-as-input
 title: Keys as the core's only input
-status: accepted
+status: superseded
 date: 2026-10-16
 addresses: qg-checkable, qg-accessibility
+:::
+```
+
+## A Typed Input for the Core
+
+Interactive apps will use more than keys and mouse: touch, gestures and other input later. So the core's
+`step(state, input)` takes a typed input (a key, a pointer or touch action, …), extensible by new kinds; playthroughs
+record such inputs, and the components translate any device input into inputs, so that the build and the browser play
+the same steps. Rejected: keys as the only input, with pointer and
+touch disguised as keys. Not built: the runtime passes only keys (`risk-input-only-keys`).
+
+```arc42
+:::decision
+id: dec-typed-input
+title: The core's input is typed and extensible (key, pointer, touch, …)
+status: accepted
+date: 2026-10-16
+supersedes: dec-keys-as-input
+addresses: qg-checkable, qg-accessibility, risk-input-only-keys
 :::
 ```
 
@@ -72,10 +90,11 @@ addresses: qg-checkable
 
 ## Playthroughs as Data
 
-A playthrough is a seed, a route and steps of keys with the state or announcement expected after them, written as
-YAML under `src/playthroughs/`. The build plays each against the core twice and the browser plays the same keys, so
+A playthrough is a seed, a route and steps of inputs with the state or announcement expected after them, written as
+YAML under `src/playthroughs/`. The build plays each against the core twice and the browser plays the same inputs, so
 determinism and behaviour are checked without test code per app. A step that lets n ticks pass, in the build and in
-the browser, is accepted (owner) but not built yet. Rejected: free test code as the only behaviour check.
+the browser, is accepted (owner) but not built yet, nor are the core's property tests over fixed seeds; until then
+every playthrough played twice checks determinism. Rejected: free test code as the only behaviour check.
 
 ```arc42
 :::decision
@@ -83,6 +102,6 @@ id: dec-playthroughs-as-data
 title: Playthroughs as data, played in the build and in the browser
 status: accepted
 date: 2026-10-16
-addresses: qg-checkable, risk-time-not-replayed
+addresses: qg-checkable, risk-time-not-replayed, risk-no-core-property-tests
 :::
 ```

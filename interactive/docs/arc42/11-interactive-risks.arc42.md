@@ -4,7 +4,7 @@ The interactive archetype's risks, besides the generic ones, highest first.
 
 ## Time Is Not Replayed by Playthroughs
 
-A playthrough holds only keys. The build never calls `tick`, so what a core does over time (a letter not typed in time,
+A playthrough holds only inputs. The build never calls `tick`, so what a core does over time (a letter not typed in time,
 letters flying across the screen) is not checked there; in the browser the clock runs in real time between key
 presses, so a playthrough of a real-time core depends on how fast the test types. The pilot, a real-time typing game,
 puts the most pressure on exactly this.
@@ -18,17 +18,19 @@ mitigation: Playthroughs get a time step that lets n ticks pass, played in the b
 :::
 ```
 
-## Size Budget Left in the Build
+## Only Keys Reach the Core
 
-The app's size is not limited, but `runtime/interactive/plugin.ts` still fails the build when the app's own code is
-over `SIZE_BUDGET` = 100 kB gzip, so a large app cannot be built today.
+The core's input is decided as a typed input (`dec-typed-input`), but the runtime passes only keys: `Core.step` in
+`runtime/interactive/contract.ts` takes `key: string`, a playthrough step holds `keys`, the shell listens to
+`keydown` and steps the keys the root component emits (`runtime/interactive/interactive.ts`). An app with touch or
+gestures must disguise them as keys, and its playthroughs cannot record them.
 
 ```arc42
 :::risk
-id: risk-size-budget-left
-title: SIZE_BUDGET still in the build plugin
-severity: low
-mitigation: Technical debt; remove SIZE_BUDGET and its check from runtime/interactive/plugin.ts.
+id: risk-input-only-keys
+title: Only keys reach the core
+severity: medium
+mitigation: Technical debt; give contract.ts a typed input (key, pointer or touch action, extensible), pass it through the shell, the root component's input event, the playthrough schema and both players. Until then components map pointer and touch to keys.
 :::
 ```
 
@@ -43,5 +45,21 @@ id: risk-no-core-property-tests
 title: Core property tests over fixed seeds not built
 severity: low
 mitigation: Planned; until then the build checks determinism with every playthrough played twice.
+:::
+```
+
+## Skill lernapps-interactive Not Written
+
+The guidance for an interactive app is not written yet: the kinds of apps as recipes and the advice on low stimulation
+(no flashing, calm motion, sound off by default, and why), which is advice for the creator's assistant, not a rule or
+check. Until then the skill `lernapps-app` applies alone; a settings dialog (less motion, sound, pause) is not in scope
+(`dec-no-settings`).
+
+```arc42
+:::risk
+id: risk-interactive-skill-missing
+title: Skill lernapps-interactive not written
+severity: low
+mitigation: Write skills/lernapps-interactive in @lernapps/tooling with the recipes and the advice on low stimulation; until then lernapps-app applies.
 :::
 ```

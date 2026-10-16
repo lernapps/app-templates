@@ -3,16 +3,19 @@
 The interactive archetype's extension of the generic architecture (`docs/arc42/` at the root of
 `lernapps/app-templates`): an app whose doing is the content, with a static start page, one app page on which the
 shell runs the app's deterministic core and shows its state with the app's Vue components, and hash routes for modes
-and levels. The runtime `interactive/` ships the pages, the shell and the playthrough players; the creator writes the
-core, the UI, the data, the playthroughs, the messages and the description. Of the optional generic blocks it
-realises the component rules; the tutor handoff, task numbers, exercise contract, settings and loading indicator are
-not built for it, and it has no examples check (its playthroughs take that role). Only the start page reads without
-JavaScript. An interactive app adds its own blocks below `bb-interactive-core`, `bb-interactive-ui` and
-`bb-interactive-data`, in an architecture part of its own.
+and levels. The runtime `runtime/interactive/` ships the build step, the pages, the shell and the end-to-end tests; the
+creator writes the description, the core, the UI, the data, the messages and the playthroughs, and `src/main.ts`, which
+calls `startInteractive`. It reuses the explainer's component rules; the tutor handoff, task numbers, exercise contract
+and the examples check are not built for it (its playthroughs take the examples' role). Only the start page reads
+without JavaScript. An interactive app adds its own blocks below `bb-interactive-core`, `bb-interactive-ui` and
+`bb-interactive-data`, in an architecture part of its own; the skill `lernapps-interactive` is not written yet
+(`risk-interactive-skill-missing`).
+
+## Level 1 (interactive app)
 
 ```arc42
 :::diagram
-id: building-blocks-interactive
+id: building-blocks-interactive-level-1
 view: building-block
 notation: mermaid
 :::
@@ -20,399 +23,426 @@ notation: mermaid
 
 ```mermaid
 flowchart TB
-    subgraph bb-archetype["Archetype part: interactive app"]
-        bb-interactive-description["Description (app.yaml)"]
-        bb-interactive-main["main.ts glue"]
-        bb-interactive-core["Core"]
-        bb-interactive-ui["UI"]
-        bb-interactive-data["Data"]
-        bb-interactive-messages["Messages"]
-        bb-interactive-playthroughs["Playthroughs"]
-    end
-    subgraph bb-static-description["Static description"]
-        bb-interactive-start-page["Start page"]
-        bb-interactive-app-page["App page"]
-    end
-    subgraph bb-build-checks["Build checks"]
-        bb-interactive-validation["Description validation"]
-        bb-core-check["Core contract check"]
-        bb-build-playthroughs["Build playthrough player"]
-    end
-    subgraph bb-shell["Shell"]
-        bb-state-holder["Mount and state"]
-        bb-input-router["Input router"]
-        bb-clock["Clock"]
-        bb-hash-router["Hash router"]
-        bb-seed["Seed from the address"]
-    end
-    subgraph bb-e2e["End-to-end tests"]
-        bb-browser-playthroughs["Browser playthrough player"]
-    end
-    bb-interactive-main -->|"if-core-contract"| bb-interactive-core
-    bb-interactive-main -->|"if-root-component"| bb-interactive-ui
+    bb-runtime["Shared runtime"]
+    bb-tooling["Tooling helpers"]
+    bb-archetype-runtime["Interactive runtime"]
+    bb-interactive-description["Description"]
+    bb-interactive-core["Core"]
+    bb-interactive-ui["UI"]
+    bb-interactive-data["Data"]
+    bb-interactive-messages["Messages"]
+    bb-interactive-playthroughs["Playthroughs"]
+    bb-archetype-runtime -->|"if-shared-runtime"| bb-runtime
+    bb-archetype-runtime -->|"if-preset"| bb-tooling
     bb-interactive-core -->|"if-interactive-data"| bb-interactive-data
     bb-interactive-ui -->|"if-messages"| bb-interactive-messages
-    bb-browser-playthroughs -->|"if-state-property"| bb-state-holder
-    bb-build-playthroughs -->|"if-playthrough-format"| bb-interactive-playthroughs
+    bb-interactive-ui -->|"if-a11y"| bb-tooling
+    bb-interactive-ui -->|"if-translator"| bb-tooling
 ```
 
-### Start page
-
-Built. Renders the static start page from `src/app.yaml` (what the app does, link into the app, routes, how to play,
-competencies, background sections) with a `<noscript>` note and no script, so the app is described and found without
-JavaScript.
+## Level 2: the interactive runtime
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
-:::building-block
-id: bb-interactive-start-page
-title: Start page
-parent: bb-static-description
-technology: TypeScript (runtime/interactive/render.ts)
-requires: if-interactive-description
-implements: concept-readable-without-js, concept-accessibility
+:::diagram
+id: building-blocks-interactive-runtime
+view: building-block
+notation: mermaid
 :::
 ```
 
-### App page
+```mermaid
+flowchart TB
+    subgraph bb-archetype-runtime["Interactive runtime"]
+        bb-build["Build step"]
+        bb-validation["Description validation"]
+        bb-render["Page rendering"]
+        bb-shell["Shell"]
+        bb-e2e["End-to-end tests"]
+        bb-runtime-texts["Runtime texts"]
+        bb-component-rules["Component rules"]
+    end
+    bb-interactive-description["Description"]
+    bb-interactive-core["Core"]
+    bb-interactive-ui["UI"]
+    bb-interactive-playthroughs["Playthroughs"]
+    bb-tooling["Tooling helpers"]
+    bb-build -->|"if-archetype-content"| bb-interactive-description
+    bb-build -->|"if-playthrough-format"| bb-interactive-playthroughs
+    bb-build -->|"if-core-contract"| bb-interactive-core
+    bb-build -->|"if-component-rules"| bb-component-rules
+    bb-validation -->|"if-archetype-content"| bb-interactive-description
+    bb-validation -->|"if-playthrough-format"| bb-interactive-playthroughs
+    bb-validation -->|"if-runtime-texts"| bb-runtime-texts
+    bb-render -->|"if-archetype-content"| bb-interactive-description
+    bb-render -->|"if-runtime-texts"| bb-runtime-texts
+    bb-shell -->|"if-core-contract"| bb-interactive-core
+    bb-shell -->|"if-root-component"| bb-interactive-ui
+    bb-e2e -->|"if-archetype-content"| bb-interactive-description
+    bb-e2e -->|"if-playthrough-format"| bb-interactive-playthroughs
+    bb-e2e -->|"if-state-property"| bb-shell
+    bb-e2e -->|"if-runtime-texts"| bb-runtime-texts
+    bb-e2e -->|"if-a11y"| bb-tooling
+```
 
-Built. Renders the app page: title, `<noscript>` note with a link back, the routes as anchor links, and the element
-the shell mounts into, carrying the route ids. Without JavaScript it shows only the note.
+## Interactive runtime
+
+Built. The runtime of every interactive app, which the app does not change: it builds the pages, runs the build
+checks, starts the app's core and UI in the browser and brings the end-to-end tests.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
 :::building-block
-id: bb-interactive-app-page
-title: App page
-parent: bb-static-description
-technology: TypeScript (runtime/interactive/render.ts)
-requires: if-interactive-description
-implements: concept-hash-routes
+id: bb-archetype-runtime
+title: Interactive runtime
+path: runtime/interactive
+technology: TypeScript, Vite plugin, Vue
+requires: if-shared-runtime, if-preset
+implements: concept-archetype-extension
 :::
 ```
 
-#### App address
+### Build step
 
-The app page's address `app/?seed=<n>#<route>` opens a mode or level, optionally with a fixed seed; learners play
-there and the catalog entry's topics link to the routes.
+Built. The plugin `interactive()` reads `src/app.yaml` and the playthroughs, runs the component rules on the UI, loads
+the core in a Vite server of its own and checks its exports and that every route starts, plays every playthrough
+against the core twice and fails when the two plays differ or a state differs from the expected one, and only then
+writes the start page, the app page and the 404 page. Time steps (a step that lets n ticks pass) are decided, not
+built; today the build never ticks. It still fails an app over `SIZE_BUDGET` (`risk-size-budget-left`).
+
+```arc42
+:::building-block
+id: bb-build
+title: Build step
+parent: bb-archetype-runtime
+path: runtime/interactive/plugin.ts
+technology: Vite plugin
+requires: if-archetype-content, if-playthrough-format, if-core-contract, if-component-rules
+implements: concept-playthroughs, concept-determinism
+:::
+```
+
+#### Build plugin interface
+
+The app's vite.config.ts adds `interactive()` to the tooling preset; that is the only way the app enters the build.
 
 ```arc42
 :::interface
-id: if-app-address
-title: App address app/?seed=<n>#<route>
-provider: bb-interactive-app-page
-protocol: URL over HTTPS (query and hash)
+id: if-build-plugin
+title: interactive() Vite plugin
+provider: bb-build
+protocol: TypeScript import, @lernapps/app-templates/interactive/plugin
+path: runtime/interactive/plugin.ts
 :::
 ```
 
 ### Description validation
 
 Built. Validates `src/app.yaml` and every playthrough against their JSON schemas, then German first, complete
-languages, unique ids, at least one playthrough and known routes.
+languages, unique ids, at least one playthrough, each step expecting something, and known routes; one line per
+problem with file and line.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
 :::building-block
-id: bb-interactive-validation
+id: bb-validation
 title: Description validation
-parent: bb-build-checks
-technology: Ajv, JSON Schema (runtime/interactive/load.ts, interactive.v1, playthrough.v1)
-requires: if-interactive-description, if-playthrough-format
+parent: bb-archetype-runtime
+path: runtime/interactive/load.ts
+technology: Ajv, JSON Schema, YAML
+requires: if-archetype-content, if-playthrough-format, if-runtime-texts
 :::
 ```
 
-### Core contract check
+### Page rendering
 
-Built. Loads the core in a Vite server of its own and checks its exports and that every route starts.
+Built. Renders, in each language, the start page (what the app does, the link into the app, the routes, how to play,
+competencies, background sections, a `<noscript>` note and no script) and the app page (title, `<noscript>` note with
+a link back, the routes as anchor links, and the element the shell mounts into, carrying the route ids).
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
 :::building-block
-id: bb-core-check
-title: Core contract check
-parent: bb-build-checks
-technology: TypeScript (runtime/interactive/plugin.ts, runtime/shared/vue.ts)
-requires: if-core-contract, if-interactive-description
-implements: concept-determinism
+id: bb-render
+title: Page rendering
+parent: bb-archetype-runtime
+path: runtime/interactive/render.ts
+technology: TypeScript, HTML
+requires: if-archetype-content, if-runtime-texts
+implements: concept-readable-without-js, concept-hash-routes, concept-accessibility
 :::
 ```
 
-### Build playthrough player
+#### Pages interface
 
-Built. Plays every playthrough against the core twice and fails when the two plays differ or a state differs from the
-expected one. Time steps (a step that lets n ticks pass) are decided, not built yet; today the build never ticks.
+Learners, teachers and parents read the start page at `lernapps.net/<repo>/` and play at
+`app/?seed=<n>#<route>`; the catalog entry's topics link to the routes.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
-:::building-block
-id: bb-build-playthroughs
-title: Build playthrough player
-parent: bb-build-checks
-technology: TypeScript (runtime/interactive/plugin.ts)
-requires: if-core-contract, if-playthrough-format
-implements: concept-playthroughs, concept-determinism
+:::interface
+id: if-pages
+title: Start page and app page app/?seed=<n>#<route>
+provider: bb-render
+protocol: HTML pages over HTTPS (query and hash)
+path: runtime/interactive/render.ts
 :::
 ```
 
-### Mount and state
+### Shell
 
-Built. `startInteractive(core, root)` mounts the root component on the app page and holds the core's state, so that
-the app's components only show it; on any other page it does nothing.
+Built. `startInteractive(core, root)` mounts the root component on the app page and holds the core's state; it takes
+the seed from `?seed=<n>` (else a random one) and the route from the hash (else the first route), starts the core
+again on a new route, calls `tick(state, 20)` every 20 ms when the core has `tick`, and routes input to `step`. The
+input is decided as a typed input (`dec-typed-input`); the shell passes only keys today: every key typed on the page
+except on links, buttons and form fields or with Ctrl, Alt or Meta, and every key the root component emits as
+`input` (`risk-input-only-keys`).
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
 :::building-block
-id: bb-state-holder
-title: Mount and state
-parent: bb-shell
-technology: TypeScript, Vue (runtime/interactive/interactive.ts)
+id: bb-shell
+title: Shell
+parent: bb-archetype-runtime
+path: runtime/interactive/interactive.ts
+technology: TypeScript, Vue, DOM events
 requires: if-core-contract, if-root-component
-implements: concept-core-and-shell
+implements: concept-core-and-shell, concept-hash-routes, concept-determinism
+:::
+```
+
+#### Start interface
+
+The app's `src/main.ts` imports the runtime's style, the core and the root component and calls `startInteractive`.
+
+```arc42
+:::interface
+id: if-start
+title: startInteractive(core, root)
+provider: bb-shell
+protocol: TypeScript import, @lernapps/app-templates/interactive
+path: runtime/interactive/interactive.ts
 :::
 ```
 
 #### State property
 
-The shell mirrors the state on the host element as `lernappsState`, which the browser playthrough player reads.
+The shell mirrors the state on the app's element as `lernappsState`, which the end-to-end tests read.
 
 ```arc42
 :::interface
 id: if-state-property
 title: lernappsState on the app element
-provider: bb-state-holder
+provider: bb-shell
 protocol: DOM property
+path: runtime/interactive/contract.ts
 :::
 ```
 
-### Input router
-
-Built. Gives every key typed on the page to `step`, except keys on links, buttons and form fields or with Ctrl, Alt or
-Meta, and steps every key the root component emits as `input` (pointer input as a button that stands for a key).
-
-```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
-:::building-block
-id: bb-input-router
-title: Input router
-parent: bb-shell
-technology: TypeScript, DOM keydown (runtime/interactive/interactive.ts)
-requires: if-core-contract, if-root-component
-:::
-```
-
-### Clock
-
-Built. Calls `tick(state, 20)` every 20 ms when the core has `tick`, so real-time apps move without their own loop in
-the core.
-
-```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
-:::building-block
-id: bb-clock
-title: Clock
-parent: bb-shell
-technology: TypeScript, setInterval (runtime/interactive/interactive.ts)
-requires: if-core-contract
-:::
-```
-
-### Hash router
-
-Built. Starts the core with the route of the address (`#<id>`, else the first route) and again on every new route, so
-that modes and levels have addresses an entry's topics can point to.
-
-```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
-:::building-block
-id: bb-hash-router
-title: Hash router
-parent: bb-shell
-technology: TypeScript, hashchange (runtime/interactive/interactive.ts)
-requires: if-core-contract
-implements: concept-hash-routes
-:::
-```
-
-### Seed from the address
-
-Built. Takes the seed from `?seed=<n>`, else a random one, so that a round can be replayed and tested at its address.
-
-```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
-:::building-block
-id: bb-seed
-title: Seed from the address
-parent: bb-shell
-technology: TypeScript (runtime/interactive/interactive.ts)
-requires: if-core-contract
-implements: concept-determinism
-:::
-```
-
-### Browser playthrough player
+### End-to-end tests
 
 Built. `interactiveTests()` checks the start page and the app page without JavaScript in every language and plays
-every playthrough's keys in the browser, comparing the state and the announcement after each step; run at desktop
-width and 360 px. Time steps are decided, not built yet.
+every playthrough's steps in the browser, comparing the state and the polite announcement after each step, at
+desktop width and 360 px. Time steps are decided, not built.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
 :::building-block
-id: bb-browser-playthroughs
-title: Browser playthrough player
-parent: bb-e2e
-technology: Playwright (runtime/interactive/e2e.ts)
-requires: if-playthrough-format, if-interactive-description, if-state-property, if-a11y
+id: bb-e2e
+title: End-to-end tests
+parent: bb-archetype-runtime
+path: runtime/interactive/e2e.ts
+technology: Playwright
+requires: if-archetype-content, if-playthrough-format, if-state-property, if-runtime-texts, if-a11y
 implements: concept-playthroughs
 :::
 ```
 
-### Description
+#### Tests interface
 
-Built in the template. `src/app.yaml` says what the start page shows, the languages and the routes.
+The app's `e2e/interactive.e2e.ts` only calls `interactiveTests()`.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
+:::interface
+id: if-e2e-tests
+title: interactiveTests()
+provider: bb-e2e
+protocol: TypeScript import, @lernapps/app-templates/interactive/e2e
+path: runtime/interactive/e2e.ts
+:::
+```
+
+### Runtime texts
+
+Built. The runtime's own learner texts in German and English; an app may declare only these languages.
+
+```arc42
+:::building-block
+id: bb-runtime-texts
+title: Runtime texts
+parent: bb-archetype-runtime
+path: runtime/interactive/messages.ts
+technology: JSON per language
+implements: concept-languages
+:::
+```
+
+#### Runtime texts interface
+
+The pages, the validation and the tests take the runtime's texts by key and language.
+
+```arc42
+:::interface
+id: if-runtime-texts
+title: Runtime texts by language
+provider: bb-runtime-texts
+protocol: TypeScript import, JSON
+path: runtime/interactive/messages
+:::
+```
+
+### Component rules
+
+Built in the explainer's runtime and reused here: code checks on the SFC compiler's output of the UI's components and
+the modules they import (no network, no `eval`, `innerHTML` or `v-html`, imports only from Vue, the runtime, the
+storage, i18n and a11y helpers and the app's own files, browser globals only once mounted).
+
+```arc42
+:::building-block
+id: bb-component-rules
+title: Component rules
+parent: bb-archetype-runtime
+path: runtime/explainer/components.ts
+technology: TypeScript, Vue SFC compiler
+implements: concept-component-rules
+:::
+```
+
+#### Component rules interface
+
+The build step runs the checks on every single-file component in `src/` and the app's modules they import.
+
+```arc42
+:::interface
+id: if-component-rules
+title: Component checks on the SFC compiler's output
+provider: bb-component-rules
+protocol: TypeScript function call at build
+path: runtime/explainer/components.ts
+:::
+```
+
+## Description
+
+Built in the template: `src/app.yaml` says what the start page shows, the languages and the routes.
+
+```arc42
+:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
 :::
 :::building-block
 id: bb-interactive-description
 title: Description
-parent: bb-archetype
-path: src/app.yaml
 technology: YAML
 :::
 ```
 
-#### App description interface
+### App description interface
 
-Part of the archetype's content (`if-archetype-content`): the page builders, the validation and the tests read the
-app only through this schema.
+The interactive archetype's content: the build, the validation, the pages and the tests read the app's description
+only through this schema.
 
 ```arc42
 :::interface
-id: if-interactive-description
+id: if-archetype-content
 title: app.yaml (interactive.v1 schema)
 provider: bb-interactive-description
 protocol: YAML, JSON Schema
-path: src/app.yaml
+path: runtime/interactive/interactive.v1.schema.json
 :::
 ```
 
-### main.ts glue
-
-Built in the template. Imports the runtime's style, the core and the root component and calls `startInteractive`.
-
-```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
-:::building-block
-id: bb-interactive-main
-title: main.ts glue
-parent: bb-archetype
-path: src/main.ts
-technology: TypeScript
-requires: if-start, if-core-contract, if-root-component
-:::
-```
-
-### Core
+## Core
 
 Built in the template. The app's logic, pure TypeScript without DOM, deterministic by its seed, its state plain JSON,
 so that it can be played and tested in Node and in the browser alike; it reads the app's data.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
+:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
 :::
 :::building-block
 id: bb-interactive-core
 title: Core
-parent: bb-archetype
-path: src/core
 technology: TypeScript
 requires: if-interactive-data
 implements: concept-core-and-shell, concept-determinism
 :::
 ```
 
-#### Core contract
+### Core contract
 
-The core exports `start(seed, route)`, `step(state, key)` and, when the app moves on its own, `tick(state, dt)`.
+The core exports `start(seed, route)`, `step(state, input)` and, when the app moves on its own, `tick(state, dt)`.
+The input is typed and extensible (a key, a pointer or touch action, …; `dec-typed-input`); the contract built today
+takes a key as `KeyboardEvent.key` (`risk-input-only-keys`).
 
 ```arc42
+:::ignore H020 the core contract and the state property are both defined in contract.ts, the runtime's one contract module
+:::
 :::interface
 id: if-core-contract
 title: Core contract start, step, tick
 provider: bb-interactive-core
 protocol: TypeScript module exports
-path: src/core/index.ts
+path: runtime/interactive/contract.ts
 :::
 ```
 
-### UI
+## UI
 
-Built in the template. Vue components that show the state and turn pointer input into keys; free in how they render
-(DOM, SVG, canvas). They may remember something through the small storage; the template does not.
+Built in the template. Vue components that show the state and translate the device's input (keys, pointer, touch, …)
+into inputs; free in how they render (DOM, SVG, canvas). They may remember something through the small storage; the
+template does not.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
+:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
 :::
 :::building-block
 id: bb-interactive-ui
 title: UI
-parent: bb-archetype
-path: src/ui
 technology: Vue single-file components
-requires: if-a11y, if-translator, if-messages, if-device-storage
+requires: if-a11y, if-translator, if-messages
 implements: concept-component-rules, concept-accessibility
 :::
 ```
 
-#### Root component
+### Root component
 
-The root component takes the props `state` and `lang` and emits `input` with a key.
+The root component takes the props `state` and `lang` and emits `input` with an input (today a key).
 
 ```arc42
+:::ignore H014 the contract has no file of its own: its props are set in runtime/interactive/interactive.ts (if-start's file), the component is the app's
+:::
 :::interface
 id: if-root-component
 title: Root component (state, lang, input)
 provider: bb-interactive-ui
 protocol: Vue props and events
-path: src/ui/App.vue
 :::
 ```
 
-### Data
+## Data
 
 Built in the template. The app's content as data in its own format (lessons, texts with their faulty versions).
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
+:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
 :::
 :::building-block
 id: bb-interactive-data
 title: Data
-parent: bb-archetype
-path: src/data
 technology: JSON
 :::
 ```
 
-#### App data
+### App data
 
 The core imports the data files as JSON modules, so they are bundled and checked with the core.
 
 ```arc42
+:::ignore H014 the template is copied into each app; this interface's path is the app's own and is set in the app's architecture
+:::
 :::interface
 id: if-interactive-data
 title: Data files (JSON imports)
@@ -421,28 +451,28 @@ protocol: JSON module import
 :::
 ```
 
-### Messages
+## Messages
 
 Built in the template. The app's learner texts by language, read through the translator.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
+:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
 :::
 :::building-block
 id: bb-interactive-messages
 title: Messages
-parent: bb-archetype
-path: src/messages
 technology: JSON
 implements: concept-languages
 :::
 ```
 
-#### Message files
+### Message files
 
 The UI imports one message file per language and hands it to the translator.
 
 ```arc42
+:::ignore H014 the template is copied into each app; this interface's path is the app's own and is set in the app's architecture
+:::
 :::interface
 id: if-messages
 title: Message files by language
@@ -451,27 +481,25 @@ protocol: JSON module import
 :::
 ```
 
-### Playthroughs
+## Playthroughs
 
-Built in the template. Playthroughs as data: a seed, a route and steps of keys with the state or announcement
-expected after them; steps that let time pass are decided, not built yet.
+Built in the template. Playthroughs as data: a seed, a route and steps of inputs with the state or announcement
+expected after them (today the inputs are keys); steps that let time pass are decided, not built.
 
 ```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
+:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
 :::
 :::building-block
 id: bb-interactive-playthroughs
 title: Playthroughs
-parent: bb-archetype
-path: src/playthroughs
 technology: YAML
 implements: concept-playthroughs
 :::
 ```
 
-#### Playthrough format
+### Playthrough format
 
-Both playthrough players read playthroughs in this format.
+The build and the end-to-end tests read playthroughs in this format.
 
 ```arc42
 :::interface
@@ -479,36 +507,6 @@ id: if-playthrough-format
 title: Playthrough (playthrough.v1 schema)
 provider: bb-interactive-playthroughs
 protocol: YAML, JSON Schema
-path: src/playthroughs
-:::
-```
-
-### Skill lernapps-interactive
-
-Not built yet: the guidance for an interactive app, including the advice on low stimulation and the kinds of apps as
-recipes. The skill `lernapps-app` applies meanwhile.
-
-```arc42
-:::ignore W026 the parent is a block of the generic architecture, documented in its own file
-:::
-:::building-block
-id: bb-skill-interactive
-title: Skill lernapps-interactive
-parent: bb-tooling
-technology: Markdown skill (skills/lernapps-interactive, not built)
-implements: concept-low-stimulation
-:::
-```
-
-#### Skill text of lernapps-interactive
-
-The creator's assistant will load it and follow it; it is advice and recipes, not a check.
-
-```arc42
-:::interface
-id: if-skill-interactive
-title: Skill text of lernapps-interactive
-provider: bb-skill-interactive
-protocol: Markdown (SKILL.md) loaded by the assistant
+path: runtime/interactive/playthrough.v1.schema.json
 :::
 ```

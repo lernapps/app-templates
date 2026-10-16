@@ -1,15 +1,17 @@
 # Cross-cutting Concepts
 
-The concepts every lernapps app implements, whatever its archetype. The interactive extension adds the concepts of
-its archetype (core and shell, playthroughs, hash routes, low stimulation).
+The concepts every lernapps app implements, whatever its archetype. The extensions add their archetype's concepts
+(the explainer's tutor; the interactive app's core and shell, playthroughs, hash routes).
 
 ## Generic architecture and extensions
 
 The archetypes stay separate but share their quality goals, so they share this architecture: the generic part defines
-the frame and an abstract archetype part, and each archetype's extension in its template folder adds only its own
-blocks below the generic ones (with `parent`), its interfaces, decisions, risks and terms, and says which optional
-generic blocks it realises. An app's architecture is the generic part plus its archetype's extension; an interactive
-app adds its own part below its extension's blocks in the same way.
+the shared runtime and the tooling helpers and what every app keeps, and each archetype's extension in its template
+folder adds its runtime and the parts its creator writes, under ids the generic part names (`bb-archetype-runtime`,
+`bb-build`, `bb-render`, `bb-shell`, `bb-e2e`, `if-archetype-content`, …), with its interfaces, decisions, risks and
+terms. An app's architecture is the generic part followed by its archetype's extension, chapter by chapter; an
+interactive app adds its own blocks below its extension's parts in the same way. The building blocks reach two levels,
+roots and their parts, so that every interface can be drawn in a view.
 
 ```arc42
 :::concept
@@ -103,19 +105,5 @@ nothing and keeps working. The quota of 100 kB per app is decided, not built.
 id: concept-device-storage
 title: Device storage
 category: persistence
-:::
-```
-
-## Tutor
-
-Optional: no model runs in the browser; the tutor is a handoff of the current task to the learner's own assistant,
-after a click, through a prompt and static tutor files. Built for the explainer, not built for the quiz and
-interactive apps.
-
-```arc42
-:::concept
-id: concept-tutor
-title: Tutor as a handoff to the learner's own assistant
-category: learning
 :::
 ```
