@@ -59,7 +59,13 @@ export type Block =
   | { type: "code"; language: string; code: string; caption?: Text }
   | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
   | { type: "section"; id: string; title: Text; blocks: readonly Block[] }
-  | { type: "vue-component"; component: string; props?: Readonly<Record<string, unknown>>; nojs: Text }
+  | {
+      type: "vue-component";
+      component: string;
+      props?: Readonly<Record<string, unknown>>;
+      nojs: Text;
+      examples?: ComponentExamples;
+    }
   | Exercise;
 
 export type BlockOf<T extends Block["type"]> = Extract<Block, { type: T }>;
@@ -128,12 +134,26 @@ export interface ComponentInfo {
   logic?: string;
 }
 
+/** An example of an exercise component: the answer its check takes, for the task of `seed`, or of every seed. */
+export interface ComponentExample {
+  answer: unknown;
+  seed?: number;
+}
+
+/** The examples of an exercise component's block: test cases for the build, never shown to learners. */
+export interface ComponentExamples {
+  accepted?: readonly ComponentExample[];
+  rejected?: readonly ComponentExample[];
+}
+
 /** A vue-component block of a page, with the component it uses. */
 export interface ComponentUse {
   block: BlockOf<"vue-component">;
   component: ComponentInfo;
   /** Where the block is, as a problem line starts: src/<chapter>/<page>.yaml:<line>: blocks[0].blocks[3] */
   place: string;
+  /** Where each of its examples is, as a problem line starts, by kind. */
+  examples: { accepted: string[]; rejected: string[] };
 }
 
 /** The events of a timeline: its own, or the records of its data file. */

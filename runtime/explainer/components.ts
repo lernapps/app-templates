@@ -25,7 +25,8 @@ import { join } from "node:path";
 import type { Node, Program } from "@babel/types";
 import type { SourceMapConsumer as Consumer } from "source-map-js";
 import { inLanguage, type Text } from "../shared/languages.ts";
-import type { ComponentInfo, Field, PropType } from "./content.ts";
+import { verdict } from "../shared/examples.ts";
+import type { ComponentExamples, ComponentInfo, Field, PropType } from "./content.ts";
 
 type Sfc = typeof import("vue/compiler-sfc");
 type TypeResolveContext = Parameters<Sfc["resolveTypeElements"]>[0];
@@ -850,4 +851,50 @@ export function propertyProblems(logic: ExerciseLogic, props: unknown, seeds = C
     }
   }
   return [];
+}
+
+/**
+ * Whether the check of an exercise component's logic, with the props of a block, judges each of the block's examples
+ * as it is listed: an accepted answer passes, a rejected one fails, for the task of its seed, or of every seed from 1
+ * to `seeds` when it gives none. One problem per example, at the first seed that judges it otherwise, with the
+ * example's kind and index.
+ */
+export function exampleProblems(
+  logic: ExerciseLogic,
+  props: unknown,
+  examples: ComponentExamples | undefined,
+  seeds = COMPONENT_SEEDS,
+): { kind: "accepted" | "rejected"; index: number; message: string }[] {
+  const problems: { kind: "accepted" | "rejected"; index: number; message: string }[] = [];
+  for (const kind of ["accepted", "rejected"] as const) {
+    (examples?.[kind] ?? []).forEach((example, index) => {
+      const shown = JSON.stringify(example.answer);
+      for (const seed of example.seed === undefined ? Array.from({ length: seeds }, (_, i) => i + 1) : [example.seed]) {
+        let result: unknown;
+        try {
+          result = logic.check(logic.generate(seed, props), example.answer);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          problems.push({ kind, index, message: `for seed ${seed} check(task, ${shown}) throws: ${reason}` });
+          return;
+        }
+        if (typeof result !== "boolean") {
+          problems.push({
+            kind,
+            index,
+            message: `for seed ${seed} check(task, ${shown}) is ${String(result)}; check returns true or false`,
+          });
+          return;
+        }
+        if (result === (kind === "accepted")) continue;
+        problems.push({
+          kind,
+          index,
+          message: `for seed ${seed} ${verdict(shown, result, "check(task, answer)", "fix check so that it")}`,
+        });
+        return;
+      }
+    });
+  }
+  return problems;
 }

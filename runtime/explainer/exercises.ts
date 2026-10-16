@@ -151,10 +151,12 @@ function generatedExercise(
       .filter((part) => part !== "")
       .join(""),
   );
+  // the examples are test cases for the build: not shipped
+  const { examples: _examples, ...shipped } = spec;
   const exerciseData: ExerciseData = {
     kind: "generated",
     lang,
-    spec,
+    spec: shipped,
     templates,
     data,
     texts: {
