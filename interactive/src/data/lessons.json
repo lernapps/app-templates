@@ -1,0 +1,4 @@
+{
+  "grundreihe": { "letters": "asdfjkl", "count": 10, "seconds": 5 },
+  "obere-reihe": { "letters": "qwertzuiop", "count": 10, "seconds": 5 }
+}

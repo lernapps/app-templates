@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url";
  */
 export const TOOLING_REF = "9b9a34c25af4fa397b64f5e01b1640245a1d3726";
 
-export const TEMPLATES = ["quiz", "explainer"] as const;
+export const TEMPLATES = ["quiz", "explainer", "interactive"] as const;
 export type Template = (typeof TEMPLATES)[number];
 
 /** What every template builds on: the shared runtime, the package (dependencies, exports) and its build (vp pack). */
@@ -40,6 +40,7 @@ const SHARED = ["runtime/shared/", "package.json", "package-lock.json", "vite.co
 export const TEMPLATE_PATHS: Record<Template, readonly string[]> = {
   quiz: ["quiz/", "runtime/quiz/", ...SHARED],
   explainer: ["explainer/", "runtime/explainer/", ...SHARED],
+  interactive: ["interactive/", "runtime/interactive/", ...SHARED],
 };
 
 /**
