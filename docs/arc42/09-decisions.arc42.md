@@ -134,7 +134,7 @@ id: dec-no-size-limit
 title: No size limit; the size in the entry, an optional loading indicator
 status: accepted
 date: 2026-10-16
-addresses: qg-accessibility, risk-size-budget-left
+addresses: qg-accessibility
 :::
 ```
 

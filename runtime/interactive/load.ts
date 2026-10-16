@@ -1,7 +1,8 @@
 // Reads an interactive app's src/app.yaml and its playthroughs (src/playthroughs/*.yaml) at build time and validates
 // them: each file against its schema (interactive.v1.schema.json, playthrough.v1.schema.json), then what a schema
 // cannot say: German first and each declared language complete, restricted Markdown in the texts, unique ids, at
-// least one playthrough, each step expecting something, a playthrough's route one of the app's. The YAML helpers are
+// least one playthrough, each step doing something (keys or inputs, not both, or ticks) and expecting something, a
+// playthrough's route one of the app's. The YAML helpers are
 // the explainer's (../explainer/load.ts). Each problem is one line: the file, its line, the place in the file, the
 // language where it matters, and what to do.
 import { existsSync, readdirSync } from "node:fs";
@@ -134,7 +135,7 @@ export function check(root: string): { interactive?: Interactive; problems: stri
     : [];
   if (files.length === 0) {
     problems.add(
-      `${PLAYTHROUGHS}/: no playthrough; write at least one, <name>.yaml: a seed, and steps of keys with the state or announcement expected after them (${playthroughSchema.$id})`,
+      `${PLAYTHROUGHS}/: no playthrough; write at least one, <name>.yaml: a seed, and steps of keys, inputs or ticks with the state or announcement expected after them (${playthroughSchema.$id})`,
     );
   }
   const playthroughs: PlaythroughFile[] = [];
@@ -152,11 +153,23 @@ export function check(root: string): { interactive?: Interactive; problems: stri
       );
     }
     playthrough.steps.forEach((step, index) => {
-      if (step.state === undefined && step.announce === undefined) {
+      if (step.keys !== undefined && step.inputs !== undefined) {
+        problems.at(
+          yaml,
+          ["steps", index, "inputs"],
+          "keys and inputs in one step; write the keys as key inputs ({ kind: key, key: a }) in inputs, or give each its own step",
+        );
+      } else if (step.keys === undefined && step.inputs === undefined && step.ticks === undefined) {
         problems.at(
           yaml,
           ["steps", index],
-          "expects nothing; give the state expected after the keys (state), the announcement (announce), or both",
+          "does nothing; give the keys (keys) or inputs (inputs) of the step, the ticks that pass (ticks), or both",
+        );
+      } else if (step.state === undefined && step.announce === undefined) {
+        problems.at(
+          yaml,
+          ["steps", index],
+          "expects nothing; give the state expected after the step (state), the announcement (announce), or both",
         );
       }
     });

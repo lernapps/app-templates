@@ -378,3 +378,13 @@ Earlier ignore directives (W002 for bb-not-found-page, bb-loading-indicator, bb-
 | Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
 | --- | --- | --- | --- | --- |
 | owner, 2026-10-16, conversation | The explainer keeps a fixed size per component; the figure (20 kB) is an implementation detail and stays out of the architecture | explainer ch.9 / dec-explainer-component-size; ch.11 / risk-size-budget-left | high | — |
+
+## Typed inputs, time steps, libraries, no size limit built (owner decisions, 2026-10-16)
+
+| Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
+| --- | --- | --- | --- | --- |
+| `runtime/interactive/contract.ts` (`Input`, `KeyInput`, `ActionInput`, `Core.step(state, input)`, `PlaythroughStep` with `keys`, `inputs`, `ticks`, `CLOCK_PROPERTY`) | The core takes a typed input (key or action, extensible); a playthrough step has keys or inputs, then ticks; the tests' clock is the global `lernappsClock` | interactive bb-shell, if-core-contract, if-root-component, if-test-clock, bb-interactive-playthroughs, dec-typed-input, term-input, term-playthrough; risk-input-only-keys removed | high | — |
+| `runtime/interactive/plugin.ts` (`play`), `runtime/interactive/e2e.ts` (`stepTicks`, `emitInput`) | The build calls tick n times per step; the browser presses keys, emits actions through the root component and steps ticks on the tests' clock | interactive bb-build, bb-e2e, scenario-interactive-build, concept-playthroughs, dec-playthroughs-as-data, qs-*, term-tick; risk-time-not-replayed removed | high | — |
+| `runtime/interactive/plugin.ts` (no `SIZE_BUDGET`) | The interactive build limits no size | generic dec-no-size-limit; risk-size-budget-left removed | high | — |
+| owner, 2026-10-16 (relayed by the coordinator); `runtime/explainer/components.ts` (`sourceScope`, `packages`) | An interactive app's components may import the libraries in the dependencies of its package.json; URL imports stay forbidden | interactive dec-libraries, bb-component-rules; generic con-component-rules, concept component rules | high | — |
+| lernapps/tooling#90 merged | The skill lernapps-interactive exists | generic bb-skills, interactive building blocks intro; risk-interactive-skill-missing removed | high | — |

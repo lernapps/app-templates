@@ -11,7 +11,8 @@ The interactive archetype's scenarios, besides the generic ones.
 
 ## The same inputs play the same twice
 
-At build, every playthrough is played against the core twice, without ticks; a core that draws from `Math.random` or
+At build, every playthrough is played against the core twice, with only the ticks its steps name; a core that draws
+from `Math.random` or
 the clock gives different states.
 
 ```arc42
@@ -35,7 +36,7 @@ id: qs-playthrough-in-browser
 title: Playthroughs play the same in the browser
 quality: qg-checkable
 stimulus: lernapps check --pre-push runs the e2e tests on the built app
-response: Each playthrough opens app/?seed=<seed>#<route>, gives its inputs (today keys) and compares the state and the polite announcement after each step
+response: Each playthrough opens app/?seed=<seed>#<route> on the test clock, gives its inputs and ticks and compares the state and the polite announcement after each step
 metric: Every expected state and announcement matches, with no console error, at desktop width and 360 px
 :::
 ```

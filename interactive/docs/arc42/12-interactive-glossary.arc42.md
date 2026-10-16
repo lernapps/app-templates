@@ -41,7 +41,8 @@ definition: A mode or level of the app with its own address on the app page (app
 
 ## Tick
 
-The runtime's constant `TICK` is 20; the build never ticks, the browser ticks in real time.
+The runtime's constant `TICK` is 20. A learner's browser ticks in real time; the build and the end-to-end tests tick
+only as a playthrough step's `ticks` say.
 
 ```arc42
 :::glossary-term
@@ -59,13 +60,13 @@ A YAML file in `src/playthroughs/`. Not a free-form test: it holds only data the
 :::glossary-term
 id: term-playthrough
 title: Playthrough
-definition: A seed, a route and a list of steps, each a list of inputs followed by the state (a part of it) or the announcement expected after them; played by the build against the core and by the browser test.
+definition: A seed, a route and a list of steps, each inputs (keys as their short form) and ticks followed by the state (a part of it) or the announcement expected after them; played by the build against the core and by the browser test.
 :::
 ```
 
 ## Input
 
-What the core's `step` takes. Today only a key (`risk-input-only-keys`).
+What the core's `step` takes: a key input or an action input (`dec-typed-input`).
 
 ```arc42
 :::glossary-term
