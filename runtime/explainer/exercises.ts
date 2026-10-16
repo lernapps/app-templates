@@ -145,6 +145,7 @@ function questionExercise(block: QuestionBlock, lang: string): string {
   const data: ExerciseData = { kind: "question", lang, question };
   return [
     `<div class="explainer-exercise explainer-question" id="${block.id}">`,
+    `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
     renderQuestion(question, { lang }),
     `<details class="explainer-solution"><summary>${plain(messagesIn(lang).solution)}</summary>`,
     renderSolution(question, { lang }),
@@ -203,6 +204,7 @@ function generatedExercise(
   };
   return [
     `<div class="explainer-exercise explainer-generated" id="${spec.id}">`,
+    `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
     `<div class="explainer-live" hidden></div>`,
     `<p class="explainer-worked-intro">${plain(message(lang, "workedTasks"))}</p>`,
     `<ol class="explainer-worked">${worked.join("\n")}</ol>`,
