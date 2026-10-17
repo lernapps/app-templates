@@ -285,13 +285,12 @@ Built in the template, written by the creator: title, intro, languages, sources,
 questions; the only file of a quiz the creator changes.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
-:::
 :::building-block
 id: bb-quiz-bank
 title: Question bank
 technology: JSON
 implements: concept-languages
+path: quiz/src/quiz.json
 :::
 ```
 

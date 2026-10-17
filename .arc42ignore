@@ -4,3 +4,11 @@
 runtime/quiz
 runtime/explainer
 runtime/interactive
+# In each template folder, whose parts the extensions claim with the folder as prefix (interactive/src/core): the
+# entry, which hands the app's parts to its archetype's shell, and type declarations, configuration rather than
+# architecture; and the explainer's example chapter, part of bb-explainer-content (which claims src/app.yaml).
+quiz/src/main.ts
+explainer/src/main.ts
+explainer/src/prozent
+interactive/src/main.ts
+interactive/src/env.d.ts
