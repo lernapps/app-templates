@@ -53,3 +53,6 @@ trigger: The pre-push hook or CI runs lernapps check --pre-push
 involves: bb-e2e, bb-interactive-description, bb-interactive-playthroughs, bb-shell, bb-interactive-core, bb-interactive-ui, bb-runtime-texts, bb-tooling
 :::
 ```
+
+<!-- app: begin -->
+<!-- app: end -->

@@ -40,3 +40,6 @@ response: Each playthrough opens app/?seed=<seed>#<route> on the test clock, giv
 metric: Every expected state and announcement matches, with no console error, at desktop width and 360 px
 :::
 ```
+
+<!-- app: begin -->
+<!-- app: end -->
