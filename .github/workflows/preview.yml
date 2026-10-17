@@ -53,7 +53,7 @@ jobs:
         run: |
           mkdir _site
           for template in quiz explainer interactive; do
-            (cd "$template" && npm install --no-audit --no-fund && npx vp build --outDir "$PWD/_site/$template")
+            (cd "$template" && npm install --no-audit --no-fund && npx vp build --outDir "$GITHUB_WORKSPACE/_site/$template")
           done
           {
             echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Template preview</title></head><body><h1>Template preview</h1><ul>'
