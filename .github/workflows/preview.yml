@@ -1,17 +1,17 @@
 name: Preview
 
-# A preview of the templates for every pull request, at https://lernapps.net/app-templates/pr-preview/pr-<number>/
-# (the quiz, the explainer and the interactive template, each built as an app, below quiz/, explainer/ and
-# interactive/), updated on every push and removed when the pull request is closed. It is published the way the
-# preview of an app is (lernapps/tooling, actions/app-preview): on the branch gh-pages below pr-preview/, not indexed by
-# search engines, with one comment on the pull request, updated in place. It needs GitHub Pages to serve gh-pages from
-# its root (Settings → Pages → Deploy from a branch → gh-pages, / (root)), as lernapps.net/app-templates/.
-# The change scope (changes.yml of lernapps/tooling, as in check.yml) gates the build: no preview for a change of only
-# the plan (.vibe/**) or only docs; closing a pull request always removes its preview. The job `preview` always runs
-# and reports the result.
+# A preview of the templates for every pull request, published like the preview of an app: the app preview action of
+# lernapps/tooling (actions/app-preview) puts the bundle at <this repo's address>pr-preview/pr-<number>/, i.e.
+# https://lernapps.net/app-templates/pr-preview/pr-<number>/, on the branch gh-pages, not indexed by search engines,
+# updated on every push and removed when the pull request is closed or merged; one comment on the pull request links it.
+# The action takes the artifact "app" (what app-check uploads for an app); here the job `bundle` makes it: the quiz,
+# the explainer and the interactive template, each built as an app, below quiz/, explainer/ and interactive/, with a
+# page that links them. check.yml checks the templates; this builds them. It needs GitHub Pages to serve gh-pages from
+# its root (Settings → Pages → Deploy from a branch → gh-pages, / (root)). The actions ask the change scope (a change
+# of only the plan .vibe/** or only docs gets no preview; closing always removes it), so there is no paths filter.
 on:
   pull_request:
-    types: [opened, reopened, synchronize, closed]
+    types: [opened, synchronize, reopened, closed]
 
 permissions:
   contents: read
@@ -26,58 +26,47 @@ jobs:
     with:
       tooling-ref: 9b9a34c25af4fa397b64f5e01b1640245a1d3726
 
-  build:
+  bundle:
     needs: changes
-    # Pull requests from forks get a read-only token and cannot push to gh-pages.
+    # a pull request from this repo only (a fork's token may not write to gh-pages); closing removes the preview, builds nothing
     if: >-
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      (github.event.action == 'closed' || needs.changes.outputs.code == 'true')
+      github.event.action != 'closed' && needs.changes.outputs.code == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci # the runtime's build tools, for file:..
+      # no hooks before the templates' install, so that any hooks it installs leave core.hooksPath alone (see check.yml)
+      - run: git config --unset core.hooksPath || true
+      - name: Build the templates into dist/
+        run: |
+          mkdir dist
+          for template in quiz explainer interactive; do
+            (cd "$template" && npm install --no-audit --no-fund && npx vp build --outDir "$GITHUB_WORKSPACE/dist/$template")
+          done
+          {
+            echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Templates</title></head><body><h1>Templates</h1><ul>'
+            for template in quiz explainer interactive; do echo "<li><a href=\"$template/\">$template</a></li>"; done
+            echo '</ul></body></html>'
+          } > dist/index.html
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: app
+          path: dist
+
+  preview:
+    needs: bundle
+    if: >-
+      always() && github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.action == 'closed' || needs.bundle.result == 'success' || needs.bundle.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
+      pages: read # the address, for the comment
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - if: github.event.action != 'closed'
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 22
-          cache: npm
-      - if: github.event.action != 'closed'
-        run: npm ci # the runtime's build tools, for file:..
-      # no hooks before the templates' install, so that any hooks it installs leave core.hooksPath alone (see check.yml)
-      - if: github.event.action != 'closed'
-        run: git config --unset core.hooksPath || true
-      - name: Build the templates
-        if: github.event.action != 'closed'
-        run: |
-          mkdir _site
-          for template in quiz explainer interactive; do
-            (cd "$template" && npm install --no-audit --no-fund && npx vp build --outDir "$GITHUB_WORKSPACE/_site/$template")
-          done
-          {
-            echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Template preview</title></head><body><h1>Template preview</h1><ul>'
-            for template in quiz explainer interactive; do echo "<li><a href=\"$template/\">$template</a></li>"; done
-            echo '</ul></body></html>'
-          } > _site/index.html
-          # a preview is not for search engines
-          find _site -name '*.html' -exec sed -i 's|</head>|<meta name="robots" content="noindex"></head>|' {} +
-      - uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.8.1
-        with:
-          source-dir: _site
-          preview-branch: gh-pages
-          umbrella-dir: pr-preview
-          pages-base-url: lernapps.net/app-templates
-          qr-code: false
-          action: auto
-
-  preview: # always runs, fails when a job above failed or was cancelled
-    needs: [changes, build]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - env:
-          RESULTS: ${{ join(needs.*.result, ' ') }}
-        run: |
-          echo "the jobs ended: $RESULTS"
-          case " $RESULTS " in *" failure "* | *" cancelled "*) exit 1 ;; esac
+      - uses: lernapps/tooling/actions/app-preview@41bffad2afcc823c19f741a13854d575ee52f282 # main
