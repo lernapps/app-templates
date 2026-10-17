@@ -351,12 +351,11 @@ path: runtime/explainer/components.ts
 Built in the template: `src/app.yaml` says what the start page shows, the languages and the routes.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
-:::
 :::building-block
 id: bb-interactive-description
 title: Description
 technology: YAML
+path: interactive/src/app.yaml
 :::
 ```
 
@@ -381,14 +380,13 @@ Built in the template. The app's logic, pure TypeScript without DOM, determinist
 so that it can be played and tested in Node and in the browser alike; it reads the app's data.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
-:::
 :::building-block
 id: bb-interactive-core
 title: Core
 technology: TypeScript
 requires: if-interactive-data
 implements: concept-core-and-shell, concept-determinism
+path: interactive/src/core
 :::
 ```
 
@@ -418,14 +416,13 @@ into inputs; free in how they render (DOM, SVG, canvas). They may remember somet
 template does not.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
-:::
 :::building-block
 id: bb-interactive-ui
 title: UI
 technology: Vue single-file components
 requires: if-a11y, if-translator, if-messages
 implements: concept-component-rules, concept-accessibility
+path: interactive/src/ui
 :::
 ```
 
@@ -449,12 +446,11 @@ protocol: Vue props and events
 Built in the template. The app's content as data in its own format (lessons, texts with their faulty versions).
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
-:::
 :::building-block
 id: bb-interactive-data
 title: Data
 technology: JSON
+path: interactive/src/data
 :::
 ```
 
@@ -463,13 +459,12 @@ technology: JSON
 The core imports the data files as JSON modules, so they are bundled and checked with the core.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this interface's path is the app's own and is set in the app's architecture
-:::
 :::interface
 id: if-interactive-data
 title: Data files (JSON imports)
 provider: bb-interactive-data
 protocol: JSON module import
+path: interactive/src/data
 :::
 ```
 
@@ -478,13 +473,12 @@ protocol: JSON module import
 Built in the template. The app's learner texts by language, read through the translator.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
-:::
 :::building-block
 id: bb-interactive-messages
 title: Messages
 technology: JSON
 implements: concept-languages
+path: interactive/src/messages
 :::
 ```
 
@@ -493,13 +487,12 @@ implements: concept-languages
 The UI imports one message file per language and hands it to the translator.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this interface's path is the app's own and is set in the app's architecture
-:::
 :::interface
 id: if-messages
 title: Message files by language
 provider: bb-interactive-messages
 protocol: JSON module import
+path: interactive/src/messages
 :::
 ```
 
@@ -510,13 +503,12 @@ inputs, or `inputs`) and ticks that pass after them, with the state or announcem
 template's playthrough lets a letter go late and starts a round with the action `again`.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
-:::
 :::building-block
 id: bb-interactive-playthroughs
 title: Playthroughs
 technology: YAML
 implements: concept-playthroughs
+path: interactive/src/playthroughs
 :::
 ```
 
