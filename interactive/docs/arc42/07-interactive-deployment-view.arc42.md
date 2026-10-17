@@ -30,3 +30,6 @@ parent: dn-learner-browser
 hosts: bb-shell, bb-interactive-core, bb-interactive-ui, bb-interactive-data, bb-interactive-messages
 :::
 ```
+
+<!-- app: begin -->
+<!-- app: end -->

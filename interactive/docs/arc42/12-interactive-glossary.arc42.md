@@ -75,3 +75,6 @@ title: Input
 definition: A typed, extensible value the core's step takes: a key as the browser names it, a pointer or touch action, and other kinds later; the components translate any device input into inputs, and playthroughs record them.
 :::
 ```
+
+<!-- app: begin -->
+<!-- app: end -->

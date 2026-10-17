@@ -125,3 +125,6 @@ date: 2026-10-16
 addresses: qg-privacy
 :::
 ```
+
+<!-- app: begin -->
+<!-- app: end -->

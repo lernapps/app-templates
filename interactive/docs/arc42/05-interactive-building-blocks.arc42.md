@@ -8,8 +8,10 @@ creator writes the description, the core, the UI, the data, the messages and the
 calls `startInteractive`. It reuses the explainer's component rules; the tutor handoff, task numbers, exercise contract
 and the examples check are not built for it (its playthroughs take the examples' role). Only the start page reads
 without JavaScript. An interactive app adds its own blocks below `bb-interactive-core`, `bb-interactive-ui` and
-`bb-interactive-data`, in an architecture part of its own. The creator's assistant follows the skill
-`lernapps-interactive` (`if-skills`).
+`bb-interactive-data`: an app gets this architecture as a copy, and writes its own part between the markers
+`<!-- app: begin … -->` and `<!-- app: end … -->` in it (here inside the sections of the core, the UI and the data and
+at the end of each chapter), which the tooling keeps when it replaces the rest. The creator's assistant follows the
+skill `lernapps-interactive` (`if-skills`).
 
 ## Level 1 (interactive app)
 
@@ -409,6 +411,9 @@ path: runtime/interactive/contract.ts
 :::
 ```
 
+<!-- app: begin core -->
+<!-- app: end core -->
+
 ## UI
 
 Built in the template. Vue components that show the state and translate the device's input (keys, pointer, touch, …)
@@ -441,6 +446,9 @@ protocol: Vue props and events
 :::
 ```
 
+<!-- app: begin ui -->
+<!-- app: end ui -->
+
 ## Data
 
 Built in the template. The app's content as data in its own format (lessons, texts with their faulty versions).
@@ -467,6 +475,9 @@ protocol: JSON module import
 path: interactive/src/data
 :::
 ```
+
+<!-- app: begin data -->
+<!-- app: end data -->
 
 ## Messages
 
@@ -525,3 +536,6 @@ protocol: YAML, JSON Schema
 path: runtime/interactive/playthrough.v1.schema.json
 :::
 ```
+
+<!-- app: begin -->
+<!-- app: end -->
