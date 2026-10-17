@@ -2,8 +2,8 @@
 // the quiz runtime's per-question exports (its controls, and a <details> "Lösung" with the right answer, the
 // background of every option, the explanation and the links); and a generated exercise: its templates rendered once
 // per language (restricted Markdown, formulas as MathML, the placeholders as tokens), the place of the live task, and
-// three worked tasks, the task numbers 1 to 3 (taskSeeds), each with its task number and a <details> "Lösung" (with JavaScript they show
-// once the live task is solved). Each exercise carries the data its live part
+// three worked tasks, the task numbers 1 to 3 (taskSeeds), each with its task number and a <details> "Lösung" (with JavaScript they stay
+// hidden, the live task replaces them). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
 import { questionIn, type Question } from "../quiz/quiz.ts";
 import { answerText, messagesIn, renderQuestion, renderSolution } from "../quiz/render.ts";

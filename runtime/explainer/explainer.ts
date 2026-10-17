@@ -8,8 +8,8 @@
 // address names its task number (?<exercise>=<n>), else from a random one; its seed from the exercise's table
 // of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the quiz's controls, checker and feedback through its
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
-// always holds the task number of every exercise of the page. Its worked tasks, with their solutions, show below the
-// live task once the learner has solved it or asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
+// always holds the task number of every exercise of the page. Its worked tasks, with their solutions, are for readers
+// without JavaScript: they stay hidden, as they are other tasks than the live one. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
 // which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
 // with it on a click (a page's button also gives it the tasks of the page's address); the learner's chosen way to the
 // tutor is the only thing kept on the device.
@@ -32,12 +32,10 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   const live = element.querySelector<HTMLElement>(".explainer-live");
   if (!live) return;
   const { spec, templates, lang, texts } = data;
-  // the worked tasks with their solutions, once the learner has solved a live task or asked for its solution
-  const worked = [...element.querySelectorAll<HTMLElement>(".explainer-worked-intro, .explainer-worked")];
-  for (const part of worked) part.hidden = true;
-  const showWorked = () => {
-    for (const part of worked) part.hidden = false;
-  };
+  // the worked tasks with their solutions are the page's text for readers without JavaScript: the live task replaces them
+  for (const part of element.querySelectorAll<HTMLElement>(".explainer-worked-intro, .explainer-worked")) {
+    part.hidden = true;
+  }
   const { seeds } = data;
   const count = Math.max(seeds.length, 1);
   const from = numberFromAddress(location.href, spec.id);
@@ -76,7 +74,6 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
         lang,
         retry: true,
         diagnose: (answer) => diagnose(spec, task, question, answer, lang, templates),
-        onReveal: showWorked,
       });
       const legend = item.querySelector<HTMLElement>("legend");
       if (focus && legend) moveFocus(legend);
