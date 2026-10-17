@@ -449,13 +449,12 @@ Built in the template, written by the creator: `src/app.yaml` and a folder per c
 pages of blocks, each page with an exercise.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
-:::
 :::building-block
 id: bb-explainer-content
 title: Content
 technology: YAML, restricted Markdown, LaTeX subset
 implements: concept-languages
+path: explainer/src/app.yaml
 :::
 ```
 
@@ -480,7 +479,7 @@ Optional, not in the template: `src/data/<name>.yaml`, lists of records a timeli
 from, so each fact is written once.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
+:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
 :::
 :::building-block
 id: bb-explainer-data
@@ -494,7 +493,7 @@ technology: YAML
 A block names a data file by its name (`data: ereignisse`, `from: { data: elemente }`).
 
 ```arc42
-:::ignore H014 the template is copied into each app; this interface's path is the app's own and is set in the app's architecture
+:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
 :::
 :::interface
 id: if-data-files
@@ -511,7 +510,7 @@ component rules and within a fixed size each (`dec-explainer-component-size`); a
 module.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this block's path is the app's own and is set in the app's architecture
+:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
 :::
 :::building-block
 id: bb-explainer-components
@@ -527,7 +526,7 @@ A `vue-component` block names the component with its typed props and a `nojs` te
 `answered { correct, reason? }` and takes the prop `seed`.
 
 ```arc42
-:::ignore H014 the template is copied into each app; this interface's path is the app's own and is set in the app's architecture
+:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
 :::
 :::interface
 id: if-vue-component
@@ -544,7 +543,7 @@ exercise contract, which the build tests over fixed seeds and the tutor files re
 in each language, and what the exercise is for a tutor).
 
 ```arc42
-:::ignore H014 the template is copied into each app; this interface's path is the app's own and is set in the app's architecture
+:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
 :::
 :::interface
 id: if-exercise-logic
