@@ -9,9 +9,10 @@ Parts that only some archetypes have (component rules, question types, tutor han
 are in the extensions that use them. Not built and not in the frame now: a loading indicator (`dec-no-size-limit`) and
 a settings dialog (`dec-no-settings`).
 
-Paths are relative to the root of `lernapps/app-templates`. The parts in a template folder carry no path: the template
-is copied into each app, where the app's architecture sets them. An app's architecture is this part followed by its
-archetype's extension, chapter by chapter; so the level-1 view of a whole app is in its extension.
+Paths are relative to the root of `lernapps/app-templates`. The parts in a template folder carry their path with the
+folder as prefix (`interactive/src/core`); an app that gets this architecture as a copy has them without it
+(`src/core`). An app's architecture is this part followed by its archetype's extension, chapter by chapter; so the
+level-1 view of a whole app is in its extension.
 
 ## Level 1: the generic roots
 
