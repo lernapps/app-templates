@@ -16,3 +16,5 @@ mitigation: Planned; until then the build checks determinism with every playthro
 :::
 ```
 
+<!-- app: begin -->
+<!-- app: end -->

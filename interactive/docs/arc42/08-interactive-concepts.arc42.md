@@ -47,3 +47,6 @@ title: Hash routes
 category: navigation
 :::
 ```
+
+<!-- app: begin -->
+<!-- app: end -->
