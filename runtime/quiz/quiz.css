@@ -11,7 +11,23 @@
   --quiz-right-background: #dcfce7;
   --quiz-wrong: #7f1d1d;
   --quiz-wrong-background: #fee2e2;
-  color-scheme: light;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --quiz-text: #ececec;
+    --quiz-muted: #b8bcc4;
+    --quiz-background: #121316;
+    --quiz-surface: #1d1f24;
+    --quiz-border: #7d838d;
+    --quiz-accent: #8ab4ff;
+    --quiz-on-accent: #0b1020;
+    --quiz-right: #bbf7d0;
+    --quiz-right-background: #143522;
+    --quiz-wrong: #fecaca;
+    --quiz-wrong-background: #3f1515;
+  }
 }
 
 *,
