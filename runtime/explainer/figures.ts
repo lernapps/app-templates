@@ -14,7 +14,7 @@ export function hundredGrid(filled: number, alt: string): string {
     const x = 1 + (index % 10) * 11;
     const y = 1 + Math.floor(index / 10) * 11;
     cells.push(
-      `<rect x="${x}" y="${y}" width="10" height="10" fill="${index < filled ? ON : OFF}" stroke="${LINE}" stroke-width="0.5"/>`,
+      `<rect x="${x}" y="${y}" width="10" height="10" class="${index < filled ? "fig-on" : "fig-off"} fig-line" fill="${index < filled ? ON : OFF}" stroke="${LINE}" stroke-width="0.5"/>`,
     );
   }
   return `<svg class="explainer-drawing explainer-hundred-grid" role="img" aria-label="${escape(alt)}" viewBox="0 0 111 111" xmlns="http://www.w3.org/2000/svg">${cells.join("")}</svg>`;
@@ -30,11 +30,11 @@ export function bar(part: number, whole: number, alt: string, locale: string, pe
   const width = 298 * share;
   const at = Math.min(Math.max(1 + width, 50), 250);
   const label = (x: number, y: number, anchor: string, text: string) =>
-    `<text x="${x.toFixed(1)}" y="${y}" text-anchor="${anchor}" font-size="12" fill="#1a1a1a">${escape(text)}</text>`;
+    `<text x="${x.toFixed(1)}" y="${y}" text-anchor="${anchor}" font-size="12" class="fig-text" fill="#1a1a1a">${escape(text)}</text>`;
   return [
     `<svg class="explainer-drawing explainer-bar" role="img" aria-label="${escape(alt)}" viewBox="0 0 300 ${percent ? 74 : 58}" xmlns="http://www.w3.org/2000/svg">`,
-    `<rect x="1" y="1" width="298" height="36" fill="${OFF}" stroke="${LINE}"/>`,
-    `<rect x="1" y="1" width="${width.toFixed(1)}" height="36" fill="${ON}"/>`,
+    `<rect x="1" y="1" width="298" height="36" class="fig-off fig-line" fill="${OFF}" stroke="${LINE}"/>`,
+    `<rect x="1" y="1" width="${width.toFixed(1)}" height="36" class="fig-on" fill="${ON}"/>`,
     label(1, 54, "start", "0"),
     label(at, 54, "middle", numbers.format(part)),
     label(299, 54, "end", numbers.format(whole)),
