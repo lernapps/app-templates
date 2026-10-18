@@ -109,6 +109,8 @@ export interface StartQuestionOptions {
   onAnswer?: (answer: Answer, right: boolean) => void;
   /** Called once, when the solution shows. */
   onReveal?: () => void;
+  /** How a text of the question that the feedback quotes becomes HTML (its formulas); plain text without it. */
+  format?: (text: string) => string;
 }
 
 /**
@@ -158,10 +160,12 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     why.className = "quiz-diagnosis";
     if (option !== undefined) {
       const name = doc.createElement("strong");
-      name.textContent = `${option}:`;
+      if (options.format) name.innerHTML = `${options.format(option)}:`;
+      else name.textContent = `${option}:`;
       why.append(name, " ");
     }
-    why.append(text);
+    if (options.format) why.insertAdjacentHTML("beforeend", options.format(text));
+    else why.append(text);
     feedback.append(why);
   };
   let answered = false;

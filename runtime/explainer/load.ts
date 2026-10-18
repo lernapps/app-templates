@@ -16,6 +16,7 @@ import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.
 import { isNode, LineCounter, parseDocument, type Document } from "yaml";
 import schema from "./explainer.v1.schema.json" with { type: "json" };
 import quizSchema from "../quiz/quiz.v1.schema.json" with { type: "json" };
+import { questionTexts } from "../quiz/quiz.ts";
 import { addressProblem, questionDetails } from "../quiz/validate.ts";
 import {
   inLanguage,
@@ -44,7 +45,7 @@ import {
   type Generated,
   type Templates,
 } from "./generated.ts";
-import { htmlTag, inspect } from "./markdown.ts";
+import { formulaProblems, htmlTag, inspect } from "./markdown.ts";
 import { MESSAGES } from "./messages.ts";
 import { allBlocks } from "./routes.ts";
 import { RESERVED_PARAMS } from "./tasks.ts";
@@ -600,6 +601,14 @@ function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Path, dep
           const path = [...at, ...problem.path, ...(problem.lang === undefined ? [] : [problem.lang])];
           problems.at(yaml, path, problem.message, problem.lang);
         }
+        // the texts of a question are plain text with formulas: $…$ must be a formula the build can render
+        for (const { path, text } of questionTexts(block)) {
+          for (const { lang, text: source, keyed } of textLanguages(text, texts.languages).texts) {
+            for (const message of formulaProblems(source)) {
+              problems.at(yaml, [...at, ...path, ...(keyed ? [lang] : [])], message, keyed ? lang : undefined);
+            }
+          }
+        }
     }
   });
 }
@@ -816,6 +825,7 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
   }
   texts.check(yaml, [...at, "task", "text"], "markdown");
   texts.check(yaml, [...at, "hint"], "markdown");
+  texts.check(yaml, [...at, "practice"], "plain");
   (block.steps ?? []).forEach((_step, index) => texts.check(yaml, [...at, "steps", index], "markdown"));
   for (const problem of templateProblems(block)) {
     problems.at(yaml, [...at, ...problem.path], problem.message, problem.lang);

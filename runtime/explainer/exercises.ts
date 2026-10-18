@@ -24,13 +24,19 @@ import {
   type LanguageTemplates,
   type Templates,
 } from "./generated.ts";
-import { plain, renderInline } from "./markdown.ts";
+import { plain, renderInline, renderWithFormulas } from "./markdown.ts";
 import { distinctSeeds } from "./tasks.ts";
 import { message } from "./messages.ts";
 
 /** What the browser reads from an exercise (script.explainer-exercise-data). */
 export type ExerciseData =
-  | { kind: "question"; lang: string; question: Question }
+  | {
+      kind: "question";
+      lang: string;
+      question: Question;
+      /** The texts of the question that hold a formula, as HTML (the feedback quotes them); the others are plain. */
+      rendered: Record<string, string>;
+    }
   | {
       kind: "generated";
       lang: string;
@@ -40,6 +46,8 @@ export type ExerciseData =
       /** The seed of each task number, from 1 (taskSeeds). */
       seeds: number[];
       texts: { newTask: string; practice: string; hint: string; solution: string; taskNumber: string };
+      /** Whether the worked tasks show once the live task is solved (workedTasks: "always"). */
+      showWorked: boolean;
     };
 
 /** The templates of a generated exercise in each of `languages`; links inside them through `resolve`. */
@@ -140,15 +148,25 @@ export function workedTasks(spec: Generated, data: Data, templates: Templates, l
 
 const json = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
+/** The texts of a question that hold a formula, $…$. */
+function formulaTexts(value: unknown): string[] {
+  if (typeof value === "string") return value.includes("$") && /\$[^$\n]+\$/.test(value) ? [value] : [];
+  if (Array.isArray(value)) return value.flatMap(formulaTexts);
+  if (typeof value === "object" && value !== null) return Object.values(value).flatMap(formulaTexts);
+  return [];
+}
+
 function questionExercise(block: QuestionBlock, lang: string): string {
   const question = questionIn(block, lang);
-  const data: ExerciseData = { kind: "question", lang, question };
+  const rendered: Record<string, string> = {};
+  for (const text of formulaTexts(question)) rendered[text] = renderWithFormulas(text);
+  const data: ExerciseData = { kind: "question", lang, question, rendered };
   return [
     `<div class="explainer-exercise explainer-question" id="${block.id}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
-    renderQuestion(question, { lang }),
+    renderQuestion(question, { lang, format: renderWithFormulas }),
     `<details class="explainer-solution"><summary>${plain(messagesIn(lang).solution)}</summary>`,
-    renderSolution(question, { lang }),
+    renderSolution(question, { lang, format: renderWithFormulas }),
     `</details>`,
     `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
     `</div>`,
@@ -193,9 +211,10 @@ function generatedExercise(
     templates,
     data,
     seeds: taskSeeds(spec, data),
+    showWorked: spec.workedTasks === "always",
     texts: {
       newTask: message(lang, "newTask"),
-      practice: message(lang, "practice"),
+      practice: spec.practice === undefined ? message(lang, "practice") : inLanguage(spec.practice, lang),
       hint: message(lang, "hint"),
       solution,
       // with {n} kept for the client module

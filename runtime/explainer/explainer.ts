@@ -8,8 +8,9 @@
 // address names its task number (?<exercise>=<n>), else from a random one; its seed from the exercise's table
 // of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the quiz's controls, checker and feedback through its
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
-// always holds the task number of every exercise of the page. Its worked tasks, with their solutions, show below the
-// live task once the learner has solved it or asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
+// always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
+// JavaScript, unless the exercise asks for them (workedTasks: always): then they show below the live task once the
+// learner has solved it or asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
 // which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
 // with it on a click (a page's button also gives it the tasks of the page's address); the learner's chosen way to the
 // tutor is the only thing kept on the device.
@@ -32,11 +33,12 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   const live = element.querySelector<HTMLElement>(".explainer-live");
   if (!live) return;
   const { spec, templates, lang, texts } = data;
-  // the worked tasks with their solutions, once the learner has solved a live task or asked for its solution
+  // the worked tasks with their solutions: hidden with JavaScript (the learner gets new tasks), unless the exercise
+  // asks for them (workedTasks: always), then once the learner has solved a live task or asked for its solution
   const worked = [...element.querySelectorAll<HTMLElement>(".explainer-worked-intro, .explainer-worked")];
   for (const part of worked) part.hidden = true;
   const showWorked = () => {
-    for (const part of worked) part.hidden = false;
+    if (data.showWorked) for (const part of worked) part.hidden = false;
   };
   const { seeds } = data;
   const count = Math.max(seeds.length, 1);
@@ -279,7 +281,12 @@ export function startExplainer(root: Document = document): void {
       // the question shows the same as its "Lösung" once it is answered
       const solution = element.querySelector<HTMLElement>(":scope > details.explainer-solution");
       if (solution) solution.hidden = true;
-      startQuestion(item, data.question, { lang: data.lang, retry: true });
+      const { rendered } = data;
+      startQuestion(item, data.question, {
+        lang: data.lang,
+        retry: true,
+        format: (text) => rendered[text] ?? escape(text),
+      });
     } else startGenerated(element, data);
   }
 }
