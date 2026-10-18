@@ -9,7 +9,38 @@
   --explainer-accent: #1d4ed8;
   --explainer-example: #ecfdf3;
   --explainer-note: #fff7e0;
-  color-scheme: light;
+  --explainer-on-accent: #ffffff;
+  --explainer-right: #14532d;
+  --explainer-right-background: #dcfce7;
+  --explainer-wrong: #7f1d1d;
+  --explainer-wrong-background: #fee2e2;
+  --explainer-hl-keyword: #7b2382;
+  --explainer-hl-string: #0f5a2e;
+  --explainer-hl-number: #8a3b00;
+  --explainer-hl-comment: #50555c;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --explainer-text: #ececec;
+    --explainer-muted: #b8bcc4;
+    --explainer-background: #121316;
+    --explainer-surface: #1d1f24;
+    --explainer-border: #7d838d;
+    --explainer-accent: #8ab4ff;
+    --explainer-example: #12261b;
+    --explainer-note: #2b2512;
+    --explainer-on-accent: #0b1020;
+    --explainer-right: #bbf7d0;
+    --explainer-right-background: #143522;
+    --explainer-wrong: #fecaca;
+    --explainer-wrong-background: #3f1515;
+    --explainer-hl-keyword: #e0a3ff;
+    --explainer-hl-string: #8fe0ac;
+    --explainer-hl-number: #ffb77a;
+    --explainer-hl-comment: #a3a9b3;
+  }
 }
 
 *,
@@ -350,23 +381,23 @@ figcaption p {
 .hljs-selector-tag,
 .hljs-literal,
 .hljs-type {
-  color: #7b2382;
+  color: var(--explainer-hl-keyword);
 }
 
 .hljs-string,
 .hljs-attr,
 .hljs-regexp {
-  color: #0f5a2e;
+  color: var(--explainer-hl-string);
 }
 
 .hljs-number,
 .hljs-symbol {
-  color: #8a3b00;
+  color: var(--explainer-hl-number);
 }
 
 .hljs-comment,
 .hljs-meta {
-  color: #50555c;
+  color: var(--explainer-hl-comment);
   font-style: italic;
 }
 
@@ -374,13 +405,13 @@ figcaption p {
 .hljs-function,
 .hljs-name,
 .hljs-built_in {
-  color: #1d4ed8;
+  color: var(--explainer-accent);
 }
 
 .hljs-variable,
 .hljs-params,
 .hljs-tag {
-  color: #1a1a1a;
+  color: var(--explainer-text);
 }
 
 /* Exercises: the quiz's question types and generated exercises, the quiz's controls and feedback in the explainer's
@@ -388,10 +419,6 @@ figcaption p {
    solutions and worked tasks once the exercise is solved or its solution asked for. */
 .explainer-exercise,
 .explainer-component {
-  --explainer-right: #14532d;
-  --explainer-right-background: #dcfce7;
-  --explainer-wrong: #7f1d1d;
-  --explainer-wrong-background: #fee2e2;
   margin: 1rem 0 1.5rem;
 }
 
@@ -466,7 +493,7 @@ figcaption p {
   border: 2px solid var(--explainer-accent);
   border-radius: 0.375rem;
   background: var(--explainer-accent);
-  color: #ffffff;
+  color: var(--explainer-on-accent);
   cursor: pointer;
 }
 
@@ -689,7 +716,7 @@ figcaption p {
 .explainer-tutor-go {
   border-radius: 0.375rem 0 0 0.375rem;
   background: var(--explainer-accent);
-  color: #ffffff;
+  color: var(--explainer-on-accent);
 }
 
 .explainer-tutor-select {
@@ -751,7 +778,7 @@ figcaption p {
   padding: 0.4rem 1rem;
   border-radius: 0.5rem 0.5rem 0 0;
   background: var(--explainer-accent);
-  color: #ffffff;
+  color: var(--explainer-on-accent);
   font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -810,4 +837,20 @@ figcaption p {
 
 .explainer-worked-task:last-child {
   border-bottom: 0;
+}
+
+.explainer-drawing .fig-on {
+  fill: var(--explainer-accent);
+}
+
+.explainer-drawing .fig-off {
+  fill: var(--explainer-background);
+}
+
+.explainer-drawing .fig-line {
+  stroke: var(--explainer-muted);
+}
+
+.explainer-drawing .fig-text {
+  fill: var(--explainer-text);
 }
