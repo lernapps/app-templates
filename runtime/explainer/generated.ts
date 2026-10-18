@@ -94,6 +94,10 @@ export interface Generated {
   readonly mistakes?: readonly { readonly value: string; readonly message: Text }[];
   readonly hint?: Text;
   readonly steps?: readonly Text[];
+  /** The sentence above the live task; the page's own when absent. */
+  readonly practice?: Text;
+  /** Whether the worked tasks show with JavaScript too ("always"); by default they show only without it. */
+  readonly workedTasks?: "without-javascript" | "always";
   /**
    * Test cases for the build, never shown to learners: answers as expressions of given and answer, which the check
    * of every seed's task must accept or reject (exampleProblems).
