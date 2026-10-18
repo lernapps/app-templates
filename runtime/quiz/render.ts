@@ -53,9 +53,12 @@ export interface QuizData {
 const escape = (text: string) =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+/** How a learner text becomes HTML. */
+type Format = (text: string) => string;
+
 export const solutionId = (question: Question) => `loesung-${question.id}`;
 
-function controls(question: Question, { t }: Language): string {
+function controls(question: Question, { t }: Language, format: Format): string {
   const name = questionId(question);
   switch (question.type) {
     case "single-choice":
@@ -64,7 +67,7 @@ function controls(question: Question, { t }: Language): string {
       return question.options
         .map(
           (option, index) =>
-            `<label class="quiz-option"><input type="${type}" name="${name}" value="${index}"> <span>${escape(option.text)}</span></label>`,
+            `<label class="quiz-option"><input type="${type}" name="${name}" value="${index}"> <span>${format(option.text)}</span></label>`,
         )
         .join("\n");
     }
@@ -79,7 +82,7 @@ function controls(question: Question, { t }: Language): string {
       return [
         `<label class="quiz-number">${t("yourAnswer")}`,
         `<input type="text" inputmode="decimal" autocomplete="off" name="${name}"${question.unit === undefined ? "" : ` aria-describedby="${name}-unit"`}>`,
-        question.unit === undefined ? "" : `<span id="${name}-unit">${escape(question.unit)}</span>`,
+        question.unit === undefined ? "" : `<span id="${name}-unit">${format(question.unit)}</span>`,
         `</label>`,
       ].join(" ");
     case "ordering": {
@@ -91,7 +94,7 @@ function controls(question: Question, { t }: Language): string {
         `<ul class="quiz-pairs">`,
         ...mixed(question.items.length, question.id).map(
           (index) =>
-            `<li><label><span>${escape(question.items[index] ?? "")}</span> <select name="${name}-${index}" data-item="${index}"><option value="">${t("choose")}</option>${places}</select></label></li>`,
+            `<li><label><span>${format(question.items[index] ?? "")}</span> <select name="${name}-${index}" data-item="${index}"><option value="">${t("choose")}</option>${places}</select></label></li>`,
         ),
         `</ul>`,
       ].join("\n");
@@ -105,7 +108,7 @@ function controls(question: Question, { t }: Language): string {
         `<ul class="quiz-pairs">`,
         ...question.pairs.map(
           (pair, index) =>
-            `<li><label><span>${escape(pair.left)}</span> <select name="${name}-${index}" data-left="${index}"><option value="">${t("choose")}</option>${rights}</select></label></li>`,
+            `<li><label><span>${format(pair.left)}</span> <select name="${name}-${index}" data-left="${index}"><option value="">${t("choose")}</option>${rights}</select></label></li>`,
         ),
         `</ul>`,
       ].join("\n");
@@ -119,6 +122,8 @@ function controls(question: Question, { t }: Language): string {
  * itself (with formulas), its text as HTML.
  */
 export interface RenderQuestionOptions {
+  /** How a learner text becomes HTML, e.g. with its formulas; escaped as plain text by default. */
+  format?: (text: string) => string;
   element?: "div" | "li";
   next?: boolean;
   lang?: string;
@@ -128,6 +133,7 @@ export interface RenderQuestionOptions {
 
 /** How a solution renders: in which language, and, for a page that renders it itself, the explanation as HTML. */
 export interface RenderSolutionOptions {
+  format?: (text: string) => string;
   lang?: string;
   explanationHtml?: string;
 }
@@ -139,7 +145,14 @@ export interface RenderSolutionOptions {
  */
 export function renderQuestion(
   question: Question,
-  { element = "div", next = false, lang = "de", textHtml, explanationHtml }: RenderQuestionOptions = {},
+  {
+    element = "div",
+    next = false,
+    lang = "de",
+    textHtml,
+    explanationHtml,
+    format = escape,
+  }: RenderQuestionOptions = {},
 ): string {
   const words = language(lang);
   const { t } = words;
@@ -149,12 +162,12 @@ export function renderQuestion(
     `<${element} class="quiz-question" id="${id}" data-id="${question.id}" data-type="${question.type}">`,
     `<form class="quiz-form" novalidate>`,
     `<fieldset>`,
-    `<legend class="quiz-text">${textHtml ?? escape(question.text)}</legend>`,
-    controls(question, words),
+    `<legend class="quiz-text">${textHtml ?? format(question.text)}</legend>`,
+    controls(question, words, format),
     `</fieldset>`,
     `<div class="quiz-feedback" role="status"></div>`,
     `<div class="quiz-reveal" hidden>`,
-    renderSolution(question, explanationHtml === undefined ? { lang } : { lang, explanationHtml }),
+    renderSolution(question, { lang, format, ...(explanationHtml === undefined ? {} : { explanationHtml }) }),
     `</div>`,
     `<p class="quiz-actions" hidden><button type="submit" class="quiz-check">${t("check")}</button>${nextButton}</p>`,
     `</form>`,
@@ -163,22 +176,22 @@ export function renderQuestion(
 }
 
 /** The right answer as the solution states it, in `lang`: the right options, the number, the order, the pairs. */
-export function answerText(question: Question, lang = "de"): string {
-  return rightAnswerText(question, language(lang));
+export function answerText(question: Question, lang = "de", format: Format = escape): string {
+  return rightAnswerText(question, language(lang), format);
 }
 
-function rightAnswerText(question: Question, { t, numbers }: Language): string {
+function rightAnswerText(question: Question, { t, numbers }: Language, format: Format): string {
   switch (question.type) {
     case "single-choice":
     case "multiple-choice":
       return question.options
         .filter((option) => option.correct)
-        .map((option) => escape(option.text))
+        .map((option) => format(option.text))
         .join("; ");
     case "true-false":
       return t(question.answer ? "statementTrue" : "statementFalse");
     case "number": {
-      const unit = question.unit === undefined ? "" : ` ${escape(question.unit)}`;
+      const unit = question.unit === undefined ? "" : ` ${format(question.unit)}`;
       const tolerance =
         question.tolerance > 0
           ? ` ${t("tolerance", { tolerance: `${numbers.format(question.tolerance)}${unit}` })}`
@@ -186,9 +199,9 @@ function rightAnswerText(question: Question, { t, numbers }: Language): string {
       return `${numbers.format(question.answer)}${unit}${tolerance}`;
     }
     case "ordering":
-      return question.items.map((item, index) => `${index + 1}. ${escape(item)}`).join(", ");
+      return question.items.map((item, index) => `${index + 1}. ${format(item)}`).join(", ");
     case "matching":
-      return question.pairs.map((pair) => `${escape(pair.left)} – ${escape(pair.right)}`).join("; ");
+      return question.pairs.map((pair) => `${format(pair.left)} – ${format(pair.right)}`).join("; ");
   }
 }
 
@@ -196,18 +209,18 @@ function rightAnswerText(question: Question, { t, numbers }: Language): string {
 const external = (link: Link) => `<a href="${escape(link.url)}" rel="noopener">${escape(link.title)}</a>`;
 
 /** Every option with its background, the right ones marked; the engine marks the learner's choice. */
-function optionInfo(question: Question, words: Language): string {
+function optionInfo(question: Question, words: Language, format: Format): string {
   const { t } = words;
   if (question.type !== "single-choice" && question.type !== "multiple-choice") {
-    return `<p><strong>${t("rightAnswer")}</strong> ${rightAnswerText(question, words)}</p>`;
+    return `<p><strong>${t("rightAnswer")}</strong> ${rightAnswerText(question, words, format)}</p>`;
   }
   return [
     `<ul class="quiz-infos">`,
     ...question.options.map((option, index) =>
       [
         `<li class="quiz-info${option.correct ? " quiz-info-right" : ""}" data-option="${index}">`,
-        `<p class="quiz-info-head"><strong>${escape(option.text)}</strong>${option.correct ? ` <span class="quiz-badge quiz-badge-right">${t("rightOption")}</span>` : ""}</p>`,
-        option.info === "" ? "" : `<p>${escape(option.info)}</p>`,
+        `<p class="quiz-info-head"><strong>${format(option.text)}</strong>${option.correct ? ` <span class="quiz-badge quiz-badge-right">${t("rightOption")}</span>` : ""}</p>`,
+        option.info === "" ? "" : `<p>${format(option.info)}</p>`,
         option.link === undefined ? "" : `<p>${external(option.link)}</p>`,
         `</li>`,
       ].join(""),
@@ -222,7 +235,7 @@ function optionInfo(question: Question, words: Language): string {
  */
 export function renderSolution(
   question: Question,
-  { lang = "de", explanationHtml }: RenderSolutionOptions = {},
+  { lang = "de", explanationHtml, format = escape }: RenderSolutionOptions = {},
 ): string {
   const words = language(lang);
   const links =
@@ -236,8 +249,8 @@ export function renderSolution(
         ];
   const explanation =
     explanationHtml ??
-    (question.explanation === "" ? "" : `<p class="quiz-explanation">${escape(question.explanation)}</p>`);
-  return [optionInfo(question, words), explanation, ...links].filter((part) => part !== "").join("\n");
+    (question.explanation === "" ? "" : `<p class="quiz-explanation">${format(question.explanation)}</p>`);
+  return [optionInfo(question, words, format), explanation, ...links].filter((part) => part !== "").join("\n");
 }
 
 function solutionItem(question: Question, lang: string): string {

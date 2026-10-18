@@ -160,6 +160,27 @@ export function renderInline(source: string, resolve: (href: string) => string):
 /** A plain text as HTML. */
 export const plain = escape;
 
+const FORMULA = /\$((?:\\.|[^\\$\n])+?)\$/g;
+
+/** A plain text as HTML in which only $…$ is a formula (MathML); everything else stays text, as in a quiz. */
+export function renderWithFormulas(text: string): string {
+  let html = "";
+  let from = 0;
+  for (const match of text.matchAll(FORMULA)) {
+    html += escape(text.slice(from, match.index)) + renderFormula(match[1] ?? "", false);
+    from = match.index + match[0].length;
+  }
+  return html + escape(text.slice(from));
+}
+
+/** What is wrong with the formulas $…$ of a plain text; none when each is in the command list and parses. */
+export function formulaProblems(text: string): string[] {
+  return [...text.matchAll(FORMULA)].flatMap((match) => {
+    const problem = formulaProblem(match[1] ?? "");
+    return problem === undefined ? [] : [`$${match[1]}$: ${problem}`];
+  });
+}
+
 /** The first HTML tag in a plain text, if it has one. */
 export function htmlTag(text: string): string | undefined {
   return /<\/?([a-zA-Z][\w-]*)[^>]*>/.exec(text)?.[1];
