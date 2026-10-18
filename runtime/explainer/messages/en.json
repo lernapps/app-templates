@@ -23,7 +23,7 @@
   "imprint": "Imprint",
   "privacy": "Privacy",
   "workedTasks": "Three worked tasks, each with its solution:",
-  "practice": "Practise yourself, with new numbers each time:",
+  "practice": "Practise yourself, with new tasks each time:",
   "newTask": "New task",
   "hint": "Hint",
   "gridAlt": "A hundred grid with {{figure.filled}} squares shaded.",

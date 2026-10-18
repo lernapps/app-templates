@@ -245,6 +245,8 @@ requires: if-vue-component, if-task-numbers
 Built. Exercises drawn from a seed (`generated`), the explainer's own notation: the same code gives three worked tasks
 at build, runs the property test over fixed seeds and draws a live task in the browser, so both agree; their answers
 are checked through the question types' checker.
+The texts of a quiz-type exercise are plain text in which `$…$` is a formula, rendered as MathML at build and checked
+like every formula.
 
 ```arc42
 :::building-block
