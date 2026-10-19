@@ -1,9 +1,16 @@
 // The texts of an explainer's exercises: formulas $…$ in the texts of a quiz question (question, options, background,
 // explanation), the sentence above a generated exercise's live task, and its worked tasks with JavaScript.
+import { cpSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { renderExercise } from "../runtime/explainer/exercises.ts";
 import { formulaProblems, renderWithFormulas } from "../runtime/explainer/markdown.ts";
 import type { Exercise } from "../runtime/explainer/content.ts";
+import { loadSite } from "../runtime/explainer/load.ts";
+import { outline } from "../runtime/explainer/outline.ts";
+import { renderPage } from "../runtime/explainer/render.ts";
+import { routes } from "../runtime/explainer/routes.ts";
 
 const question: Exercise = {
   type: "single-choice",
@@ -85,5 +92,23 @@ describe("a generated exercise", () => {
     expect(data(renderExercise(generated, "de", {}, (href) => href)).showWorked).toBe(false);
     const always = { ...generated, workedTasks: "always" } as Exercise;
     expect(data(renderExercise(always, "de", {}, (href) => href)).showWorked).toBe(true);
+  });
+});
+
+describe("the outline, which the end-to-end tests compare the page with", () => {
+  test("counts as many formulas on a content page as the page renders, those in the texts of a question too", () => {
+    const root = mkdtempSync(join(tmpdir(), "explainer-outline-"));
+    cpSync(join(import.meta.dirname, "fixtures/explainer-all-blocks"), join(root, "src"), { recursive: true });
+    const { pages } = outline(root);
+    const site = loadSite(root, 0);
+    let withQuestionFormulas = 0;
+    for (const route of routes(site).filter((candidate) => candidate.page !== undefined)) {
+      const item = (pages[route.lang] ?? []).find((candidate) => candidate.url === route.path);
+      const main = /<main[\s\S]*<\/main>/.exec(renderPage(site, route).body)?.[0] ?? "";
+      expect(item?.formulas, route.path).toBe(main.split("<math").length - 1);
+      if (main.includes("explainer-exercise") && /1 % ist ein Hundertstel: <math/.test(main)) withQuestionFormulas++;
+    }
+    // the fixture has a question with formulas in its explanation: the case this test is about
+    expect(withQuestionFormulas).toBeGreaterThan(0);
   });
 });
