@@ -335,7 +335,8 @@ function header(context: Context): string {
     label: plain(context.t("languages")),
     name: (lang) => plain(message(lang, "language")),
   });
-  return `<header class="explainer-header"><p class="explainer-brand"><a href="${context.to("")}">${context.text(site.app.title)}</a></p>${switcher}</header>`;
+  // only the language switch: the breadcrumbs lead to the start page, and the way back to the catalog is the platform's
+  return switcher === "" ? "" : `<header class="explainer-header">${switcher}</header>`;
 }
 
 function breadcrumbs(context: Context): string {

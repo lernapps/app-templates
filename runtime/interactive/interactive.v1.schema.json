@@ -8,11 +8,7 @@
   "required": ["title", "description", "howto", "competencies", "languages"],
   "properties": {
     "title": {
-      "description": "The app's title: the h1 of the start page, the title of both pages and the link to the start page in the header of the app page. The h1 of the app page too, unless heading says otherwise.",
-      "$ref": "#/$defs/text"
-    },
-    "heading": {
-      "description": "Optional: the h1 of the app page, when it should not repeat the title that the header above it already shows (e.g. the title \"Textcheck\" and the heading \"Dein Text, geprüft\"). Without it the h1 is the title, as before. The start page keeps the title as its h1.",
+      "description": "The app's title: the h1 of the start page and of the app page, and the title of both.",
       "$ref": "#/$defs/text"
     },
     "description": {

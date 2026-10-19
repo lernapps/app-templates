@@ -118,9 +118,7 @@ export function interactiveTests(root = "."): void {
           await page.goto(`./${start}${APP_PAGE}`);
           await expectFrame(page, lang, app.languages);
           const main = page.locator("main");
-          await expect(main.locator("h1"), "one h1: the heading, else the title").toHaveText(
-            text(app.heading ?? app.title),
-          );
+          await expect(main.locator("h1"), "one h1: the title").toHaveText(text(app.title));
           await expect(page.locator(".interactive-title-slot"), "the slot of the heading line").toBeHidden();
           const note = main.locator(".interactive-noscript");
           await expect(note, "the note that the app needs JavaScript").toBeVisible();
