@@ -46,6 +46,11 @@ const cases: [string, (root: string) => void, string][] = [
     'src/app.yaml:7: howto (de): a Markdown heading ("Spielen"); use a section block with the title "Spielen"',
   ],
   [
+    "a heading in a language the app does not have",
+    (root) => edit(root, "app.yaml", "description: |", "heading: { de: Tippe los!, en: Go }\ndescription: |"),
+    "src/app.yaml:3: heading (en): en is not a language of the app; declare it in languages in src/app.yaml, or remove it",
+  ],
+  [
     "a route twice",
     (root) => edit(root, "app.yaml", "id: obere-reihe", "id: grundreihe"),
     "src/app.yaml:19: routes[1].id: grundreihe is used twice in routes; give each its own id",

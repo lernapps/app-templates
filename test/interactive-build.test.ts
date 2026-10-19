@@ -27,6 +27,11 @@ test("the template builds: a start page without script, and the app page with th
   expect(start).not.toContain("<script");
   expect(start).not.toContain("modulepreload");
   const app = read(root, "app/index.html");
+  // the heading line: the title as the h1 without a heading in app.yaml, and the slot, hidden until an app fills it
+  expect(app).toContain(
+    '<div class="interactive-title"><h1>Buchstaben tippen</h1><div class="interactive-title-slot" hidden></div></div>',
+  );
+  expect(app.match(/<h1>/g)).toHaveLength(1);
   expect(app).toContain('<li id="grundreihe"><a href="#grundreihe">Grundreihe</a></li>');
   expect(app).toContain('<div class="interactive-app" data-routes="[&quot;grundreihe&quot;,&quot;obere-reihe&quot;]">');
   expect(app).toContain('<a href="../">Zur Startseite</a>');
@@ -99,4 +104,18 @@ test("a component imports a library in the dependencies of package.json, and the
   const script = /<script type="module" crossorigin src="([^"]+)"/.exec(app)?.[1] ?? "";
   // the library is in the app's own bundle, not loaded from elsewhere
   expect(readFileSync(join(root, "dist/app", script), "utf8")).not.toMatch(/from\s*["']yaml["']/);
+}, 60_000);
+
+test("a heading in app.yaml is the h1 of the app page only; the start page and both titles keep the title", async () => {
+  const root = interactiveApp();
+  edit(root, "app.yaml", "description: |", "heading: Tippe los!\ndescription: |");
+  await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [interactive()] });
+  const start = read(root, "index.html");
+  expect(start).toContain("<h1>Buchstaben tippen</h1>");
+  expect(start).toContain("<title>Buchstaben tippen</title>");
+  const app = read(root, "app/index.html");
+  expect(app).toContain("<h1>Tippe los!</h1>");
+  expect(app).not.toContain("<h1>Buchstaben tippen</h1>");
+  expect(app).toContain('<p class="interactive-brand"><a href="../">Buchstaben tippen</a></p>');
+  expect(app).toContain("<title>Los geht's – Buchstaben tippen</title>");
 }, 60_000);
