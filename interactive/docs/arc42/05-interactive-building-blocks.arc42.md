@@ -196,6 +196,14 @@ again on a new route, calls `tick(state, 20)` every 20 ms when the core has `tic
 Ctrl, Alt or Meta, and every input the root component emits as `input` (an action, or a key it stands for). When the
 end-to-end tests' clock is on the page (`if-test-clock`), it starts no interval and steps the ticks the tests ask for.
 
+The app page has a heading line: the h1, the app's title, and a slot beside it, hidden and empty. An app that wants a
+small control there (help, sound off) passes a component as `startInteractive(core, App, { title })`; the shell
+mounts it into the slot with the props `state` and `lang` and the same `input` event as the root component, and shows
+the slot. The header of both pages holds the language switch and nothing else, and an app with one language has none:
+the title is the h1, and the way back to the catalog is the platform's. The frame of the header, the page and the
+footer is as wide as the custom property `--interactive-max-width` (default `44rem`), which an app sets in its own
+`:root` rule.
+
 ```arc42
 :::building-block
 id: bb-shell
@@ -215,7 +223,7 @@ The app's `src/main.ts` imports the runtime's style, the core and the root compo
 ```arc42
 :::interface
 id: if-start
-title: startInteractive(core, root)
+title: startInteractive(core, root, options?)
 provider: bb-shell
 protocol: TypeScript import, @lernapps/app-templates/interactive
 path: runtime/interactive/interactive.ts

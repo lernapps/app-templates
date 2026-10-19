@@ -27,6 +27,16 @@ test("the template builds: a start page without script, and the app page with th
   expect(start).not.toContain("<script");
   expect(start).not.toContain("modulepreload");
   const app = read(root, "app/index.html");
+  // the heading line: the title as the h1, and the slot, hidden until an app fills it
+  expect(app).toContain(
+    '<div class="interactive-title"><h1>Buchstaben tippen</h1><div class="interactive-title-slot" hidden></div></div>',
+  );
+  expect(app.match(/<h1>/g)).toHaveLength(1);
+  // one language: no header, and no link with the app's name anywhere in the frame (the title is the h1)
+  for (const html of [start, app]) {
+    expect(html).not.toContain("<header");
+    expect(html).not.toContain("interactive-brand");
+  }
   expect(app).toContain('<li id="grundreihe"><a href="#grundreihe">Grundreihe</a></li>');
   expect(app).toContain('<div class="interactive-app" data-routes="[&quot;grundreihe&quot;,&quot;obere-reihe&quot;]">');
   expect(app).toContain('<a href="../">Zur Startseite</a>');
@@ -65,6 +75,11 @@ test("a bilingual app: German at the root, English below en/, each with its lang
   expect(en).toContain('<html lang="en">');
   expect(en).toContain("<h1>Typing letters</h1>");
   expect(en).toContain('<link rel="alternate" hreflang="de" href="../" />');
+  // two languages: a header with the language switch and nothing else
+  expect(en).toMatch(
+    /<header class="interactive-header"><nav class="interactive-languages"[^>]*><ul>.*<\/ul><\/nav><\/header>/,
+  );
+  expect(en).not.toContain("interactive-brand");
   expect(en).toContain('<a href="../" hreflang="de" lang="de">Deutsch</a>');
   expect(en).toContain('<a class="interactive-start" href="../en/app/">Let\'s go</a>');
   const enApp = read(root, "en/app/index.html");

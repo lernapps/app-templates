@@ -37,7 +37,9 @@ body {
 .interactive-header,
 .interactive,
 .interactive-footer {
-  max-width: 44rem;
+  /* an app that needs a wider frame sets --interactive-max-width in its own :root rule (here only the fallback, so
+     that the order of the stylesheets does not matter) */
+  max-width: var(--interactive-max-width, 44rem);
   margin: 0 auto;
   padding: 0 1rem;
   overflow-wrap: break-word;
@@ -52,13 +54,8 @@ a {
   flex-wrap: wrap;
   gap: 0.25rem 1rem;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding-top: 0.75rem;
-}
-
-.interactive-brand {
-  margin: 0;
-  font-weight: 600;
 }
 
 .interactive-languages ul,
@@ -81,6 +78,23 @@ a {
 .interactive h1 {
   font-size: 1.875rem;
   line-height: 1.2;
+}
+
+.interactive-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.interactive-title h1 {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.interactive-title-slot {
+  flex: 0 0 auto;
 }
 
 .interactive h2 {
