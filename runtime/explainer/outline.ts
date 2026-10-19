@@ -6,7 +6,7 @@
 import { questionIn, type Question } from "../quiz/quiz.ts";
 import { answerText } from "../quiz/render.ts";
 import { inLanguage, timelineEvents, type Block, type Site, type Text } from "./content.ts";
-import { dataOf, templatesOf, workedTasks } from "./exercises.ts";
+import { dataOf, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
 import { kindOf, plainText, type Data, type Generated, type Templates } from "./generated.ts";
 import { loadSite } from "./load.ts";
 import { inspect, renderMarkdown } from "./markdown.ts";
@@ -160,6 +160,10 @@ function walk(
         break;
       }
       default: {
+        // the formulas in the texts of a question (question, options, background, explanation) are rendered, and the
+        // page shows some of them more than once: count what the renderer writes, not the texts
+        const html = renderExercise(block, lang, site.data, (href) => href);
+        into.formulas += (html.split('<script type="application/json"')[0] ?? "").split("<math").length - 1;
         const question = questionIn(block, lang);
         into.exercises.push({
           kind: "question",
