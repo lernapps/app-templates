@@ -128,14 +128,18 @@ blocks:
       - type: single-choice
         id: prozent-von-200
         text: { de: "Wie viel sind 1 % von 200?", en: "How much is 1 % of 200?" }
-        explanation: { de: "1 % ist ein Hundertstel: 200 : 100 = 2.", en: "1 % is one hundredth: 200 : 100 = 2." }
+        explanation:
+          {
+            de: "1 % ist ein Hundertstel: $\\frac{200}{100} = 2$.",
+            en: "1 % is one hundredth: $\\frac{200}{100} = 2$.",
+          }
         links:
           - title: { de: "Prozentrechnung (Wikipedia)", en: "Percentage (Wikipedia, German)" }
             url: https://de.wikipedia.org/wiki/Prozentrechnung
         options:
           - text: { de: "2", en: "2" }
             correct: true
-            info: { de: "200 geteilt durch 100.", en: "200 divided by 100." }
+            info: { de: "$200 : 100$ ergibt 2.", en: "$200 : 100$ gives 2." }
           - text: { de: "20", en: "20" }
             correct: false
             info: { de: "Das sind 10 % von 200.", en: "That is 10 % of 200." }
