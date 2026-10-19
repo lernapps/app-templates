@@ -2,7 +2,8 @@
 // root, every other language below /<language>/):
 // - the start page (index.html): what the app does, a link into the app, its routes, how to play, what a learner
 //   learns, and the background sections; complete static HTML, with a <noscript> note that the app needs JavaScript;
-// - the app page (app/index.html): the title, a <noscript> note, the routes as links to their anchors (#<id>, each the
+// - the app page (app/index.html): the heading line (the heading, the title unless app.yaml gives another, and the
+//   hidden slot that the app's title component is mounted into, interactive.ts), a <noscript> note, the routes as links to their anchors (#<id>, each the
 //   id of its list item, so that a topic app/#<id> of the catalog entry finds it), and the element the app's root
 //   component is mounted into (interactive.ts).
 // Each page has its language, its alternates and a language switch of plain links, the archetype marker, and the
@@ -56,6 +57,8 @@ export function renderPage(app: App, page: Page): RenderedPage {
   const markdown = (value: Text) =>
     renderMarkdown(inLanguage(value, lang), (href) => (href.startsWith("/") ? to(href.slice(1)) : href));
   const title = text(app.title);
+  /** The h1 of the app page: the app's own heading, else its title as before. */
+  const heading = app.heading === undefined ? title : text(app.heading);
   const switcher = languageSwitch({
     ...page,
     languages: app.languages,
@@ -105,7 +108,7 @@ export function renderPage(app: App, page: Page): RenderedPage {
             .map((route) => `<li id="${route.id}"><a href="#${route.id}">${text(route.title)}</a></li>`)
             .join("")}</ul></nav>`;
     main = [
-      `<h1>${title}</h1>`,
+      `<div class="interactive-title"><h1>${heading}</h1><div class="interactive-title-slot" hidden></div></div>`,
       `<noscript><p class="interactive-noscript">${t("noscriptApp")} <a href="${to("")}">${t("toStart")}</a></p></noscript>`,
       nav,
       `<div class="interactive-app" data-routes="${plain(JSON.stringify(routeIds(app)))}"></div>`,
