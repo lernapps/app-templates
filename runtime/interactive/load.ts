@@ -35,8 +35,6 @@ export interface Section {
 /** src/app.yaml: what the start page says, the languages and the routes. */
 export interface App {
   title: Text;
-  /** The h1 of the app page when it should differ from the title (the header links the title there). */
-  heading?: Text;
   description: Text;
   howto: Text;
   competencies: readonly Text[];
@@ -113,7 +111,6 @@ export function check(root: string): { interactive?: Interactive; problems: stri
   if (languageList.length > 0) return { problems: problems.lines };
   const texts = new Texts(app.languages, problems);
   texts.check(appYaml, ["title"], "plain");
-  if (app.heading !== undefined) texts.check(appYaml, ["heading"], "plain");
   texts.check(appYaml, ["description"], "markdown");
   texts.check(appYaml, ["howto"], "markdown");
   app.competencies.forEach((_, index) => texts.check(appYaml, ["competencies", index], "plain"));

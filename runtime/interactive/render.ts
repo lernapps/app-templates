@@ -2,12 +2,13 @@
 // root, every other language below /<language>/):
 // - the start page (index.html): what the app does, a link into the app, its routes, how to play, what a learner
 //   learns, and the background sections; complete static HTML, with a <noscript> note that the app needs JavaScript;
-// - the app page (app/index.html): the heading line (the heading, the title unless app.yaml gives another, and the
-//   hidden slot that the app's title component is mounted into, interactive.ts), a <noscript> note, the routes as links to their anchors (#<id>, each the
+// - the app page (app/index.html): the heading line (the title, and the hidden slot that the app's title component is
+//   mounted into, interactive.ts), a <noscript> note, the routes as links to their anchors (#<id>, each the
 //   id of its list item, so that a topic app/#<id> of the catalog entry finds it), and the element the app's root
 //   component is mounted into (interactive.ts).
-// Each page has its language, its alternates and a language switch of plain links, the archetype marker, and the
-// footer with imprint and privacy notice. The end-to-end tests rely on the classes and ids written here.
+// Each page has its language, its alternates, the archetype marker, and the footer with imprint and privacy notice. The
+// header holds the language switch of plain links and nothing else (no link with the app's name: the title is the h1,
+// and the way back to the catalog is the platform's); an app with one language has no header. The end-to-end tests rely on the classes and ids written here.
 import { inLanguage, type Text } from "../shared/languages.ts";
 import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
 import { plain, renderMarkdown } from "../explainer/markdown.ts";
@@ -57,8 +58,6 @@ export function renderPage(app: App, page: Page): RenderedPage {
   const markdown = (value: Text) =>
     renderMarkdown(inLanguage(value, lang), (href) => (href.startsWith("/") ? to(href.slice(1)) : href));
   const title = text(app.title);
-  /** The h1 of the app page: the app's own heading, else its title as before. */
-  const heading = app.heading === undefined ? title : text(app.heading);
   const switcher = languageSwitch({
     ...page,
     languages: app.languages,
@@ -66,7 +65,7 @@ export function renderPage(app: App, page: Page): RenderedPage {
     label: t("languages"),
     name: (other) => plain(message(other, "language")),
   });
-  const header = `<header class="interactive-header"><p class="interactive-brand"><a href="${to("")}">${title}</a></p>${switcher}</header>`;
+  const header = switcher === "" ? "" : `<header class="interactive-header">${switcher}</header>`;
   const footer = `<footer class="interactive-footer"><p>${t("footer")} · <a href="https://lernapps.net/imprint/">${t("imprint")}</a> · <a href="https://lernapps.net/privacy/">${t("privacy")}</a></p></footer>`;
   const routes = app.routes ?? [];
   let main: string;
@@ -108,7 +107,7 @@ export function renderPage(app: App, page: Page): RenderedPage {
             .map((route) => `<li id="${route.id}"><a href="#${route.id}">${text(route.title)}</a></li>`)
             .join("")}</ul></nav>`;
     main = [
-      `<div class="interactive-title"><h1>${heading}</h1><div class="interactive-title-slot" hidden></div></div>`,
+      `<div class="interactive-title"><h1>${title}</h1><div class="interactive-title-slot" hidden></div></div>`,
       `<noscript><p class="interactive-noscript">${t("noscriptApp")} <a href="${to("")}">${t("toStart")}</a></p></noscript>`,
       nav,
       `<div class="interactive-app" data-routes="${plain(JSON.stringify(routeIds(app)))}"></div>`,
@@ -116,7 +115,9 @@ export function renderPage(app: App, page: Page): RenderedPage {
       .filter((part) => part !== "")
       .join("\n");
   }
-  const body = [header, `<main class="interactive" id="inhalt">`, main, `</main>`, footer].join("\n");
+  const body = [header, `<main class="interactive" id="inhalt">`, main, `</main>`, footer]
+    .filter((part) => part !== "")
+    .join("\n");
   const head = [
     `<title>${page.kind === "start" ? title : `${t("play")} – ${title}`}</title>`,
     `<meta name="description" content="${plain(inLanguage(app.description, lang).replace(/\s+/g, " ").trim())}" />`,
