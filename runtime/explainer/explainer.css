@@ -88,13 +88,8 @@ a {
   flex-wrap: wrap;
   gap: 0.25rem 1rem;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding-top: 0.75rem;
-}
-
-.explainer-brand {
-  margin: 0;
-  font-weight: 600;
 }
 
 .explainer-languages ul,

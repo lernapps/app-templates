@@ -77,7 +77,8 @@ describe("one build writes every page", () => {
         expect(scripts[0]).toMatch(/^index-[\w-]{8}\.js$/);
       }
       expect(assets.filter((file) => file.endsWith(".css") && file.startsWith("index-"))).toHaveLength(1);
-      const all = routes(loadSite(root));
+      const site = loadSite(root);
+      const all = routes(site);
       expect(all.filter((route) => route.kind === "page" && route.lang === "de")).toHaveLength(count);
       for (const route of all) {
         const file = join(root, "dist", route.path, "index.html");
@@ -145,6 +146,12 @@ describe("one build writes every page", () => {
         expect(start).toContain(
           '<a class="explainer-tutor-provider" href="https://claude.ai/new" rel="noopener" target="_blank">',
         );
+        // the header holds the language switch and nothing else (no link with the app's name), and an app with one
+        // language has none
+        expect(start).not.toContain("explainer-brand");
+        if (site.app.languages.length > 1) {
+          expect(start).toMatch(/<header class="explainer-header"><nav class="explainer-languages"/);
+        } else expect(start).not.toContain("<header");
         // the way to the tutor: a button with a select beside it, Claude first, copying last
         expect(start).toContain('<select class="explainer-tutor-select"');
         expect(start).toMatch(/<option value="0">Claude<\/option><option value="copy">/);
