@@ -16,81 +16,19 @@
 // its page (/<language>/) is in that language with every question and its solution, and its switch leads to the page
 // in every language; with JavaScript one question is answered, with the feedback in that language.
 // The helpers answerQuestion, expectBackground and expectFeedbackInView work per question, on any page with a question
-// that renderQuestion of @lernapps/app-templates/quiz/question rendered and startQuestion made live.
+// that renderQuestion of @lernapps/app-templates/questions rendered and startQuestion made live (shared/questions/e2e.ts).
 import { readFileSync } from "node:fs";
-import { expect, test, type Locator, type Page } from "playwright/test";
+import { expect, test } from "playwright/test";
 import type { Text } from "../shared/languages.ts";
-import de from "./messages/de.json" with { type: "json" };
-import en from "./messages/en.json" with { type: "json" };
-import {
-  questionId,
-  quizIn,
-  quizLanguages,
-  rightAnswer,
-  wrongAnswer,
-  type Answer,
-  type Question,
-  type Quiz,
-} from "./quiz.ts";
+import { answerQuestion, expectBackground, expectFeedbackInView, question } from "../shared/questions/e2e.ts";
+import { questionId, quizIn, quizLanguages, rightAnswer, wrongAnswer, type Quiz } from "./quiz.ts";
+import { messagesIn, QUIZ_MESSAGES } from "./render.ts";
 
-const MESSAGES: Readonly<Record<string, typeof de>> = { de, en };
+export { answerQuestion, expectBackground, expectFeedbackInView } from "../shared/questions/e2e.ts";
+
+const de = QUIZ_MESSAGES["de"]!;
 /** The quiz's own texts in `lang`. */
-const messagesOf = (lang: string) => MESSAGES[lang] ?? de;
-
-const question = (page: Page, item: Question) => page.locator(`#${questionId(item)}`);
-
-/** Gives `answer` to the question through its controls, as a learner does, on a page in `lang`. */
-export async function answerQuestion(page: Page, item: Question, answer: Answer, lang = "de"): Promise<void> {
-  const form = question(page, item);
-  switch (item.type) {
-    case "single-choice":
-    case "multiple-choice":
-    case "true-false": {
-      const values = typeof answer === "object" ? answer.map(String) : [String(answer)];
-      for (const value of values) await form.locator(`input[value="${value}"]`).check();
-      break;
-    }
-    case "number":
-      await form.locator("input").fill(String(answer));
-      break;
-    case "ordering":
-    case "matching": {
-      if (typeof answer !== "object") throw new Error(`${item.id}: an ${item.type} answer is a list`);
-      const key = item.type === "ordering" ? "item" : "left";
-      for (const [index, value] of answer.entries()) {
-        await form.locator(`select[data-${key}="${index}"]`).selectOption(String(value));
-      }
-      break;
-    }
-  }
-  await form.getByRole("button", { name: messagesOf(lang).check }).click();
-}
-
-/** What the learner learns about a question shows in `where`: each option's background, the explanation, the links. */
-export async function expectBackground(where: Locator, item: Question): Promise<void> {
-  if (item.type === "single-choice" || item.type === "multiple-choice") {
-    for (const option of item.options) {
-      await expect(where.getByText(option.info, { exact: true })).toBeVisible();
-      if (option.link) await expect(where.locator(`a[href="${option.link.url}"]`).first()).toBeVisible();
-    }
-  }
-  await expect(where.getByText(item.explanation, { exact: true })).toBeVisible();
-  for (const link of item.links) {
-    const anchor = where.locator(`a[href="${link.url}"]`).first();
-    await expect(anchor).toBeVisible();
-    await expect(anchor).toHaveAttribute("rel", "noopener");
-  }
-}
-
-/** After an answer, the learner sees the feedback without scrolling back; it has the focus, the next button follows. */
-export async function expectFeedbackInView(page: Page, item: Question): Promise<void> {
-  const feedback = question(page, item).locator(".quiz-feedback");
-  const top = await feedback.evaluate((element) => element.getBoundingClientRect().top);
-  const height = await page.evaluate(() => innerHeight);
-  expect(top, "the top of the feedback is in the viewport").toBeGreaterThanOrEqual(0);
-  expect(top, "the top of the feedback is in the viewport").toBeLessThan(height);
-  await expect(feedback).toBeFocused();
-}
+const messagesOf = messagesIn;
 
 /** The quiz's tests, for the question bank in `bank` (relative to the app's root). */
 export function quizTests(bank = "src/quiz.json"): void {

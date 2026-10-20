@@ -5,8 +5,8 @@
 // three worked tasks, the task numbers 1 to 3 (taskSeeds), each with its task number and a <details> "Lösung" (with JavaScript they show
 // once the live task is solved). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
-import { questionIn, type Question } from "../quiz/quiz.ts";
-import { answerText, messagesIn, renderQuestion, renderSolution } from "../quiz/render.ts";
+import { questionIn, type Question } from "../shared/questions/question.ts";
+import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 import type { DataRecord, Exercise, QuestionBlock } from "./content.ts";
 import {
@@ -165,7 +165,7 @@ function questionExercise(block: QuestionBlock, lang: string): string {
     `<div class="explainer-exercise explainer-question" id="${block.id}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
     renderQuestion(question, { lang, format: renderWithFormulas }),
-    `<details class="explainer-solution"><summary>${plain(messagesIn(lang).solution)}</summary>`,
+    `<details class="explainer-solution"><summary>${plain(questionMessagesIn(lang).solution)}</summary>`,
     renderSolution(question, { lang, format: renderWithFormulas }),
     `</details>`,
     `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
@@ -181,7 +181,7 @@ function generatedExercise(
 ): string {
   const templates = templatesOf(spec, [lang], resolve);
   const data = dataOf(spec, all);
-  const solution = messagesIn(lang).solution;
+  const solution = questionMessagesIn(lang).solution;
   const worked = workedTasks(spec, data, templates, lang).map((item) =>
     [
       `<li class="explainer-worked-task">`,
@@ -195,7 +195,7 @@ function generatedExercise(
       item.steps.length === 0
         ? ""
         : `<ol class="explainer-steps">${item.steps.map((step) => `<li>${step}</li>`).join("")}</ol>`,
-      `<p><strong>${plain(messagesIn(lang).rightAnswer)}</strong> ${item.answer}</p>`,
+      `<p><strong>${plain(questionMessagesIn(lang).rightAnswer)}</strong> ${item.answer}</p>`,
       `</details>`,
       `</li>`,
     ]

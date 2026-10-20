@@ -88,6 +88,26 @@ addresses: qg-understandable, con-architecture-current
 :::
 ```
 
+## What Archetypes Share Lives in the Shared Runtime
+
+Quiz, explainer and interactive app use some things alike, the questions first of all: the quiz asks them, the
+explainer's exercises are the same six types. Such a thing lives in `runtime/shared` (the questions in
+`runtime/shared/questions`), and the archetypes build on it: no archetype imports another, and the shared runtime
+imports none. The public paths of the package (`quiz/question`, `quiz/e2e`, ...) stay as thin re-exports, so that an
+app generated from a template keeps building when a module moves. A test (`test/architecture.test.ts`) fails on an
+import against this direction and on a public path without a file or a build entry. Rejected: the explainer importing
+the quiz and the quiz the explainer's figures, which makes two archetypes one; copying the questions into each.
+
+```arc42
+:::decision
+id: dec-shared-runtime-direction
+title: Archetypes build on the shared runtime and never on each other
+status: accepted
+date: 2026-10-20
+addresses: qg-understandable, con-runtime-unchanged
+:::
+```
+
 ## Vue Is Fixed for Components
 
 Where an app has components of its own (an explainer's components, an interactive app's UI), they are Vue with

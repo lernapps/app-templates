@@ -26,7 +26,9 @@ notation: mermaid
 
 ```mermaid
 flowchart TB
-    bb-runtime["Shared runtime (runtime/shared)"]
+    subgraph bb-runtime["Shared runtime (runtime/shared)"]
+        bb-questions["Questions (runtime/shared/questions)"]
+    end
     bb-tooling["Tooling helpers (@lernapps/tooling)"]
     bb-skills["Skills (.agents/skills)"]
 ```
@@ -37,7 +39,8 @@ Built. The code the archetypes' runtimes share: the page trees, German at the ro
 `/<language>/`, with alternates, a language switch of plain links and the 404 page, which leads every address the
 app does not have to its start page (`pages.ts`); learner texts by language (`languages.ts`); the examples check,
 which runs an exercise's accepted and rejected examples through the check the page uses, for the quiz and the
-explainer (`examples.ts`); Vue at build for the archetypes with components (`vue.ts`); and the app's name, the prefix
+explainer (`examples.ts`); the questions, their six types with checker, schema, validation, rendering, engine, end-to-end
+helpers and texts, which the quiz and the explainer's exercises both use (`questions/`); Vue at build for the archetypes with components (`vue.ts`); and the app's name, the prefix
 of what it stores (`appname.ts`). The app never edits it.
 
 ```arc42
@@ -61,6 +64,38 @@ title: Page trees, languages, examples check, Vue at build
 provider: bb-runtime
 protocol: TypeScript imports (runtime/shared)
 path: runtime/shared
+:::
+```
+
+### Questions
+
+Built in the shared runtime, for every archetype that has questions: the six question types and what counts as a right
+answer, at build, in the browser and in the tests alike, with their schema, validation, rendering, engine, end-to-end
+helpers and texts. The quiz asks them; the explainer's quiz-type exercises and the answers of its generated exercises
+use the same. Neither archetype imports the other.
+
+```arc42
+:::building-block
+id: bb-questions
+title: Questions
+parent: bb-runtime
+path: runtime/shared/questions
+technology: TypeScript
+:::
+```
+
+#### Questions interface
+
+The validation, the rendering, the client module and the tests of an archetype with questions use their types,
+rendering, engine and checker.
+
+```arc42
+:::interface
+id: if-questions
+title: The question types, rendering, engine and checker
+provider: bb-questions
+protocol: TypeScript imports (runtime/shared/questions), @lernapps/app-templates/questions
+path: runtime/shared/questions
 :::
 ```
 

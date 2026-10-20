@@ -13,7 +13,7 @@ id: dn-quiz-build
 title: Quiz build
 type: container
 parent: dn-ci-runner
-hosts: bb-question-types, bb-quiz-bank
+hosts: bb-quiz-bank
 :::
 ```
 
@@ -28,6 +28,6 @@ id: dn-quiz-page
 title: Quiz page
 type: container
 parent: dn-learner-browser
-hosts: bb-shell, bb-question-types, bb-runtime-texts
+hosts: bb-shell, bb-runtime-texts
 :::
 ```

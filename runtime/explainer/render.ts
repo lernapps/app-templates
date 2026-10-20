@@ -9,7 +9,7 @@
 // nothing is loaded from another server before a click. The end-to-end tests rely on the classes, ids and rel
 // attributes written here.
 import { readFileSync } from "node:fs";
-import { messagesIn } from "../quiz/render.ts";
+import { questionMessagesIn } from "../shared/questions/render.ts";
 import { highlight, type CodeLanguage } from "./code.ts";
 import { propsIn } from "./components.ts";
 import {
@@ -268,7 +268,7 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
   context.hasIslands = true;
   const { component } = use;
   const markup = context.islands.get(block)?.get(context.lang) ?? "";
-  const messages = messagesIn(context.lang);
+  const messages = questionMessagesIn(context.lang);
   const feedback = component.exercise
     ? `<p class="quiz-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
     : "";

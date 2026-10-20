@@ -500,7 +500,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
           }
         },
         {
@@ -514,7 +514,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
           }
         },
         {
@@ -528,7 +528,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
           }
         },
         {
@@ -542,7 +542,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
           }
         },
         {
@@ -556,7 +556,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
           }
         },
         {
@@ -570,7 +570,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
           }
         },
         {

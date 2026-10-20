@@ -18,7 +18,7 @@ task is the exercise's `practice`, else a neutral default.
 id: scenario-explainer-practise
 title: Practising on a page of the explainer
 trigger: The learner opens a page or answers one of its exercises
-involves: bb-render, bb-shell, bb-islands, bb-generated-exercises, bb-question-types, bb-task-numbers, bb-explainer-content, bb-explainer-data, bb-explainer-components, bb-runtime-texts, bb-tooling
+involves: bb-render, bb-shell, bb-islands, bb-generated-exercises, bb-questions, bb-task-numbers, bb-explainer-content, bb-explainer-data, bb-explainer-components, bb-runtime-texts, bb-tooling
 :::
 ```
 
@@ -33,7 +33,7 @@ tutor is on, a `tutor.md` per page from each exercise's tasks by number and its 
 id: scenario-explainer-build
 title: Building the explainer
 trigger: The creator, a git hook or CI runs the build
-involves: bb-build, bb-validation, bb-component-rules, bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-question-types, bb-explainer-content, bb-explainer-data, bb-explainer-components
+involves: bb-build, bb-validation, bb-component-rules, bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-questions, bb-explainer-content, bb-explainer-data, bb-explainer-components
 :::
 ```
 

@@ -16,9 +16,9 @@
 // tutor is the only thing kept on the device.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
-import { startQuestion } from "../quiz/engine.ts";
-import { renderQuestion } from "../quiz/render.ts";
-import { questionId } from "../quiz/quiz.ts";
+import { startQuestion } from "../shared/questions/engine.ts";
+import { renderQuestion } from "../shared/questions/render.ts";
+import { questionId } from "../shared/questions/question.ts";
 import type { ExerciseData } from "./exercises.ts";
 import { diagnose, figureOf, generate, hintOf, questionFor, stepsOf, taskText } from "./generated.ts";
 import { message } from "./messages.ts";

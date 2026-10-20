@@ -1,18 +1,15 @@
 // One question of the quiz, for another archetype that embeds the quiz's questions as exercises
-// (@lernapps/app-templates/quiz/question), at build time and in Node: the six types of question and their checker,
-// the schema of a question for a `$ref` from another schema, the validation of one question with the quiz's
-// messages, the rendering of its controls and of its solution without JavaScript, and the messages. The quiz is
-// built from the same. In the browser, the engine's startQuestion (@lernapps/app-templates/quiz) makes a rendered
-// question live; the end-to-end helpers are in @lernapps/app-templates/quiz/e2e. A page embeds a question as
+// (@lernapps/app-templates/quiz/question). The questions are not the quiz's: their types, checker, schema, validation,
+// rendering, engine and messages are in shared/questions (@lernapps/app-templates/questions), which the quiz and the
+// explainer build on alike. This module is the path an app or another archetype already imports, and passes them on
+// with the quiz's own, so that it keeps working; new code imports @lernapps/app-templates/questions. A page embeds
+// a question as
 //
 //   renderQuestion(question) +
 //   `<details><summary>${messages.solution}</summary>${renderSolution(question)}</details>`
 //
-// and fails its build when validateQuestion(question, "<where it is>") finds problems. A page in several languages
-// writes each learner text of a question as a map, { de: …, en: … }: validateQuestion(question, at, languages) checks
-// that each declared language is there (German always), questionIn(question, lang) gives the question in the page's
-// language for the checker, and renderQuestion and renderSolution take the page's `lang` for their own texts.
-import de from "./messages/de.json" with { type: "json" };
+// and fails its build when validateQuestion(question, "<where it is>") finds problems.
+import { QUIZ_MESSAGES } from "./render.ts";
 
 export * from "./quiz.ts";
 export {
@@ -36,5 +33,5 @@ export {
   type QuestionProblem,
 } from "./validate.ts";
 
-/** The quiz's texts for learners in German, by their key (messages/de.json); messagesIn(lang) for another language. */
-export const messages = de;
+/** The quiz's texts for learners in German, by their key; messagesIn(lang) for another language. */
+export const messages = QUIZ_MESSAGES["de"]!;
