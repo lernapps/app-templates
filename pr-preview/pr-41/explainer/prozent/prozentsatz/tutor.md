@@ -1,0 +1,239 @@
+# Prozentsatz – Tutor-Datei
+
+> Den Prozentsatz berechnen: p = W : G · 100, mit einem Beispiel und dem Prozentstreifen.
+
+App: Prozentrechnung. Seite: [Prozentsatz](./)
+
+Diese Datei ist für einen KI-Tutor. Sie enthält die Lösungen: Nutze sie, um anzuleiten und Fehler zu erkennen, nicht um vorzusagen. Die Regeln stehen in llms.txt. Kannst du eine Datei der App nicht abrufen, bitte die lernende Person, den Text der Seite oder diese Datei einzufügen oder anzuhängen.
+
+## Abschnitte
+
+- [Warum](./#warum)
+- [Regel](./#regel)
+- [Beispiel](./#beispiel)
+- [Übung](./#uebung)
+
+## Übungen
+
+### welche-rechnung (single-choice)
+
+- Link: [./#welche-rechnung](./#welche-rechnung), im Abschnitt „Übung“
+- Aufgabe: In einer Klasse mit 25 Schülern haben 10 ein Haustier. Mit welcher Rechnung bekommst du den Prozentsatz?
+- Antwortformat: eine Antwort wählen
+- Antworten zur Wahl (✓ richtig, ✗ falsch, mit der Meldung der App):
+  - ✓ 10 : 25 · 100 – Teil durch Ganzes, dann mal 100. So kommt der Anteil in Hundertsteln heraus.
+  - ✗ 25 : 10 · 100 – Hier wird das Ganze durch den Teil geteilt. Das ergibt 250 %, mehr als die ganze Klasse.
+  - ✗ 10 · 25 : 100 – So rechnest du einen Prozentwert aus, nicht einen Prozentsatz. Es kommen 2,5 heraus.
+- Lösung: 10 : 25 · 100
+- Erklärung: Der Prozentsatz ist Teil durch Ganzes, mal 100. Der Teil sind die 10 Schüler mit Haustier, das Ganze die 25 Schüler der Klasse, also 10 : 25 · 100 = 40 %.
+
+### prozentsatz-ueben (generated, number)
+
+- Link: [./#prozentsatz-ueben](./#prozentsatz-ueben), im Abschnitt „Übung“
+- Antwortformat: eine Zahl eintippen (%)
+- Tipp, den die App zeigt (Vorlage: {{…}} sind die Werte der Aufgabe): Teile den Teil ({{W}} Schüler) durch das Ganze ({{G}} Schüler) und nimm das Ergebnis mal 100.
+- Lösungsweg (Vorlage: {{…}} sind die Werte der Aufgabe):
+  - $p = \frac{W}{G} \cdot 100$
+  - $p = \frac{{{W}}}{{{G}}} \cdot 100 = {{answer}}$, also {{answer}} %.
+- Aufgaben nach Nummer, 1 bis 67: jede eine andere (die App zeigt „Aufgabe Nr. …“):
+  - [Aufgabe Nr. 1](./?prozentsatz-ueben=1#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 2 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 10 %
+    - ✗ 0,1: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 1000: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 2](./?prozentsatz-ueben=2#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 22 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 88 %
+    - ✗ 0,88: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 113,636364: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 3](./?prozentsatz-ueben=3#prozentsatz-ueben): In einer Klasse sind 26 Schüler. 13 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 4](./?prozentsatz-ueben=4#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 6 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 20 %
+    - ✗ 0,2: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 500: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 5](./?prozentsatz-ueben=5#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 12 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 48 %
+    - ✗ 0,48: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 208,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 6](./?prozentsatz-ueben=6#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 8 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 40 %
+    - ✗ 0,4: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 250: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 7](./?prozentsatz-ueben=7#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 6 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 24 %
+    - ✗ 0,24: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 416,666667: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 8](./?prozentsatz-ueben=8#prozentsatz-ueben): In einer Klasse sind 18 Schüler. 9 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 9](./?prozentsatz-ueben=9#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 19 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 76 %
+    - ✗ 0,76: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 131,578947: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 10](./?prozentsatz-ueben=10#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 5 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 20 %
+    - ✗ 0,2: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 500: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 11](./?prozentsatz-ueben=11#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 17 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 68 %
+    - ✗ 0,68: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 147,058824: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 12](./?prozentsatz-ueben=12#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 6 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 30 %
+    - ✗ 0,3: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 333,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 13](./?prozentsatz-ueben=13#prozentsatz-ueben): In einer Klasse sind 24 Schüler. 18 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 75 %
+    - ✗ 0,75: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 133,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 14](./?prozentsatz-ueben=14#prozentsatz-ueben): In einer Klasse sind 24 Schüler. 12 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 15](./?prozentsatz-ueben=15#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 19 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 95 %
+    - ✗ 0,95: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 105,263158: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 16](./?prozentsatz-ueben=16#prozentsatz-ueben): In einer Klasse sind 32 Schüler. 8 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 25 %
+    - ✗ 0,25: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 400: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 17](./?prozentsatz-ueben=17#prozentsatz-ueben): In einer Klasse sind 28 Schüler. 14 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 18](./?prozentsatz-ueben=18#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 4 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 20 %
+    - ✗ 0,2: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 500: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 19](./?prozentsatz-ueben=19#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 23 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 92 %
+    - ✗ 0,92: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 108,695652: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 20](./?prozentsatz-ueben=20#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 3 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 10 %
+    - ✗ 0,1: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 1000: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 21](./?prozentsatz-ueben=21#prozentsatz-ueben): In einer Klasse sind 16 Schüler. 4 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 25 %
+    - ✗ 0,25: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 400: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 22](./?prozentsatz-ueben=22#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 16 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 64 %
+    - ✗ 0,64: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 156,25: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 23](./?prozentsatz-ueben=23#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 9 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 36 %
+    - ✗ 0,36: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 277,777778: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 24](./?prozentsatz-ueben=24#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 10 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 25](./?prozentsatz-ueben=25#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 12 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 40 %
+    - ✗ 0,4: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 250: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 26](./?prozentsatz-ueben=26#prozentsatz-ueben): In einer Klasse sind 24 Schüler. 6 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 25 %
+    - ✗ 0,25: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 400: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 27](./?prozentsatz-ueben=27#prozentsatz-ueben): In einer Klasse sind 16 Schüler. 8 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 28](./?prozentsatz-ueben=28#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 21 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 84 %
+    - ✗ 0,84: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 119,047619: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 29](./?prozentsatz-ueben=29#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 13 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 52 %
+    - ✗ 0,52: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 192,307692: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 30](./?prozentsatz-ueben=30#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 5 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 25 %
+    - ✗ 0,25: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 400: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 31](./?prozentsatz-ueben=31#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 17 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 85 %
+    - ✗ 0,85: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 117,647059: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 32](./?prozentsatz-ueben=32#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 7 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 28 %
+    - ✗ 0,28: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 357,142857: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 33](./?prozentsatz-ueben=33#prozentsatz-ueben): In einer Klasse sind 28 Schüler. 21 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 75 %
+    - ✗ 0,75: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 133,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 34](./?prozentsatz-ueben=34#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 14 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 56 %
+    - ✗ 0,56: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 178,571429: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 35](./?prozentsatz-ueben=35#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 15 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 60 %
+    - ✗ 0,6: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 166,666667: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 36](./?prozentsatz-ueben=36#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 13 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 65 %
+    - ✗ 0,65: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 153,846154: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 37](./?prozentsatz-ueben=37#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 1 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 5 %
+    - ✗ 0,05: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 2000: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 38](./?prozentsatz-ueben=38#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 3 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 15 %
+    - ✗ 0,15: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 666,666667: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 39](./?prozentsatz-ueben=39#prozentsatz-ueben): In einer Klasse sind 22 Schüler. 11 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 40](./?prozentsatz-ueben=40#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 4 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 16 %
+    - ✗ 0,16: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 625: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 41](./?prozentsatz-ueben=41#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 11 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 44 %
+    - ✗ 0,44: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 227,272727: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 42](./?prozentsatz-ueben=42#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 20 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 80 %
+    - ✗ 0,8: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 125: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 43](./?prozentsatz-ueben=43#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 9 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 45 %
+    - ✗ 0,45: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 222,222222: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 44](./?prozentsatz-ueben=44#prozentsatz-ueben): In einer Klasse sind 28 Schüler. 7 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 25 %
+    - ✗ 0,25: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 400: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 45](./?prozentsatz-ueben=45#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 11 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 55 %
+    - ✗ 0,55: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 181,818182: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 46](./?prozentsatz-ueben=46#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 15 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 75 %
+    - ✗ 0,75: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 133,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 47](./?prozentsatz-ueben=47#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 24 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 80 %
+    - ✗ 0,8: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 125: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 48](./?prozentsatz-ueben=48#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 15 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 49](./?prozentsatz-ueben=49#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 14 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 70 %
+    - ✗ 0,7: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 142,857143: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 50](./?prozentsatz-ueben=50#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 8 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 32 %
+    - ✗ 0,32: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 312,5: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 51](./?prozentsatz-ueben=51#prozentsatz-ueben): In einer Klasse sind 16 Schüler. 12 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 75 %
+    - ✗ 0,75: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 133,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 52](./?prozentsatz-ueben=52#prozentsatz-ueben): In einer Klasse sind 32 Schüler. 24 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 75 %
+    - ✗ 0,75: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 133,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 53](./?prozentsatz-ueben=53#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 16 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 80 %
+    - ✗ 0,8: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 125: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 54](./?prozentsatz-ueben=54#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 7 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 35 %
+    - ✗ 0,35: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 285,714286: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 55](./?prozentsatz-ueben=55#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 24 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 96 %
+    - ✗ 0,96: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 104,166667: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 56](./?prozentsatz-ueben=56#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 18 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 90 %
+    - ✗ 0,9: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 111,111111: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 57](./?prozentsatz-ueben=57#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 3 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 12 %
+    - ✗ 0,12: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 833,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 58](./?prozentsatz-ueben=58#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 1 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 4 %
+    - ✗ 0,04: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 2500: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 59](./?prozentsatz-ueben=59#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 27 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 90 %
+    - ✗ 0,9: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 111,111111: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 60](./?prozentsatz-ueben=60#prozentsatz-ueben): In einer Klasse sind 20 Schüler. 12 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 60 %
+    - ✗ 0,6: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 166,666667: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 61](./?prozentsatz-ueben=61#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 18 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 60 %
+    - ✗ 0,6: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 166,666667: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 62](./?prozentsatz-ueben=62#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 10 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 40 %
+    - ✗ 0,4: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 250: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 63](./?prozentsatz-ueben=63#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 2 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 8 %
+    - ✗ 0,08: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 1250: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 64](./?prozentsatz-ueben=64#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 21 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 70 %
+    - ✗ 0,7: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 142,857143: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 65](./?prozentsatz-ueben=65#prozentsatz-ueben): In einer Klasse sind 32 Schüler. 16 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 50 %
+    - ✗ 0,5: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 200: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 66](./?prozentsatz-ueben=66#prozentsatz-ueben): In einer Klasse sind 30 Schüler. 9 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 30 %
+    - ✗ 0,3: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 333,333333: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+  - [Aufgabe Nr. 67](./?prozentsatz-ueben=67#prozentsatz-ueben): In einer Klasse sind 25 Schüler. 18 davon haben ein Haustier. Wie viel Prozent der Klasse sind das? → Lösung: 72 %
+    - ✗ 0,72: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+    - ✗ 138,888889: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
