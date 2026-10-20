@@ -295,3 +295,86 @@ body {
   margin-bottom: 0;
   font-weight: 600;
 }
+
+/* the celebration of a good result: confetti from 80% right, fireworks for all right (engine.ts) */
+.quiz-celebration {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.quiz-fireworks {
+  background: rgb(6 10 28 / 0.72);
+  animation: quiz-dim 4.8s ease-in-out forwards;
+}
+
+@keyframes quiz-dim {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.quiz-burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.quiz-burst i {
+  position: absolute;
+  left: -0.4rem;
+  top: -0.4rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: hsl(var(--hue) 90% 62%);
+  box-shadow: 0 0 0.9rem 0.25rem hsl(var(--hue) 90% 62% / 0.7);
+  opacity: 0;
+  animation: quiz-spark 2.2s ease-out forwards;
+}
+
+@keyframes quiz-spark {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(0);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(calc(min(20rem, 42vw) * var(--far)));
+  }
+}
+
+.quiz-confetti span {
+  position: absolute;
+  top: -1.5rem;
+  width: 0.6rem;
+  height: 1rem;
+  border-radius: 2px;
+  background: hsl(var(--hue) 80% 55%);
+  animation: quiz-confetti-fall 2.8s ease-in forwards;
+}
+
+@keyframes quiz-confetti-fall {
+  to {
+    transform: translateY(105vh) rotate(var(--turn));
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-celebration {
+    display: none;
+  }
+}

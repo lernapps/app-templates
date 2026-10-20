@@ -1,7 +1,7 @@
 // The quiz engine in the browser (@lernapps/app-templates/quiz). The build has rendered every question into the page
 // (render.ts); the engine turns that page into a quiz: one question at a time in an order given by the seed in the
 // address (?seed=<number>); after each answer, right or wrong, the background of every option with the right ones
-// and the learner's choice marked, the explanation and further reading; the score and the solutions at the end. A deep
+// and the learner's choice marked, the explanation and further reading; the score and the solutions at the end, with confetti from 80% right and fireworks for all right. A deep
 // link (#frage-<id>) opens its question. The quiz's own texts are in the page's language (its data's lang, German
 // without one). Nothing is stored, except the last result on the device when the bank asks for it
 // (rememberLastResult), through the storage of @lernapps/tooling. An app's src/main.ts is
@@ -238,6 +238,59 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
   });
 }
 
+/** The share of right answers from which the result rains confetti; all right gives fireworks instead. */
+const CONFETTI_FROM = 0.8;
+
+/**
+ * Celebrates a result on a layer over the page that takes no clicks and is hidden for those who prefer less motion
+ * (quiz.css): confetti from 80% right, fireworks for all right. Positions, delays and colours are fixed by index, so
+ * the same result always looks the same.
+ */
+function celebrate(root: Document, right: number, total: number): HTMLElement | undefined {
+  if (total === 0 || right / total < CONFETTI_FROM) return undefined;
+  const layer = root.createElement("div");
+  layer.setAttribute("aria-hidden", "true");
+  const add = (parent: HTMLElement, tag: string, style: Record<string, string>): HTMLElement => {
+    const element = root.createElement(tag);
+    for (const [name, value] of Object.entries(style)) element.style.setProperty(name, value);
+    parent.append(element);
+    return element;
+  };
+  if (right === total) {
+    layer.className = "quiz-celebration quiz-fireworks";
+    const bursts = [
+      { left: "24%", top: "26%", delay: "0.3s", hue: 20 },
+      { left: "76%", top: "22%", delay: "0.9s", hue: 200 },
+      { left: "50%", top: "40%", delay: "1.5s", hue: 320 },
+      { left: "18%", top: "58%", delay: "2.1s", hue: 140 },
+      { left: "82%", top: "56%", delay: "2.7s", hue: 50 },
+    ];
+    for (const burst of bursts) {
+      const element = add(layer, "span", { left: burst.left, top: burst.top, "--hue": String(burst.hue) });
+      element.className = "quiz-burst";
+      for (let index = 0; index < 28; index++) {
+        const spark = add(element, "i", {
+          "--angle": `${index * (360 / 28)}deg`,
+          "--far": index % 2 === 0 ? "1" : "0.6",
+        });
+        spark.style.animationDelay = burst.delay;
+      }
+    }
+  } else {
+    layer.className = "quiz-celebration quiz-confetti";
+    for (let index = 0; index < 28; index++) {
+      const piece = add(layer, "span", {
+        left: `${(index * 37) % 100}%`,
+        "--hue": String((index * 47) % 360),
+        "--turn": `${(index % 2 === 0 ? 1 : -1) * (180 + ((index * 29) % 360))}deg`,
+      });
+      piece.style.animationDelay = `${((index * 53) % 100) / 100}s`;
+    }
+  }
+  root.body.append(layer);
+  return layer;
+}
+
 /** Starts the quiz on the page the build rendered; does nothing on a page without one. */
 export function startQuiz(root: Document = document): void {
   const dataElement = root.getElementById("quiz-data");
@@ -267,7 +320,9 @@ export function startQuiz(root: Document = document): void {
     startQuestion(item, question, { seed, lang, onAnswer: (answer) => answers.set(question.id, answer) });
   }
 
+  let celebration: HTMLElement | undefined;
   const show = (index: number, focus: boolean) => {
+    celebration?.remove();
     order.forEach((question, at) => {
       const item = items.get(question.id);
       if (item) item.hidden = at !== index;
@@ -299,6 +354,8 @@ export function startQuiz(root: Document = document): void {
     if (restart) restart.href = `?${SEED}=${1 + ((seed * 7919) % 999_999)}`;
     result.hidden = false;
     solutions.hidden = false;
+    celebration?.remove();
+    celebration = celebrate(root, right, order.length);
     moveFocus(result);
     announce(scoreText?.textContent ?? "");
   };
