@@ -42,21 +42,21 @@ jobs:
       - run: npm ci # the runtime's build tools, for file:..
       # no hooks before the templates' install, so that any hooks it installs leave core.hooksPath alone (see check.yml)
       - run: git config --unset core.hooksPath || true
-      - name: Build the templates into dist/
+      - name: Build the templates into preview/
         run: |
-          mkdir dist
+          mkdir preview
           for template in quiz explainer interactive; do
-            (cd "$template" && npm install --no-audit --no-fund && npx vp build --outDir "$GITHUB_WORKSPACE/dist/$template")
+            (cd "$template" && npm install --no-audit --no-fund && npx vp build --outDir "$GITHUB_WORKSPACE/preview/$template")
           done
           {
             echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Templates</title></head><body><h1>Templates</h1><ul>'
             for template in quiz explainer interactive; do echo "<li><a href=\"$template/\">$template</a></li>"; done
             echo '</ul></body></html>'
-          } > dist/index.html
+          } > preview/index.html
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: app
-          path: dist
+          path: preview
 
   preview:
     needs: bundle
