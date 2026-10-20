@@ -15,9 +15,9 @@ import { join } from "node:path";
 import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
 import { isNode, LineCounter, parseDocument, type Document } from "yaml";
 import schema from "./explainer.v1.schema.json" with { type: "json" };
-import quizSchema from "../quiz/quiz.v1.schema.json" with { type: "json" };
-import { questionTexts } from "../quiz/quiz.ts";
-import { addressProblem, questionDetails } from "../quiz/validate.ts";
+import questionSchema from "../shared/questions/question.v1.schema.json" with { type: "json" };
+import { questionTexts } from "../shared/questions/question.ts";
+import { addressProblem, questionDetails } from "../shared/questions/validate.ts";
 import {
   inLanguage,
   isExercise,
@@ -96,7 +96,7 @@ export function pathText(path: Path): string {
 
 // union types ("type": ["string", "object"]) keep the messages of the comparator and the lists plain
 const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true });
-ajv.addSchema(quizSchema);
+ajv.addSchema(questionSchema);
 ajv.addSchema(schema);
 const validator = (name: string): ValidateFunction => {
   const validate = ajv.getSchema(`${SCHEMA_URL}#/$defs/${name}`);
@@ -143,8 +143,8 @@ const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
   "vue-component": "vueComponent",
 };
 
-/** The fields of each of the quiz's question types, from the quiz's schema. */
-const quizDefinitions = quizSchema.$defs as unknown as Record<string, { properties?: Record<string, unknown> }>;
+/** The fields of each of the question types, from the schema of a question. */
+const quizDefinitions = questionSchema.$defs as unknown as Record<string, { properties?: Record<string, unknown> }>;
 const QUIZ_BRANCH: Readonly<Record<string, string>> = {
   "single-choice": "choice",
   "multiple-choice": "choice",

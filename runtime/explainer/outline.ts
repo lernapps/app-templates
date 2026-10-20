@@ -3,8 +3,8 @@
 // a box one level below the heading it is under), their sections with their anchors, the number of formulas and the
 // name of every figure, its exercises with what each must accept, and its components with their nojs text; and the
 // other pages (start, chapters, glossary) with their titles.
-import { questionIn, type Question } from "../quiz/quiz.ts";
-import { answerText } from "../quiz/render.ts";
+import { questionIn, type Question } from "../shared/questions/question.ts";
+import { answerText } from "../shared/questions/render.ts";
 import { inLanguage, timelineEvents, type Block, type Site, type Text } from "./content.ts";
 import { dataOf, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
 import { kindOf, plainText, type Data, type Generated, type Templates } from "./generated.ts";

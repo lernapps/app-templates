@@ -2,7 +2,7 @@
 // (load.ts): the app, its chapters in order, their pages in order, the data files, the bundled images and the
 // components (src/components/, components.ts) with the blocks that use them.
 
-import type { Question } from "../quiz/quiz.ts";
+import type { Question } from "../shared/questions/question.ts";
 import type { Generated } from "./generated.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 

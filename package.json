@@ -1,7 +1,7 @@
 {
   "name": "@lernapps/app-templates",
   "version": "0.0.0",
-  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and each question on its own for other archetypes; the explainer: build step, client module with its exercises, the islands of its Vue components, styles, end-to-end tests, the schema of its content; the interactive archetype: build step, the start page and the app page around the app's own Vue components and core, its playthroughs, styles, end-to-end tests, the schemas of its start page and its playthroughs)",
+  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and the questions it shares with the explainer, see ./questions; the explainer: build step, client module with its exercises, the islands of its Vue components, styles, end-to-end tests, the schema of its content; the interactive archetype: build step, the start page and the app page around the app's own Vue components and core, its playthroughs, styles, end-to-end tests, the schemas of its start page and its playthroughs)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -14,6 +14,21 @@
   "type": "module",
   "exports": {
     "./package.json": "./package.json",
+    "./questions": {
+      "types": "./runtime/shared/questions/index.ts",
+      "default": "./dist/questions.mjs"
+    },
+    "./questions/engine": {
+      "types": "./runtime/shared/questions/engine.ts",
+      "default": "./dist/questions-engine.mjs"
+    },
+    "./questions/e2e": {
+      "types": "./runtime/shared/questions/e2e.ts",
+      "default": "./dist/questions-e2e.mjs"
+    },
+    "./questions/question.v1.schema.json": "./runtime/shared/questions/question.v1.schema.json",
+    "./questions/messages/de.json": "./runtime/shared/questions/messages/de.json",
+    "./questions/messages/en.json": "./runtime/shared/questions/messages/en.json",
     "./quiz": {
       "types": "./runtime/quiz/engine.ts",
       "default": "./dist/quiz.mjs"

@@ -33,9 +33,9 @@ import {
   wrongReasons,
   type Answer,
   type Question,
-} from "../quiz/quiz.ts";
-import { answerQuestion, expectFeedbackInView } from "../quiz/e2e.ts";
-import { messagesIn } from "../quiz/render.ts";
+} from "../shared/questions/question.ts";
+import { answerQuestion, expectFeedbackInView } from "../shared/questions/e2e.ts";
+import { questionMessagesIn } from "../shared/questions/render.ts";
 import { answerFor, fill, generate, plainText, questionFor, taskKey, taskText } from "./generated.ts";
 import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
@@ -150,7 +150,7 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     for (const correct of [true, false]) {
       await element.evaluate(emitAnswered, { correct });
       await expect(feedback, `${component.name}: the feedback on answered`).toHaveText(
-        messagesIn("de")[correct ? "right" : "wrong"],
+        questionMessagesIn("de")[correct ? "right" : "wrong"],
       );
       await expect(feedback).toBeFocused();
       await expect(feedback).toBeInViewport();
@@ -218,7 +218,7 @@ const feedback = (page: Page, id: string) => page.locator(`[id="${id}"] .quiz-fe
 
 /** The first reason the feedback gives for the wrong `answer`: the most specific the question has. */
 function reasonFor(question: Question, answer: Answer): string {
-  const quiz = messagesIn("de");
+  const quiz = questionMessagesIn("de");
   const [first] = wrongReasons(question, answer);
   if (first !== undefined) return first.option === undefined ? first.text : `${first.option}: ${first.text}`;
   return missesRight(question, answer) ? quiz.missingRight : quiz.lookAgain;
@@ -230,14 +230,14 @@ function reasonFor(question: Question, answer: Answer): string {
  */
 async function wrongThenSolution(page: Page, exercise: string, question: Question, reason: string): Promise<void> {
   const item = page.locator(`[id="${questionId(question)}"]`);
-  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").wrong);
+  await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
   await expect(item.locator(".quiz-diagnosis").first(), `${exercise}: the reason of the wrong answer`).toHaveText(
     reason,
   );
   await expectFeedbackInView(page, question);
   await expect(item.locator(".quiz-reveal"), `${exercise}: no solution after a wrong answer`).toBeHidden();
   await expect(item.locator("input, select").first(), `${exercise}: another try`).toBeEnabled();
-  await item.getByRole("button", { name: messagesIn("de").showSolution }).click();
+  await item.getByRole("button", { name: questionMessagesIn("de").showSolution }).click();
   await expect(item.locator(".quiz-reveal"), `${exercise}: the solution on Lösung zeigen`).toBeVisible();
   await expect(item.locator(".quiz-reveal")).toBeFocused();
 }
@@ -254,7 +254,7 @@ async function checkQuestion(
   await expect(item.locator(".quiz-reveal"), `${exercise.id}: no solution before the answer`).toBeHidden();
   await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung before the answer`).toBeHidden();
   await answerQuestion(page, question, rightAnswer(question));
-  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").right);
+  await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").right);
   await expectFeedbackInView(page, question);
   await expect(item.locator(".quiz-reveal"), `${exercise.id}: the solution after the right answer`).toBeVisible();
   await page.reload();
@@ -312,7 +312,7 @@ async function checkGenerated(
   }
   await expect(nextLegend).toBeFocused();
   await answerQuestion(page, nextQuestion, rightAnswer(nextQuestion));
-  await expect(feedback(page, questionId(nextQuestion))).toContainText(messagesIn("de").right);
+  await expect(feedback(page, questionId(nextQuestion))).toContainText(questionMessagesIn("de").right);
   await expectFeedbackInView(page, nextQuestion);
 }
 

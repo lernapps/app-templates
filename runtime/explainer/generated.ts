@@ -39,7 +39,7 @@ import {
   shuffled,
   type Answer,
   type Question,
-} from "../quiz/quiz.ts";
+} from "../shared/questions/question.ts";
 import { verdict } from "../shared/examples.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 

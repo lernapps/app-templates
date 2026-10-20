@@ -13,7 +13,7 @@ id: dn-explainer-build
 title: Explainer build
 type: container
 parent: dn-ci-runner
-hosts: bb-component-rules, bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-question-types, bb-explainer-content, bb-explainer-data, bb-explainer-components
+hosts: bb-component-rules, bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-explainer-content, bb-explainer-data, bb-explainer-components
 :::
 ```
 
@@ -28,6 +28,6 @@ id: dn-explainer-page
 title: Explainer page
 type: container
 parent: dn-learner-browser
-hosts: bb-islands, bb-generated-exercises, bb-question-types, bb-task-numbers, bb-runtime-texts, bb-explainer-components
+hosts: bb-islands, bb-generated-exercises, bb-task-numbers, bb-runtime-texts, bb-explainer-components
 :::
 ```

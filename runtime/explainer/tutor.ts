@@ -10,8 +10,8 @@
 // (prompt.ts) and the links to the tutor files.
 // Every link of llms.txt and of the tutor files is checked against the pages and anchors the build writes
 // (linkProblems). The app itself collects nothing and sends nothing: the files only help a tutor guide.
-import { questionIn, type Question } from "../quiz/quiz.ts";
-import { answerText } from "../quiz/render.ts";
+import { questionIn, type Question } from "../shared/questions/question.ts";
+import { answerText } from "../shared/questions/render.ts";
 import {
   inLanguage,
   type Block,
