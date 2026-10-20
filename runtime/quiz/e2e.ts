@@ -141,15 +141,16 @@ export function quizTests(bank = "src/quiz.json"): void {
     }
 
     test("the seed in the address gives the order; without one, the address gets one", async ({ page }) => {
+      const everything = `&n=${quiz.questions.length}`;
       const order = async (address: string) => {
         await page.goto(address);
         return page.locator(".quiz-question").evaluateAll((items) => items.map((item) => item.id).join());
       };
-      const first = await order("./?seed=11");
-      expect(await order("./?seed=11")).toBe(first);
+      const first = await order(`./?seed=11${everything}`);
+      expect(await order(`./?seed=11${everything}`)).toBe(first);
       if (quiz.questions.length > 2) {
         const others = [];
-        for (const seed of [12, 13, 14, 15, 16]) others.push(await order(`./?seed=${seed}`));
+        for (const seed of [12, 13, 14, 15, 16]) others.push(await order(`./?seed=${seed}${everything}`));
         expect(others.some((other) => other !== first)).toBe(true);
       }
       await page.goto("./");
@@ -158,6 +159,7 @@ export function quizTests(bank = "src/quiz.json"): void {
 
     test("all right answers give the full score, then the solutions show", async ({ page }) => {
       await page.goto("./");
+      if (quiz.questions.length > 1) await page.locator(".quiz-start button").click();
       expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
       for (let step = 0; step < quiz.questions.length; step++) {
         const id = await page.locator(".quiz-question:visible").getAttribute("data-id");
@@ -180,6 +182,34 @@ export function quizTests(bank = "src/quiz.json"): void {
         expect(stored).toEqual([]);
       }
     });
+
+    if (quiz.questions.length > 1) {
+      test("the learner chooses how many questions to answer; the address keeps the choice", async ({ page }) => {
+        await page.goto("./?seed=11");
+        await expect(page.locator(".quiz-start")).toBeVisible();
+        await expect(page.locator(".quiz-question:visible")).toHaveCount(0);
+        const count = page.locator("#quiz-count");
+        await expect(count).toHaveValue(String(quiz.questions.length));
+        await expect(count).toHaveAttribute("max", String(quiz.questions.length));
+        await count.fill("1");
+        await page.locator(".quiz-start button").click();
+        await expect(page.locator(".quiz-start")).toBeHidden();
+        expect(new URL(page.url()).searchParams.get("n")).toBe("1");
+        await expect(page.locator(".quiz-question")).toHaveCount(1);
+        await expect(page.locator(".quiz-solution")).toHaveCount(1);
+        const id = await page.locator(".quiz-question:visible").getAttribute("data-id");
+        const item = quiz.questions.find((candidate) => candidate.id === id);
+        if (item === undefined) throw new Error("no visible question");
+        await answerQuestion(page, item, rightAnswer(item));
+        await question(page, item).locator(".quiz-next").click();
+        await expect(page.locator(".quiz-score")).toHaveText(de.score.replace("{score}", "1").replace("{total}", "1"));
+        // the same address asks the same question, without asking again
+        await page.goto(page.url());
+        await expect(page.locator(".quiz-start")).toBeHidden();
+        await expect(page.locator(".quiz-question")).toHaveCount(1);
+        await expect(page.locator(".quiz-question")).toHaveAttribute("data-id", item.id);
+      });
+    }
 
     test.describe("without JavaScript", () => {
       test.use({ javaScriptEnabled: false });

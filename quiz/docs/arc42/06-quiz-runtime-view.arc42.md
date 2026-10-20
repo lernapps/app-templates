@@ -6,7 +6,7 @@ The quiz's own scenario, besides the generic ones.
 
 The learner opens the quiz, possibly with `?seed=<n>` or `#frage-<id>`. Without JavaScript the page is a worksheet:
 every question, then the solutions with the same background and links. With JavaScript `startQuiz()` turns it into a
-quiz: the questions in the order of the seed (the address gets one when it has none), one at a time; an answer is
+quiz: the questions in the order of the seed (the address gets one when it has none), one at a time. Before the first question the learner chooses how many to answer (`?n=<n>` in the address, all by default; a link with `n` or to a question skips the choice), the first of them in the order of the seed; an answer is
 checked by the question types' checker, and right or wrong, the background of every option, the explanation and the
 further reading show, the feedback in view with the focus and announced. At the end come the score and the solutions;
 when the bank asks for it, the last result is kept on the device.

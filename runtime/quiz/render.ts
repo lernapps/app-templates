@@ -294,6 +294,19 @@ export interface RenderedQuiz {
   body: string;
 }
 
+/** The form with which the learner chooses how many questions to answer; the engine shows it (none for one question). */
+function renderStart(total: number, t: Language["t"]): string {
+  if (total < 2) return "";
+  return [
+    `<form class="quiz-start" hidden>`,
+    `<p><label for="quiz-count">${t("countLabel")}</label> `,
+    `<input id="quiz-count" type="number" inputmode="numeric" min="1" max="${total}" value="${total}" required> `,
+    `<span>${t("countOf", { total })}</span></p>`,
+    `<p><button type="submit">${t("start")}</button></p>`,
+    `</form>`,
+  ].join("");
+}
+
 /**
  * The page of the quiz in its data's language (German without one): its title and description, its alternates, and
  * the quiz itself for the page's body, after a language switch when the quiz has several `languages`.
@@ -319,6 +332,7 @@ export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {
     `<p class="quiz-howto">${t("howto")}</p>`,
     `<noscript><p>${t("noscript")}</p></noscript>`,
     `<h2 class="quiz-heading">${t("questions")}</h2>`,
+    renderStart(quiz.questions.length, t),
     `<p class="quiz-progress" hidden></p>`,
     `<ol class="quiz-questions">`,
     ...quiz.questions.map((question) => renderQuestion(question, { element: "li", next: true, lang })),
