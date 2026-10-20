@@ -26,8 +26,8 @@ import {
 } from "./content.ts";
 import { renderExercise } from "./exercises.ts";
 import { bar, hundredGrid } from "./figures.ts";
-import { renderFormula } from "./formula.ts";
-import { plain, renderInline, renderMarkdown } from "./markdown.ts";
+import { renderFormula } from "../shared/text/formula.ts";
+import { plain, renderInline, renderMarkdown } from "../shared/text/markdown.ts";
 import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";

@@ -8,9 +8,9 @@ import { inLanguage, type Text } from "../shared/languages.ts";
 
 export { inLanguage, type Text };
 
-/** An exercise of one of the quiz's question types, with the quiz's fields; its texts may be maps by language. */
+/** An exercise of one of the question types, with the fields of a question; its texts may be maps by language. */
 export type QuestionBlock = Question<Text>;
-/** An exercise block: one of the quiz's question types, or generated. */
+/** An exercise block: one of the question types, or generated. */
 export type Exercise = QuestionBlock | Generated;
 
 export interface Source {

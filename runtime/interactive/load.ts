@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
 import schema from "./interactive.v1.schema.json" with { type: "json" };
 import playthroughSchema from "./playthrough.v1.schema.json" with { type: "json" };
-import { Problems, readYaml, schemaProblems, Texts, type YamlFile } from "../explainer/load.ts";
+import { Problems, readYaml, schemaProblems, Texts, type YamlFile } from "../shared/content.ts";
 import { languageListProblems, type Text } from "../shared/languages.ts";
 import type { Playthrough } from "./contract.ts";
 import { MESSAGES } from "./messages.ts";

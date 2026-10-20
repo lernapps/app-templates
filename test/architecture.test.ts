@@ -11,17 +11,6 @@ const root = join(import.meta.dirname, "..");
 const runtime = join(root, "runtime");
 const ARCHETYPES = ["quiz", "explainer", "interactive"];
 
-/**
- * Imports between archetypes that exist and are to move into runtime/shared. A ratchet: a new import between
- * archetypes fails the test, and so does an entry that is no longer needed (delete it).
- */
-const KNOWN: readonly string[] = [
-  "runtime/interactive/load.ts -> runtime/explainer/load.ts",
-  "runtime/interactive/plugin.ts -> runtime/explainer/components.ts",
-  "runtime/interactive/plugin.ts -> runtime/explainer/load.ts",
-  "runtime/interactive/render.ts -> runtime/explainer/markdown.ts",
-];
-
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
@@ -44,28 +33,17 @@ const partOf = (path: string): string | undefined => {
 };
 
 describe("the runtime's dependencies", () => {
-  const found = [...ARCHETYPES, "shared"].flatMap((part) => {
+  for (const part of [...ARCHETYPES, "shared"]) {
     const forbidden = part === "shared" ? ARCHETYPES : ARCHETYPES.filter((other) => other !== part);
-    return sources(join(runtime, part)).flatMap((file) =>
-      imports(file)
-        .filter((target) => forbidden.includes(partOf(target) ?? ""))
-        .map((target) => `${relative(root, file)} -> ${relative(root, target)}`),
-    );
-  });
-
-  test("an archetype imports nothing from another, runtime/shared nothing from an archetype", () => {
-    expect(
-      found.filter((pair) => !KNOWN.includes(pair)),
-      "move what both need into runtime/shared",
-    ).toEqual([]);
-  });
-
-  test("each known exception still exists", () => {
-    expect(
-      KNOWN.filter((pair) => !found.includes(pair)),
-      "delete it from KNOWN",
-    ).toEqual([]);
-  });
+    test(`${part} imports nothing from ${forbidden.join(", ")}`, () => {
+      const found = sources(join(runtime, part)).flatMap((file) =>
+        imports(file)
+          .filter((target) => forbidden.includes(partOf(target) ?? ""))
+          .map((target) => `${relative(root, file)} imports ${relative(root, target)}`),
+      );
+      expect(found, "move what both need into runtime/shared").toEqual([]);
+    });
+  }
 });
 
 describe("the package's public paths", () => {

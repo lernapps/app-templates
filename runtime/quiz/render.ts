@@ -13,7 +13,8 @@ import en from "./messages/en.json" with { type: "json" };
 import { alternateLinks, languageRoot, languageSwitch } from "../shared/pages.ts";
 import { QUESTION_MESSAGES, LOCALES } from "../shared/questions/render.ts";
 import { questionId, type Question, type Quiz } from "./quiz.ts";
-import { escape, external, renderQuestion, renderSolution } from "../shared/questions/render.ts";
+import { external, renderQuestion, renderSolution } from "../shared/questions/render.ts";
+import { escape } from "../shared/html.ts";
 
 export {
   answerText,

@@ -11,7 +11,7 @@
 // and the way back to the catalog is the platform's); an app with one language has no header. The end-to-end tests rely on the classes and ids written here.
 import { inLanguage, type Text } from "../shared/languages.ts";
 import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
-import { plain, renderMarkdown } from "../explainer/markdown.ts";
+import { plain, renderMarkdown } from "../shared/text/markdown.ts";
 import type { App } from "./load.ts";
 import { message, type Messages } from "./messages.ts";
 

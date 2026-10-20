@@ -1,5 +1,5 @@
-// The exercises of an explainer page at build time: a block of one of the quiz's question types, rendered through
-// the quiz runtime's per-question exports (its controls, and a <details> "Lösung" with the right answer, the
+// The exercises of an explainer page at build time: a block of one of the question types, rendered through
+// the per-question exports of the shared runtime (shared/questions) (its controls, and a <details> "Lösung" with the right answer, the
 // background of every option, the explanation and the links); and a generated exercise: its templates rendered once
 // per language (restricted Markdown, formulas as MathML, the placeholders as tokens), the place of the live task, and
 // three worked tasks, the task numbers 1 to 3 (taskSeeds), each with its task number and a <details> "Lösung" (with JavaScript they show
@@ -24,7 +24,7 @@ import {
   type LanguageTemplates,
   type Templates,
 } from "./generated.ts";
-import { plain, renderInline, renderWithFormulas } from "./markdown.ts";
+import { plain, renderInline, renderWithFormulas } from "../shared/text/markdown.ts";
 import { distinctSeeds } from "./tasks.ts";
 import { message } from "./messages.ts";
 

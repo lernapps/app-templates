@@ -22,12 +22,11 @@ import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/p
 import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
 import { renderQuiz } from "./render.ts";
 import { readBank } from "./validate.ts";
+import { escape } from "../shared/html.ts";
 
 /** Where the question bank is, relative to the app's root. */
 export const BANK = "src/quiz.json";
 const MARKER = "<!-- quiz -->";
-
-const escapeAttribute = (text: string) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
 /** The bank, in all its languages, and the name of the app's storage when the quiz keeps the last result. */
 interface Bank {
@@ -47,8 +46,8 @@ function fill(html: string, { quiz, storage }: Bank, lang: string): string {
   };
   const { title, description, alternates, body } = renderQuiz(data, { languages: quizLanguages(quiz) });
   const head = [
-    `<title>${escapeAttribute(title)}</title>`,
-    `<meta name="description" content="${escapeAttribute(description)}" />`,
+    `<title>${escape(title)}</title>`,
+    `<meta name="description" content="${escape(description)}" />`,
     ...alternates,
   ].join("\n    ");
   const withHead = /<title>[\s\S]*?<\/title>/.test(html)

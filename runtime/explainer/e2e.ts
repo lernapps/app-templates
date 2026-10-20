@@ -11,7 +11,7 @@
 // language, its alternates in the other languages, a language switch and the archetype marker. Previous and next
 // form one chain over all pages, in the order of the lists. Every exercise shows its text in the page's language, and
 // every "Lösung" opens and shows the answer the checker accepts. With JavaScript, in German, one exercise of each type
-// per page, whose solution shows only once it is answered: a question of the quiz's types accepts its right answer
+// per page, whose solution shows only once it is answered: a question of the question types accepts its right answer
 // and then shows its solution; it rejects a wrong one with the most specific reason it has, stays open for another
 // try, and shows its solution on "Lösung zeigen"; the feedback each time in view with the focus. A generated exercise
 // shows, at its deep link ?seed=<n>#<id>, the task of number n (the seed of its table of distinct tasks), its worked tasks hidden;
@@ -242,7 +242,7 @@ async function wrongThenSolution(page: Page, exercise: string, question: Questio
   await expect(item.locator(".quiz-reveal")).toBeFocused();
 }
 
-/** With JavaScript: a question of the quiz's types, answered before its solution shows, right and wrong. */
+/** With JavaScript: a question of the question types, answered before its solution shows, right and wrong. */
 async function checkQuestion(
   page: Page,
   url: string,

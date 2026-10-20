@@ -3,17 +3,16 @@
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
 // list, bundled images and quotes name source and licence, links to pages of the app find their page and section,
-// every page has an exercise, a question of the quiz's types passes the quiz's validation in every declared language,
+// every page has an exercise, a question of the question types passes the validation of a question in every declared language,
 // a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), the check
 // of each exercise judges its examples as they are listed, a vue-component block names a component of src/components/
 // that passes its checks (components.ts), its props match the component's prop types, it has its nojs text (an exercise
 // component's is generated from its describe) and, for an exercise component, its examples (which the build step
 // runs, plugin.ts) and an anchor once on the page (its id, or its name in kebab case), and src/ holds nothing else. Each problem is one line: the file,
 // its line, the place in the file, the language where it matters, and what to do.
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
-import { isNode, LineCounter, parseDocument, type Document } from "yaml";
+import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
 import schema from "./explainer.v1.schema.json" with { type: "json" };
 import questionSchema from "../shared/questions/question.v1.schema.json" with { type: "json" };
 import { questionTexts } from "../shared/questions/question.ts";
@@ -36,7 +35,6 @@ import {
 import { propsProblems, readComponents, textPaths } from "./components.ts";
 import { ExpressionError, parse, variables } from "./expression.ts";
 import { dataOf, templatesOf } from "./exercises.ts";
-import { formulaProblem } from "./formula.ts";
 import {
   exampleProblems,
   soundness,
@@ -45,11 +43,24 @@ import {
   type Generated,
   type Templates,
 } from "./generated.ts";
-import { formulaProblems, htmlTag, inspect } from "./markdown.ts";
+import { formulaProblems } from "../shared/text/markdown.ts";
 import { MESSAGES } from "./messages.ts";
 import { allBlocks } from "./routes.ts";
 import { RESERVED_PARAMS } from "./tasks.ts";
 import { appName } from "../shared/appname.ts";
+import {
+  get,
+  isObject,
+  lineOf,
+  pathText,
+  Problems,
+  readYaml,
+  schemaProblems,
+  Texts,
+  type DescribeError,
+  type Path,
+  type YamlFile,
+} from "../shared/content.ts";
 import { languageListProblems, textLanguages } from "../shared/languages.ts";
 
 export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/explainer.v1.schema.json";
@@ -61,18 +72,6 @@ const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, comp
 const RESERVED = new Set(["data", "images", "glossar", "components", "assets"]);
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const IMAGE = /^[a-z0-9]+(-[a-z0-9]+)*\.(svg|png|jpg|webp)$/;
-/** A source of a credit that is only a URL, rendered as a link. */
-const SOURCE_URL = /^https?:\/\/\S+$/;
-
-type Path = readonly (string | number)[];
-
-/** A YAML file of the content, parsed, with its line positions. */
-export interface YamlFile {
-  file: string;
-  doc: Document;
-  lines: LineCounter;
-  value: unknown;
-}
 
 /** The content could not be read: one problem per line in `problems`. */
 export class ContentError extends Error {
@@ -87,11 +86,6 @@ export class ContentError extends Error {
     );
     this.problems = problems;
   }
-}
-
-/** `["blocks", 0, "text"]` as `blocks[0].text`. */
-export function pathText(path: Path): string {
-  return path.map((part, index) => (typeof part === "number" ? `[${part}]` : index === 0 ? part : `.${part}`)).join("");
 }
 
 // union types ("type": ["string", "object"]) keep the messages of the comparator and the lists plain
@@ -144,8 +138,8 @@ const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
 };
 
 /** The fields of each of the question types, from the schema of a question. */
-const quizDefinitions = questionSchema.$defs as unknown as Record<string, { properties?: Record<string, unknown> }>;
-const QUIZ_BRANCH: Readonly<Record<string, string>> = {
+const questionDefinitions = questionSchema.$defs as unknown as Record<string, { properties?: Record<string, unknown> }>;
+const QUESTION_BRANCH: Readonly<Record<string, string>> = {
   "single-choice": "choice",
   "multiple-choice": "choice",
   "true-false": "trueFalse",
@@ -153,63 +147,11 @@ const QUIZ_BRANCH: Readonly<Record<string, string>> = {
   ordering: "ordering",
   matching: "matching",
 };
-const quizFields = (type: string): Set<string> =>
+const questionFields = (type: string): Set<string> =>
   new Set([
-    ...Object.keys(quizDefinitions["question"]?.properties ?? {}),
-    ...Object.keys(quizDefinitions[QUIZ_BRANCH[type] ?? ""]?.properties ?? {}),
+    ...Object.keys(questionDefinitions["question"]?.properties ?? {}),
+    ...Object.keys(questionDefinitions[QUESTION_BRANCH[type] ?? ""]?.properties ?? {}),
   ]);
-
-const get = (value: unknown, path: Path): unknown =>
-  path.reduce<unknown>(
-    (at, part) => (typeof at === "object" && at !== null ? (at as Record<string, unknown>)[part] : undefined),
-    value,
-  );
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-/** Collects the problems, one line each, without repeating one. */
-export class Problems {
-  readonly lines: string[] = [];
-  add(line: string): void {
-    if (!this.lines.includes(line)) this.lines.push(line);
-  }
-  /** A problem at `path` in `yaml` (in `lang`), `offset` lines below the line of the value there. */
-  at(yaml: YamlFile, path: Path, message: string, lang?: string, offset = 0): void {
-    const line = lineOf(yaml, path, offset);
-    // the text of one language is at <path>.<lang>: named as <path> (<lang>)
-    const shown = lang !== undefined && path.at(-1) === lang ? path.slice(0, -1) : path;
-    const where = shown.length === 0 ? "" : ` ${pathText(shown)}${lang === undefined ? "" : ` (${lang})`}:`;
-    this.add(`${yaml.file}${line === undefined ? "" : `:${line}`}:${where} ${message}`);
-  }
-  file(file: string, message: string): void {
-    this.add(`${file}: ${message}`);
-  }
-}
-
-/** The line of the value at `path`, or of the nearest value around it; a block scalar's text starts a line lower. */
-function lineOf(yaml: YamlFile, path: Path, offset: number): number | undefined {
-  for (let length = path.length; length >= 0; length--) {
-    const node = yaml.doc.getIn(path.slice(0, length), true);
-    if (!isNode(node) || node.range === undefined || node.range === null) continue;
-    const block = "type" in node && (node.type === "BLOCK_LITERAL" || node.type === "BLOCK_FOLDED");
-    const start = yaml.lines.linePos(node.range[0]).line;
-    return start + (length === path.length ? offset + (block && offset > 0 ? 1 : block ? 1 : 0) : 0);
-  }
-  return undefined;
-}
-
-export function readYaml(root: string, file: string, problems: Problems): YamlFile | undefined {
-  const lines = new LineCounter();
-  const doc = parseDocument(readFileSync(join(root, file), "utf8"), { lineCounter: lines, prettyErrors: false });
-  if (doc.errors.length > 0) {
-    for (const error of doc.errors) {
-      const line = lines.linePos(error.pos[0]).line;
-      problems.add(`${file}:${line}: not valid YAML: ${error.message.split("\n")[0] ?? ""}`);
-    }
-    return undefined;
-  }
-  return { file, doc, lines, value: doc.toJS() as unknown };
-}
 
 /** What `required` names as missing, with why it is needed. */
 function missing(property: string, object: unknown): string {
@@ -224,169 +166,57 @@ function missing(property: string, object: unknown): string {
   return `${property} is missing`;
 }
 
-/** The schema's errors as problems: one per cause, the branches of texts and blocks folded. */
-export function schemaProblems(yaml: YamlFile, errors: readonly ErrorObject[], problems: Problems): void {
-  const pathOf = (pointer: string): Path =>
-    pointer
-      .split("/")
-      .slice(1)
-      .map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"))
-      .map((part) => (/^\d+$/.test(part) ? Number(part) : part));
-  const texts = errors.filter((error) => error.keyword === "anyOf").map((error) => error.instancePath);
-  const underText = (error: ErrorObject) =>
-    texts.some((text) => error.instancePath === text || error.instancePath.startsWith(`${text}/`));
-  for (const error of errors) {
-    const path = pathOf(error.instancePath);
-    const value = get(yaml.value, path);
-    switch (error.keyword) {
-      case "if":
-        break;
-      case "anyOf": {
-        // the address of a link of an exercise of the quiz's types: an https address, or a map of them by language
-        if (path.at(-1) === "url") {
-          const { lang, message } = addressProblem(value);
-          problems.at(yaml, path, message, lang);
-        } else if (typeof value === "string") problems.at(yaml, path, "must not be empty");
-        else if (isObject(value)) {
-          for (const [lang, text] of Object.entries(value)) {
-            if (typeof text !== "string") problems.at(yaml, path, "must be a text", lang);
-            else if (text.trim() === "") problems.at(yaml, path, "must not be empty", lang);
-            else if (!/^[a-z]{2}$/.test(lang)) {
-              problems.at(yaml, path, `${lang} is not a language code; use two letters, e.g. de, en`);
-            }
-          }
-        } else problems.at(yaml, path, "must be a text, or a map of texts by language: { de: …, en: … }");
-        break;
-      }
-      case "required":
-      case "dependentRequired":
-        problems.at(yaml, path, missing(String(error.params["missingProperty"]), value));
-        break;
-      case "additionalProperties":
-        problems.at(yaml, path, `${String(error.params["additionalProperty"])} is not allowed here`);
-        break;
-      case "unevaluatedProperties": {
-        const property = String(error.params["unevaluatedProperty"]);
-        const type = isObject(value) ? value["type"] : undefined;
-        const kind = isObject(value) ? value["kind"] : undefined;
-        const definition =
-          path.at(-1) === "draw"
-            ? "drawing"
-            : typeof type === "string"
-              ? BLOCK_DEFINITIONS[type]
-              : typeof kind === "string"
-                ? "drawing"
-                : undefined;
-        if (typeof type === "string" && type in QUIZ_BRANCH) {
-          if (!quizFields(type).has(property))
-            problems.at(yaml, path, `${property} is not a field of a ${type} exercise`);
-          break;
-        }
-        if (definition === undefined) break;
-        if (property !== "type" && !known(definitions[definition]).has(property)) {
-          const what = path.at(-1) === "draw" ? `a ${String(kind)} drawing` : `a ${String(type)} block`;
-          problems.at(yaml, path, `${property} is not a field of ${what}`);
-        }
-        break;
-      }
-      case "enum":
-        if (path.at(-1) === "type") {
-          problems.at(
-            yaml,
-            path.slice(0, -1),
-            `${String(value)} is not a block type; use one of ${(error.params["allowedValues"] as string[]).join(", ")}`,
-          );
-        } else {
-          problems.at(yaml, path, `must be one of ${(error.params["allowedValues"] as unknown[]).join(", ")}`);
-        }
-        break;
-      case "pattern":
-        if (underText(error)) break;
-        if (error.schemaPath.includes("/id/") || error.schemaPath.startsWith("#/$defs/id")) {
-          problems.at(yaml, path, `use lower-case letters, digits and hyphens, e.g. "prozentwert"`);
-        } else if (String(error.params["pattern"]) === "\\S") problems.at(yaml, path, "must not be empty");
-        else problems.at(yaml, path, `must match ${String(error.params["pattern"])}`);
-        break;
-      case "type":
-      case "minLength":
-        if (!underText(error)) problems.at(yaml, path, error.message ?? "is not valid");
-        break;
-      case "minItems":
-        problems.at(yaml, path, "must not be empty");
-        break;
-      default:
-        if (!underText(error)) problems.at(yaml, path, error.message ?? "is not valid");
+/** The explainer's own words for the errors of its schema: what a block or an exercise lacks, or may not have. */
+const describe: DescribeError = (error, path, value) => {
+  switch (error.keyword) {
+    case "anyOf": {
+      // the address of a link of an exercise of the question types: an https address, or a map of them by language
+      if (path.at(-1) !== "url") return undefined;
+      const { lang, message } = addressProblem(value);
+      return { message, ...(lang === undefined ? {} : { lang }) };
     }
+    case "required":
+    case "dependentRequired":
+      return { message: missing(String(error.params["missingProperty"]), value) };
+    case "unevaluatedProperties": {
+      const property = String(error.params["unevaluatedProperty"]);
+      const type = isObject(value) ? value["type"] : undefined;
+      const kind = isObject(value) ? value["kind"] : undefined;
+      const definition =
+        path.at(-1) === "draw"
+          ? "drawing"
+          : typeof type === "string"
+            ? BLOCK_DEFINITIONS[type]
+            : typeof kind === "string"
+              ? "drawing"
+              : undefined;
+      if (typeof type === "string" && type in QUESTION_BRANCH) {
+        return questionFields(type).has(property)
+          ? null
+          : { message: `${property} is not a field of a ${type} exercise` };
+      }
+      if (definition === undefined || property === "type" || known(definitions[definition]).has(property)) return null;
+      const what = path.at(-1) === "draw" ? `a ${String(kind)} drawing` : `a ${String(type)} block`;
+      return { message: `${property} is not a field of ${what}` };
+    }
+    case "enum":
+      if (path.at(-1) !== "type") return undefined;
+      return {
+        path: path.slice(0, -1),
+        message: `${String(value)} is not a block type; use one of ${(error.params["allowedValues"] as string[]).join(", ")}`,
+      };
   }
-}
+  return undefined;
+};
 
 function validate(yaml: YamlFile, kind: keyof typeof validators, problems: Problems): boolean {
   const check = validators[kind];
   if (check(yaml.value)) return true;
   const before = problems.lines.length;
-  schemaProblems(yaml, check.errors ?? [], problems);
+  schemaProblems(yaml, check.errors ?? [], problems, describe);
   // every error folded away: the file is still invalid
   if (problems.lines.length === before) problems.at(yaml, [], "does not match the schema");
   return false;
-}
-
-/** Where a link inside a text was written, to check its target once every page is known. */
-interface Link {
-  yaml: YamlFile;
-  path: Path;
-  lang: string;
-  offset: number;
-  href: string;
-}
-
-/** The checks of the texts: languages, raw HTML, Markdown, formulas. */
-export class Texts {
-  readonly links: Link[] = [];
-  readonly languages: readonly string[];
-  private readonly problems: Problems;
-  constructor(languages: readonly string[], problems: Problems) {
-    this.languages = languages;
-    this.problems = problems;
-  }
-
-  /**
-   * The text at `path` of `yaml`: a plain text, restricted Markdown, a formula, a name (a person, a work), or the source
-   * of a credit (a URL or a citation); a formula, a name or a URL given as a string is the same in every language, a
-   * citation is a plain text.
-   */
-  check(yaml: YamlFile, path: Path, kind: "plain" | "markdown" | "latex" | "name" | "credit"): void {
-    const value = get(yaml.value, path);
-    if (value === undefined) return;
-    const neutral =
-      kind === "latex" || kind === "name" || (kind === "credit" && typeof value === "string" && SOURCE_URL.test(value));
-    const { texts, problems } = textLanguages(value as Text, this.languages, neutral);
-    for (const problem of problems) this.problems.at(yaml, path, problem.message, problem.lang);
-    for (const { lang, text, keyed } of texts) {
-      const at = keyed ? [...path, lang] : path;
-      if (kind === "latex") {
-        const problem = formulaProblem(text);
-        if (problem !== undefined) this.problems.at(yaml, at, problem, keyed ? lang : undefined);
-        continue;
-      }
-      if (kind === "plain" || kind === "name" || kind === "credit") {
-        const tag = htmlTag(text);
-        if (tag !== undefined) {
-          this.problems.at(
-            yaml,
-            at,
-            `raw HTML (<${tag}>) is not allowed; write restricted Markdown: **bold**, *italics*, lists, links`,
-            lang,
-          );
-        }
-        continue;
-      }
-      const found = inspect(text);
-      for (const problem of found.problems) this.problems.at(yaml, at, problem.message, lang, problem.line);
-      for (const href of found.links.filter((link) => link.startsWith("/"))) {
-        this.links.push({ yaml, path: at, lang, offset: 0, href });
-      }
-    }
-  }
 }
 
 /** A date of an event as a number to sort by: year, month, day. */
@@ -1063,7 +893,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         problems.at(
           yaml,
           ["blocks"],
-          "the page has no exercise; give it a section with an exercise: one of the quiz's question types, or generated",
+          "the page has no exercise; give it a section with an exercise: one of the question types, or generated",
         );
       }
       for (const [id, path] of exercises) {

@@ -3,9 +3,9 @@
 // an answer with a comparator, typical mistakes with their messages, a hint and the steps, and examples: answers
 // the build runs through the check of every seed's task (exampleProblems), never shown to learners. The same code runs at build
 // time (the worked tasks without JavaScript, the property test over fixed seeds) and in the browser (a live task for
-// any seed, "Neue Aufgabe"), so both agree. The comparator maps the answer onto the quiz's answer kinds: number,
-// choice, order, set and pairs become the quiz's number, single-choice, ordering, multiple-choice and matching
-// questions, so controls, checker and feedback come from the quiz runtime.
+// any seed, "Neue Aufgabe"), so both agree. The comparator maps the answer onto the answer kinds of a question: number,
+// choice, order, set and pairs become the number, single-choice, ordering, multiple-choice and matching
+// questions, so controls, checker and feedback come from the shared questions.
 //
 // Templates are rendered by the build (restricted Markdown, formulas as MathML) with each placeholder {{name}} as a
 // token ⟦name⟧ (inside a formula \text{⟦name⟧}); fill() puts in the values of a task, so the browser needs no Markdown
@@ -42,6 +42,7 @@ import {
 } from "../shared/questions/question.ts";
 import { verdict } from "../shared/examples.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
+import { escape } from "../shared/html.ts";
 
 /** A literal of a list in the content: a number, a string, or a text by language. */
 export type Literal = number | string | Readonly<Record<string, string>>;
@@ -304,9 +305,6 @@ export function generate(spec: Generated, seed: number, data: Data): Task {
 }
 
 // ------------------------------------------------------------------------------------------- texts of a task
-
-const escape = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const formats = new Map<string, Intl.NumberFormat>();
 /** A number as the page shows it: up to six decimals, no grouping (a learner would type 1500, not 1.500). */
@@ -617,14 +615,14 @@ export function figureOf(spec: Generated, task: Task, lang: string, templates: T
     : bar(n(values.part), n(values.whole), alt, LOCALES[lang] ?? lang, false);
 }
 
-// ------------------------------------------------------------------------------------- the quiz's question
+// ------------------------------------------------------------------------------------- the question
 
 const listOf = (value: Value, what: string): readonly Value[] => {
   if (!Array.isArray(value)) throw new ExpressionError(`the answer of ${what} is a list`);
   return value as readonly Value[];
 };
 
-/** The task as the quiz's question of the comparator's kind, in `lang`. */
+/** The task as the question of the comparator's kind, in `lang`. */
 export function questionFor(spec: Generated, task: Task, lang: string, templates: Templates): Question {
   const kind = kindOf(spec.answer.compare);
   const base = {

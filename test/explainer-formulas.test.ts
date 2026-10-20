@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { renderExercise } from "../runtime/explainer/exercises.ts";
-import { formulaProblems, renderWithFormulas } from "../runtime/explainer/markdown.ts";
+import { formulaProblems, renderWithFormulas } from "../runtime/shared/text/markdown.ts";
 import type { Exercise } from "../runtime/explainer/content.ts";
 import { loadSite } from "../runtime/explainer/load.ts";
 import { outline } from "../runtime/explainer/outline.ts";
