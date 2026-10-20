@@ -11,6 +11,7 @@ A quiz about things to know: one page of questions with options, feedback on eve
 - One question at a time with feedback; at the end the score and all solutions. Without JavaScript: a worksheet with
   the solutions.
 - Questions in a shuffled order; a link with a seed gives every learner the same order. A link to each question.
+- The learner chooses at the start how many questions to answer (at most all of them): the seed picks them, and the address (`?seed=…&n=…`) keeps the choice, so a link gives every learner the same questions.
 - German, plus English: a page per language.
 - Optionally keeps the last score on the learner's device.
 
@@ -18,7 +19,7 @@ A quiz about things to know: one page of questions with options, feedback on eve
 
 - No images or other media.
 - No own colours or layout: the look is the runtime's, calm like a worksheet. Dark mode follows the device.
-- No timer, no new tasks drawn each time, no rounds the learner chooses.
+- No timer, no new tasks drawn each time, no count the learner chooses.
 
 ## What the app supplies
 
