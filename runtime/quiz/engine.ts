@@ -1,6 +1,6 @@
 // The quiz engine in the browser (@lernapps/app-templates/quiz). The build has rendered every question into the page
 // (render.ts); the engine turns that page into a quiz: one question at a time in an order given by the seed in the
-// address (?seed=<number>); after each answer, right or wrong, the background of every option with the right ones
+// address (?seed=<number>), as many as the learner chooses at the start (?n=<number>, all by default); after each answer, right or wrong, the background of every option with the right ones
 // and the learner's choice marked, the explanation and further reading; the score and the solutions at the end, with confetti from 80% right and fireworks for all right. A deep
 // link (#frage-<id>) opens its question. The quiz's own texts are in the page's language (its data's lang, German
 // without one). Nothing is stored, except the last result on the device when the bank asks for it
@@ -28,7 +28,7 @@ import {
   type Answer,
   type Question,
 } from "./quiz.ts";
-import type { QuizData } from "./render.ts";
+import { solutionId, type QuizData } from "./render.ts";
 
 export * from "./quiz.ts";
 export type { QuizData } from "./render.ts";
@@ -36,6 +36,7 @@ export type { QuizData } from "./render.ts";
 /** The quiz's texts, by the page's language. */
 const BY_LANGUAGE: Readonly<Record<string, typeof de>> = { de, en };
 const SEED = "seed";
+const COUNT = "n";
 
 interface LastResult {
   score: number;
@@ -59,6 +60,12 @@ function seedOf(location: Location): number {
   url.searchParams.set(SEED, String(seed));
   history.replaceState(history.state, "", url);
   return seed;
+}
+
+/** The number of questions in the address (?n=<number>), if it is one from 1 to `total`. */
+function countOf(location: Location, total: number): number | undefined {
+  const given = Number(new URL(location.href).searchParams.get(COUNT));
+  return Number.isInteger(given) && given >= 1 && given <= total ? given : undefined;
 }
 
 /** The learner's answer as the form holds it; undefined when nothing is given yet. */
@@ -300,82 +307,123 @@ export function startQuiz(root: Document = document): void {
   const t = translator(BY_LANGUAGE[lang] ?? de);
   const storage = storageName === undefined ? undefined : createStorage(storageName);
   const seed = seedOf(root.location);
-  const order = shuffled(quiz.questions.length, seed).flatMap((index) => quiz.questions[index] ?? []);
-  const answers = new Map<string, Answer>();
+  const total = quiz.questions.length;
+  const shuffledQuestions = shuffled(total, seed).flatMap((index) => quiz.questions[index] ?? []);
+  const hashId = decodeURIComponent(root.location.hash.slice(1));
   const list = main.querySelector<HTMLElement>(".quiz-questions");
   const progress = main.querySelector<HTMLElement>(".quiz-progress");
   const result = main.querySelector<HTMLElement>(".quiz-result");
   const solutions = main.querySelector<HTMLElement>(".quiz-solutions");
   if (!list || !progress || !result || !solutions) return;
+  const heading = main.querySelector<HTMLElement>(".quiz-heading");
+  const form = main.querySelector<HTMLFormElement>(".quiz-start");
 
-  main.classList.add("quiz-running");
-  solutions.hidden = true;
-  progress.hidden = false;
-  const items = new Map<string, HTMLElement>();
-  for (const question of order) {
-    const item = root.getElementById(questionId(question));
-    if (!item) continue;
-    items.set(question.id, item);
-    list.append(item); // in the order of the seed
-    startQuestion(item, question, { seed, lang, onAnswer: (answer) => answers.set(question.id, answer) });
-  }
+  /** Runs the quiz with the first `count` questions in the order of the seed. */
+  const run = (count: number) => {
+    const order = shuffledQuestions.slice(0, count);
+    // a link to a question that this run does not ask puts that question first, so every question keeps its link
+    const linked = shuffledQuestions.find((question) => questionId(question) === hashId);
+    if (linked && !order.includes(linked)) order[0] = linked;
+    const answers = new Map<string, Answer>();
 
-  let celebration: HTMLElement | undefined;
-  const show = (index: number, focus: boolean) => {
-    celebration?.remove();
-    order.forEach((question, at) => {
-      const item = items.get(question.id);
-      if (item) item.hidden = at !== index;
-    });
-    result.hidden = true;
+    main.classList.add("quiz-running");
     solutions.hidden = true;
-    progress.textContent = t("progress", { current: index + 1, total: order.length });
-    const legend = items.get(order[index]?.id ?? "")?.querySelector<HTMLElement>("legend");
-    if (focus && legend) moveFocus(legend);
-  };
-
-  const finish = () => {
-    for (const item of items.values()) item.hidden = true;
-    progress.hidden = true;
-    const right = order.filter((question) => {
-      const answer = answers.get(question.id);
-      return answer !== undefined && isCorrect(question, answer);
-    }).length;
-    const scoreText = main.querySelector(".quiz-score");
-    if (scoreText) scoreText.textContent = t("score", { score: right, total: order.length });
-    const last = storage?.load("last-result", isLastResult);
-    const lastText = main.querySelector<HTMLElement>(".quiz-last");
-    if (lastText && last) {
-      lastText.textContent = t("last", { score: last.score, total: last.total });
-      lastText.hidden = false;
+    progress.hidden = false;
+    const items = new Map<string, HTMLElement>();
+    for (const question of order) {
+      const item = root.getElementById(questionId(question));
+      if (!item) continue;
+      items.set(question.id, item);
+      list.append(item); // in the order of the seed
+      startQuestion(item, question, { seed, lang, onAnswer: (answer) => answers.set(question.id, answer) });
     }
-    storage?.save("last-result", { score: right, total: order.length } satisfies LastResult);
-    const restart = main.querySelector<HTMLAnchorElement>(".quiz-restart");
-    if (restart) restart.href = `?${SEED}=${1 + ((seed * 7919) % 999_999)}`;
-    result.hidden = false;
-    solutions.hidden = false;
-    celebration?.remove();
-    celebration = celebrate(root, right, order.length);
-    moveFocus(result);
-    announce(scoreText?.textContent ?? "");
-  };
+    // the questions this run does not ask: neither the question nor its solution
+    for (const question of quiz.questions.filter((candidate) => !order.includes(candidate))) {
+      root.getElementById(questionId(question))?.remove();
+      root.getElementById(solutionId(question))?.remove();
+    }
 
-  order.forEach((question, index) => {
-    const next = items.get(question.id)?.querySelector<HTMLButtonElement>(".quiz-next");
-    if (!next) return;
-    const isLast = index === order.length - 1;
-    if (isLast) next.textContent = t("toResult");
-    next.addEventListener("click", () => {
-      if (isLast) finish();
-      else show(index + 1, true);
+    let celebration: HTMLElement | undefined;
+    const show = (index: number, focus: boolean) => {
+      celebration?.remove();
+      order.forEach((question, at) => {
+        const item = items.get(question.id);
+        if (item) item.hidden = at !== index;
+      });
+      result.hidden = true;
+      solutions.hidden = true;
+      progress.textContent = t("progress", { current: index + 1, total: order.length });
+      const legend = items.get(order[index]?.id ?? "")?.querySelector<HTMLElement>("legend");
+      if (focus && legend) moveFocus(legend);
+    };
+
+    const finish = () => {
+      for (const item of items.values()) item.hidden = true;
+      progress.hidden = true;
+      const right = order.filter((question) => {
+        const answer = answers.get(question.id);
+        return answer !== undefined && isCorrect(question, answer);
+      }).length;
+      const scoreText = main.querySelector(".quiz-score");
+      if (scoreText) scoreText.textContent = t("score", { score: right, total: order.length });
+      const last = storage?.load("last-result", isLastResult);
+      const lastText = main.querySelector<HTMLElement>(".quiz-last");
+      if (lastText && last) {
+        lastText.textContent = t("last", { score: last.score, total: last.total });
+        lastText.hidden = false;
+      }
+      storage?.save("last-result", { score: right, total: order.length } satisfies LastResult);
+      const restart = main.querySelector<HTMLAnchorElement>(".quiz-restart");
+      if (restart) restart.href = `?${SEED}=${1 + ((seed * 7919) % 999_999)}&${COUNT}=${order.length}`;
+      result.hidden = false;
+      solutions.hidden = false;
+      celebration?.remove();
+      celebration = celebrate(root, right, order.length);
+      moveFocus(result);
+      announce(scoreText?.textContent ?? "");
+    };
+
+    order.forEach((question, index) => {
+      const next = items.get(question.id)?.querySelector<HTMLButtonElement>(".quiz-next");
+      if (!next) return;
+      const isLast = index === order.length - 1;
+      if (isLast) next.textContent = t("toResult");
+      next.addEventListener("click", () => {
+        if (isLast) finish();
+        else show(index + 1, true);
+      });
     });
-  });
 
-  const fromAddress = (focus: boolean) => {
-    const hashId = decodeURIComponent(root.location.hash.slice(1));
-    const index = order.findIndex((question) => questionId(question) === hashId);
-    show(index >= 0 ? index : 0, focus || index >= 0);
+    const fromAddress = (focus: boolean) => {
+      const hashId = decodeURIComponent(root.location.hash.slice(1));
+      const index = order.findIndex((question) => questionId(question) === hashId);
+      show(index >= 0 ? index : 0, focus || index >= 0);
+    };
+    globalThis.addEventListener("hashchange", () => fromAddress(true));
+    fromAddress(false);
   };
-  globalThis.addEventListener("hashchange", () => fromAddress(true));
-  fromAddress(false);
+
+  const given = countOf(root.location, total);
+  // the learner chooses how many questions to answer, unless the address already says (or links to a question)
+  if (given !== undefined || hashId !== "" || !form || total < 2) {
+    run(given ?? total);
+    return;
+  }
+  const input = form.querySelector<HTMLInputElement>("input");
+  if (!input) return run(total);
+  list.hidden = true;
+  solutions.hidden = true;
+  if (heading) heading.hidden = true;
+  form.hidden = false;
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const count = Math.min(total, Math.max(1, Math.floor(Number(input.value)) || total));
+    const url = new URL(root.location.href);
+    url.searchParams.set(COUNT, String(count));
+    history.replaceState(history.state, "", url);
+    form.hidden = true;
+    list.hidden = false;
+    if (heading) heading.hidden = false;
+    run(count);
+  });
 }
