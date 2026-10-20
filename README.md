@@ -14,6 +14,10 @@ with which a creator and their AI assistant build a learning app.
 
 ## What is in it
 
+What each archetype can and cannot do is in the README of its folder: [quiz](quiz/README.md),
+[explainer](explainer/README.md), [interactive](interactive/README.md). Change it in the same pull request as the
+feature: assistants read it before they choose an archetype.
+
 | Folder | Archetype | What the app supplies |
 |---|---|---|
 | [`quiz/`](quiz/) | a quiz about things to know: questions with options, feedback on every option, score and solutions, in one or more languages (a page per language) | the question bank `src/quiz.json` ([schema](https://lernapps.net/tooling/schemas/quiz.v1.schema.json)) |
