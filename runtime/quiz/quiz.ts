@@ -22,9 +22,17 @@ export interface Option<T extends Text = string> {
   link?: Link<T>;
 }
 
+/** A topic of a quiz, from which a learner composes a round; each question belongs to one. */
+export interface Category<T extends Text = string> {
+  id: string;
+  title: T;
+}
+
 interface Base<T extends Text> {
   id: string;
   text: T;
+  /** The id of the quiz's category the question belongs to; required when the quiz has categories. */
+  category?: string;
   /** Why the right answer is right; for types without options also their background. */
   explanation: T;
   links: Link<T>[];
@@ -158,6 +166,7 @@ export function questionIn(question: Question<Text>, lang: string): Question {
   const link = (value: Link<Text>): Link => ({ title: t(value.title), url: t(value.url) });
   const base = {
     id: question.id,
+    ...(question.category === undefined ? {} : { category: question.category }),
     text: t(question.text),
     explanation: t(question.explanation),
     links: question.links.map(link),
@@ -210,10 +219,19 @@ export interface Quiz<T extends Text = string> {
   languages?: string[];
   title: T;
   intro: T;
+  /** Optional topics: the learner chooses which of them a round draws its questions from. */
+  categories?: Category<T>[];
   rememberLastResult?: boolean;
   questions: Question<T>[];
   /** Where the facts come from. */
   sources?: { title: T; url?: string }[];
+}
+
+/** The questions of the chosen categories; all of them when none is chosen. */
+export function inCategories<Q extends { category?: string }>(questions: readonly Q[], chosen: readonly string[]): Q[] {
+  return chosen.length === 0
+    ? [...questions]
+    : questions.filter((question) => question.category !== undefined && chosen.includes(question.category));
 }
 
 /** The quiz's languages, German first. */
@@ -221,12 +239,15 @@ export const quizLanguages = (quiz: Pick<Quiz<Text>, "languages">): readonly str
 
 /** The quiz in `lang`: each text from its map, a plain string as it is; everything else as it is. */
 export function quizIn(quiz: Quiz<Text>, lang: string): Quiz {
-  const { sources } = quiz;
+  const { sources, categories } = quiz;
   // the keys in their order, so a quiz in German only is as it was
   return {
-    ...(quiz as Omit<Quiz<Text>, "sources">),
+    ...(quiz as Omit<Quiz<Text>, "sources" | "categories">),
     title: inLanguage(quiz.title, lang),
     intro: inLanguage(quiz.intro, lang),
+    ...(categories === undefined
+      ? {}
+      : { categories: categories.map((category) => ({ ...category, title: inLanguage(category.title, lang) })) }),
     questions: quiz.questions.map((question) => questionIn(question, lang)),
     ...(sources === undefined
       ? {}

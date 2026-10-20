@@ -280,6 +280,24 @@ function renderSources(quiz: Quiz, { t }: Language): string[] {
   ];
 }
 
+/** The choice of categories before a round: a plain form (GET), so a round is an address; hidden until the engine runs. */
+function renderCategories(quiz: Quiz, { t }: Language): string[] {
+  if (quiz.categories === undefined) return [];
+  return [
+    `<form class="quiz-categories" method="get" hidden>`,
+    `<fieldset>`,
+    `<legend>${t("categories")}</legend>`,
+    `<p class="quiz-hint">${t("categoriesHint")}</p>`,
+    ...quiz.categories.map(
+      (category) =>
+        `<label class="quiz-option"><input type="checkbox" name="category" value="${category.id}"> <span>${escape(category.title)}</span></label>`,
+    ),
+    `</fieldset>`,
+    `<p><input type="hidden" name="seed" value=""><button type="submit" class="quiz-start">${t("start")}</button></p>`,
+    `</form>`,
+  ];
+}
+
 /** The pages of a quiz: its languages, German first. */
 export interface QuizPages {
   languages?: readonly string[];
@@ -318,6 +336,7 @@ export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {
     `<p class="quiz-intro">${escape(quiz.intro)}</p>`,
     `<p class="quiz-howto">${t("howto")}</p>`,
     `<noscript><p>${t("noscript")}</p></noscript>`,
+    ...renderCategories(quiz, words),
     `<h2 class="quiz-heading">${t("questions")}</h2>`,
     `<p class="quiz-progress" hidden></p>`,
     `<ol class="quiz-questions">`,
@@ -327,7 +346,7 @@ export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {
     `<h2>${t("result")}</h2>`,
     `<p class="quiz-score"></p>`,
     `<p class="quiz-last" hidden></p>`,
-    `<p><a class="quiz-restart" href="./">${t("restart")}</a></p>`,
+    `<p><a class="quiz-restart" href="./">${t("restart")}</a>${quiz.categories === undefined ? "" : ` · <a class="quiz-change-categories" href="./">${t("changeCategories")}</a>`}</p>`,
     `</section>`,
     `<section class="quiz-solutions" id="loesungen">`,
     `<h2>${t("solutions")}</h2>`,

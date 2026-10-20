@@ -10,6 +10,8 @@ A quiz about things to know: one page of questions with options, feedback on eve
   wrong numbers with their message.
 - One question at a time with feedback; at the end the score and all solutions. Without JavaScript: a worksheet with
   the solutions.
+- Optional categories: the learner chooses which topics a round draws its questions from; the round is an address
+  (`?category=berge&category=fluesse`), so it can be shared.
 - Questions in a shuffled order; a link with a seed gives every learner the same order. A link to each question.
 - German, plus English: a page per language.
 - Optionally keeps the last score on the learner's device.
@@ -18,7 +20,7 @@ A quiz about things to know: one page of questions with options, feedback on eve
 
 - No images or other media.
 - No own colours or layout: the look is the runtime's, calm like a worksheet. Dark mode follows the device.
-- No timer, no new tasks drawn each time, no rounds the learner chooses.
+- No timer, no new tasks drawn each time, no rounds the learner chooses beyond categories.
 
 ## What the app supplies
 

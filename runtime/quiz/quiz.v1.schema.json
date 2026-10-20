@@ -29,6 +29,14 @@
       "description": "One or two sentences under the heading: what the quiz is about and whom it is for.",
       "$ref": "#/$defs/learnerText"
     },
+    "categories": {
+      "description": "Optional topics of the quiz. With categories, a learner chooses before a round which of them it draws its questions from; every question then names its category. Without them, a round is all questions.",
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/$defs/category"
+      }
+    },
     "rememberLastResult": {
       "description": "Keep the last result on the learner's device (localStorage, through the preset's storage) and show it at the end. Off by default: then the quiz stores nothing.",
       "type": "boolean",
@@ -75,6 +83,22 @@
         }
       ]
     },
+    "category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": {
+          "description": "Stable name of the category, used in the address of a round (?category=<id>): lower-case letters, digits and hyphens.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "title": {
+          "description": "The category's name as the learner chooses it, e.g. \"Berge\".",
+          "$ref": "#/$defs/learnerText"
+        }
+      }
+    },
     "question": {
       "type": "object",
       "required": ["id", "type", "text", "explanation", "links"],
@@ -87,6 +111,11 @@
         "type": {
           "description": "The kind of question.",
           "enum": ["single-choice", "multiple-choice", "true-false", "number", "ordering", "matching"]
+        },
+        "category": {
+          "description": "The id of the category the question belongs to (see categories); required for every question when the quiz has categories, else not allowed.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
         },
         "text": {
           "description": "The question, complete in itself.",

@@ -19,6 +19,7 @@ import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
 import {
   hash,
+  inCategories,
   isComplete,
   isCorrect,
   missesRight,
@@ -36,6 +37,7 @@ export type { QuizData } from "./render.ts";
 /** The quiz's texts, by the page's language. */
 const BY_LANGUAGE: Readonly<Record<string, typeof de>> = { de, en };
 const SEED = "seed";
+const CATEGORY = "category";
 
 interface LastResult {
   score: number;
@@ -59,6 +61,11 @@ function seedOf(location: Location): number {
   url.searchParams.set(SEED, String(seed));
   history.replaceState(history.state, "", url);
   return seed;
+}
+
+/** The categories in the address (?category=<id>&category=<id>) that the quiz has; none when it has none of them. */
+function categoriesOf(location: Location, known: readonly string[]): string[] {
+  return new URL(location.href).searchParams.getAll(CATEGORY).filter((id) => known.includes(id));
 }
 
 /** The learner's answer as the form holds it; undefined when nothing is given yet. */
@@ -247,7 +254,11 @@ export function startQuiz(root: Document = document): void {
   const t = translator(BY_LANGUAGE[lang] ?? de);
   const storage = storageName === undefined ? undefined : createStorage(storageName);
   const seed = seedOf(root.location);
-  const order = shuffled(quiz.questions.length, seed).flatMap((index) => quiz.questions[index] ?? []);
+  const known = (quiz.categories ?? []).map((category) => category.id);
+  const chosen = categoriesOf(root.location, known);
+  const chosenSet = new Set(chosen);
+  const round = inCategories(quiz.questions, chosen);
+  const order = shuffled(round.length, seed).flatMap((index) => round[index] ?? []);
   const answers = new Map<string, Answer>();
   const list = main.querySelector<HTMLElement>(".quiz-questions");
   const progress = main.querySelector<HTMLElement>(".quiz-progress");
@@ -258,6 +269,26 @@ export function startQuiz(root: Document = document): void {
   main.classList.add("quiz-running");
   solutions.hidden = true;
   progress.hidden = false;
+  // the questions of categories that were not chosen are not part of this round: neither asked nor solved
+  for (const question of quiz.questions) {
+    if (order.includes(question)) continue;
+    const item = root.getElementById(questionId(question));
+    if (item) item.hidden = true;
+    // the solution's id, as render.ts writes it
+    const solution = root.getElementById(`loesung-${question.id}`);
+    if (solution) solution.hidden = true;
+  }
+  // a quiz with categories asks for them first, unless the address already names them
+  const picker = main.querySelector<HTMLFormElement>(".quiz-categories");
+  if (picker && chosen.length === 0) {
+    progress.hidden = true;
+    for (const item of list.querySelectorAll<HTMLElement>(".quiz-question")) item.hidden = true;
+    main.querySelector<HTMLElement>(".quiz-heading")?.setAttribute("hidden", "");
+    const seedField = picker.querySelector<HTMLInputElement>('input[name="seed"]');
+    if (seedField) seedField.value = String(seed);
+    picker.hidden = false;
+    return;
+  }
   const items = new Map<string, HTMLElement>();
   for (const question of order) {
     const item = root.getElementById(questionId(question));
@@ -296,7 +327,9 @@ export function startQuiz(root: Document = document): void {
     }
     storage?.save("last-result", { score: right, total: order.length } satisfies LastResult);
     const restart = main.querySelector<HTMLAnchorElement>(".quiz-restart");
-    if (restart) restart.href = `?${SEED}=${1 + ((seed * 7919) % 999_999)}`;
+    const again = new URLSearchParams({ [SEED]: String(1 + ((seed * 7919) % 999_999)) });
+    for (const id of known.filter((id) => chosenSet.has(id))) again.append(CATEGORY, id);
+    if (restart) restart.href = `?${again}`;
     result.hidden = false;
     solutions.hidden = false;
     moveFocus(result);

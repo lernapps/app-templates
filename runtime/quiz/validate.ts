@@ -435,6 +435,7 @@ function bankTextProblems(quiz: Quiz<Text>, languages: readonly string[]): strin
   const texts: [string, Text][] = [
     ["title", quiz.title],
     ["intro", quiz.intro],
+    ...(quiz.categories ?? []).map((category, index): [string, Text] => [`categories[${index}].title`, category.title]),
     ...(quiz.sources ?? []).map((source, index): [string, Text] => [`sources[${index}].title`, source.title]),
   ];
   return texts.flatMap(([at, text]) =>
@@ -442,6 +443,32 @@ function bankTextProblems(quiz: Quiz<Text>, languages: readonly string[]): strin
       (problem) => `${at} (${problem.lang}): ${problem.message}`,
     ),
   );
+}
+
+/** The problems of the categories of a bank and of the questions' use of them. */
+function categoryProblems(quiz: Quiz<Text>): string[] {
+  const declared = (quiz.categories ?? []).map((category) => category.id);
+  const used = new Set<string>();
+  const found = duplicates(declared).map(
+    (id) => `categories: the id "${id}" appears twice; each category needs its own id`,
+  );
+  quiz.questions.forEach((question, index) => {
+    const at = `questions[${index}] (question "${question.id}")`;
+    if (question.category === undefined) {
+      if (declared.length > 0)
+        found.push(
+          `${at}: add "category", one of ${declared.map((id) => `"${id}"`).join(", ")}; the quiz has categories`,
+        );
+    } else if (declared.length === 0) {
+      found.push(`${at}: remove "category", or declare the quiz's "categories"`);
+    } else if (!declared.includes(question.category)) {
+      found.push(`${at}.category: "${question.category}" is not declared in "categories" (${declared.join(", ")})`);
+    } else used.add(question.category);
+  });
+  for (const id of declared) {
+    if (!used.has(id)) found.push(`categories: no question belongs to "${id}"; add questions or remove the category`);
+  }
+  return found;
 }
 
 /** The problems of a question bank; none when it is valid. */
@@ -455,6 +482,7 @@ export function problems(value: unknown): string[] {
   const ids = value.questions.map((question) => question.id);
   return [
     ...duplicates(ids).map((id) => `questions: the id "${id}" appears twice; each question needs its own id`),
+    ...categoryProblems(value),
     ...bankTextProblems(value, languages),
     ...value.questions.flatMap((question, index) =>
       validateQuestion(question, `questions[${index}]`, languages, DECLARED_IN),

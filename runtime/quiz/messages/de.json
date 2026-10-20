@@ -1,6 +1,10 @@
 {
   "howto": "Beantworte die Fragen der Reihe nach. Nach jeder Antwort siehst du, ob sie stimmt, und erfährst mehr über jede Antwort. Am Ende siehst du dein Ergebnis.",
   "noscript": "Ohne JavaScript kannst du alle Fragen lesen. Die Lösungen mit mehr Wissen zu jeder Antwort stehen am Ende der Seite.",
+  "categories": "Kategorien",
+  "categoriesHint": "Wähle die Themen deiner Runde. Ohne Auswahl kommen alle Fragen dran.",
+  "start": "Starten",
+  "changeCategories": "Andere Kategorien wählen",
   "questions": "Fragen",
   "progress": "Frage {current} von {total}",
   "check": "Prüfen",
