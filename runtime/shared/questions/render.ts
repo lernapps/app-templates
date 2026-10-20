@@ -11,6 +11,7 @@
 import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
+import { escape } from "../html.ts";
 import { mixed, questionId, type Link, type Question } from "./question.ts";
 
 export type QuestionMessages = typeof de;
@@ -40,9 +41,6 @@ export function questionLanguage(lang = "de"): Language {
   return found;
 }
 const language = questionLanguage;
-
-export const escape = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** How a learner text becomes HTML. */
 export type Format = (text: string) => string;

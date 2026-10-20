@@ -91,7 +91,8 @@ addresses: qg-understandable, con-architecture-current
 ## What Archetypes Share Lives in the Shared Runtime
 
 Quiz, explainer and interactive app use some things alike, the questions first of all: the quiz asks them, the
-explainer's exercises are the same six types. Such a thing lives in `runtime/shared` (the questions in
+explainer's exercises are the same six types; the explainer and the interactive archetype read YAML content, check
+texts and formulas and check the code of Vue components alike. Such a thing lives in `runtime/shared` (the questions in
 `runtime/shared/questions`), and the archetypes build on it: no archetype imports another, and the shared runtime
 imports none. The public paths of the package (`quiz/question`, `quiz/e2e`, ...) stay as thin re-exports, so that an
 app generated from a template keeps building when a module moves. A test (`test/architecture.test.ts`) fails on an

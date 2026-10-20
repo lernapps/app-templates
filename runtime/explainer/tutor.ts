@@ -202,13 +202,13 @@ export function llmsTutorPart(site: Site, lang: string): string[] {
   return [...lines, ""];
 }
 
-/** The answer format of a question of the quiz's types, in `lang`. */
+/** The answer format of a question of the question types, in `lang`. */
 function questionFormat(question: Question, words: Words): string {
   const format = words.formats[question.type] ?? "";
   return question.type === "number" && question.unit !== undefined ? `${format} (${question.unit})` : format;
 }
 
-/** A question of the quiz's types, in `lang`: its text, format, options, solution, explanation, hint, mistakes. */
+/** A question of the question types, in `lang`: its text, format, options, solution, explanation, hint, mistakes. */
 function questionPart(question: Question, lang: string, words: Words): string[] {
   const lines = [
     `- ${words.task}: ${line(question.text)}`,

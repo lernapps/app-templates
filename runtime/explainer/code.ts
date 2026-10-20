@@ -11,6 +11,7 @@ import python from "highlight.js/lib/languages/python";
 import sql from "highlight.js/lib/languages/sql";
 import typescript from "highlight.js/lib/languages/typescript";
 import xml from "highlight.js/lib/languages/xml";
+import { escapeText } from "../shared/html.ts";
 
 const languages = { bash, c, css, html: xml, java, javascript, json, python, sql, typescript };
 for (const [name, language] of Object.entries(languages)) hljs.registerLanguage(name, language);
@@ -18,10 +19,8 @@ for (const [name, language] of Object.entries(languages)) hljs.registerLanguage(
 /** The languages a code block may have. */
 export type CodeLanguage = keyof typeof languages | "plaintext";
 
-const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
 /** The code as highlighted HTML, for inside <code>. */
 export function highlight(code: string, language: CodeLanguage): string {
-  if (language === "plaintext") return escape(code);
+  if (language === "plaintext") return escapeText(code);
   return hljs.highlight(code, { language, ignoreIllegals: true }).value;
 }

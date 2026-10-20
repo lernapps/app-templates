@@ -39,7 +39,9 @@ Built. The code the archetypes' runtimes share: the page trees, German at the ro
 `/<language>/`, with alternates, a language switch of plain links and the 404 page, which leads every address the
 app does not have to its start page (`pages.ts`); learner texts by language (`languages.ts`); the examples check,
 which runs an exercise's accepted and rejected examples through the check the page uses, for the quiz and the
-explainer (`examples.ts`); the questions, their six types with checker, schema, validation, rendering, engine, end-to-end
+explainer (`examples.ts`); the content as YAML, with its problems placed at file, line and path, the errors of a schema
+as problems and the checks of the texts (`content.ts`); restricted Markdown and formulas (`text/`); the checks of the
+code of Vue components (`vue-code.ts`); HTML escaping (`html.ts`); the questions, their six types with checker, schema, validation, rendering, engine, end-to-end
 helpers and texts, which the quiz and the explainer's exercises both use (`questions/`); Vue at build for the archetypes with components (`vue.ts`); and the app's name, the prefix
 of what it stores (`appname.ts`). The app never edits it.
 

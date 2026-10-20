@@ -9,7 +9,7 @@ import { inLanguage, timelineEvents, type Block, type Site, type Text } from "./
 import { dataOf, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
 import { kindOf, plainText, type Data, type Generated, type Templates } from "./generated.ts";
 import { loadSite } from "./load.ts";
-import { inspect, renderMarkdown } from "./markdown.ts";
+import { inspect, renderMarkdown } from "../shared/text/markdown.ts";
 import { routes } from "./routes.ts";
 
 export interface PageOutline {
@@ -46,7 +46,7 @@ export type ExerciseOutline =
   | {
       kind: "question";
       id: string;
-      /** The exercise's type, one per kind of controls: the quiz's question type. */
+      /** The exercise's type, one per kind of controls: the question type. */
       type: string;
       question: Question;
       /** The right answer as its "Lösung" states it: each right option, or the answer. */

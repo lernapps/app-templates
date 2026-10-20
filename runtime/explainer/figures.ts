@@ -1,7 +1,6 @@
 // The figures drawn from data at build time, as inline SVG with role="img" and the figure's alternative text as its
 // name: hundred-grid (a field of 100 squares, some shaded) and bar (a strip with a shaded part and its percentage).
-const escape = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+import { escape } from "../shared/html.ts";
 
 const ON = "#1d4ed8";
 const OFF = "#ffffff";

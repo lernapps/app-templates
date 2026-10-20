@@ -2,11 +2,11 @@
 // src/main.ts. Every page is complete without JavaScript; this module only adds: it marks the page as running with
 // JavaScript (class explainer-js on <html>) and makes its exercises live. Every exercise is answered before its
 // solution shows: a wrong answer gets its reason and may be tried again, and the solution shows after the right
-// answer or "Lösung zeigen" (startQuestion of the quiz runtime with retry). A question of one of the quiz's types gets
-// the quiz's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
+// answer or "Lösung zeigen" (startQuestion of the shared questions with retry). A question of one of the question types gets
+// the question's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
 // shows the same after the answer. A generated exercise gets a live task: from the seed in the address when the
 // address names its task number (?<exercise>=<n>), else from a random one; its seed from the exercise's table
-// of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the quiz's controls, checker and feedback through its
+// of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the question's controls, checker and feedback through its
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
 // always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
 // JavaScript, unless the exercise asks for them (workedTasks: always): then they show below the live task once the
@@ -24,11 +24,9 @@ import { diagnose, figureOf, generate, hintOf, questionFor, stepsOf, taskText } 
 import { message } from "./messages.ts";
 import { pageTutorText } from "./tutorpage.ts";
 import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
+import { escape } from "../shared/html.ts";
 
-const escape = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-/** Makes a generated exercise live: a task from a seed, checked by the quiz runtime, and "Neue Aufgabe". */
+/** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind: "generated" }>): void {
   const live = element.querySelector<HTMLElement>(".explainer-live");
   if (!live) return;
