@@ -193,6 +193,16 @@ body {
   cursor: pointer;
 }
 
+.quiz a.quiz-restart {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--quiz-accent);
+  border-radius: 0.375rem;
+  background: var(--quiz-accent);
+  color: var(--quiz-on-accent);
+  text-decoration: none;
+}
+
 .quiz button:focus-visible,
 .quiz a:focus-visible,
 .quiz input:focus-visible,
@@ -294,6 +304,16 @@ body {
 .quiz-more {
   margin-bottom: 0;
   font-weight: 600;
+}
+
+.quiz-start input {
+  font: inherit;
+  width: 4.5rem;
+  padding: 0.375rem 0.5rem;
+  border: 2px solid var(--quiz-border);
+  border-radius: 0.375rem;
+  background: var(--quiz-surface);
+  color: inherit;
 }
 
 /* the celebration of a good result: confetti from 80% right, fireworks for all right (engine.ts) */
