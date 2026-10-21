@@ -117,6 +117,16 @@
       "id": "totes-meer",
       "type": "true-false",
       "text": "Das Tote Meer liegt tiefer als der Meeresspiegel.",
+      "material": [
+        {
+          "type": "figure",
+          "image": "images/totes-meer.jpg",
+          "alt": "Ein flacher Strand mit heller, krustiger Salzschicht; rechts ein blaugrünes Gewässer, dahinter Berge und ein Himmel mit Wolken",
+          "caption": "Der helle Boden am Ufer ist eine Kruste aus Salz. Foto: Wilson44691.",
+          "source": "https://commons.wikimedia.org/wiki/File:Dead_Sea_Halite_View_031712.jpg",
+          "licence": "CC-BY-SA-3.0"
+        }
+      ],
       "answer": true,
       "explanation": "Das Tote Meer liegt mehr als 440 m unter dem Meeresspiegel. Kein anderer See der Erde liegt so tief. Sein Wasser ist sehr salzig, und der Fluss Jordan fließt hinein.",
       "links": [
@@ -130,6 +140,16 @@
       "id": "everest-hoehe",
       "type": "number",
       "text": "Wie hoch ist der Mount Everest? Gib die Höhe in Metern an. Bis zu 100 m daneben zählt noch als richtig.",
+      "material": [
+        {
+          "type": "figure",
+          "image": "images/everest-hoehe.jpg",
+          "alt": "Ein mächtiger, schneebedeckter Berg mit felsigen Flanken, davor ein steiniges, braunes Tal unter blauem Himmel",
+          "caption": "Schau auf den Gipfel: Fels, Schnee und Eis, so weit man sieht. Foto: Luca Galuzzi.",
+          "source": "https://commons.wikimedia.org/wiki/File:Everest_North_Face_toward_Base_Camp_Tibet_Luca_Galuzzi_2006.jpg",
+          "licence": "CC-BY-SA-2.5"
+        }
+      ],
       "answer": 8848,
       "tolerance": 100,
       "unit": "m",
@@ -145,7 +165,22 @@
       "id": "berge-ordnen",
       "type": "ordering",
       "text": "Ordne die Berge nach ihrer Höhe, vom niedrigsten zum höchsten.",
-      "items": ["Zugspitze", "Mont Blanc", "Kilimandscharo", "Mount Everest"],
+      "material": [
+        {
+          "type": "figure",
+          "image": "images/berge-ordnen.jpg",
+          "alt": "Ein grauer, felsiger Gebirgsstock mit steilen Wänden, davor grüne, bewaldete Hänge unter blauem Himmel mit Wolken",
+          "caption": "So sieht einer der Berge aus der Aufgabe aus: viel nackter Fels an den Hängen. Foto: Tuxyso.",
+          "source": "https://commons.wikimedia.org/wiki/File:Zugspitzmassiv-von-Almkopf-2024.jpg",
+          "licence": "CC-BY-SA-4.0"
+        }
+      ],
+      "items": [
+        "Zugspitze",
+        "Mont Blanc",
+        "Kilimandscharo",
+        "Mount Everest"
+      ],
       "explanation": "Die Zugspitze ist mit 2962 m der höchste Berg Deutschlands. Der Mont Blanc ist mit etwa 4807 m der höchste Berg der Alpen. Der Kibo am Kilimandscharo ist mit 5895 m der höchste Berg Afrikas, und der Mount Everest ist mit über 8848 m der höchste Berg der Erde.",
       "links": [
         {
@@ -162,6 +197,16 @@
       "id": "wasserfaelle-laender",
       "type": "matching",
       "text": "Zwischen welchen Ländern liegen diese Wasserfälle?",
+      "material": [
+        {
+          "type": "figure",
+          "image": "images/wasserfaelle-laender.jpg",
+          "alt": "Blick von oben auf zwei Wasserfälle, die in einen breiten, grünblauen Fluss stürzen; am Ufer Straßen, Wiesen und Gebäude",
+          "caption": "Aus der Luft sieht man gut, wie viel Wasser über die Kante fällt. Foto: ErwinMeier.",
+          "source": "https://commons.wikimedia.org/wiki/File:Niagara_01.jpg",
+          "licence": "CC-BY-SA-3.0"
+        }
+      ],
       "pairs": [
         {
           "left": "Niagarafälle",
@@ -192,6 +237,16 @@
       "id": "galapagos",
       "type": "single-choice",
       "text": "Welche Inseln liegen im Pazifik am Äquator, etwa 1000 km vor der Küste Südamerikas?",
+      "material": [
+        {
+          "type": "figure",
+          "image": "images/galapagos.jpg",
+          "alt": "Zwei Seelöwen liegen an einem hellen Sandstrand; im Wasser dahinter ein Schlauchboot und dunkle Felsen",
+          "caption": "Hier ruhen Tiere am Strand, zwischen dunklen Felsen und klarem Wasser. Foto: M M from Switzerland.",
+          "source": "https://commons.wikimedia.org/wiki/File:Gal%C3%A1pagos_Inseln%2C_Ecuador_%2813918667084%29.jpg",
+          "licence": "CC-BY-SA-2.0"
+        }
+      ],
       "options": [
         {
           "text": "Galapagosinseln",
@@ -233,6 +288,16 @@
       "id": "uluru",
       "type": "true-false",
       "text": "Den Uluru in Australien darf man heute besteigen.",
+      "material": [
+        {
+          "type": "figure",
+          "image": "images/uluru.jpg",
+          "alt": "Ein riesiger, runder Felsen in leuchtendem Orangerot, davor Büsche und rote Erde, darüber Wolken im Abendlicht",
+          "caption": "Der Felsen steht ganz allein in einer flachen Landschaft. Foto: Thomas Schoch.",
+          "source": "https://commons.wikimedia.org/wiki/File:Sunset_at_Uluru_on_July_30%2C_2005.jpg",
+          "licence": "CC-BY-SA-3.0"
+        }
+      ],
       "answer": false,
       "explanation": "Der Uluru ist ein Berg in der Wüste Zentralaustraliens, etwa 350 m höher als das Land um ihn herum. Für die Anangu, die Aborigines dort, ist er heilig. Seit Oktober 2019 ist es verboten, ihn zu besteigen.",
       "links": [
