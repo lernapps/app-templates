@@ -33,7 +33,7 @@ tutor is on, a `tutor.md` per page from each exercise's tasks by number and its 
 id: scenario-explainer-build
 title: Building the explainer
 trigger: The creator, a git hook or CI runs the build
-involves: bb-build, bb-validation, bb-component-rules, bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-questions, bb-explainer-content, bb-explainer-data, bb-explainer-components
+involves: bb-archetype-runtime, bb-build, bb-validation, bb-component-rules, bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-questions, bb-blocks, bb-explainer-content, bb-explainer-data, bb-explainer-components
 :::
 ```
 

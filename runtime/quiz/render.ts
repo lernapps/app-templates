@@ -10,11 +10,12 @@
 import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
-import { alternateLinks, languageRoot, pageFooter, pageHeader } from "../shared/pages.ts";
+import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
+import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { localeOf, textsIn, type Language } from "../shared/languages.ts";
 import { QUESTION_MESSAGES } from "../shared/questions/render.ts";
 import { questionId, type Question } from "../shared/questions/question.ts";
-import { type Quiz } from "./quiz.ts";
+import { solutionId, type Quiz, type QuizData } from "./quiz.ts";
 import { external, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { escape } from "../shared/html.ts";
 
@@ -42,18 +43,6 @@ function wordsIn(lang = "de"): Words {
   }
   return found;
 }
-
-/** What the engine reads from the page (script#quiz-data). */
-export interface QuizData {
-  /** The quiz in the page's language. */
-  quiz: Quiz;
-  /** The name of the app's storage, when the quiz keeps the last result on the device. */
-  storage?: string;
-  /** The page's language, when it is not German. */
-  lang?: string;
-}
-
-export const solutionId = (question: Question) => `loesung-${question.id}`;
 
 function solutionItem(question: Question, lang: string): string {
   const { t } = wordsIn(lang);
@@ -85,6 +74,8 @@ function renderSources(quiz: Quiz, { t }: Words): string[] {
 /** The pages of a quiz: its languages, German first. */
 export interface QuizPages {
   languages?: readonly string[];
+  /** Whether a bundled image has no size of its own (see MaterialContext); none is without one. */
+  sizeless?: (image: string) => boolean;
 }
 
 /** One page of the quiz: its title and description, its alternates in its languages for <head>, and its body. */
@@ -113,13 +104,26 @@ function renderStart(total: number, t: Words["t"]): string {
  * The page of the quiz in its data's language (German without one): its title and description, its alternates, and
  * the quiz itself for the page's body, after a language switch when the quiz has several `languages`.
  */
-export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {}): RenderedQuiz {
+export function renderQuiz(data: QuizData, { languages = ["de"], sizeless }: QuizPages = {}): RenderedQuiz {
   const { quiz } = data;
   const lang = data.lang ?? "de";
   const words = wordsIn(lang);
   const { t } = words;
   const where = { path: languageRoot(lang), local: "", languages };
-  const json = JSON.stringify(data).replace(/</g, "\\u003c");
+  // the engine needs the questions to check the answers, not what they show
+  const forEngine = {
+    ...data,
+    quiz: {
+      ...data.quiz,
+      questions: data.quiz.questions.map(({ material: _material, ...question }) => question as Question),
+    },
+  };
+  const json = JSON.stringify(forEngine).replace(/</g, "\\u003c");
+  const material: MaterialContext = {
+    lang,
+    href: (image) => relative(where.path, image),
+    ...(sizeless === undefined ? {} : { sizeless }),
+  };
   const body = [
     pageHeader({
       ...where,
@@ -136,7 +140,14 @@ export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {
     renderStart(quiz.questions.length, t),
     `<p class="quiz-progress" hidden></p>`,
     `<ol class="quiz-questions">`,
-    ...quiz.questions.map((question) => renderQuestion(question, { element: "li", next: true, lang })),
+    ...quiz.questions.map((question) =>
+      renderQuestion(question, {
+        element: "li",
+        next: true,
+        lang,
+        ...(question.material === undefined ? {} : { materialHtml: renderMaterial(question.material, material) }),
+      }),
+    ),
     `</ol>`,
     `<section class="quiz-result" id="ergebnis" hidden tabindex="-1">`,
     `<h2>${t("result")}</h2>`,

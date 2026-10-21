@@ -41,3 +41,16 @@ export function score(questions: readonly Question[], answers: ReadonlyMap<strin
     return answer !== undefined && isCorrect(question, answer);
   }).length;
 }
+
+/** What the engine reads from the page (script#quiz-data). */
+export interface QuizData {
+  /** The quiz in the page's language. */
+  quiz: Quiz;
+  /** The name of the app's storage, when the quiz keeps the last result on the device. */
+  storage?: string;
+  /** The page's language, when it is not German. */
+  lang?: string;
+}
+
+/** The id of the element of the solution of a question, in the list of solutions. */
+export const solutionId = (question: Pick<Question, "id">): string => `loesung-${question.id}`;

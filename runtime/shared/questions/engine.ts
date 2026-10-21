@@ -3,7 +3,8 @@
 // the most specific reason of a wrong answer; then the solution shows: the background of every option with the right
 // ones and the learner's choice marked, the explanation and further reading. A question can also be tried again
 // (retry), as an exercise is. The question's own texts are in the page's language (the option `lang`, German by
-// default). Used on the element that renderQuestion rendered:
+// default). The browser imports only this module of the questions (@lernapps/app-templates/questions/engine), which
+// has no build-time code: its types and the id of a question. Used on the element that renderQuestion rendered:
 //
 //   startQuestion(element, question);
 import { moveFocus } from "@lernapps/tooling/a11y";
@@ -50,6 +51,8 @@ function chosenOptions(question: Question, answer: Answer): number[] {
   if (question.type !== "single-choice" && question.type !== "multiple-choice") return [];
   return typeof answer === "number" ? [answer] : typeof answer === "object" ? [...answer] : [];
 }
+
+export { questionId, type Answer, type Question } from "./question.ts";
 
 /** What a page that runs one question may set. */
 export interface StartQuestionOptions {

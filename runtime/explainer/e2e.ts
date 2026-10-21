@@ -34,7 +34,7 @@ import {
   type Answer,
   type Question,
 } from "../shared/questions/question.ts";
-import { answerQuestion, expectFeedbackInView } from "../shared/questions/e2e.ts";
+import { answerQuestion, expectFeedbackInView, expectMaterial } from "../shared/questions/e2e.ts";
 import { questionMessagesIn } from "../shared/questions/render.ts";
 import { answerFor, questionFor, taskKey } from "./generated/question.ts";
 import { fill, plainText, taskText } from "./generated/texts.ts";
@@ -253,6 +253,7 @@ async function checkQuestion(
   const { question } = exercise;
   const item = page.locator(`[id="${exercise.id}"]`);
   await page.goto(`./${url}#${exercise.id}`);
+  await expectMaterial(page, question);
   await expect(item.locator(".question-reveal"), `${exercise.id}: no solution before the answer`).toBeHidden();
   await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung before the answer`).toBeHidden();
   await answerQuestion(page, question, rightAnswer(question));

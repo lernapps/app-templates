@@ -164,7 +164,7 @@ function walk(
       default: {
         // the formulas in the texts of a question (question, options, background, explanation) are rendered, and the
         // page shows some of them more than once: count what the renderer writes, not the texts
-        const html = renderExercise(block, lang, site.data, (href) => href);
+        const html = renderExercise(block, lang, site.data, (href) => href, { lang, href: (image) => image });
         into.formulas += (html.split('<script type="application/json"')[0] ?? "").split("<math").length - 1;
         const question = questionIn(block, lang);
         into.exercises.push({

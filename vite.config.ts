@@ -38,6 +38,7 @@ export default defineConfig({
     // quiz and the explainer share.
     entry: {
       // the questions of every archetype that has them (shared/questions): the quiz and the explainer build on them
+      blocks: "runtime/shared/blocks/index.ts",
       questions: "runtime/shared/questions/index.ts",
       "questions-engine": "runtime/shared/questions/engine.ts",
       "questions-e2e": "runtime/shared/questions/e2e.ts",

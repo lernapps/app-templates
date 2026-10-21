@@ -64,3 +64,45 @@ export async function expectFeedbackInView(page: Page, item: Question): Promise<
   expect(top, "the top of the feedback is in the viewport").toBeLessThan(height);
   await expect(feedback).toBeFocused();
 }
+
+/** What a question shows besides its text (its material) is on the page, between the text and the answers; images load. */
+export async function expectMaterial(page: Page, item: Question, { loaded = true } = {}): Promise<void> {
+  const blocks = item.material ?? [];
+  const area = question(page, item).locator(".question-material");
+  if (blocks.length === 0) {
+    await expect(area).toHaveCount(0);
+    return;
+  }
+  await expect(area).toBeVisible();
+  const count = (type: string) => blocks.filter((block) => block.type === type).length;
+  for (const [type, selector] of [
+    ["text", ".block-text"],
+    ["formula", ".block-formula"],
+    ["figure", ".block-figure:not(.block-labelled)"],
+    ["labelled-figure", ".block-labelled"],
+    ["table", ".block-table"],
+    ["quote", ".block-quote"],
+    ["code", ".block-code"],
+  ] as const) {
+    await expect(area.locator(selector), `${item.id}: the ${type} blocks`).toHaveCount(count(type));
+  }
+  const withCredit = blocks.filter((block) => "licence" in block && block.licence !== undefined).length;
+  await expect(area.locator(".block-credit")).toHaveCount(withCredit);
+  const images = blocks.filter((block) => "image" in block && block.image !== undefined);
+  const pictures = area.locator("img");
+  await expect(pictures).toHaveCount(images.length);
+  for (const [index, block] of images.entries()) {
+    const picture = pictures.nth(index);
+    await expect(picture).toHaveAttribute(
+      "alt",
+      block.type === "figure" || block.type === "labelled-figure" ? block.alt : "",
+    );
+    if (!loaded) continue;
+    // the file is found from this page and drawn
+    await expect
+      .poll(() => picture.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0), {
+        message: `${item.id}: image ${index + 1} loads`,
+      })
+      .toBe(true);
+  }
+}

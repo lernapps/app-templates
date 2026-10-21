@@ -5,7 +5,8 @@
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
 import schema from "./explainer.v1.schema.json" with { type: "json" };
 import questionSchema from "../shared/questions/question.v1.schema.json" with { type: "json" };
-import { addressProblem } from "../shared/questions/validate.ts";
+import { knownProperties, schemasById } from "../shared/schema.ts";
+import { addressProblem, QUESTION_BRANCH, questionSchemas } from "../shared/questions/validate.ts";
 import { isObject, schemaProblems, type DescribeError, type Problems, type YamlFile } from "../shared/content.ts";
 
 export const SCHEMA_ID = schema.$id;
@@ -14,7 +15,7 @@ export const SCHEMA_FILE = "node_modules/@lernapps/app-templates/runtime/explain
 
 // union types ("type": ["string", "object"]) keep the messages of the comparator and the lists plain
 const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true });
-ajv.addSchema(questionSchema);
+for (const each of questionSchemas) ajv.addSchema(each);
 ajv.addSchema(schema);
 const validator = (name: string): ValidateFunction => {
   const validate = ajv.getSchema(`${SCHEMA_ID}#/$defs/${name}`);
@@ -29,21 +30,8 @@ export const validators = {
   event: validator("event"),
 };
 
-type Definition = { properties?: Record<string, unknown>; allOf?: unknown[]; $ref?: string; then?: unknown };
-const definitions = schema.$defs as unknown as Record<string, Definition>;
+const schemas = schemasById(...questionSchemas, schema);
 
-/** The properties a definition of the schema knows, with those of its allOf, its references and its branches. */
-function known(definition: unknown, into = new Set<string>()): Set<string> {
-  if (typeof definition !== "object" || definition === null) return into;
-  const def = definition as Definition;
-  for (const key of Object.keys(def.properties ?? {})) into.add(key);
-  if (typeof def.$ref === "string") known(definitions[def.$ref.replace("#/$defs/", "")], into);
-  for (const part of def.allOf ?? []) {
-    known(part, into);
-    if (typeof part === "object" && part !== null && "then" in part) known(part.then, into);
-  }
-  return into;
-}
 const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
   text: "textBlock",
   formula: "formula",
@@ -61,21 +49,12 @@ const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
   "vue-component": "vueComponent",
 };
 
-/** The fields of each of the question types, from the schema of a question. */
-const questionDefinitions = questionSchema.$defs as unknown as Record<string, { properties?: Record<string, unknown> }>;
-const QUESTION_BRANCH: Readonly<Record<string, string>> = {
-  "single-choice": "choice",
-  "multiple-choice": "choice",
-  "true-false": "trueFalse",
-  number: "number",
-  ordering: "ordering",
-  matching: "matching",
+/** The fields of an exercise of a question type: those of every question and those of its type. */
+const questionFields = (type: string): Set<string> => {
+  const own = knownProperties(schemas, questionSchema.$id, "question", { branches: false });
+  const branch = knownProperties(schemas, questionSchema.$id, QUESTION_BRANCH[type] ?? "");
+  return new Set([...own, ...branch]);
 };
-const questionFields = (type: string): Set<string> =>
-  new Set([
-    ...Object.keys(questionDefinitions["question"]?.properties ?? {}),
-    ...Object.keys(questionDefinitions[QUESTION_BRANCH[type] ?? ""]?.properties ?? {}),
-  ]);
 
 /** What `required` names as missing, with why it is needed. */
 function missing(property: string, object: unknown): string {
@@ -119,7 +98,12 @@ const describe: DescribeError = (error, path, value) => {
           ? null
           : { message: `${property} is not a field of a ${type} exercise` };
       }
-      if (definition === undefined || property === "type" || known(definitions[definition]).has(property)) return null;
+      if (
+        definition === undefined ||
+        property === "type" ||
+        knownProperties(schemas, schema.$id, definition).has(property)
+      )
+        return null;
       const what = path.at(-1) === "draw" ? `a ${String(kind)} drawing` : `a ${String(type)} block`;
       return { message: `${property} is not a field of ${what}` };
     }

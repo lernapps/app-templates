@@ -6,6 +6,7 @@
 // once the live task is solved). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
 import { questionIn, type Question } from "../shared/questions/question.ts";
+import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 import type { DataRecord, Exercise, QuestionBlock } from "./content.ts";
@@ -146,7 +147,7 @@ function formulaTexts(value: unknown): string[] {
   return [];
 }
 
-function questionExercise(block: QuestionBlock, lang: string): string {
+function questionExercise(block: QuestionBlock, lang: string, material: MaterialContext): string {
   const question = questionIn(block, lang);
   const rendered: Record<string, string> = {};
   for (const text of formulaTexts(question)) rendered[text] = renderWithFormulas(text);
@@ -154,7 +155,11 @@ function questionExercise(block: QuestionBlock, lang: string): string {
   return [
     `<div class="explainer-exercise explainer-question" id="${block.id}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
-    renderQuestion(question, { lang, format: renderWithFormulas }),
+    renderQuestion(question, {
+      lang,
+      format: renderWithFormulas,
+      ...(question.material === undefined ? {} : { materialHtml: renderMaterial(question.material, material) }),
+    }),
     `<details class="explainer-solution"><summary>${plain(questionMessagesIn(lang).solution)}</summary>`,
     renderSolution(question, { lang, format: renderWithFormulas }),
     `</details>`,
@@ -228,6 +233,9 @@ export function renderExercise(
   lang: string,
   data: Readonly<Record<string, readonly DataRecord[]>>,
   resolve: (href: string) => string,
+  material: MaterialContext,
 ): string {
-  return block.type === "generated" ? generatedExercise(block, lang, data, resolve) : questionExercise(block, lang);
+  return block.type === "generated"
+    ? generatedExercise(block, lang, data, resolve)
+    : questionExercise(block, lang, material);
 }

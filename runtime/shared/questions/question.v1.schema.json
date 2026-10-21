@@ -4,29 +4,6 @@
   "title": "A question of a lernapps app",
   "description": "One question of the six types (single-choice, multiple-choice, true-false, number, ordering, matching) as the quiz's question bank and the explainer's exercises write it. Use #/$defs/question for one question; the schemas of the quiz and of the explainer refer to it.",
   "$defs": {
-    "text": {
-      "type": "string",
-      "minLength": 1,
-      "pattern": "\\S"
-    },
-    "learnerText": {
-      "description": "A text for learners: a string, or a map of texts by language ({ de: …, en: … }) in a quiz or on a page in several languages. German is required; the quiz or page checks that every language it declares is there, and that no other is.",
-      "anyOf": [
-        {
-          "$ref": "#/$defs/text"
-        },
-        {
-          "type": "object",
-          "minProperties": 1,
-          "propertyNames": {
-            "pattern": "^[a-z]{2}$"
-          },
-          "additionalProperties": {
-            "$ref": "#/$defs/text"
-          }
-        }
-      ]
-    },
     "question": {
       "type": "object",
       "required": ["id", "type", "text", "explanation", "links"],
@@ -42,11 +19,19 @@
         },
         "text": {
           "description": "The question, complete in itself.",
-          "$ref": "#/$defs/learnerText"
+          "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
+        },
+        "material": {
+          "description": "Optional: content that the question shows, between its text and its answers: prose, formulas, figures and labelled figures (bundled images in src/images/, or drawn from data), tables, quotations and code. A figure has an alternative text and a caption, and an image its source and licence. A question that asks about what the content shows needs it; one that merely looks nicer with an image should not have one.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "urn:lernapps:schema:blocks.v1#/$defs/materialBlock"
+          }
         },
         "explanation": {
           "description": "Why the right answer is right, in one to three sentences. For number, ordering and matching questions also the background knowledge, as their options carry none.",
-          "$ref": "#/$defs/learnerText"
+          "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
         },
         "links": {
           "description": "Further reading on the question, at least one link, e.g. to the article in the German Wikipedia; in a quiz or on a page in several languages to the article in each language's Wikipedia, with url as a map by language.",
@@ -58,7 +43,7 @@
         },
         "hint": {
           "description": "Optional: what to look at again after a wrong answer, in one sentence, without giving the answer away, e.g. \"Schau dir noch einmal an, wie hoch die Spannung im Haushalt ist.\" Shown with the feedback of a wrong answer when nothing more specific applies: a chosen option's info or a number's typical mistake come first. In an explainer, a wrong answer can be tried again, with this hint, before the solution shows.",
-          "$ref": "#/$defs/learnerText"
+          "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
         },
         "examples": {
           "$ref": "#/$defs/examples"
@@ -195,7 +180,7 @@
             "properties": {
               "text": {
                 "description": "The option as the learner reads it.",
-                "$ref": "#/$defs/learnerText"
+                "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
               },
               "correct": {
                 "description": "Whether this option is correct.",
@@ -203,7 +188,7 @@
               },
               "info": {
                 "description": "One to three sentences of background on this option itself, true whether or not it is the right answer, e.g. \"Der Uluru ist ein Inselberg in der Wüste Zentralaustraliens ...\". After an answer it shows for every option. For a wrong option it is also the reason a learner who chose it reads with the feedback, so say there why it does not fit.",
-                "$ref": "#/$defs/learnerText"
+                "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
               },
               "link": {
                 "description": "Further reading on this option.",
@@ -241,7 +226,7 @@
         },
         "unit": {
           "description": "The unit, shown next to the input, e.g. \"cm\"; the learner does not type it.",
-          "$ref": "#/$defs/learnerText"
+          "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
         },
         "mistakes": {
           "description": "Optional: typical wrong numbers, each with a message that says what went wrong, e.g. { \"answer\": 2300, \"message\": \"Du hast mit 10 statt mit 100 multipliziert.\" }. A learner's number within the tolerance of a mistake's answer gets its message with the feedback. A mistake's answer must not count as right, and each is listed once.",
@@ -258,7 +243,7 @@
               },
               "message": {
                 "description": "What went wrong, in one or two sentences, without giving the right number away.",
-                "$ref": "#/$defs/learnerText"
+                "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
               }
             }
           }
@@ -275,7 +260,7 @@
           "minItems": 2,
           "maxItems": 8,
           "items": {
-            "$ref": "#/$defs/learnerText"
+            "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
           }
         }
       }
@@ -295,10 +280,10 @@
             "required": ["left", "right"],
             "properties": {
               "left": {
-                "$ref": "#/$defs/learnerText"
+                "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
               },
               "right": {
-                "$ref": "#/$defs/learnerText"
+                "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
               }
             }
           }
@@ -312,7 +297,7 @@
       "properties": {
         "title": {
           "description": "The link's text: what the learner finds there, e.g. \"Uluru (Wikipedia)\".",
-          "$ref": "#/$defs/learnerText"
+          "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
         },
         "url": {
           "description": "The address, https only: one for every language, or, in a quiz or on a page in several languages where the page to read differs by language (the article in each language's Wikipedia), a map of addresses by language ({ \"de\": \"https://de.wikipedia.org/wiki/Uluru\", \"en\": \"https://en.wikipedia.org/wiki/Uluru\" }) with every declared language, as a text's map. Each language's page links the address of its language. Check that each opens the page you mean.",

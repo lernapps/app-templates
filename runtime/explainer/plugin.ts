@@ -41,6 +41,7 @@ import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";
 import { anchorsOf, linkProblems, tutorFile, tutorFileOf } from "./tutor.ts";
 import { PROMPT_FILE, tutorPrompt, withBase } from "./prompt.ts";
+import { imageType } from "../shared/blocks/image.ts";
 
 const MARKER = "<!-- explainer -->";
 const ISLANDS = "\0lernapps-explainer-islands";
@@ -320,7 +321,7 @@ export function explainer(): Plugin[] {
         const url = new URL(request.url ?? "/", "http://localhost");
         const path = decodeURIComponent(url.pathname).replace(/^\//, "");
         if (path.startsWith("images/")) {
-          response.setHeader("content-type", path.endsWith(".svg") ? "image/svg+xml" : "application/octet-stream");
+          response.setHeader("content-type", imageType(path));
           response.end(readFileSync(join(root, "src", path)));
           return;
         }

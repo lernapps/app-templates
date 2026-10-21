@@ -1,4 +1,4 @@
-// Code blocks, highlighted at build time by highlight.js into spans with classes (explainer.css colours them): the
+// Code blocks, highlighted at build time by highlight.js into spans with classes (blocks.css colours them): the
 // page needs no script for it. The languages are a fixed list, the schema's $defs/code.
 import hljs from "highlight.js/lib/core";
 import bash from "highlight.js/lib/languages/bash";
@@ -11,7 +11,7 @@ import python from "highlight.js/lib/languages/python";
 import sql from "highlight.js/lib/languages/sql";
 import typescript from "highlight.js/lib/languages/typescript";
 import xml from "highlight.js/lib/languages/xml";
-import { escapeText } from "../shared/html.ts";
+import { escapeText } from "../html.ts";
 
 const languages = { bash, c, css, html: xml, java, javascript, json, python, sql, typescript };
 for (const [name, language] of Object.entries(languages)) hljs.registerLanguage(name, language);

@@ -1,6 +1,6 @@
 // The figures drawn from data at build time, as inline SVG with role="img" and the figure's alternative text as its
 // name: hundred-grid (a field of 100 squares, some shaded) and bar (a strip with a shaded part and its percentage).
-import { escape } from "../shared/html.ts";
+import { escape } from "../html.ts";
 
 const ON = "#1d4ed8";
 const OFF = "#ffffff";
@@ -16,7 +16,7 @@ export function hundredGrid(filled: number, alt: string): string {
       `<rect x="${x}" y="${y}" width="10" height="10" class="${index < filled ? "fig-on" : "fig-off"} fig-line" fill="${index < filled ? ON : OFF}" stroke="${LINE}" stroke-width="0.5"/>`,
     );
   }
-  return `<svg class="explainer-drawing explainer-hundred-grid" role="img" aria-label="${escape(alt)}" viewBox="0 0 111 111" xmlns="http://www.w3.org/2000/svg">${cells.join("")}</svg>`;
+  return `<svg class="block-drawing block-hundred-grid" role="img" aria-label="${escape(alt)}" viewBox="0 0 111 111" xmlns="http://www.w3.org/2000/svg">${cells.join("")}</svg>`;
 }
 
 /**
@@ -31,7 +31,7 @@ export function bar(part: number, whole: number, alt: string, locale: string, pe
   const label = (x: number, y: number, anchor: string, text: string) =>
     `<text x="${x.toFixed(1)}" y="${y}" text-anchor="${anchor}" font-size="12" class="fig-text" fill="#1a1a1a">${escape(text)}</text>`;
   return [
-    `<svg class="explainer-drawing explainer-bar" role="img" aria-label="${escape(alt)}" viewBox="0 0 300 ${percent ? 74 : 58}" xmlns="http://www.w3.org/2000/svg">`,
+    `<svg class="block-drawing block-bar" role="img" aria-label="${escape(alt)}" viewBox="0 0 300 ${percent ? 74 : 58}" xmlns="http://www.w3.org/2000/svg">`,
     `<rect x="1" y="1" width="298" height="36" class="fig-off fig-line" fill="${OFF}" stroke="${LINE}"/>`,
     `<rect x="1" y="1" width="${width.toFixed(1)}" height="36" class="fig-on" fill="${ON}"/>`,
     label(1, 54, "start", "0"),

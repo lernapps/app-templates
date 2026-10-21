@@ -16,6 +16,6 @@ when the bank asks for it, the last result is kept on the device.
 id: scenario-quiz-answer
 title: Answering a question of the quiz
 trigger: The learner opens the quiz or answers a question
-involves: bb-archetype-runtime, bb-render, bb-shell, bb-questions, bb-quiz-bank, bb-runtime-texts, bb-tooling
+involves: bb-archetype-runtime, bb-render, bb-shell, bb-questions, bb-blocks, bb-quiz-bank, bb-runtime-texts, bb-tooling
 :::
 ```

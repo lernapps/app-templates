@@ -27,7 +27,8 @@ notation: mermaid
 ```mermaid
 flowchart TB
     subgraph bb-runtime["Shared runtime (runtime/shared)"]
-        bb-questions["Questions (runtime/shared/questions)"]
+        bb-blocks["Content blocks (runtime/shared/blocks)"]
+    bb-questions["Questions (runtime/shared/questions)"]
     bb-component-rules["Component rules (runtime/shared/vue-code.ts)"]
     end
     bb-tooling["Tooling helpers (@lernapps/tooling)"]
@@ -42,7 +43,7 @@ app does not have to its start page (`pages.ts`); learner texts by language (`la
 which runs an exercise's accepted and rejected examples through the check the page uses, for the quiz and the
 explainer (`examples.ts`); the content as YAML, with its problems placed at file, line and path, the errors of a schema
 as problems and the checks of the texts (`content.ts`); restricted Markdown and formulas (`text/`); the checks of the
-code of Vue components (`vue-code.ts`); HTML escaping (`html.ts`); the frame of every page, with its colours in the light and the dark scheme, its header with the language switch and its footer (`page.css`, `pages.ts`); the questions, their six types with checker, schema, validation, rendering, engine, end-to-end
+code of Vue components (`vue-code.ts`); HTML escaping (`html.ts`); the frame of every page, with its colours in the light and the dark scheme, its header with the language switch and its footer (`page.css`, `pages.ts`); the content blocks (`blocks/`); the questions, their six types with checker, schema, validation, rendering, engine, end-to-end
 helpers and texts, which the quiz and the explainer's exercises both use (`questions/`); Vue at build for the archetypes with components (`vue.ts`); and the app's name, the prefix
 of what it stores (`appname.ts`). The app never edits it.
 
@@ -67,6 +68,38 @@ title: Page trees, languages, examples check, Vue at build
 provider: bb-runtime
 protocol: TypeScript imports (runtime/shared)
 path: runtime/shared
+:::
+```
+
+### Content blocks
+
+Built in the shared runtime, for every archetype that shows content with its questions or on its pages: prose, a
+formula, a figure (drawn from data, or a bundled image of `src/images/`), a labelled figure, a table, a quotation and
+program code, with the credit of an image or a quotation. Their types, their schema, their checks (what the schema
+cannot say, every text complete in the declared languages), their rendering at build and their look; the quiz shows
+them as the `material` of a question, the explainer as blocks of a page.
+
+```arc42
+:::building-block
+id: bb-blocks
+title: Content blocks
+parent: bb-runtime
+path: runtime/shared/blocks
+technology: TypeScript
+:::
+```
+
+#### Content blocks interface
+
+The validation and the rendering of an archetype with content blocks use their types, checks and renderer.
+
+```arc42
+:::interface
+id: if-blocks
+title: The content blocks (checkMaterial, renderMaterial, materialIn)
+provider: bb-blocks
+protocol: TypeScript imports (runtime/shared/blocks), @lernapps/app-templates/blocks
+path: runtime/shared/blocks
 :::
 ```
 

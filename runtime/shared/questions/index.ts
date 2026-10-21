@@ -29,6 +29,7 @@ export {
   QUESTION_SCHEMA_ID,
   questionDetails,
   questionSchema,
+  questionSchemas,
   questionSchemaProblems,
   validateQuestion,
   type QuestionProblem,

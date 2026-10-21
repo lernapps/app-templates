@@ -73,6 +73,48 @@ describe("the runtime's modules", () => {
   });
 });
 
+describe("the modules the browser loads", () => {
+  // what the build step uses is not for a page: the Markdown and formula renderers, the highlighter, the schema
+  // validator, the YAML reader, the build tools, Node's own modules
+  const BUILD_ONLY = /^(node:|temml|marked|highlight\.js|ajv|yaml$|vite|@babel|source-map|playwright|vue\/compiler)/;
+  const ENTRIES = [
+    "quiz/engine.ts",
+    "shared/questions/engine.ts",
+    "explainer/explainer.ts",
+    "explainer/islands.ts",
+    "interactive/interactive.ts",
+  ];
+  // a type-only import leaves nothing in the page
+  const specifiers = (file: string): string[] =>
+    [
+      ...readFileSync(file, "utf8")
+        .replace(/(?:import|export)\s+type\s*\{[^}]*\}\s*from\s*["'][^"']+["'];?/g, "")
+        .matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g),
+    ].map((match) => match[1] ?? "");
+  const closure = (entry: string): Set<string> => {
+    const seen = new Set<string>();
+    const visit = (file: string): void => {
+      if (seen.has(file)) return;
+      seen.add(file);
+      for (const specifier of specifiers(file).filter((name) => name.startsWith("."))) {
+        for (const next of resolveSource(resolve(dirname(file), specifier))) visit(next);
+      }
+    };
+    visit(join(runtime, entry));
+    return seen;
+  };
+  for (const entry of ENTRIES) {
+    test(`${entry} loads nothing that only the build uses`, () => {
+      const found = [...closure(entry)].flatMap((file) =>
+        specifiers(file)
+          .filter((name) => BUILD_ONLY.test(name))
+          .map((name) => `${relative(runtime, file)} imports ${name}`),
+      );
+      expect(found, "keep build-time code out of what the page loads").toEqual([]);
+    });
+  }
+});
+
 describe("the package's public paths", () => {
   const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
     exports: Record<string, string | { types?: string; default: string }>;

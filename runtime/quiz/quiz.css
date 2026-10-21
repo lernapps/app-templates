@@ -1,6 +1,7 @@
 /* The look of a quiz (@lernapps/app-templates/quiz/style.css): the frame and the questions are shared (page.css,
    questions.css); this is the quiz's page: its start form, its progress, its result, its solutions and its celebration. */
 @import "../shared/page.css";
+@import "../shared/blocks/blocks.css";
 @import "../shared/questions/questions.css";
 
 .quiz {
