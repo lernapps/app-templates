@@ -116,10 +116,10 @@ describe("the page of a question with content", () => {
 
   test("finds the images from each language's page", () => {
     expect(page("de")).toContain(
-      '<img src="images/kreis.svg" alt="Ein blauer Kreis mit einem weißen Kreis in der Mitte">',
+      '<img src="images/kreis.svg" alt="Ein blauer Kreis mit einem weißen Kreis in der Mitte" loading="lazy" decoding="async">',
     );
     expect(page("en")).toContain(
-      '<img src="../images/kreis.svg" alt="A blue circle with a white circle in the middle">',
+      '<img src="../images/kreis.svg" alt="A blue circle with a white circle in the middle" loading="lazy" decoding="async">',
     );
   });
 
