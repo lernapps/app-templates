@@ -10,7 +10,7 @@
 import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
-import { alternateLinks, languageRoot, languageSwitch } from "../shared/pages.ts";
+import { alternateLinks, languageRoot, pageFooter, pageHeader } from "../shared/pages.ts";
 import { localeOf, textsIn, type Language } from "../shared/languages.ts";
 import { QUESTION_MESSAGES } from "../shared/questions/render.ts";
 import { questionId, type Question } from "../shared/questions/question.ts";
@@ -121,10 +121,9 @@ export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {
   const where = { path: languageRoot(lang), local: "", languages };
   const json = JSON.stringify(data).replace(/</g, "\\u003c");
   const body = [
-    languageSwitch({
+    pageHeader({
       ...where,
       lang,
-      className: "quiz-languages",
       label: escape(t("languages")),
       name: (other) => escape(messagesIn(other).language),
     }),
@@ -153,7 +152,7 @@ export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {
     `</section>`,
     ...renderSources(quiz, words),
     `</main>`,
-    `<footer class="quiz-footer"><p>${t("footer")} · <a href="https://lernapps.net/imprint/">${t("imprint")}</a> · <a href="https://lernapps.net/privacy/">${t("privacy")}</a></p></footer>`,
+    pageFooter({ footer: t("footer"), imprint: t("imprint"), privacy: t("privacy") }),
     `<script type="application/json" id="quiz-data">${json}</script>`,
   ]
     .filter((part) => part !== "")

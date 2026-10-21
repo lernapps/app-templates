@@ -202,7 +202,7 @@ small control there (help, sound off) passes a component as `startInteractive(co
 mounts it into the slot with the props `state` and `lang` and the same `input` event as the root component, and shows
 the slot. The header of both pages holds the language switch and nothing else, and an app with one language has none:
 the title is the h1, and the way back to the catalog is the platform's. The frame of the header, the page and the
-footer is as wide as the custom property `--interactive-max-width` (default `44rem`), which an app sets in its own
+footer is as wide as the custom property `--page-max-width` (default `44rem`), which an app sets in its own
 `:root` rule.
 
 ```arc42

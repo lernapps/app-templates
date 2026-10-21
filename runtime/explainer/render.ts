@@ -30,7 +30,7 @@ import { localeOf } from "../shared/languages.ts";
 import { renderFormula } from "../shared/text/formula.ts";
 import { plain, renderInline, renderMarkdown } from "../shared/text/markdown.ts";
 import { message, type Messages } from "./messages.ts";
-import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
+import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { llmsTutorPart, TUTOR_FILE } from "./tutor.ts";
 import { BASE, MAX_URL, plainAddress, PROMPT_FILE, providersOf, shortPrompt, tutorPrompt } from "./prompt.ts";
@@ -325,15 +325,13 @@ function pageContents(context: Context, blocks: readonly Block[]): string {
 
 function header(context: Context): string {
   const { site, route } = context;
-  const switcher = languageSwitch({
+  // only the language switch: the breadcrumbs lead to the start page, and the way back to the catalog is the platform's
+  return pageHeader({
     ...route,
     languages: site.app.languages,
-    className: "explainer-languages",
     label: plain(context.t("languages")),
     name: (lang) => plain(message(lang, "language")),
   });
-  // only the language switch: the breadcrumbs lead to the start page, and the way back to the catalog is the platform's
-  return switcher === "" ? "" : `<header class="explainer-header">${switcher}</header>`;
 }
 
 function breadcrumbs(context: Context): string {
@@ -516,7 +514,11 @@ function head(context: Context): string {
 }
 
 function footer(context: Context): string {
-  return `<footer class="explainer-footer"><p>${plain(context.t("footer"))} · <a href="https://lernapps.net/imprint/">${plain(context.t("imprint"))}</a> · <a href="https://lernapps.net/privacy/">${plain(context.t("privacy"))}</a></p></footer>`;
+  return pageFooter({
+    footer: plain(context.t("footer")),
+    imprint: plain(context.t("imprint")),
+    privacy: plain(context.t("privacy")),
+  });
 }
 
 /** One page of the app, with the markup of its components as the build rendered them. */
