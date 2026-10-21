@@ -194,7 +194,7 @@ export function startQuiz(root: Document = document): void {
     };
 
     order.forEach((question, index) => {
-      const next = items.get(question.id)?.querySelector<HTMLButtonElement>(".quiz-next");
+      const next = items.get(question.id)?.querySelector<HTMLButtonElement>(".question-next");
       if (!next) return;
       const isLast = index === order.length - 1;
       if (isLast) next.textContent = t("toResult");

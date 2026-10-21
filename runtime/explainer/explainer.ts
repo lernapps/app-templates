@@ -274,7 +274,7 @@ export function startExplainer(root: Document = document): void {
     if (!element) continue;
     const data = JSON.parse(script.textContent ?? "{}") as ExerciseData;
     if (data.kind === "question") {
-      const item = element.querySelector<HTMLElement>(".quiz-question");
+      const item = element.querySelector<HTMLElement>(".question");
       if (!item) continue;
       // the question shows the same as its "Lösung" once it is answered
       const solution = element.querySelector<HTMLElement>(":scope > details.explainer-solution");

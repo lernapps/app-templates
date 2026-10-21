@@ -46,22 +46,22 @@ export function quizTests(bank = "src/quiz.json"): void {
       test(`${item.id} (${item.type}): its link opens it and the right answer counts`, async ({ page }) => {
         await page.goto(`./#${questionId(item)}`);
         await expect(question(page, item)).toBeVisible();
-        await expect(page.locator(".quiz-question:visible")).toHaveCount(1);
+        await expect(page.locator(".question:visible")).toHaveCount(1);
         await answerQuestion(page, item, rightAnswer(item));
-        await expect(question(page, item).locator(".quiz-feedback")).toContainText(de.right);
+        await expect(question(page, item).locator(".question-feedback")).toContainText(de.right);
         await expectFeedbackInView(page, item);
         // from the feedback, the keyboard reaches the next question (past the links of the background)
-        const next = question(page, item).locator(".quiz-next");
+        const next = question(page, item).locator(".question-next");
         for (let tab = 0; tab < 30 && !(await next.evaluate((button) => button === document.activeElement)); tab++) {
           await page.keyboard.press("Tab");
         }
         await expect(next).toBeFocused();
-        const reveal = question(page, item).locator(".quiz-reveal");
+        const reveal = question(page, item).locator(".question-reveal");
         await expectBackground(reveal, item);
         if (item.type === "single-choice" || item.type === "multiple-choice") {
           const right = item.options.filter((option) => option.correct).length;
-          await expect(reveal.locator(".quiz-badge-right")).toHaveCount(right);
-          await expect(reveal.locator(".quiz-badge-right").first()).toHaveText(de.rightOption);
+          await expect(reveal.locator(".question-badge-right")).toHaveCount(right);
+          await expect(reveal.locator(".question-badge-right").first()).toHaveText(de.rightOption);
         } else {
           await expect(reveal).toContainText(de.rightAnswer);
         }
@@ -70,11 +70,11 @@ export function quizTests(bank = "src/quiz.json"): void {
       test(`${item.id} (${item.type}): a wrong answer does not count`, async ({ page }) => {
         await page.goto(`./#${questionId(item)}`);
         await answerQuestion(page, item, wrongAnswer(item));
-        await expect(question(page, item).locator(".quiz-feedback")).toContainText(de.wrong);
+        await expect(question(page, item).locator(".question-feedback")).toContainText(de.wrong);
         await expectFeedbackInView(page, item);
-        await expectBackground(question(page, item).locator(".quiz-reveal"), item);
+        await expectBackground(question(page, item).locator(".question-reveal"), item);
         if (item.type === "single-choice" || item.type === "multiple-choice") {
-          await expect(question(page, item).locator(".quiz-badge-chosen").first()).toHaveText(de.yourChoice);
+          await expect(question(page, item).locator(".question-badge-chosen").first()).toHaveText(de.yourChoice);
         }
       });
     }
@@ -83,7 +83,7 @@ export function quizTests(bank = "src/quiz.json"): void {
       const everything = `&n=${quiz.questions.length}`;
       const order = async (address: string) => {
         await page.goto(address);
-        return page.locator(".quiz-question").evaluateAll((items) => items.map((item) => item.id).join());
+        return page.locator(".question").evaluateAll((items) => items.map((item) => item.id).join());
       };
       const first = await order(`./?seed=11${everything}`);
       expect(await order(`./?seed=11${everything}`)).toBe(first);
@@ -101,11 +101,11 @@ export function quizTests(bank = "src/quiz.json"): void {
       if (quiz.questions.length > 1) await page.locator(".quiz-start button").click();
       expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
       for (let step = 0; step < quiz.questions.length; step++) {
-        const id = await page.locator(".quiz-question:visible").getAttribute("data-id");
+        const id = await page.locator(".question:visible").getAttribute("data-id");
         const item = quiz.questions.find((candidate) => candidate.id === id);
         if (item === undefined) throw new Error(`no visible question at step ${step + 1}`);
         await answerQuestion(page, item, rightAnswer(item));
-        await question(page, item).locator(".quiz-next").click();
+        await question(page, item).locator(".question-next").click();
       }
       const total = String(quiz.questions.length);
       await expect(page.locator(".quiz-score")).toHaveText(
@@ -126,7 +126,7 @@ export function quizTests(bank = "src/quiz.json"): void {
       test("the learner chooses how many questions to answer; the address keeps the choice", async ({ page }) => {
         await page.goto("./?seed=11");
         await expect(page.locator(".quiz-start")).toBeVisible();
-        await expect(page.locator(".quiz-question:visible")).toHaveCount(0);
+        await expect(page.locator(".question:visible")).toHaveCount(0);
         const count = page.locator("#quiz-count");
         await expect(count).toHaveValue(String(quiz.questions.length));
         await expect(count).toHaveAttribute("max", String(quiz.questions.length));
@@ -134,19 +134,19 @@ export function quizTests(bank = "src/quiz.json"): void {
         await page.locator(".quiz-start button").click();
         await expect(page.locator(".quiz-start")).toBeHidden();
         expect(new URL(page.url()).searchParams.get("n")).toBe("1");
-        await expect(page.locator(".quiz-question")).toHaveCount(1);
+        await expect(page.locator(".question")).toHaveCount(1);
         await expect(page.locator(".quiz-solution")).toHaveCount(1);
-        const id = await page.locator(".quiz-question:visible").getAttribute("data-id");
+        const id = await page.locator(".question:visible").getAttribute("data-id");
         const item = quiz.questions.find((candidate) => candidate.id === id);
         if (item === undefined) throw new Error("no visible question");
         await answerQuestion(page, item, rightAnswer(item));
-        await question(page, item).locator(".quiz-next").click();
+        await question(page, item).locator(".question-next").click();
         await expect(page.locator(".quiz-score")).toHaveText(de.score.replace("{score}", "1").replace("{total}", "1"));
         // the same address asks the same question, without asking again
         await page.goto(page.url());
         await expect(page.locator(".quiz-start")).toBeHidden();
-        await expect(page.locator(".quiz-question")).toHaveCount(1);
-        await expect(page.locator(".quiz-question")).toHaveAttribute("data-id", item.id);
+        await expect(page.locator(".question")).toHaveCount(1);
+        await expect(page.locator(".question")).toHaveAttribute("data-id", item.id);
       });
     }
 
@@ -201,8 +201,8 @@ export function quizTests(bank = "src/quiz.json"): void {
           await page.goto(`${address}#${questionId(item)}`);
           await expect(question(page, item)).toBeVisible();
           await answerQuestion(page, item, rightAnswer(item), lang);
-          await expect(question(page, item).locator(".quiz-feedback")).toContainText(words.right);
-          await expectBackground(question(page, item).locator(".quiz-reveal"), item);
+          await expect(question(page, item).locator(".question-feedback")).toContainText(words.right);
+          await expectBackground(question(page, item).locator(".question-reveal"), item);
         });
       });
     }

@@ -146,7 +146,7 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     } else await expect(nojs, "the component replaces its nojs text").toBeHidden();
     if (!component.exercise) continue;
     // the component's own answered, as it emits it, with each result: one feedback, in view with the focus
-    const feedback = element.locator(":scope > .quiz-feedback");
+    const feedback = element.locator(":scope > .question-feedback");
     for (const correct of [true, false]) {
       await element.evaluate(emitAnswered, { correct });
       await expect(feedback, `${component.name}: the feedback on answered`).toHaveText(
@@ -157,10 +157,10 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     }
     // a wrong answer with its reason: the reason under the feedback
     await element.evaluate(emitAnswered, { correct: false, reason: "Der Grund." });
-    await expect(feedback.locator(".quiz-diagnosis"), `${component.name}: the reason of a wrong answer`).toHaveText(
+    await expect(feedback.locator(".question-diagnosis"), `${component.name}: the reason of a wrong answer`).toHaveText(
       "Der Grund.",
     );
-    await expect(element.locator(".quiz-feedback"), "one feedback").toHaveCount(1);
+    await expect(element.locator(".question-feedback"), "one feedback").toHaveCount(1);
     await checkTaskNumber(page, item, component);
   }
   expect(errors, `${item.url}: no console error`).toEqual([]);
@@ -214,7 +214,7 @@ async function checkTaskNumber(page: Page, item: PageOutline, component: Compone
 }
 
 /** The feedback of the question `id` says `text`. */
-const feedback = (page: Page, id: string) => page.locator(`[id="${id}"] .quiz-feedback`);
+const feedback = (page: Page, id: string) => page.locator(`[id="${id}"] .question-feedback`);
 
 /** The first reason the feedback gives for the wrong `answer`: the most specific the question has. */
 function reasonFor(question: Question, answer: Answer): string {
@@ -231,15 +231,15 @@ function reasonFor(question: Question, answer: Answer): string {
 async function wrongThenSolution(page: Page, exercise: string, question: Question, reason: string): Promise<void> {
   const item = page.locator(`[id="${questionId(question)}"]`);
   await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
-  await expect(item.locator(".quiz-diagnosis").first(), `${exercise}: the reason of the wrong answer`).toHaveText(
+  await expect(item.locator(".question-diagnosis").first(), `${exercise}: the reason of the wrong answer`).toHaveText(
     reason,
   );
   await expectFeedbackInView(page, question);
-  await expect(item.locator(".quiz-reveal"), `${exercise}: no solution after a wrong answer`).toBeHidden();
+  await expect(item.locator(".question-reveal"), `${exercise}: no solution after a wrong answer`).toBeHidden();
   await expect(item.locator("input, select").first(), `${exercise}: another try`).toBeEnabled();
   await item.getByRole("button", { name: questionMessagesIn("de").showSolution }).click();
-  await expect(item.locator(".quiz-reveal"), `${exercise}: the solution on Lösung zeigen`).toBeVisible();
-  await expect(item.locator(".quiz-reveal")).toBeFocused();
+  await expect(item.locator(".question-reveal"), `${exercise}: the solution on Lösung zeigen`).toBeVisible();
+  await expect(item.locator(".question-reveal")).toBeFocused();
 }
 
 /** With JavaScript: a question of the question types, answered before its solution shows, right and wrong. */
@@ -251,12 +251,12 @@ async function checkQuestion(
   const { question } = exercise;
   const item = page.locator(`[id="${exercise.id}"]`);
   await page.goto(`./${url}#${exercise.id}`);
-  await expect(item.locator(".quiz-reveal"), `${exercise.id}: no solution before the answer`).toBeHidden();
+  await expect(item.locator(".question-reveal"), `${exercise.id}: no solution before the answer`).toBeHidden();
   await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung before the answer`).toBeHidden();
   await answerQuestion(page, question, rightAnswer(question));
   await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").right);
   await expectFeedbackInView(page, question);
-  await expect(item.locator(".quiz-reveal"), `${exercise.id}: the solution after the right answer`).toBeVisible();
+  await expect(item.locator(".question-reveal"), `${exercise.id}: the solution after the right answer`).toBeVisible();
   await page.reload();
   const wrong = wrongAnswer(question);
   await answerQuestion(page, question, wrong);

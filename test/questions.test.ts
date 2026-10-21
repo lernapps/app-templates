@@ -213,11 +213,11 @@ describe("one question's controls", () => {
     "%s: its text, its controls and the button to check, in an element of its own",
     (_type, item) => {
       const html = renderQuestion(item);
-      expect(html.startsWith(`<div class="quiz-question" id="${questionId(item)}" data-id="${item.id}"`)).toBe(true);
+      expect(html.startsWith(`<div class="question" id="${questionId(item)}" data-id="${item.id}"`)).toBe(true);
       expect(html.endsWith("</div>")).toBe(true);
-      expect(html).toContain(`<legend class="quiz-text">`);
+      expect(html).toContain(`<legend class="question-text">`);
       expect(html).toContain(`>${messages.check}</button>`);
-      expect(html).not.toContain("quiz-next");
+      expect(html).not.toContain("question-next");
       const controls = {
         "single-choice": [/type="radio"/g, item.type === "single-choice" ? item.options.length : 0],
         "multiple-choice": [/type="checkbox"/g, item.type === "multiple-choice" ? item.options.length : 0],
@@ -234,9 +234,9 @@ describe("one question's controls", () => {
   test("in a list item and with the button to the next question, as in the quiz", () => {
     const item = questions[0] as Question;
     const html = renderQuestion(item, { element: "li", next: true });
-    expect(html.startsWith(`<li class="quiz-question"`)).toBe(true);
+    expect(html.startsWith(`<li class="question"`)).toBe(true);
     expect(html.endsWith("</li>")).toBe(true);
-    expect(html).toContain(`class="quiz-next" hidden>${messages.next}</button>`);
+    expect(html).toContain(`class="question-next" hidden>${messages.next}</button>`);
   });
 });
 

@@ -1,5 +1,7 @@
 /* The look of an explainer (@lernapps/app-templates/explainer/style.css): plain, readable at 360 px, contrast for
    WCAG 2.1 AA, and complete without JavaScript. */
+@import "../shared/questions/questions.css";
+
 :root {
   --explainer-text: #1a1a1a;
   --explainer-muted: #4a4a4a;
@@ -41,6 +43,21 @@
     --explainer-hl-number: #ffb77a;
     --explainer-hl-comment: #a3a9b3;
   }
+}
+
+/* the colours of the questions in it */
+:root {
+  --question-text: var(--explainer-text);
+  --question-muted: var(--explainer-muted);
+  --question-background: var(--explainer-background);
+  --question-surface: var(--explainer-surface);
+  --question-border: var(--explainer-border);
+  --question-accent: var(--explainer-accent);
+  --question-on-accent: var(--explainer-on-accent);
+  --question-right: var(--explainer-right);
+  --question-right-background: var(--explainer-right-background);
+  --question-wrong: var(--explainer-wrong);
+  --question-wrong-background: var(--explainer-wrong-background);
 }
 
 *,
@@ -409,167 +426,13 @@ figcaption p {
   color: var(--explainer-text);
 }
 
-/* Exercises: the quiz's question types and generated exercises, the quiz's controls and feedback in the explainer's
-   colours. Without JavaScript the worked tasks and every "Lösung" show; with JavaScript the live part shows, and the
-   solutions and worked tasks once the exercise is solved or its solution asked for. */
+/* Exercises: the question types and generated exercises, whose controls and feedback come from the questions'
+   stylesheet in the explainer's colours (--question-*). Without JavaScript the worked tasks and every "Lösung" show;
+   with JavaScript the live part shows, and the solutions and worked tasks once the exercise is solved or its solution
+   asked for. */
 .explainer-exercise,
 .explainer-component {
   margin: 1rem 0 1.5rem;
-}
-
-.explainer-exercise fieldset {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--explainer-border);
-  border-radius: 0.5rem;
-  background: var(--explainer-surface);
-  min-width: 0;
-}
-
-.explainer-exercise legend {
-  padding: 0 0.25rem;
-  font-weight: 600;
-}
-
-.explainer-exercise .quiz-option {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
-  padding: 0.375rem 0;
-}
-
-.explainer-exercise .quiz-option input {
-  margin-top: 0.3rem;
-  flex: none;
-}
-
-.explainer-exercise input[type="text"],
-.explainer-exercise select {
-  font: inherit;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--explainer-border);
-  border-radius: 0.25rem;
-  background: var(--explainer-background);
-  color: var(--explainer-text);
-  max-width: 100%;
-}
-
-.explainer-exercise input[type="text"] {
-  width: 8rem;
-}
-
-.explainer-exercise .quiz-pairs,
-.explainer-exercise .quiz-infos,
-.explainer-exercise .quiz-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.explainer-exercise .quiz-pairs li {
-  padding: 0.375rem 0;
-}
-
-.explainer-exercise .quiz-pairs label {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.explainer-exercise .quiz-hint {
-  margin: 0 0 0.5rem;
-  color: var(--explainer-muted);
-}
-
-.explainer-exercise button {
-  font: inherit;
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--explainer-accent);
-  border-radius: 0.375rem;
-  background: var(--explainer-accent);
-  color: var(--explainer-on-accent);
-  cursor: pointer;
-}
-
-.explainer-exercise .quiz-solve {
-  background: var(--explainer-background);
-  color: var(--explainer-accent);
-}
-
-.explainer-exercise button:focus-visible,
-.explainer-exercise input:focus-visible,
-.explainer-exercise select:focus-visible,
-.explainer-exercise summary:focus-visible {
-  outline: 3px solid var(--explainer-text);
-  outline-offset: 2px;
-}
-
-.explainer-exercise .quiz-feedback:not(:empty),
-.explainer-component .quiz-feedback:not(:empty) {
-  margin: 0.75rem 0;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--explainer-border);
-}
-
-.explainer-exercise .quiz-diagnosis {
-  margin: 0.25rem 0 0;
-}
-
-.explainer-exercise .quiz-right,
-.explainer-component .quiz-right {
-  background: var(--explainer-right-background);
-  color: var(--explainer-right);
-}
-
-.explainer-exercise .quiz-wrong,
-.explainer-component .quiz-wrong {
-  background: var(--explainer-wrong-background);
-  color: var(--explainer-wrong);
-}
-
-.explainer-exercise .quiz-info {
-  margin: 0.5rem 0;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--explainer-border);
-  border-left-width: 4px;
-  border-radius: 0.375rem;
-}
-
-.explainer-exercise .quiz-info p {
-  margin: 0.25rem 0;
-}
-
-.explainer-exercise .quiz-info-right {
-  border-left-color: var(--explainer-right);
-}
-
-.explainer-exercise .quiz-info-chosen:not(.quiz-info-right) {
-  border-left-color: var(--explainer-wrong);
-}
-
-.explainer-exercise .quiz-badge {
-  display: inline-block;
-  margin-left: 0.25rem;
-  padding: 0 0.5rem;
-  border-radius: 999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.explainer-exercise .quiz-badge-right {
-  background: var(--explainer-right-background);
-  color: var(--explainer-right);
-}
-
-.explainer-exercise .quiz-badge-chosen {
-  border: 1px solid var(--explainer-border);
-}
-
-.explainer-exercise .quiz-more {
-  margin-bottom: 0;
-  font-weight: 600;
 }
 
 .explainer-exercise details {
@@ -582,6 +445,31 @@ figcaption p {
 .explainer-exercise summary {
   cursor: pointer;
   font-weight: 600;
+}
+
+.explainer-exercise summary:focus-visible {
+  outline: 3px solid var(--explainer-text);
+  outline-offset: 2px;
+}
+
+.explainer-exercise .question {
+  margin: 0;
+}
+
+/* "Neue Aufgabe" of a generated exercise; in the controls of an exercise component it is outlined (below) */
+.explainer-new-task {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--explainer-accent);
+  border-radius: 0.375rem;
+  background: var(--explainer-accent);
+  color: var(--explainer-on-accent);
+  cursor: pointer;
+}
+
+.explainer-new-task:focus-visible {
+  outline: 3px solid var(--explainer-text);
+  outline-offset: 2px;
 }
 
 .explainer-worked {
@@ -618,7 +506,7 @@ figcaption p {
   font-weight: 600;
 }
 
-.explainer-component .quiz-diagnosis {
+.explainer-component .question-diagnosis {
   display: block;
   margin: 0.25rem 0 0;
 }

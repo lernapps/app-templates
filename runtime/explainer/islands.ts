@@ -16,11 +16,11 @@ export type Components = Readonly<Record<string, () => Promise<{ default: Compon
 
 /** The feedback on an answer, with the reason of a wrong one, in place of the one before, with the focus. */
 function showFeedback(feedback: HTMLElement, correct: boolean, reason: unknown): void {
-  feedback.className = `quiz-feedback ${correct ? "quiz-right" : "quiz-wrong"}`;
+  feedback.className = `question-feedback ${correct ? "question-right" : "question-wrong"}`;
   feedback.textContent = (correct ? feedback.dataset["right"] : feedback.dataset["wrong"]) ?? "";
   if (!correct && typeof reason === "string" && reason.trim() !== "") {
     const why = feedback.ownerDocument.createElement("span");
-    why.className = "quiz-diagnosis";
+    why.className = "question-diagnosis";
     why.textContent = reason;
     feedback.append(" ", why);
   }
@@ -47,7 +47,7 @@ async function hydrate(element: HTMLElement, load: () => Promise<{ default: Comp
   const props = JSON.parse(
     element.querySelector(":scope > script.explainer-component-props")?.textContent ?? "{}",
   ) as Record<string, unknown>;
-  const feedback = element.querySelector<HTMLElement>(":scope > .quiz-feedback");
+  const feedback = element.querySelector<HTMLElement>(":scope > .question-feedback");
   const { default: component } = await load();
   const onAnswered = (event: { correct?: unknown; reason?: unknown }) => {
     if (feedback) showFeedback(feedback, event.correct === true, event.reason);
@@ -79,7 +79,7 @@ async function hydrate(element: HTMLElement, load: () => Promise<{ default: Comp
       history.replaceState(history.state, "", addressOf(location.href, id, current));
       show();
       if (feedback) {
-        feedback.className = "quiz-feedback";
+        feedback.className = "question-feedback";
         feedback.textContent = "";
       }
       number?.focus();

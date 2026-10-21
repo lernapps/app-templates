@@ -1,0 +1,181 @@
+/* The look of a question, for every archetype that has questions; the stylesheets of the quiz and of the explainer
+   import it. Its fieldset, its controls, the button to check it, its feedback and the background of its options. The
+   page that includes it sets the colours as custom properties, --question-text, -muted, -background, -surface,
+   -border, -accent, -on-accent, -right, -right-background, -wrong and -wrong-background, from its own. */
+
+.question {
+  margin: 0 0 1.5rem;
+}
+
+.question fieldset {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--question-border);
+  border-radius: 0.5rem;
+  background: var(--question-surface);
+  min-width: 0;
+}
+
+.question legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
+}
+
+.question-option {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  padding: 0.375rem 0;
+}
+
+.question-option input {
+  margin-top: 0.3rem;
+  flex: none;
+}
+
+.question-number input,
+.question-pairs select {
+  font: inherit;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--question-border);
+  border-radius: 0.25rem;
+  background: var(--question-background);
+  color: var(--question-text);
+  max-width: 100%;
+}
+
+.question-number input {
+  width: 8rem;
+}
+
+.question-pairs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.question-pairs li {
+  padding: 0.375rem 0;
+}
+
+.question-pairs label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.question-hint {
+  margin: 0 0 0.5rem;
+  color: var(--question-muted);
+}
+
+.question-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.question-feedback:not(:empty) {
+  margin: 0.75rem 0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--question-border);
+}
+
+.question-feedback p {
+  margin: 0.25rem 0;
+}
+
+.question-right {
+  background: var(--question-right-background);
+  color: var(--question-right);
+}
+
+.question-wrong {
+  background: var(--question-wrong-background);
+  color: var(--question-wrong);
+}
+
+.question-infos,
+.question-links {
+  padding-left: 0;
+  list-style: none;
+}
+
+.question-info {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--question-border);
+  border-left-width: 4px;
+  border-radius: 0.375rem;
+}
+
+.question-info p {
+  margin: 0.25rem 0;
+}
+
+.question-info-right {
+  border-left-color: var(--question-right);
+}
+
+.question-info-chosen:not(.question-info-right) {
+  border-left-color: var(--question-wrong);
+}
+
+.question-badge {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.question-badge-right {
+  background: var(--question-right-background);
+  color: var(--question-right);
+}
+
+.question-badge-chosen {
+  background: var(--question-surface);
+  color: var(--question-text);
+  border: 1px solid var(--question-border);
+}
+
+.question-links li {
+  margin: 0.25rem 0;
+}
+
+.question-more {
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+.question button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--question-accent);
+  border-radius: 0.375rem;
+  background: var(--question-accent);
+  color: var(--question-on-accent);
+  cursor: pointer;
+}
+
+.question button.question-solve {
+  background: var(--question-background);
+  color: var(--question-accent);
+}
+
+.question button:focus-visible,
+.question a:focus-visible,
+.question input:focus-visible,
+.question select:focus-visible,
+.question summary:focus-visible {
+  outline: 3px solid var(--question-text);
+  outline-offset: 2px;
+}
+
+.question-diagnosis {
+  margin: 0.25rem 0 0;
+}

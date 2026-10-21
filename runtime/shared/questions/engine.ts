@@ -84,9 +84,9 @@ export interface StartQuestionOptions {
 export function startQuestion(item: HTMLElement, question: Question, options: StartQuestionOptions = {}): void {
   const t = translator(QUESTION_MESSAGES[options.lang ?? "de"] ?? QUESTION_MESSAGES["de"]!);
   const form = item.querySelector("form");
-  const feedback = item.querySelector<HTMLElement>(".quiz-feedback");
-  const check = item.querySelector<HTMLButtonElement>(".quiz-check");
-  const next = item.querySelector<HTMLButtonElement>(".quiz-next");
+  const feedback = item.querySelector<HTMLElement>(".question-feedback");
+  const check = item.querySelector<HTMLButtonElement>(".question-check");
+  const next = item.querySelector<HTMLButtonElement>(".question-next");
   if (!form || !feedback || !check) return;
   const doc = item.ownerDocument;
   // the options of a choice in an order of their own, from the seed and the question
@@ -96,27 +96,27 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     fieldset &&
     (question.type === "single-choice" || question.type === "multiple-choice")
   ) {
-    const labels = [...fieldset.querySelectorAll(".quiz-option")];
+    const labels = [...fieldset.querySelectorAll(".question-option")];
     for (const index of shuffled(labels.length, options.seed ^ hash(question.id))) {
       const label = labels[index];
       if (label) fieldset.append(label);
     }
   }
-  const actions = item.querySelector<HTMLElement>(".quiz-actions");
+  const actions = item.querySelector<HTMLElement>(".question-actions");
   if (actions) actions.hidden = false;
   // "Lösung zeigen", after a wrong answer of a question that may be tried again
   let solve: HTMLButtonElement | undefined;
   if (options.retry === true) {
     solve = doc.createElement("button");
     solve.type = "button";
-    solve.className = "quiz-solve";
+    solve.className = "question-solve";
     solve.textContent = t("showSolution");
     solve.hidden = true;
     check.after(" ", solve);
   }
   const line = (text: string, option?: string) => {
     const why = doc.createElement("p");
-    why.className = "quiz-diagnosis";
+    why.className = "question-diagnosis";
     if (option !== undefined) {
       const name = doc.createElement("strong");
       if (options.format) name.innerHTML = `${options.format(option)}:`;
@@ -133,15 +133,15 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
   /** The solution: every option's background, the right ones marked, the learner's last choice marked too. */
   const reveal = () => {
     answered = true;
-    const solution = item.querySelector<HTMLElement>(".quiz-reveal");
+    const solution = item.querySelector<HTMLElement>(".question-reveal");
     for (const index of last === undefined ? [] : chosenOptions(question, last)) {
       const option = solution?.querySelector<HTMLElement>(`[data-option="${index}"]`);
       if (!option) continue;
-      option.classList.add("quiz-info-chosen");
+      option.classList.add("question-info-chosen");
       const badge = doc.createElement("span");
-      badge.className = "quiz-badge quiz-badge-chosen";
+      badge.className = "question-badge question-badge-chosen";
       badge.textContent = t("yourChoice");
-      option.querySelector(".quiz-info-head")?.append(" ", badge);
+      option.querySelector(".question-info-head")?.append(" ", badge);
     }
     if (solution) solution.hidden = false;
     for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")) {
@@ -159,12 +159,12 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     const answer = readAnswer(question, form);
     if (!isComplete(question, answer)) {
       feedback.textContent = t("incomplete");
-      feedback.className = "quiz-feedback";
+      feedback.className = "question-feedback";
       return;
     }
     last = answer;
     const right = isCorrect(question, answer);
-    feedback.className = `quiz-feedback ${right ? "quiz-right" : "quiz-wrong"}`;
+    feedback.className = `question-feedback ${right ? "question-right" : "question-wrong"}`;
     feedback.textContent = t(right ? "right" : "wrong");
     if (!right) {
       // the most specific reason: the diagnosis, else what the question says about this answer; the background of a
@@ -193,6 +193,6 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     if (answered) return;
     reveal();
     // the focus on the solution, which shows below the feedback in place of the button
-    moveFocus(item.querySelector<HTMLElement>(".quiz-reveal") ?? feedback);
+    moveFocus(item.querySelector<HTMLElement>(".question-reveal") ?? feedback);
   });
 }

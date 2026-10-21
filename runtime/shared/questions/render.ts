@@ -54,7 +54,7 @@ function controls(question: Question, { t }: Language, format: Format): string {
       return question.options
         .map(
           (option, index) =>
-            `<label class="quiz-option"><input type="${type}" name="${name}" value="${index}"> <span>${format(option.text)}</span></label>`,
+            `<label class="question-option"><input type="${type}" name="${name}" value="${index}"> <span>${format(option.text)}</span></label>`,
         )
         .join("\n");
     }
@@ -62,12 +62,12 @@ function controls(question: Question, { t }: Language, format: Format): string {
       return [true, false]
         .map(
           (value) =>
-            `<label class="quiz-option"><input type="radio" name="${name}" value="${value}"> <span>${t(value ? "true" : "false")}</span></label>`,
+            `<label class="question-option"><input type="radio" name="${name}" value="${value}"> <span>${t(value ? "true" : "false")}</span></label>`,
         )
         .join("\n");
     case "number":
       return [
-        `<label class="quiz-number">${t("yourAnswer")}`,
+        `<label class="question-number">${t("yourAnswer")}`,
         `<input type="text" inputmode="decimal" autocomplete="off" name="${name}"${question.unit === undefined ? "" : ` aria-describedby="${name}-unit"`}>`,
         question.unit === undefined ? "" : `<span id="${name}-unit">${format(question.unit)}</span>`,
         `</label>`,
@@ -77,8 +77,8 @@ function controls(question: Question, { t }: Language, format: Format): string {
         .map((_item, place) => `<option value="${place}">${t("place", { place: place + 1 })}</option>`)
         .join("");
       return [
-        `<p class="quiz-hint">${t("orderHint")}</p>`,
-        `<ul class="quiz-pairs">`,
+        `<p class="question-hint">${t("orderHint")}</p>`,
+        `<ul class="question-pairs">`,
         ...mixed(question.items.length, question.id).map(
           (index) =>
             `<li><label><span>${format(question.items[index] ?? "")}</span> <select name="${name}-${index}" data-item="${index}"><option value="">${t("choose")}</option>${places}</select></label></li>`,
@@ -91,8 +91,8 @@ function controls(question: Question, { t }: Language, format: Format): string {
         .map((index) => `<option value="${index}">${escape(question.pairs[index]?.right ?? "")}</option>`)
         .join("");
       return [
-        `<p class="quiz-hint">${t("matchHint")}</p>`,
-        `<ul class="quiz-pairs">`,
+        `<p class="question-hint">${t("matchHint")}</p>`,
+        `<ul class="question-pairs">`,
         ...question.pairs.map(
           (pair, index) =>
             `<li><label><span>${format(pair.left)}</span> <select name="${name}-${index}" data-left="${index}"><option value="">${t("choose")}</option>${rights}</select></label></li>`,
@@ -144,19 +144,19 @@ export function renderQuestion(
   const words = language(lang);
   const { t } = words;
   const id = questionId(question);
-  const nextButton = next ? ` <button type="button" class="quiz-next" hidden>${t("next")}</button>` : "";
+  const nextButton = next ? ` <button type="button" class="question-next" hidden>${t("next")}</button>` : "";
   return [
-    `<${element} class="quiz-question" id="${id}" data-id="${question.id}" data-type="${question.type}">`,
-    `<form class="quiz-form" novalidate>`,
+    `<${element} class="question" id="${id}" data-id="${question.id}" data-type="${question.type}">`,
+    `<form class="question-form" novalidate>`,
     `<fieldset>`,
-    `<legend class="quiz-text">${textHtml ?? format(question.text)}</legend>`,
+    `<legend class="question-text">${textHtml ?? format(question.text)}</legend>`,
     controls(question, words, format),
     `</fieldset>`,
-    `<div class="quiz-feedback" role="status"></div>`,
-    `<div class="quiz-reveal" hidden>`,
+    `<div class="question-feedback" role="status"></div>`,
+    `<div class="question-reveal" hidden>`,
     renderSolution(question, { lang, format, ...(explanationHtml === undefined ? {} : { explanationHtml }) }),
     `</div>`,
-    `<p class="quiz-actions" hidden><button type="submit" class="quiz-check">${t("check")}</button>${nextButton}</p>`,
+    `<p class="question-actions" hidden><button type="submit" class="question-check">${t("check")}</button>${nextButton}</p>`,
     `</form>`,
     `</${element}>`,
   ].join("\n");
@@ -202,11 +202,11 @@ function optionInfo(question: Question, words: Language, format: Format): string
     return `<p><strong>${t("rightAnswer")}</strong> ${rightAnswerText(question, words, format)}</p>`;
   }
   return [
-    `<ul class="quiz-infos">`,
+    `<ul class="question-infos">`,
     ...question.options.map((option, index) =>
       [
-        `<li class="quiz-info${option.correct ? " quiz-info-right" : ""}" data-option="${index}">`,
-        `<p class="quiz-info-head"><strong>${format(option.text)}</strong>${option.correct ? ` <span class="quiz-badge quiz-badge-right">${t("rightOption")}</span>` : ""}</p>`,
+        `<li class="question-info${option.correct ? " question-info-right" : ""}" data-option="${index}">`,
+        `<p class="question-info-head"><strong>${format(option.text)}</strong>${option.correct ? ` <span class="question-badge question-badge-right">${t("rightOption")}</span>` : ""}</p>`,
         option.info === "" ? "" : `<p>${format(option.info)}</p>`,
         option.link === undefined ? "" : `<p>${external(option.link)}</p>`,
         `</li>`,
@@ -229,13 +229,13 @@ export function renderSolution(
     question.links.length === 0
       ? []
       : [
-          `<p class="quiz-more">${words.t("moreReading")}</p>`,
-          `<ul class="quiz-links">`,
+          `<p class="question-more">${words.t("moreReading")}</p>`,
+          `<ul class="question-links">`,
           ...question.links.map((link) => `<li>${external(link)}</li>`),
           `</ul>`,
         ];
   const explanation =
     explanationHtml ??
-    (question.explanation === "" ? "" : `<p class="quiz-explanation">${format(question.explanation)}</p>`);
+    (question.explanation === "" ? "" : `<p class="question-explanation">${format(question.explanation)}</p>`);
   return [optionInfo(question, words, format), explanation, ...links].filter((part) => part !== "").join("\n");
 }
