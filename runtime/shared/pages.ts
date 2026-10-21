@@ -40,20 +40,25 @@ export const alternateLinks = ({ path, local, languages }: PageInLanguages): str
   );
 
 /**
- * The language switch of a page in `lang`: a link to the page in each language, named in its own language, the
- * current one marked; nothing while the app has one language. `label` and `name` give HTML, already escaped.
+ * The header of a page in `lang`: the language switch, a link to the page in each language, named in its own
+ * language, the current one marked; nothing while the app has one language. `label` and `name` give HTML, already
+ * escaped.
  */
-export function languageSwitch(
-  page: PageInLanguages & { lang: string; className: string; label: string; name: (lang: string) => string },
+export function pageHeader(
+  page: PageInLanguages & { lang: string; label: string; name: (lang: string) => string },
 ): string {
-  const { path, local, languages, lang: current, className, label, name } = page;
+  const { path, local, languages, lang: current, label, name } = page;
   if (languages.length < 2) return "";
   const links = languages.map(
     (lang) =>
       `<li><a href="${relative(path, languageRoot(lang) + local)}" hreflang="${lang}" lang="${lang}"${lang === current ? ' aria-current="page"' : ""}>${name(lang)}</a></li>`,
   );
-  return `<nav class="${className}" aria-label="${label}"><ul>${links.join("")}</ul></nav>`;
+  return `<header class="page-header"><nav class="page-languages" aria-label="${label}"><ul>${links.join("")}</ul></nav></header>`;
 }
+
+/** The footer of a page: what the app is, and the links to the imprint and the privacy statement; texts as HTML, already escaped. */
+export const pageFooter = (words: { footer: string; imprint: string; privacy: string }): string =>
+  `<footer class="page-footer"><p>${words.footer} · <a href="https://lernapps.net/imprint/">${words.imprint}</a> · <a href="https://lernapps.net/privacy/">${words.privacy}</a></p></footer>`;
 
 /**
  * The page for every address the app does not have, 404.html at the bundle's root: GitHub Pages serves it for any

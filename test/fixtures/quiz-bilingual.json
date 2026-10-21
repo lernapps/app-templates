@@ -1,5 +1,5 @@
 {
-  "$schema": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json",
+  "$schema": "../runtime/quiz/quiz.v1.schema.json",
   "languages": ["de", "en"],
   "title": {
     "de": "Naturwunder der Welt",

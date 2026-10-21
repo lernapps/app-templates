@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://lernapps.net/tooling/schemas/interactive.v1.schema.json",
+  "$id": "urn:lernapps:schema:interactive.v1",
   "title": "The start page of a lernapps interactive app",
   "description": "src/app.yaml of an app built from the archetype interactive (runtime @lernapps/app-templates): what the static start page says, readable without JavaScript, the app's languages and its routes, the modes or levels that each have an address app/#<id>. The build validates it against this schema, then what a schema cannot say (languages complete, restricted Markdown, unique ids), and fails with one line per problem. Every text is for learners, in plain language. A text is a string while German is the app's only language, else a map of texts by language: { de: …, en: … }.",
   "type": "object",

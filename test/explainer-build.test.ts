@@ -104,7 +104,7 @@ describe("one build writes every page", () => {
           expect(html).toMatch(
             /<p class="explainer-task-controls" hidden><span class="explainer-task-number"[^>]*>(Aufgabe Nr\.|Task no\.) 1<\/span>/,
           );
-          const nojs = html.split('<div class="explainer-nojs">')[1]?.split('<p class="quiz-feedback"')[0] ?? "";
+          const nojs = html.split('<div class="explainer-nojs">')[1]?.split('<p class="question-feedback"')[0] ?? "";
           expect(nojs).toContain(route.lang === "de" ? "Aufgabe Nr. 1" : "Task no. 1");
           expect(nojs).toContain(
             route.lang === "de" ? "Zur Wahl stehen, in dieser Reihenfolge:" : "The choices, in this order:",
@@ -150,7 +150,7 @@ describe("one build writes every page", () => {
         // language has none
         expect(start).not.toContain("explainer-brand");
         if (site.app.languages.length > 1) {
-          expect(start).toMatch(/<header class="explainer-header"><nav class="explainer-languages"/);
+          expect(start).toMatch(/<header class="page-header"><nav class="page-languages"/);
         } else expect(start).not.toContain("<header");
         // the way to the tutor: a button with a select beside it, Claude first, copying last
         expect(start).toContain('<select class="explainer-tutor-select"');

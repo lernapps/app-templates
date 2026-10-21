@@ -26,7 +26,11 @@ notation: mermaid
 
 ```mermaid
 flowchart TB
-    bb-runtime["Shared runtime (runtime/shared)"]
+    subgraph bb-runtime["Shared runtime (runtime/shared)"]
+        bb-blocks["Content blocks (runtime/shared/blocks)"]
+    bb-questions["Questions (runtime/shared/questions)"]
+    bb-component-rules["Component rules (runtime/shared/vue-code.ts)"]
+    end
     bb-tooling["Tooling helpers (@lernapps/tooling)"]
     bb-skills["Skills (.agents/skills)"]
 ```
@@ -37,7 +41,10 @@ Built. The code the archetypes' runtimes share: the page trees, German at the ro
 `/<language>/`, with alternates, a language switch of plain links and the 404 page, which leads every address the
 app does not have to its start page (`pages.ts`); learner texts by language (`languages.ts`); the examples check,
 which runs an exercise's accepted and rejected examples through the check the page uses, for the quiz and the
-explainer (`examples.ts`); Vue at build for the archetypes with components (`vue.ts`); and the app's name, the prefix
+explainer (`examples.ts`); the content as YAML, with its problems placed at file, line and path, the errors of a schema
+as problems and the checks of the texts (`content.ts`); restricted Markdown and formulas (`text/`); the checks of the
+code of Vue components (`vue-code.ts`); HTML escaping (`html.ts`); the frame of every page, with its colours in the light and the dark scheme, its header with the language switch and its footer (`page.css`, `pages.ts`); the content blocks (`blocks/`); the questions, their six types with checker, schema, validation, rendering, engine, end-to-end
+helpers and texts, which the quiz and the explainer's exercises both use (`questions/`); Vue at build for the archetypes with components (`vue.ts`); and the app's name, the prefix
 of what it stores (`appname.ts`). The app never edits it.
 
 ```arc42
@@ -61,6 +68,103 @@ title: Page trees, languages, examples check, Vue at build
 provider: bb-runtime
 protocol: TypeScript imports (runtime/shared)
 path: runtime/shared
+:::
+```
+
+### Content blocks
+
+Built in the shared runtime, for every archetype that shows content with its questions or on its pages: prose, a
+formula, a figure (drawn from data, or a bundled image of `src/images/`), a labelled figure, a table, a quotation and
+program code, with the credit of an image or a quotation. Their types, their schema, their checks (what the schema
+cannot say, every text complete in the declared languages), their rendering at build and their look; the quiz shows
+them as the `material` of a question, the explainer as blocks of a page.
+
+```arc42
+:::building-block
+id: bb-blocks
+title: Content blocks
+parent: bb-runtime
+path: runtime/shared/blocks
+technology: TypeScript
+:::
+```
+
+#### Content blocks interface
+
+The validation and the rendering of an archetype with content blocks use their types, checks and renderer.
+
+```arc42
+:::interface
+id: if-blocks
+title: The content blocks (checkMaterial, renderMaterial, materialIn)
+provider: bb-blocks
+protocol: TypeScript imports (runtime/shared/blocks), @lernapps/app-templates/blocks
+path: runtime/shared/blocks
+:::
+```
+
+### Questions
+
+Built in the shared runtime, for every archetype that has questions: the six question types and what counts as a right
+answer, at build, in the browser and in the tests alike, with their schema, validation, rendering, engine, end-to-end
+helpers and texts. The quiz asks them; the explainer's quiz-type exercises and the answers of its generated exercises
+use the same. Neither archetype imports the other.
+
+```arc42
+:::building-block
+id: bb-questions
+title: Questions
+parent: bb-runtime
+path: runtime/shared/questions
+technology: TypeScript
+:::
+```
+
+#### Questions interface
+
+The validation, the rendering, the client module and the tests of an archetype with questions use their types,
+rendering, engine and checker.
+
+```arc42
+:::interface
+id: if-questions
+title: The question types, rendering, engine and checker
+provider: bb-questions
+protocol: TypeScript imports (runtime/shared/questions), @lernapps/app-templates/questions
+path: runtime/shared/questions
+:::
+```
+
+### Component rules
+
+Built in the shared runtime, for every archetype that has Vue components: code checks on the SFC compiler's output of a
+component and the modules of the app it imports (no network, no `eval`, `innerHTML` or `v-html`, imports only from Vue,
+the runtime, the storage, i18n and a11y helpers and the app's own modules, never from a URL, browser globals only once
+mounted). Which modules are the app's own is the archetype's scope: the explainer's components import their own folder,
+the interactive archetype's any file of `src/` and the libraries of its `package.json`.
+
+```arc42
+:::building-block
+id: bb-component-rules
+title: Component rules
+parent: bb-runtime
+path: runtime/shared/vue-code.ts
+technology: TypeScript, Vue SFC compiler
+implements: concept-component-rules
+:::
+```
+
+#### Component rules interface
+
+The validation of an archetype with components runs the checks on its components.
+
+```arc42
+:::interface
+id: if-component-rules
+title: The code checks of a component (codeProblems, with the archetype's scope)
+provider: bb-component-rules
+protocol: TypeScript imports (runtime/shared/vue-code.ts)
+path: runtime/shared/vue-code.ts
 :::
 ```
 

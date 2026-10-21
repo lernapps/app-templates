@@ -2,15 +2,18 @@
 // (load.ts): the app, its chapters in order, their pages in order, the data files, the bundled images and the
 // components (src/components/, components.ts) with the blocks that use them.
 
-import type { Question } from "../quiz/quiz.ts";
-import type { Generated } from "./generated.ts";
+import type { Question } from "../shared/questions/question.ts";
+import type { Generated } from "./generated/types.ts";
+import type { Credit, Drawing, MaterialBlock } from "../shared/blocks/block.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
+
+export type { Credit, Drawing };
 
 export { inLanguage, type Text };
 
-/** An exercise of one of the quiz's question types, with the quiz's fields; its texts may be maps by language. */
+/** An exercise of one of the question types, with the fields of a question; its texts may be maps by language. */
 export type QuestionBlock = Question<Text>;
-/** An exercise block: one of the quiz's question types, or generated. */
+/** An exercise block: one of the question types, or generated. */
 export type Exercise = QuestionBlock | Generated;
 
 export interface Source {
@@ -32,14 +35,6 @@ export interface App {
   };
 }
 
-export interface Credit {
-  /** A URL, the same in every language, or a citation: a text. */
-  source?: Text;
-  licence?: string;
-}
-
-export type Drawing = { kind: "hundred-grid"; filled: number } | { kind: "bar"; part: number; whole: number };
-
 export interface Event {
   date: number | string;
   label?: Text;
@@ -48,21 +43,9 @@ export interface Event {
 }
 
 export type Block =
-  | { type: "text"; text: Text }
-  | { type: "formula"; formula: Text }
-  | ({ type: "figure"; draw?: Drawing; image?: string; alt: Text; caption: Text } & Credit)
-  | ({
-      type: "labelled-figure";
-      image: string;
-      alt: Text;
-      caption?: Text;
-      labels: readonly { x: number; y: number; text: Text }[];
-    } & Credit)
-  | { type: "table"; caption: Text; header?: readonly Text[]; rowHeaders?: boolean; rows: readonly (readonly Text[])[] }
+  | MaterialBlock<Text>
   | { type: "timeline"; events?: readonly Event[]; data?: string }
   | { type: "definition"; term: Text; explanation: Text }
-  | ({ type: "quote"; text: Text; origin: { author: Text; work?: Text; year?: number | Text } } & Credit)
-  | { type: "code"; language: string; code: string; caption?: Text }
   | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
   | { type: "section"; id: string; title: Text; blocks: readonly Block[] }
   | {
@@ -224,3 +207,6 @@ export function termId(term: Text): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
+
+/** What the logic of each exercise component's block describes (plugin.ts): its about, and its tasks by language. */
+export type Descriptions = ReadonlyMap<Block, ComponentDescription>;

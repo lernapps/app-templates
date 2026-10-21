@@ -25,7 +25,9 @@ notation: mermaid
 
 ```mermaid
 flowchart TB
-    bb-runtime["Shared runtime"]
+    subgraph bb-runtime["Shared runtime"]
+        bb-component-rules["Component rules"]
+    end
     bb-tooling["Tooling helpers"]
     bb-archetype-runtime["Interactive runtime"]
     bb-interactive-description["Description"]
@@ -35,6 +37,7 @@ flowchart TB
     bb-interactive-messages["Messages"]
     bb-interactive-playthroughs["Playthroughs"]
     bb-archetype-runtime -->|"if-shared-runtime"| bb-runtime
+    bb-archetype-runtime -->|"if-component-rules"| bb-component-rules
     bb-archetype-runtime -->|"if-preset"| bb-tooling
     bb-interactive-core -->|"if-interactive-data"| bb-interactive-data
     bb-interactive-ui -->|"if-messages"| bb-interactive-messages
@@ -61,7 +64,6 @@ flowchart TB
         bb-shell["Shell"]
         bb-e2e["End-to-end tests"]
         bb-runtime-texts["Runtime texts"]
-        bb-component-rules["Component rules"]
     end
     bb-interactive-description["Description"]
     bb-interactive-core["Core"]
@@ -71,7 +73,6 @@ flowchart TB
     bb-build -->|"if-archetype-content"| bb-interactive-description
     bb-build -->|"if-playthrough-format"| bb-interactive-playthroughs
     bb-build -->|"if-core-contract"| bb-interactive-core
-    bb-build -->|"if-component-rules"| bb-component-rules
     bb-validation -->|"if-archetype-content"| bb-interactive-description
     bb-validation -->|"if-playthrough-format"| bb-interactive-playthroughs
     bb-validation -->|"if-runtime-texts"| bb-runtime-texts
@@ -98,7 +99,7 @@ id: bb-archetype-runtime
 title: Interactive runtime
 path: runtime/interactive
 technology: TypeScript, Vite plugin, Vue
-requires: if-shared-runtime, if-preset
+requires: if-shared-runtime, if-preset, if-component-rules
 implements: concept-archetype-extension
 :::
 ```
@@ -201,7 +202,7 @@ small control there (help, sound off) passes a component as `startInteractive(co
 mounts it into the slot with the props `state` and `lang` and the same `input` event as the root component, and shows
 the slot. The header of both pages holds the language switch and nothing else, and an app with one language has none:
 the title is the h1, and the way back to the catalog is the platform's. The frame of the header, the page and the
-footer is as wide as the custom property `--interactive-max-width` (default `44rem`), which an app sets in its own
+footer is as wide as the custom property `--page-max-width` (default `44rem`), which an app sets in its own
 `:root` rule.
 
 ```arc42
@@ -321,38 +322,6 @@ title: Runtime texts by language
 provider: bb-runtime-texts
 protocol: TypeScript import, JSON
 path: runtime/interactive/messages
-:::
-```
-
-### Component rules
-
-Built in the explainer's runtime and reused here: code checks on the SFC compiler's output of the UI's components and
-the modules they import (no network, no `eval`, `innerHTML` or `v-html`, imports only from Vue, the runtime, the
-storage, i18n and a11y helpers, the app's own files and the libraries in the dependencies of its package.json, never
-from a URL, browser globals only once mounted; `dec-libraries`).
-
-```arc42
-:::building-block
-id: bb-component-rules
-title: Component rules
-parent: bb-archetype-runtime
-path: runtime/explainer/components.ts
-technology: TypeScript, Vue SFC compiler
-implements: concept-component-rules
-:::
-```
-
-#### Component rules interface
-
-The build step runs the checks on every single-file component in `src/` and the app's modules they import.
-
-```arc42
-:::interface
-id: if-component-rules
-title: Component checks on the SFC compiler's output
-provider: bb-component-rules
-protocol: TypeScript function call at build
-path: runtime/explainer/components.ts
 :::
 ```
 

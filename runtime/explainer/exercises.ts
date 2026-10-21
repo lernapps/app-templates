@@ -1,30 +1,21 @@
-// The exercises of an explainer page at build time: a block of one of the quiz's question types, rendered through
-// the quiz runtime's per-question exports (its controls, and a <details> "Lösung" with the right answer, the
+// The exercises of an explainer page at build time: a block of one of the question types, rendered through
+// the per-question exports of the shared runtime (shared/questions) (its controls, and a <details> "Lösung" with the right answer, the
 // background of every option, the explanation and the links); and a generated exercise: its templates rendered once
 // per language (restricted Markdown, formulas as MathML, the placeholders as tokens), the place of the live task, and
 // three worked tasks, the task numbers 1 to 3 (taskSeeds), each with its task number and a <details> "Lösung" (with JavaScript they show
 // once the live task is solved). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
-import { questionIn, type Question } from "../quiz/quiz.ts";
-import { answerText, messagesIn, renderQuestion, renderSolution } from "../quiz/render.ts";
+import { questionIn, type Question } from "../shared/questions/question.ts";
+import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
+import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 import type { DataRecord, Exercise, QuestionBlock } from "./content.ts";
-import {
-  figureOf,
-  generate,
-  hintOf,
-  questionFor,
-  stepsOf,
-  taskText,
-  tokenize,
-  taskKey,
-  WORKED_TASKS,
-  type Data,
-  type Generated,
-  type LanguageTemplates,
-  type Templates,
-} from "./generated.ts";
-import { plain, renderInline, renderWithFormulas } from "./markdown.ts";
+import { figureOf, hintOf, stepsOf, taskText, tokenize } from "./generated/texts.ts";
+import { generate } from "./generated/values.ts";
+import { questionFor, taskKey } from "./generated/question.ts";
+import { WORKED_TASKS } from "./tasks.ts";
+import { type Data, type Generated, type LanguageTemplates, type Templates } from "./generated/types.ts";
+import { plain, renderInline, renderWithFormulas } from "../shared/text/markdown.ts";
 import { distinctSeeds } from "./tasks.ts";
 import { message } from "./messages.ts";
 
@@ -156,7 +147,7 @@ function formulaTexts(value: unknown): string[] {
   return [];
 }
 
-function questionExercise(block: QuestionBlock, lang: string): string {
+function questionExercise(block: QuestionBlock, lang: string, material: MaterialContext): string {
   const question = questionIn(block, lang);
   const rendered: Record<string, string> = {};
   for (const text of formulaTexts(question)) rendered[text] = renderWithFormulas(text);
@@ -164,8 +155,12 @@ function questionExercise(block: QuestionBlock, lang: string): string {
   return [
     `<div class="explainer-exercise explainer-question" id="${block.id}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
-    renderQuestion(question, { lang, format: renderWithFormulas }),
-    `<details class="explainer-solution"><summary>${plain(messagesIn(lang).solution)}</summary>`,
+    renderQuestion(question, {
+      lang,
+      format: renderWithFormulas,
+      ...(question.material === undefined ? {} : { materialHtml: renderMaterial(question.material, material) }),
+    }),
+    `<details class="explainer-solution"><summary>${plain(questionMessagesIn(lang).solution)}</summary>`,
     renderSolution(question, { lang, format: renderWithFormulas }),
     `</details>`,
     `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
@@ -181,7 +176,7 @@ function generatedExercise(
 ): string {
   const templates = templatesOf(spec, [lang], resolve);
   const data = dataOf(spec, all);
-  const solution = messagesIn(lang).solution;
+  const solution = questionMessagesIn(lang).solution;
   const worked = workedTasks(spec, data, templates, lang).map((item) =>
     [
       `<li class="explainer-worked-task">`,
@@ -195,7 +190,7 @@ function generatedExercise(
       item.steps.length === 0
         ? ""
         : `<ol class="explainer-steps">${item.steps.map((step) => `<li>${step}</li>`).join("")}</ol>`,
-      `<p><strong>${plain(messagesIn(lang).rightAnswer)}</strong> ${item.answer}</p>`,
+      `<p><strong>${plain(questionMessagesIn(lang).rightAnswer)}</strong> ${item.answer}</p>`,
       `</details>`,
       `</li>`,
     ]
@@ -238,6 +233,9 @@ export function renderExercise(
   lang: string,
   data: Readonly<Record<string, readonly DataRecord[]>>,
   resolve: (href: string) => string,
+  material: MaterialContext,
 ): string {
-  return block.type === "generated" ? generatedExercise(block, lang, data, resolve) : questionExercise(block, lang);
+  return block.type === "generated"
+    ? generatedExercise(block, lang, data, resolve)
+    : questionExercise(block, lang, material);
 }

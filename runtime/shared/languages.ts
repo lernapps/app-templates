@@ -1,6 +1,23 @@
 // Learner texts in several languages, shared by the archetypes' runtimes (the explainer, the quiz): a text is a string while German is the app's only language, else a map of texts
 // by language, { de: …, en: … }, complete in every declared language and in no other. German is always first.
 
+/**
+ * The languages the runtime has texts for, German first. Every registry of the runtime's own texts has one entry per
+ * language (its type says so), so adding a language is complete when the compiler is.
+ */
+export const LANGUAGES = ["de", "en"] as const;
+export type Language = (typeof LANGUAGES)[number];
+
+export const isLanguage = (lang: string): lang is Language => (LANGUAGES as readonly string[]).includes(lang);
+
+const LOCALES = { de: "de-DE", en: "en-GB" } as const satisfies Readonly<Record<Language, string>>;
+/** The locale for numbers and dates in `lang`; German's for a language the runtime has no texts for. */
+export const localeOf = (lang: string): string => LOCALES[isLanguage(lang) ? lang : "de"];
+
+/** The entry of `registry` for `lang`; German's for a language the runtime has no texts for. */
+export const textsIn = <T>(registry: Readonly<Record<Language, T>>, lang: string): T =>
+  registry[isLanguage(lang) ? lang : "de"];
+
 /** A learner text: a string while German is the only language, else a map of texts by language. */
 export type Text = string | Readonly<Record<string, string>>;
 

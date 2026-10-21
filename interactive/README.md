@@ -22,7 +22,7 @@ it is and works without JavaScript.
 
 ## What the app supplies
 
-- `src/app.yaml` ([schema](https://lernapps.net/tooling/schemas/interactive.v1.schema.json)), the core
+- `src/app.yaml` ([schema](../runtime/interactive/interactive.v1.schema.json)), the core
   `src/core/index.ts`, its Vue components in `src/ui/`, data in `src/data/`, texts in `src/messages/`, playthroughs in
-  `src/playthroughs/` ([schema](https://lernapps.net/tooling/schemas/playthrough.v1.schema.json)), and its part of the
+  `src/playthroughs/` ([schema](../runtime/interactive/playthrough.v1.schema.json)), and its part of the
   architecture in `docs/arc42/`.

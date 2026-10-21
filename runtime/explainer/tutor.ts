@@ -10,8 +10,8 @@
 // (prompt.ts) and the links to the tutor files.
 // Every link of llms.txt and of the tutor files is checked against the pages and anchors the build writes
 // (linkProblems). The app itself collects nothing and sends nothing: the files only help a tutor guide.
-import { questionIn, type Question } from "../quiz/quiz.ts";
-import { answerText } from "../quiz/render.ts";
+import { questionIn, type Question } from "../shared/questions/question.ts";
+import { answerText } from "../shared/questions/render.ts";
 import {
   inLanguage,
   type Block,
@@ -20,10 +20,14 @@ import {
   type Page,
   type Site,
   type Text,
+  type Descriptions,
 } from "./content.ts";
 import { dataOf, taskSeeds, templatesOf } from "./exercises.ts";
-import type { Descriptions } from "./render.ts";
-import { fillSource, generate, kindOf, label, plainText, questionFor, type Generated } from "./generated.ts";
+import { fillSource, label, plainText } from "./generated/texts.ts";
+import { generate } from "./generated/values.ts";
+import { kindOf } from "./generated/comparator.ts";
+import { questionFor } from "./generated/question.ts";
+import { type Generated } from "./generated/types.ts";
 import { allBlocks, contentPages } from "./routes.ts";
 import { MAX_TASKS } from "./tasks.ts";
 
@@ -202,13 +206,13 @@ export function llmsTutorPart(site: Site, lang: string): string[] {
   return [...lines, ""];
 }
 
-/** The answer format of a question of the quiz's types, in `lang`. */
+/** The answer format of a question of the question types, in `lang`. */
 function questionFormat(question: Question, words: Words): string {
   const format = words.formats[question.type] ?? "";
   return question.type === "number" && question.unit !== undefined ? `${format} (${question.unit})` : format;
 }
 
-/** A question of the quiz's types, in `lang`: its text, format, options, solution, explanation, hint, mistakes. */
+/** A question of the question types, in `lang`: its text, format, options, solution, explanation, hint, mistakes. */
 function questionPart(question: Question, lang: string, words: Words): string[] {
   const lines = [
     `- ${words.task}: ${line(question.text)}`,

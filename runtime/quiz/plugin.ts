@@ -13,30 +13,33 @@
 // rewritten for its depth; each with its language, its alternates and a language switch. 404.html leads every address
 // the app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same pages, /en/
 // in English.
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite-plus";
 import { appName } from "../shared/appname.ts";
+import { imageType, isSizeless } from "../shared/blocks/image.ts";
+import { materialImages } from "../shared/blocks/index.ts";
 import type { Text } from "../shared/languages.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
 import { renderQuiz } from "./render.ts";
 import { readBank } from "./validate.ts";
+import { escape } from "../shared/html.ts";
 
 /** Where the question bank is, relative to the app's root. */
 export const BANK = "src/quiz.json";
 const MARKER = "<!-- quiz -->";
 
-const escapeAttribute = (text: string) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-
 /** The bank, in all its languages, and the name of the app's storage when the quiz keeps the last result. */
 interface Bank {
   quiz: Quiz<Text>;
   storage?: string;
+  /** The bundled images the questions show, by their path from src/ (images/<name>), with their files. */
+  images: ReadonlyMap<string, string>;
 }
 
 /** The page in `lang`: the shell with the quiz in that language, its title, description and alternates. */
-function fill(html: string, { quiz, storage }: Bank, lang: string): string {
+function fill(html: string, { quiz, storage, images }: Bank, lang: string): string {
   if (!html.includes(MARKER)) {
     throw new Error(`index.html has no ${MARKER}: put it in <body>, where the quiz goes`);
   }
@@ -45,10 +48,16 @@ function fill(html: string, { quiz, storage }: Bank, lang: string): string {
     ...(storage === undefined ? {} : { storage }),
     ...(lang === "de" ? {} : { lang }),
   };
-  const { title, description, alternates, body } = renderQuiz(data, { languages: quizLanguages(quiz) });
+  const { title, description, alternates, body } = renderQuiz(data, {
+    languages: quizLanguages(quiz),
+    sizeless: (image) => {
+      const file = images.get(image);
+      return file !== undefined && isSizeless(file);
+    },
+  });
   const head = [
-    `<title>${escapeAttribute(title)}</title>`,
-    `<meta name="description" content="${escapeAttribute(description)}" />`,
+    `<title>${escape(title)}</title>`,
+    `<meta name="description" content="${escape(description)}" />`,
     ...alternates,
   ].join("\n    ");
   const withHead = /<title>[\s\S]*?<\/title>/.test(html)
@@ -77,8 +86,13 @@ export function quiz(): Plugin {
     } catch {
       throw new Error(`${BANK} is missing: the quiz's questions belong there (schema quiz.v1.schema.json)`);
     }
-    const quiz = readBank(text, BANK);
-    return quiz.rememberLastResult === true ? { quiz, storage: appName(root, "quiz") } : { quiz };
+    const quiz = readBank(text, BANK, { imageExists: (image) => existsSync(join(root, "src", image)) });
+    const images = new Map(
+      quiz.questions
+        .flatMap((question) => materialImages(question.material ?? []))
+        .map((image) => [image, join(root, "src", image)]),
+    );
+    return quiz.rememberLastResult === true ? { quiz, storage: appName(root, "quiz"), images } : { quiz, images };
   };
   return {
     name: "lernapps-quiz",
@@ -101,6 +115,17 @@ export function quiz(): Plugin {
         server.ws.send({ type: "full-reload" });
       }
     },
+    configureServer(server) {
+      // the bundled images, before Vite's own fallback to index.html
+      server.middlewares.use((request, response, next) => {
+        const path = decodeURIComponent(new URL(request.url ?? "/", "http://localhost").pathname).replace(/^\//, "");
+        if (!path.startsWith("images/")) return next();
+        const file = (bank ??= load()).images.get(path);
+        if (file === undefined) return next();
+        response.setHeader("content-type", imageType(path));
+        response.end(readFileSync(file));
+      });
+    },
     transformIndexHtml(html, context) {
       bank ??= load();
       shell = html;
@@ -109,6 +134,8 @@ export function quiz(): Plugin {
     generateBundle() {
       if (bank === undefined || shell === undefined) return;
       this.emitFile({ type: "asset", fileName: "404.html", source: notFoundPage() });
+      for (const [image, file] of bank.images)
+        this.emitFile({ type: "asset", fileName: image, source: readFileSync(file) });
       for (const lang of quizLanguages(bank.quiz).slice(1)) {
         const path = languageRoot(lang);
         this.emitFile({

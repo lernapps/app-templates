@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { renderExercise } from "../runtime/explainer/exercises.ts";
-import { formulaProblems, renderWithFormulas } from "../runtime/explainer/markdown.ts";
+import { formulaProblems, renderWithFormulas } from "../runtime/shared/text/markdown.ts";
 import type { Exercise } from "../runtime/explainer/content.ts";
 import { loadSite } from "../runtime/explainer/load.ts";
 import { outline } from "../runtime/explainer/outline.ts";
@@ -55,7 +55,7 @@ describe("formulas in the texts of a question", () => {
   });
 
   test("the question, its options, their background and the explanation show the formulas as MathML", () => {
-    const html = renderExercise(question, "de", {}, (href) => href);
+    const html = renderExercise(question, "de", {}, (href) => href, { lang: "de", href: (image) => image });
     const body = html.split('<script type="application/json"')[0] ?? "";
     expect(body).not.toContain("$\\ce");
     expect(body.match(/<math/g)?.length).toBeGreaterThanOrEqual(8);
@@ -64,7 +64,7 @@ describe("formulas in the texts of a question", () => {
   });
 
   test("the client gets the formula texts as HTML for its feedback", () => {
-    const html = renderExercise(question, "de", {}, (href) => href);
+    const html = renderExercise(question, "de", {}, (href) => href, { lang: "de", href: (image) => image });
     const json = JSON.parse(/class="explainer-exercise-data">(.*?)<\/script>/s.exec(html)?.[1] ?? "{}");
     expect(Object.keys(json.rendered)).toContain("Rechts fehlt ein $\\ce{O}$.");
     expect(json.rendered["Rechts fehlt ein $\\ce{O}$."]).toContain("<math");
@@ -73,25 +73,31 @@ describe("formulas in the texts of a question", () => {
 
 describe("a generated exercise", () => {
   test("says 'neue Aufgaben', not 'neue Zahlen', unless it says something of its own", () => {
-    expect(data(renderExercise(generated, "de", {}, (href) => href)).texts.practice).toBe(
-      "Übe selbst, mit immer neuen Aufgaben:",
-    );
+    expect(
+      data(renderExercise(generated, "de", {}, (href) => href, { lang: "de", href: (image) => image })).texts.practice,
+    ).toBe("Übe selbst, mit immer neuen Aufgaben:");
     const own = {
       ...generated,
       practice: { de: "Übe selbst, mit immer neuen Stoffen:", en: "Practise with new substances:" },
     };
-    expect(data(renderExercise(own as Exercise, "de", {}, (href) => href)).texts.practice).toBe(
-      "Übe selbst, mit immer neuen Stoffen:",
-    );
-    expect(data(renderExercise(own as Exercise, "en", {}, (href) => href)).texts.practice).toBe(
-      "Practise with new substances:",
-    );
+    expect(
+      data(renderExercise(own as Exercise, "de", {}, (href) => href, { lang: "de", href: (image) => image })).texts
+        .practice,
+    ).toBe("Übe selbst, mit immer neuen Stoffen:");
+    expect(
+      data(renderExercise(own as Exercise, "en", {}, (href) => href, { lang: "de", href: (image) => image })).texts
+        .practice,
+    ).toBe("Practise with new substances:");
   });
 
   test("shows its worked tasks with JavaScript only when it asks for them", () => {
-    expect(data(renderExercise(generated, "de", {}, (href) => href)).showWorked).toBe(false);
+    expect(
+      data(renderExercise(generated, "de", {}, (href) => href, { lang: "de", href: (image) => image })).showWorked,
+    ).toBe(false);
     const always = { ...generated, workedTasks: "always" } as Exercise;
-    expect(data(renderExercise(always, "de", {}, (href) => href)).showWorked).toBe(true);
+    expect(
+      data(renderExercise(always, "de", {}, (href) => href, { lang: "de", href: (image) => image })).showWorked,
+    ).toBe(true);
   });
 });
 

@@ -76,9 +76,7 @@ test("a bilingual app: German at the root, English below en/, each with its lang
   expect(en).toContain("<h1>Typing letters</h1>");
   expect(en).toContain('<link rel="alternate" hreflang="de" href="../" />');
   // two languages: a header with the language switch and nothing else
-  expect(en).toMatch(
-    /<header class="interactive-header"><nav class="interactive-languages"[^>]*><ul>.*<\/ul><\/nav><\/header>/,
-  );
+  expect(en).toMatch(/<header class="page-header"><nav class="page-languages"[^>]*><ul>.*<\/ul><\/nav><\/header>/);
   expect(en).not.toContain("interactive-brand");
   expect(en).toContain('<a href="../" hreflang="de" lang="de">Deutsch</a>');
   expect(en).toContain('<a class="interactive-start" href="../en/app/">Let\'s go</a>');

@@ -203,7 +203,7 @@ const cases: [string, (root: string) => void, string][] = [
       const text = readFileSync(file, "utf8");
       writeFileSync(file, text.slice(0, text.indexOf("  - type: single-choice")));
     },
-    "src/kapitel/zwei.yaml:3: blocks: the page has no exercise; give it a section with an exercise: one of the quiz's question types, or generated",
+    "src/kapitel/zwei.yaml:3: blocks: the page has no exercise; give it a section with an exercise: one of the question types, or generated",
   ],
 ];
 

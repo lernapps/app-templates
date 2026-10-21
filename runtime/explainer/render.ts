@@ -8,42 +8,33 @@
 // states it with the solution folded, and the place of its feedback. Links to other sites are plain links with rel="noopener":
 // nothing is loaded from another server before a click. The end-to-end tests rely on the classes, ids and rel
 // attributes written here.
-import { readFileSync } from "node:fs";
-import { messagesIn } from "../quiz/render.ts";
-import { highlight, type CodeLanguage } from "./code.ts";
-import { propsIn } from "./components.ts";
+import { questionMessagesIn } from "../shared/questions/render.ts";
+import { propsIn } from "./components/props.ts";
 import {
   inLanguage,
   termId as termIdOf,
   timelineEvents,
   type Block,
   type BlockOf,
-  type ComponentDescription,
-  type Credit,
   type Event,
   type Site,
   type Text,
+  type Descriptions,
 } from "./content.ts";
 import { renderExercise } from "./exercises.ts";
-import { bar, hundredGrid } from "./figures.ts";
-import { renderFormula } from "./formula.ts";
-import { plain, renderInline, renderMarkdown } from "./markdown.ts";
+import { isSizeless } from "../shared/blocks/image.ts";
+import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
+import { localeOf } from "../shared/languages.ts";
+import { plain, renderInline, renderMarkdown } from "../shared/text/markdown.ts";
 import { message, type Messages } from "./messages.ts";
-import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
+import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { llmsTutorPart, TUTOR_FILE } from "./tutor.ts";
 import { BASE, MAX_URL, plainAddress, PROMPT_FILE, providersOf, shortPrompt, tutorPrompt } from "./prompt.ts";
 
-/**
- * Whether the bundled image `image` has no size of its own: an SVG whose root has neither a width nor a height (only a
- * viewBox, or percentages). In a box as wide as its content, as the image of a labelled figure is, the browser draws
- * such an image with zero width.
- */
 function sizeless(site: Site, image: string): boolean {
   const file = site.images.get(image);
-  if (file === undefined || !image.endsWith(".svg")) return false;
-  const root = /<svg\b[^>]*>/i.exec(readFileSync(file, "utf8"))?.[0] ?? "";
-  return !/\s(?:width|height)\s*=\s*["']?\s*\d*\.?\d+\s*(?:px|pt|pc|mm|cm|in|em|ex|rem)?\s*["'\s/>]/i.test(root);
+  return file !== undefined && isSizeless(file);
 }
 
 /** A rendered page: its language, what goes into <head>, and what replaces the marker in <body>. */
@@ -57,10 +48,6 @@ export interface RenderedPage {
 
 /** The markup of each vue-component block in each language, as the build rendered it (plugin.ts). */
 export type Islands = ReadonlyMap<Block, ReadonlyMap<string, string>>;
-/** What the logic of each exercise component's block describes (plugin.ts): its about, and its tasks by language. */
-export type Descriptions = ReadonlyMap<Block, ComponentDescription>;
-
-const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
 
 /** What rendering one page needs. */
 class Context {
@@ -69,6 +56,8 @@ class Context {
   readonly route: Route;
   readonly islands: Islands;
   readonly descriptions: Descriptions;
+  /** What the blocks that show content need from this page. */
+  readonly material: MaterialContext;
   /** Whether a component was rendered. */
   hasIslands = false;
   constructor(site: Site, route: Route, islands: Islands, descriptions: Descriptions) {
@@ -76,7 +65,13 @@ class Context {
     this.route = route;
     this.islands = islands;
     this.descriptions = descriptions;
-    this.locale = LOCALES[route.lang] ?? route.lang;
+    this.locale = localeOf(route.lang);
+    this.material = {
+      lang: route.lang,
+      href: (image) => relative(route.path, image),
+      resolve: this.resolve,
+      sizeless: (image) => sizeless(site, image),
+    };
   }
   get lang(): string {
     return this.route.lang;
@@ -103,14 +98,6 @@ class Context {
 }
 
 const external = (url: string, text = url) => `<a href="${plain(url)}" rel="noopener">${plain(text)}</a>`;
-
-function credit(context: Context, item: Credit): string {
-  if (item.source === undefined || item.licence === undefined) return "";
-  const given = inLanguage(item.source, context.lang);
-  const source = /^https?:\/\//.test(given) ? external(given) : plain(given);
-  const text = context.t("credit", { source: "\u0000", licence: plain(item.licence) }).replace("\u0000", source);
-  return ` <span class="explainer-credit">${text}</span>`;
-}
 
 function dateLabel(context: Context, event: Event): { label: string; datetime?: string } {
   const date = String(event.date);
@@ -173,56 +160,11 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
         `</div>`,
       ].join("\n");
     case "text":
-      return `<div class="explainer-text">${context.markdown(block.text)}</div>`;
     case "formula":
-      return `<div class="explainer-formula">${renderFormula(inLanguage(block.formula, context.lang), true)}</div>`;
-    case "figure": {
-      const alt = inLanguage(block.alt, context.lang);
-      let picture = "";
-      if (block.draw?.kind === "hundred-grid") picture = hundredGrid(block.draw.filled, alt);
-      else if (block.draw?.kind === "bar") picture = bar(block.draw.part, block.draw.whole, alt, context.locale);
-      else if (block.image !== undefined) {
-        picture = `<img src="${plain(relative(context.route.path, block.image))}" alt="${plain(alt)}">`;
-      }
-      return `<figure class="explainer-figure">${picture}<figcaption>${context.markdown(block.caption)}${credit(context, block)}</figcaption></figure>`;
-    }
-    case "labelled-figure": {
-      const markers = block.labels
-        .map(
-          (label, index) =>
-            `<span class="explainer-marker" style="left: ${label.x}%; top: ${label.y}%" aria-hidden="true">${index + 1}</span>`,
-        )
-        .join("");
-      const legend = block.labels.map((label) => `<li>${context.text(label.text)}</li>`).join("");
-      const caption = block.caption === undefined ? "" : context.markdown(block.caption);
-      return [
-        `<figure class="explainer-figure explainer-labelled">`,
-        `<div class="explainer-labelled-image${sizeless(context.site, block.image) ? " explainer-labelled-fill" : ""}"><img src="${plain(relative(context.route.path, block.image))}" alt="${context.text(block.alt)}">${markers}</div>`,
-        `<ol class="explainer-legend">${legend}</ol>`,
-        `<figcaption>${caption}${credit(context, block)}</figcaption>`,
-        `</figure>`,
-      ].join("");
-    }
-    case "table": {
-      const caption = context.text(block.caption);
-      const head =
-        block.header === undefined
-          ? ""
-          : `<thead><tr>${block.header.map((cell) => `<th scope="col">${context.inline(cell)}</th>`).join("")}</tr></thead>`;
-      const rows = block.rows
-        .map(
-          (row) =>
-            `<tr>${row
-              .map((cell, index) =>
-                index === 0 && block.rowHeaders === true
-                  ? `<th scope="row">${context.inline(cell)}</th>`
-                  : `<td>${context.inline(cell)}</td>`,
-              )
-              .join("")}</tr>`,
-        )
-        .join("");
-      return `<div class="explainer-table" role="region" aria-label="${caption}" tabindex="0"><table><caption>${caption}</caption>${head}<tbody>${rows}</tbody></table></div>`;
-    }
+    case "figure":
+    case "labelled-figure":
+    case "table":
+      return renderMaterial([block], context.material);
     case "timeline":
       return renderEvents(context, timelineEvents(context.site, block));
     case "definition": {
@@ -234,24 +176,13 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
         `</dl>`,
       ].join("");
     }
-    case "quote": {
-      const { author, work, year } = block.origin;
-      const origin = [
-        context.text(author),
-        ...(work === undefined ? [] : [`<cite>${context.text(work)}</cite>`]),
-        ...(year === undefined ? [] : [typeof year === "number" ? String(year) : context.text(year)]),
-      ].join(", ");
-      return `<figure class="explainer-quote"><blockquote>${context.markdown(block.text)}</blockquote><figcaption>— ${origin}.${credit(context, block)}</figcaption></figure>`;
-    }
-    case "code": {
-      const language = block.language as CodeLanguage;
-      const caption = block.caption === undefined ? "" : `<figcaption>${context.text(block.caption)}</figcaption>`;
-      return `<figure class="explainer-code"><pre role="region" aria-label="${plain(context.t("code", { language }))}" tabindex="0"><code class="hljs language-${language}">${highlight(block.code, language)}</code></pre>${caption}</figure>`;
-    }
+    case "quote":
+    case "code":
+      return renderMaterial([block], context.material);
     case "vue-component":
       return renderComponent(context, block);
     default:
-      return renderExercise(block, context.lang, context.site.data, context.resolve);
+      return renderExercise(block, context.lang, context.site.data, context.resolve, context.material);
   }
 }
 
@@ -268,9 +199,9 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
   context.hasIslands = true;
   const { component } = use;
   const markup = context.islands.get(block)?.get(context.lang) ?? "";
-  const messages = messagesIn(context.lang);
+  const messages = questionMessagesIn(context.lang);
   const feedback = component.exercise
-    ? `<p class="quiz-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
+    ? `<p class="question-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
     : "";
   const first = context.descriptions.get(block)?.tasks[context.lang]?.[0];
   const number = (seed: number) => plain(context.t("taskNumber", { n: String(seed) }));
@@ -328,15 +259,13 @@ function pageContents(context: Context, blocks: readonly Block[]): string {
 
 function header(context: Context): string {
   const { site, route } = context;
-  const switcher = languageSwitch({
+  // only the language switch: the breadcrumbs lead to the start page, and the way back to the catalog is the platform's
+  return pageHeader({
     ...route,
     languages: site.app.languages,
-    className: "explainer-languages",
     label: plain(context.t("languages")),
     name: (lang) => plain(message(lang, "language")),
   });
-  // only the language switch: the breadcrumbs lead to the start page, and the way back to the catalog is the platform's
-  return switcher === "" ? "" : `<header class="explainer-header">${switcher}</header>`;
 }
 
 function breadcrumbs(context: Context): string {
@@ -519,7 +448,11 @@ function head(context: Context): string {
 }
 
 function footer(context: Context): string {
-  return `<footer class="explainer-footer"><p>${plain(context.t("footer"))} · <a href="https://lernapps.net/imprint/">${plain(context.t("imprint"))}</a> · <a href="https://lernapps.net/privacy/">${plain(context.t("privacy"))}</a></p></footer>`;
+  return pageFooter({
+    footer: plain(context.t("footer")),
+    imprint: plain(context.t("imprint")),
+    privacy: plain(context.t("privacy")),
+  });
 }
 
 /** One page of the app, with the markup of its components as the build rendered them. */

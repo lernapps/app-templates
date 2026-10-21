@@ -6,7 +6,7 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 
 - Text, formulas (also chemistry), drawn figures, your own images with source and licence, figures with numbered
   labels, tables, timelines, definitions with a glossary, quotes, code, boxes for worked examples and hints.
-- Exercises of the quiz's six question types, with feedback, hints and typical mistakes.
+- Exercises of the six question types, with feedback, hints and typical mistakes; a question can show content (`material`: the figures, tables, quotes and code of the page's blocks) between its text and its answers.
 - Generated exercises: each task draws new numbers or records, up to 67 numbered tasks per exercise, with typical
   mistakes, a hint and the way to the solution. The build tests them over fixed seeds.
 - Vue components for what no block can show or check, such as reading a scale, labelling a figure or dragging into
@@ -27,5 +27,5 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 ## What the app supplies
 
 - The content as YAML in `src/`: the app, a folder per chapter with its pages, data files and images
-  ([schema](https://lernapps.net/tooling/schemas/explainer.v1.schema.json)); Vue components in `src/components/` where
+  ([schema](../runtime/explainer/explainer.v1.schema.json)); Vue components in `src/components/` where
   no block fits.

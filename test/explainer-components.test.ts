@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { build } from "vite-plus";
-import { describedProblems, exampleProblems, propertyProblems } from "../runtime/explainer/components.ts";
+import { describedProblems, exampleProblems, propertyProblems } from "../runtime/explainer/components/exercise.ts";
 import { explainer } from "../runtime/explainer/plugin.ts";
 
 const FIXTURE = join(import.meta.dirname, "fixtures/explainer-history");
