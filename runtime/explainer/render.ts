@@ -270,7 +270,7 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
   const markup = context.islands.get(block)?.get(context.lang) ?? "";
   const messages = questionMessagesIn(context.lang);
   const feedback = component.exercise
-    ? `<p class="quiz-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
+    ? `<p class="question-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
     : "";
   const first = context.descriptions.get(block)?.tasks[context.lang]?.[0];
   const number = (seed: number) => plain(context.t("taskNumber", { n: String(seed) }));

@@ -56,7 +56,7 @@ export async function expectBackground(where: Locator, item: Question): Promise<
 
 /** After an answer, the learner sees the feedback without scrolling back; it has the focus, the next button follows. */
 export async function expectFeedbackInView(page: Page, item: Question): Promise<void> {
-  const feedback = question(page, item).locator(".quiz-feedback");
+  const feedback = question(page, item).locator(".question-feedback");
   const top = await feedback.evaluate((element) => element.getBoundingClientRect().top);
   const height = await page.evaluate(() => innerHeight);
   expect(top, "the top of the feedback is in the viewport").toBeGreaterThanOrEqual(0);
