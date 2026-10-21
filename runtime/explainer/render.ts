@@ -11,18 +11,18 @@
 import { readFileSync } from "node:fs";
 import { questionMessagesIn } from "../shared/questions/render.ts";
 import { highlight, type CodeLanguage } from "./code.ts";
-import { propsIn } from "./components.ts";
+import { propsIn } from "./components/props.ts";
 import {
   inLanguage,
   termId as termIdOf,
   timelineEvents,
   type Block,
   type BlockOf,
-  type ComponentDescription,
   type Credit,
   type Event,
   type Site,
   type Text,
+  type Descriptions,
 } from "./content.ts";
 import { renderExercise } from "./exercises.ts";
 import { bar, hundredGrid } from "./figures.ts";
@@ -58,8 +58,6 @@ export interface RenderedPage {
 
 /** The markup of each vue-component block in each language, as the build rendered it (plugin.ts). */
 export type Islands = ReadonlyMap<Block, ReadonlyMap<string, string>>;
-/** What the logic of each exercise component's block describes (plugin.ts): its about, and its tasks by language. */
-export type Descriptions = ReadonlyMap<Block, ComponentDescription>;
 
 /** What rendering one page needs. */
 class Context {

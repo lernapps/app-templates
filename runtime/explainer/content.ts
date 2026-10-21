@@ -3,7 +3,7 @@
 // components (src/components/, components.ts) with the blocks that use them.
 
 import type { Question } from "../shared/questions/question.ts";
-import type { Generated } from "./generated.ts";
+import type { Generated } from "./generated/types.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 
 export { inLanguage, type Text };
@@ -224,3 +224,6 @@ export function termId(term: Text): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
+
+/** What the logic of each exercise component's block describes (plugin.ts): its about, and its tasks by language. */
+export type Descriptions = ReadonlyMap<Block, ComponentDescription>;

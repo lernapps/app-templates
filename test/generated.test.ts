@@ -2,17 +2,11 @@
 // placeholders, the answer mapped onto the quiz's answer kinds, the mistakes diagnosed, and the property test over
 // fixed seeds with its messages.
 import { describe, expect, test } from "vite-plus/test";
-import {
-  answerFor,
-  diagnose,
-  generate,
-  questionFor,
-  soundness,
-  taskText,
-  tokenize,
-  type Generated,
-  type Templates,
-} from "../runtime/explainer/generated.ts";
+import { answerFor, diagnose, questionFor } from "../runtime/explainer/generated/question.ts";
+import { generate } from "../runtime/explainer/generated/values.ts";
+import { soundness } from "../runtime/explainer/generated/soundness.ts";
+import { taskText, tokenize } from "../runtime/explainer/generated/texts.ts";
+import { type Generated, type Templates } from "../runtime/explainer/generated/types.ts";
 import { isCorrect, rightAnswer, wrongAnswer } from "../runtime/shared/questions/question.ts";
 import type { DataRecord } from "../runtime/explainer/content.ts";
 import { Fraction } from "../runtime/explainer/fraction.ts";

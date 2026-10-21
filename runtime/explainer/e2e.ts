@@ -36,7 +36,9 @@ import {
 } from "../shared/questions/question.ts";
 import { answerQuestion, expectFeedbackInView } from "../shared/questions/e2e.ts";
 import { questionMessagesIn } from "../shared/questions/render.ts";
-import { answerFor, fill, generate, plainText, questionFor, taskKey, taskText } from "./generated.ts";
+import { answerFor, questionFor, taskKey } from "./generated/question.ts";
+import { fill, plainText, taskText } from "./generated/texts.ts";
+import { generate } from "./generated/values.ts";
 import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
 import { nextTaskNumber, taskNumber } from "./tasks.ts";

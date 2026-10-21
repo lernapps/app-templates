@@ -20,10 +20,14 @@ import {
   type Page,
   type Site,
   type Text,
+  type Descriptions,
 } from "./content.ts";
 import { dataOf, taskSeeds, templatesOf } from "./exercises.ts";
-import type { Descriptions } from "./render.ts";
-import { fillSource, generate, kindOf, label, plainText, questionFor, type Generated } from "./generated.ts";
+import { fillSource, label, plainText } from "./generated/texts.ts";
+import { generate } from "./generated/values.ts";
+import { kindOf } from "./generated/comparator.ts";
+import { questionFor } from "./generated/question.ts";
+import { type Generated } from "./generated/types.ts";
 import { allBlocks, contentPages } from "./routes.ts";
 import { MAX_TASKS } from "./tasks.ts";
 

@@ -28,6 +28,7 @@ notation: mermaid
 flowchart TB
     subgraph bb-runtime["Shared runtime (runtime/shared)"]
         bb-questions["Questions (runtime/shared/questions)"]
+    bb-component-rules["Component rules (runtime/shared/vue-code.ts)"]
     end
     bb-tooling["Tooling helpers (@lernapps/tooling)"]
     bb-skills["Skills (.agents/skills)"]
@@ -98,6 +99,39 @@ title: The question types, rendering, engine and checker
 provider: bb-questions
 protocol: TypeScript imports (runtime/shared/questions), @lernapps/app-templates/questions
 path: runtime/shared/questions
+:::
+```
+
+### Component rules
+
+Built in the shared runtime, for every archetype that has Vue components: code checks on the SFC compiler's output of a
+component and the modules of the app it imports (no network, no `eval`, `innerHTML` or `v-html`, imports only from Vue,
+the runtime, the storage, i18n and a11y helpers and the app's own modules, never from a URL, browser globals only once
+mounted). Which modules are the app's own is the archetype's scope: the explainer's components import their own folder,
+the interactive archetype's any file of `src/` and the libraries of its `package.json`.
+
+```arc42
+:::building-block
+id: bb-component-rules
+title: Component rules
+parent: bb-runtime
+path: runtime/shared/vue-code.ts
+technology: TypeScript, Vue SFC compiler
+implements: concept-component-rules
+:::
+```
+
+#### Component rules interface
+
+The validation of an archetype with components runs the checks on its components.
+
+```arc42
+:::interface
+id: if-component-rules
+title: The code checks of a component (codeProblems, with the archetype's scope)
+provider: bb-component-rules
+protocol: TypeScript imports (runtime/shared/vue-code.ts)
+path: runtime/shared/vue-code.ts
 :::
 ```
 

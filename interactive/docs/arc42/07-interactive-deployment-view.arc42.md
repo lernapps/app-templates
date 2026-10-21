@@ -13,7 +13,7 @@ id: dn-interactive-build
 title: Interactive build
 type: container
 parent: dn-ci-runner
-hosts: bb-component-rules, bb-interactive-description, bb-interactive-core, bb-interactive-ui, bb-interactive-data, bb-interactive-messages, bb-interactive-playthroughs
+hosts: bb-interactive-description, bb-interactive-core, bb-interactive-ui, bb-interactive-data, bb-interactive-messages, bb-interactive-playthroughs
 :::
 ```
 

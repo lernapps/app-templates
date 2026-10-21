@@ -31,6 +31,7 @@ flowchart TB
     bb-explainer-components["Vue components (optional)"]
     bb-archetype-runtime -->|"if-shared-runtime"| bb-runtime
     bb-archetype-runtime -->|"if-questions"| bb-questions
+    bb-archetype-runtime -->|"if-component-rules"| bb-component-rules
     bb-archetype-runtime -->|"if-preset"| bb-tooling
 ```
 
@@ -55,7 +56,6 @@ flowchart TB
         bb-generated-exercises["Generated exercises"]
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
-        bb-component-rules["Component rules"]
         bb-e2e["End-to-end tests"]
         bb-runtime-texts["Runtime texts"]
     end
@@ -64,12 +64,10 @@ flowchart TB
     bb-explainer-components["Vue components"]
     bb-tooling["Tooling helpers"]
     bb-build -->|"if-archetype-content"| bb-explainer-content
-    bb-build -->|"if-component-rules"| bb-component-rules
     bb-build -->|"if-exercise-logic"| bb-explainer-components
     bb-build -->|"if-tutor-files"| bb-tutor-handoff
     bb-validation -->|"if-archetype-content"| bb-explainer-content
     bb-validation -->|"if-data-files"| bb-explainer-data
-    bb-validation -->|"if-component-rules"| bb-component-rules
     bb-render -->|"if-archetype-content"| bb-explainer-content
     bb-render -->|"if-vue-component"| bb-explainer-components
     bb-render -->|"if-runtime-texts"| bb-runtime-texts
@@ -100,7 +98,7 @@ id: bb-archetype-runtime
 title: Explainer runtime
 path: runtime/explainer
 technology: TypeScript, Vite plugin, Vue
-requires: if-shared-runtime, if-preset, if-questions
+requires: if-shared-runtime, if-preset, if-questions, if-component-rules
 implements: concept-archetype-extension
 :::
 ```
@@ -250,7 +248,7 @@ like every formula.
 id: bb-generated-exercises
 title: Generated exercises
 parent: bb-archetype-runtime
-path: runtime/explainer/generated.ts
+path: runtime/explainer/generated
 technology: TypeScript, exact fractions
 requires: if-archetype-content, if-data-files, if-questions
 implements: concept-determinism
@@ -318,38 +316,6 @@ title: Task numbers and their seeds
 provider: bb-task-numbers
 protocol: TypeScript import
 path: runtime/explainer/tasks.ts
-:::
-```
-
-### Component rules
-
-Built, also reused by the interactive archetype: code checks on the SFC compiler's output of every component and the
-modules it imports (no network, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from Vue, the
-runtime, the storage, i18n and a11y helpers and the component's own folder, browser globals only once mounted), and
-what the build reads from a component (props, its test file, an exercise component's logic module).
-
-```arc42
-:::building-block
-id: bb-component-rules
-title: Component rules
-parent: bb-archetype-runtime
-path: runtime/explainer/components.ts
-technology: TypeScript, Vue SFC compiler
-implements: concept-component-rules
-:::
-```
-
-#### Component rules interface
-
-The build step and the validation run the checks and read the components through it.
-
-```arc42
-:::interface
-id: if-component-rules
-title: Component checks on the SFC compiler's output
-provider: bb-component-rules
-protocol: TypeScript function call at build
-path: runtime/explainer/components.ts
 :::
 ```
 

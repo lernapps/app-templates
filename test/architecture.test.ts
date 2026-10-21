@@ -26,6 +26,12 @@ function imports(file: string): string[] {
   return specifiers.map((specifier) => resolve(dirname(file), specifier));
 }
 
+/** The source file a resolved import names: with its extension, or as a folder's index; none for a JSON file. */
+const resolveSource = (target: string): string[] =>
+  [target, `${target}.ts`, join(target, "index.ts")]
+    .filter((file) => file.endsWith(".ts") && existsSync(file))
+    .slice(0, 1);
+
 /** The part of the runtime a path is in: an archetype's folder, `shared`, or undefined outside the runtime. */
 const partOf = (path: string): string | undefined => {
   const [part] = relative(runtime, path).split(/[\\/]/);
@@ -44,6 +50,27 @@ describe("the runtime's dependencies", () => {
       expect(found, "move what both need into runtime/shared").toEqual([]);
     });
   }
+});
+
+describe("the runtime's modules", () => {
+  test("do not import each other in a circle", () => {
+    const files = [...ARCHETYPES, "shared"].flatMap((part) => sources(join(runtime, part)));
+    const graph = new Map(files.map((file) => [file, imports(file).flatMap((target) => resolveSource(target))]));
+    const circles: string[] = [];
+    const done = new Set<string>();
+    const walk = (file: string, trail: string[]): void => {
+      const at = trail.indexOf(file);
+      if (at >= 0) {
+        circles.push([...trail.slice(at), file].map((name) => relative(runtime, name)).join(" -> "));
+        return;
+      }
+      if (done.has(file)) return;
+      for (const next of graph.get(file) ?? []) walk(next, [...trail, file]);
+      done.add(file);
+    };
+    for (const file of files) walk(file, []);
+    expect(circles).toEqual([]);
+  });
 });
 
 describe("the package's public paths", () => {

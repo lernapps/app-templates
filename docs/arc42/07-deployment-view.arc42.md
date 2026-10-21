@@ -67,7 +67,7 @@ id: dn-creator-machine
 title: Creator's machine
 type: device
 parent: env-development
-hosts: bb-tooling, bb-skills, bb-runtime, bb-questions, bb-build, bb-validation, bb-render, bb-runtime-texts, bb-e2e
+hosts: bb-tooling, bb-skills, bb-runtime, bb-questions, bb-component-rules, bb-build, bb-validation, bb-render, bb-runtime-texts, bb-e2e
 :::
 ```
 
@@ -95,7 +95,7 @@ id: dn-ci-runner
 title: GitHub Actions runner
 type: server
 parent: env-ci
-hosts: bb-tooling, bb-runtime, bb-questions, bb-build, bb-validation, bb-render, bb-runtime-texts, bb-e2e
+hosts: bb-tooling, bb-runtime, bb-questions, bb-component-rules, bb-build, bb-validation, bb-render, bb-runtime-texts, bb-e2e
 :::
 ```
 
@@ -124,7 +124,7 @@ id: dn-github-pages
 title: GitHub Pages
 type: server
 parent: env-production
-hosts: bb-render, bb-runtime, bb-questions
+hosts: bb-render, bb-runtime, bb-questions, bb-component-rules
 :::
 ```
 
@@ -139,7 +139,7 @@ id: dn-pr-preview
 title: Pull request preview
 type: server
 parent: env-production
-hosts: bb-render, bb-runtime, bb-questions
+hosts: bb-render, bb-runtime, bb-questions, bb-component-rules
 :::
 ```
 

@@ -9,21 +9,11 @@ import { questionIn, type Question } from "../shared/questions/question.ts";
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 import type { DataRecord, Exercise, QuestionBlock } from "./content.ts";
-import {
-  figureOf,
-  generate,
-  hintOf,
-  questionFor,
-  stepsOf,
-  taskText,
-  tokenize,
-  taskKey,
-  WORKED_TASKS,
-  type Data,
-  type Generated,
-  type LanguageTemplates,
-  type Templates,
-} from "./generated.ts";
+import { figureOf, hintOf, stepsOf, taskText, tokenize } from "./generated/texts.ts";
+import { generate } from "./generated/values.ts";
+import { questionFor, taskKey } from "./generated/question.ts";
+import { WORKED_TASKS } from "./tasks.ts";
+import { type Data, type Generated, type LanguageTemplates, type Templates } from "./generated/types.ts";
 import { plain, renderInline, renderWithFormulas } from "../shared/text/markdown.ts";
 import { distinctSeeds } from "./tasks.ts";
 import { message } from "./messages.ts";
