@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://lernapps.net/tooling/schemas/question.v1.schema.json",
+  "$id": "urn:lernapps:schema:question.v1",
   "title": "A question of a lernapps app",
-  "description": "One question of the six types (single-choice, multiple-choice, true-false, number, ordering, matching) as a quiz and an explainer write it: the definitions below are shared by the schema of the quiz's question bank (quiz.v1.schema.json, which carries the same definitions so that its address keeps working) and the schema of the explainer's exercises. Use #/$defs/question for one question.",
+  "description": "One question of the six types (single-choice, multiple-choice, true-false, number, ordering, matching) as the quiz's question bank and the explainer's exercises write it. Use #/$defs/question for one question; the schemas of the quiz and of the explainer refer to it.",
   "$defs": {
     "text": {
       "type": "string",

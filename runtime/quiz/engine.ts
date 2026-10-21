@@ -17,12 +17,8 @@ import { createStorage } from "@lernapps/tooling/storage";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
 import { startQuestion } from "../shared/questions/engine.ts";
-import { isCorrect, questionId, shuffled, type Answer } from "./quiz.ts";
+import { isCorrect, questionId, shuffled, type Answer } from "../shared/questions/question.ts";
 import { solutionId, type QuizData } from "./render.ts";
-
-export * from "./quiz.ts";
-export { startQuestion, type StartQuestionOptions } from "../shared/questions/engine.ts";
-export type { QuizData } from "./render.ts";
 
 /** The quiz's texts, by the page's language. */
 const BY_LANGUAGE: Readonly<Record<string, typeof de>> = { de, en };

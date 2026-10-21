@@ -1,12 +1,9 @@
 // The question bank of a quiz about things to know (src/quiz.json, schema quiz.v1.schema.json): the quiz around its
 // questions, and the score. The questions themselves, and what counts as a right answer, are in
-// ../shared/questions/question.ts; this module passes them on, so that the quiz's own modules and the path
-// @lernapps/app-templates/quiz/question keep working. A quiz or page in several languages writes each learner text
-// as a map of texts by language, { de: …, en: … } (Quiz<Text>); quizIn gives it in the page's language.
+// ../shared/questions/question.ts. A quiz in several languages writes each learner text as a map of texts by
+// language, { de: …, en: … } (Quiz<Text>); quizIn gives it in the page's language.
 import { inLanguage, type Text } from "../shared/languages.ts";
 import { isCorrect, questionIn, type Answer, type Question } from "../shared/questions/question.ts";
-
-export * from "../shared/questions/question.ts";
 
 export interface Quiz<T extends Text = string> {
   /** The quiz's languages, German first; German only when it has none. */

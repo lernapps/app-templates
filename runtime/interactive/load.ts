@@ -15,7 +15,9 @@ import { languageListProblems, type Text } from "../shared/languages.ts";
 import type { Playthrough } from "./contract.ts";
 import { MESSAGES } from "./messages.ts";
 
-export const SCHEMA_URL = schema.$id;
+/** Where an app finds the schemas of its start page and of its playthroughs, for the messages that name them. */
+const SCHEMA_FILE = "node_modules/@lernapps/app-templates/runtime/interactive/interactive.v1.schema.json";
+const PLAYTHROUGH_SCHEMA_FILE = "node_modules/@lernapps/app-templates/runtime/interactive/playthrough.v1.schema.json";
 export const RULE_URL = "https://lernapps.net/tooling/rules/#interactive-app-valid";
 export const APP = "src/app.yaml";
 export const PLAYTHROUGHS = "src/playthroughs";
@@ -63,7 +65,7 @@ export class InteractiveError extends Error {
       [
         `the interactive app in src/ is not valid (${RULE_URL}):`,
         ...problems.map((problem) => `  - ${problem}`),
-        `Fix it as the schemas say: ${SCHEMA_URL}, ${playthroughSchema.$id}`,
+        `Fix it as the schemas say: ${SCHEMA_FILE}, ${PLAYTHROUGH_SCHEMA_FILE}`,
       ].join("\n"),
     );
     this.problems = problems;
@@ -98,7 +100,7 @@ function uniqueIds(yaml: YamlFile, key: string, items: readonly { id: string }[]
 export function check(root: string): { interactive?: Interactive; problems: string[] } {
   const problems = new Problems();
   if (!existsSync(join(root, APP))) {
-    problems.add(`${APP} is missing: the start page of the app comes from it (${SCHEMA_URL})`);
+    problems.add(`${APP} is missing: the start page of the app comes from it (${SCHEMA_FILE})`);
     return { problems: problems.lines };
   }
   const appYaml = readYaml(root, APP, problems);
@@ -135,7 +137,7 @@ export function check(root: string): { interactive?: Interactive; problems: stri
     : [];
   if (files.length === 0) {
     problems.add(
-      `${PLAYTHROUGHS}/: no playthrough; write at least one, <name>.yaml: a seed, and steps of keys, inputs or ticks with the state or announcement expected after them (${playthroughSchema.$id})`,
+      `${PLAYTHROUGHS}/: no playthrough; write at least one, <name>.yaml: a seed, and steps of keys, inputs or ticks with the state or announcement expected after them (${PLAYTHROUGH_SCHEMA_FILE})`,
     );
   }
   const playthroughs: PlaythroughFile[] = [];

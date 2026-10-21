@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vite-plus/test";
 import { renderQuiz } from "../runtime/quiz/render.ts";
-import { parseBank, SCHEMA_URL } from "../runtime/quiz/validate.ts";
+import { parseBank, SCHEMA_FILE } from "../runtime/quiz/validate.ts";
 
 const text = readFileSync(new URL("fixtures/naturwunder.json", import.meta.url), "utf8");
 const bank = () => JSON.parse(text) as { questions: Record<string, unknown>[] };
@@ -30,7 +30,7 @@ describe("a broken question bank fails the build", () => {
     expect(message).toContain(
       'questions[0] (question "grand-canyon"): a single-choice question needs exactly one correct option; it has 4',
     );
-    expect(message).toContain(SCHEMA_URL);
+    expect(message).toContain(SCHEMA_FILE);
   });
 
   test("a question without its options, of an unknown type, or with a duplicate id", () => {

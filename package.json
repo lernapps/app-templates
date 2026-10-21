@@ -1,7 +1,7 @@
 {
   "name": "@lernapps/app-templates",
   "version": "0.0.0",
-  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, and the questions it shares with the explainer, see ./questions; the explainer: build step, client module with its exercises, the islands of its Vue components, styles, end-to-end tests, the schema of its content; the interactive archetype: build step, the start page and the app page around the app's own Vue components and core, its playthroughs, styles, end-to-end tests, the schemas of its start page and its playthroughs)",
+  "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, the questions it shares with the explainer are in ./questions; the explainer: build step, client module with its exercises, the islands of its Vue components, styles, end-to-end tests, the schema of its content; the interactive archetype: build step, the start page and the app page around the app's own Vue components and core, its playthroughs, styles, end-to-end tests, the schemas of its start page and its playthroughs)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -27,8 +27,6 @@
       "default": "./dist/questions-e2e.mjs"
     },
     "./questions/question.v1.schema.json": "./runtime/shared/questions/question.v1.schema.json",
-    "./questions/messages/de.json": "./runtime/shared/questions/messages/de.json",
-    "./questions/messages/en.json": "./runtime/shared/questions/messages/en.json",
     "./quiz": {
       "types": "./runtime/quiz/engine.ts",
       "default": "./dist/quiz.mjs"
@@ -37,18 +35,12 @@
       "types": "./runtime/quiz/plugin.ts",
       "default": "./dist/quiz-plugin.mjs"
     },
-    "./quiz/question": {
-      "types": "./runtime/quiz/question.ts",
-      "default": "./dist/quiz-question.mjs"
-    },
     "./quiz/e2e": {
       "types": "./runtime/quiz/e2e.ts",
       "default": "./dist/quiz-e2e.mjs"
     },
     "./quiz/style.css": "./runtime/quiz/quiz.css",
     "./quiz/quiz.v1.schema.json": "./runtime/quiz/quiz.v1.schema.json",
-    "./quiz/messages/de.json": "./runtime/quiz/messages/de.json",
-    "./quiz/messages/en.json": "./runtime/quiz/messages/en.json",
     "./explainer": {
       "types": "./runtime/explainer/explainer.ts",
       "default": "./dist/explainer.mjs"
@@ -62,8 +54,6 @@
       "default": "./dist/explainer-e2e.mjs"
     },
     "./explainer/style.css": "./runtime/explainer/explainer.css",
-    "./explainer/messages/de.json": "./runtime/explainer/messages/de.json",
-    "./explainer/messages/en.json": "./runtime/explainer/messages/en.json",
     "./explainer/explainer.v1.schema.json": "./runtime/explainer/explainer.v1.schema.json",
     "./interactive": {
       "types": "./runtime/interactive/interactive.ts",
@@ -78,8 +68,6 @@
       "default": "./dist/interactive-e2e.mjs"
     },
     "./interactive/style.css": "./runtime/interactive/interactive.css",
-    "./interactive/messages/de.json": "./runtime/interactive/messages/de.json",
-    "./interactive/messages/en.json": "./runtime/interactive/messages/en.json",
     "./interactive/interactive.v1.schema.json": "./runtime/interactive/interactive.v1.schema.json",
     "./interactive/playthrough.v1.schema.json": "./runtime/interactive/playthrough.v1.schema.json"
   },

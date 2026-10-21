@@ -23,5 +23,5 @@ A quiz about things to know: one page of questions with options, feedback on eve
 
 ## What the app supplies
 
-- Only the question bank `src/quiz.json` ([schema](https://lernapps.net/tooling/schemas/quiz.v1.schema.json)). No
+- Only the question bank `src/quiz.json` ([schema](../runtime/quiz/quiz.v1.schema.json)). No
   code: the runtime `@lernapps/app-templates` does the rest.

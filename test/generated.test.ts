@@ -13,7 +13,7 @@ import {
   type Generated,
   type Templates,
 } from "../runtime/explainer/generated.ts";
-import { isCorrect, rightAnswer, wrongAnswer } from "../runtime/quiz/quiz.ts";
+import { isCorrect, rightAnswer, wrongAnswer } from "../runtime/shared/questions/question.ts";
 import type { DataRecord } from "../runtime/explainer/content.ts";
 import { Fraction } from "../runtime/explainer/fraction.ts";
 

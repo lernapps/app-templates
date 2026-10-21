@@ -21,7 +21,8 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "playwright/test";
 import type { Text } from "../shared/languages.ts";
 import { answerQuestion, expectBackground, expectFeedbackInView, question } from "../shared/questions/e2e.ts";
-import { questionId, quizIn, quizLanguages, rightAnswer, wrongAnswer, type Quiz } from "./quiz.ts";
+import { questionId, rightAnswer, wrongAnswer } from "../shared/questions/question.ts";
+import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
 import { messagesIn, QUIZ_MESSAGES } from "./render.ts";
 
 export { answerQuestion, expectBackground, expectFeedbackInView } from "../shared/questions/e2e.ts";
