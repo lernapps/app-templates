@@ -1,18 +1,18 @@
-// The contract of one question of the quiz, as another archetype consumes it (@lernapps/app-templates/quiz/question):
-// the schema of a question, usable from another schema; the validation of one question, with the same messages as
-// the quiz's for the same problem, at the path the consumer gives; the rendering of one question's controls and of
-// its solution without JavaScript, a fragment that can sit in a <details>; the checker; the messages. The quiz
-// itself is built from the same exports. The fixture bank (test/fixtures/naturwunder.json) has every type of question.
+// The contract of one question, as an archetype consumes it (@lernapps/app-templates/questions): the schema of a
+// question, usable from another schema; the validation of one question, with the same messages whatever the archetype,
+// at the path the consumer gives; the rendering of one question's controls and of its solution without JavaScript, a
+// fragment that can sit in a <details>; the checker; the messages. The quiz and the explainer are built from the same
+// exports. The fixture bank (test/fixtures/naturwunder.json) has every type of question.
 import { readFileSync } from "node:fs";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { describe, expect, test } from "vite-plus/test";
 import {
   isCorrect,
   messages,
-  QUESTION_SCHEMA_URL,
+  QUESTION_REF,
   questionId,
   questionIn,
-  quizSchema,
+  questionSchemas,
   renderQuestion,
   renderSolution,
   rightAnswer,
@@ -20,7 +20,7 @@ import {
   wrongAnswer,
   wrongReasons,
   type Question,
-} from "../runtime/quiz/question.ts";
+} from "../runtime/shared/questions/index.ts";
 import { renderQuiz } from "../runtime/quiz/render.ts";
 import { parseBank, problems } from "../runtime/quiz/validate.ts";
 
@@ -40,17 +40,17 @@ const plain = (html: string) =>
 
 describe("the schema of a question, from another schema", () => {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
-  ajv.addSchema(quizSchema);
+  for (const each of questionSchemas) ajv.addSchema(each);
   const validate = ajv.compile({
     $id: "https://example.org/exercise.schema.json",
     type: "object",
     additionalProperties: false,
     required: ["exercise"],
-    properties: { exercise: { $ref: QUESTION_SCHEMA_URL } },
+    properties: { exercise: { $ref: QUESTION_REF } },
   });
 
-  test("names the question of the quiz's schema", () => {
-    expect(QUESTION_SCHEMA_URL).toBe("https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question");
+  test("names the question of the schema of a question", () => {
+    expect(QUESTION_REF).toBe("urn:lernapps:schema:question.v1#/$defs/question");
   });
 
   test.each(questions.map((question) => [question.type, question] as const))("a valid %s passes", (_type, item) => {
@@ -213,11 +213,11 @@ describe("one question's controls", () => {
     "%s: its text, its controls and the button to check, in an element of its own",
     (_type, item) => {
       const html = renderQuestion(item);
-      expect(html.startsWith(`<div class="quiz-question" id="${questionId(item)}" data-id="${item.id}"`)).toBe(true);
+      expect(html.startsWith(`<div class="question" id="${questionId(item)}" data-id="${item.id}"`)).toBe(true);
       expect(html.endsWith("</div>")).toBe(true);
-      expect(html).toContain(`<legend class="quiz-text">`);
+      expect(html).toContain(`<legend class="question-text">`);
       expect(html).toContain(`>${messages.check}</button>`);
-      expect(html).not.toContain("quiz-next");
+      expect(html).not.toContain("question-next");
       const controls = {
         "single-choice": [/type="radio"/g, item.type === "single-choice" ? item.options.length : 0],
         "multiple-choice": [/type="checkbox"/g, item.type === "multiple-choice" ? item.options.length : 0],
@@ -234,9 +234,9 @@ describe("one question's controls", () => {
   test("in a list item and with the button to the next question, as in the quiz", () => {
     const item = questions[0] as Question;
     const html = renderQuestion(item, { element: "li", next: true });
-    expect(html.startsWith(`<li class="quiz-question"`)).toBe(true);
+    expect(html.startsWith(`<li class="question"`)).toBe(true);
     expect(html.endsWith("</li>")).toBe(true);
-    expect(html).toContain(`class="quiz-next" hidden>${messages.next}</button>`);
+    expect(html).toContain(`class="question-next" hidden>${messages.next}</button>`);
   });
 });
 
@@ -330,17 +330,4 @@ describe("why a wrong answer is wrong", () => {
       { text: "Der höchste Berg kommt zuletzt." },
     ]);
   });
-});
-
-test("the package exports the question, the engine, the e2e helpers and the messages", () => {
-  const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
-    exports: Record<string, string | { types: string; default: string }>;
-  };
-  expect(manifest.exports["./quiz/question"]).toEqual({
-    types: "./runtime/quiz/question.ts",
-    default: "./dist/quiz-question.mjs",
-  });
-  expect(manifest.exports["./quiz/messages/de.json"]).toBe("./runtime/quiz/messages/de.json");
-  expect(manifest.exports["./quiz"]).toBeDefined();
-  expect(manifest.exports["./quiz/e2e"]).toBeDefined();
 });

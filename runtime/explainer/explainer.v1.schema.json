@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://lernapps.net/tooling/schemas/explainer.v1.schema.json",
+  "$id": "urn:lernapps:schema:explainer.v1",
   "title": "Content of a lernapps explainer",
   "description": "The content of an app built from the archetype explainer (runtime @lernapps/app-templates), as YAML in src/: the app (src/app.yaml), each chapter (src/<chapter>/chapter.yaml), each page (src/<chapter>/<page>.yaml) and data files (src/data/<name>.yaml). A page is a list of blocks from a closed set; structure comes only from section blocks. The build validates every file against this schema, then what a schema cannot say (order lists complete, depth, languages complete, formulas in the command list), and fails with one line per problem. Every text is for learners, in plain language. A text is a string while German is the app's only language, else a map of texts by language: { de: …, en: … }.",
   "allOf": [
@@ -56,34 +56,13 @@
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
     },
     "text": {
-      "description": "A text without formatting: a string while German is the only language of the app, else a map of texts by language ({ de: …, en: … }) with every declared language.",
-      "anyOf": [
-        {
-          "type": "string",
-          "minLength": 1,
-          "pattern": "\\S"
-        },
-        {
-          "type": "object",
-          "minProperties": 1,
-          "propertyNames": {
-            "pattern": "^[a-z]{2}$"
-          },
-          "additionalProperties": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "\\S"
-          }
-        }
-      ]
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
     },
     "markdown": {
-      "description": "Restricted Markdown, as a text or a map of texts by language: paragraphs, **bold**, *italics*, lists, links and line breaks, formulas as $…$ in the formula command list. No headings (use a section block), no HTML, no images (use a figure block), no code (use a code block), no quotes (use a quote block), no tables (use a table block). A link to a page of the app starts with / and names it from the app's root: /<chapter>/<page>/#<section>.",
-      "$ref": "#/$defs/text"
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/markdown"
     },
     "latex": {
-      "description": "One formula in the LaTeX subset of the formula command list: \\frac, \\cdot, \\times, \\div, \\%, \\text, ^, _, \\sqrt, \\approx, \\pm, \\le, \\ge, \\neq, \\, (thin space), parentheses and braces; \\ce{…} for chemical equations and \\pu{…} for units (mhchem). Written without the $ signs. A map by language only when it has \\text{…} that differs by language.",
-      "$ref": "#/$defs/text"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/latex"
     },
     "source": {
       "type": "object",
@@ -103,43 +82,10 @@
       "description": "Where the app's facts come from."
     },
     "credit": {
-      "description": "Where a bundled image or a quote comes from: the source (a URL or a citation) and its licence (an SPDX identifier such as CC-BY-SA-4.0, or \"gemeinfrei\").",
-      "type": "object",
-      "properties": {
-        "source": {
-          "description": "Where it comes from: a URL, the same in every language and shown as a link, or a citation, a text like any other: a string while German is the only language of the app, else a map of texts by language with every declared language, e.g. { de: eigene Zeichnung, en: own drawing }. Each language's page shows its own.",
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1,
-              "pattern": "\\S"
-            },
-            {
-              "type": "object",
-              "minProperties": 1,
-              "propertyNames": {
-                "pattern": "^[a-z]{2}$"
-              },
-              "additionalProperties": {
-                "type": "string",
-                "minLength": 1,
-                "pattern": "\\S"
-              }
-            }
-          ]
-        },
-        "licence": {
-          "description": "Its licence: an SPDX identifier (CC-BY-SA-4.0, CC0-1.0, …), or gemeinfrei for a work in the public domain.",
-          "type": "string",
-          "minLength": 1,
-          "pattern": "\\S"
-        }
-      }
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/credit"
     },
     "image": {
-      "description": "A bundled image file in src/images/, as a path from src/: images/<name>.svg (or .png, .jpg, .webp).",
-      "type": "string",
-      "pattern": "^images/[a-z0-9]+(-[a-z0-9]+)*\\.(svg|png|jpg|webp)$"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/image"
     },
     "app": {
       "description": "src/app.yaml: the app, its languages and the order of its chapters.",
@@ -500,7 +446,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -514,7 +460,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -528,7 +474,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -542,7 +488,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -556,7 +502,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -570,7 +516,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -605,201 +551,22 @@
       "unevaluatedProperties": false
     },
     "textBlock": {
-      "description": "Prose in restricted Markdown.",
-      "required": ["text"],
-      "properties": {
-        "text": {
-          "$ref": "#/$defs/markdown"
-        }
-      },
-      "type": "object"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/textBlock"
     },
     "formula": {
-      "description": "One formula on its own line, rendered at build to MathML.",
-      "required": ["formula"],
-      "properties": {
-        "formula": {
-          "$ref": "#/$defs/latex"
-        }
-      },
-      "type": "object"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/formula"
     },
     "figure": {
-      "description": "A figure: drawn from data (draw) or a bundled image (image, with its source and licence), one of the two. It has an alternative text that says what it shows, and a caption that says what to see.",
-      "required": ["alt", "caption"],
-      "allOf": [
-        {
-          "$ref": "#/$defs/credit"
-        }
-      ],
-      "properties": {
-        "draw": {
-          "$ref": "#/$defs/drawing"
-        },
-        "image": {
-          "$ref": "#/$defs/image"
-        },
-        "alt": {
-          "description": "What the figure shows, for those who cannot see it.",
-          "$ref": "#/$defs/text"
-        },
-        "caption": {
-          "description": "What to see in the figure, under it.",
-          "$ref": "#/$defs/markdown"
-        }
-      },
-      "dependentRequired": {
-        "image": ["source", "licence"]
-      },
-      "type": "object"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/figure"
     },
     "drawing": {
-      "description": "A figure drawn from numbers at build, as inline SVG: hundred-grid (a field of 100 squares, filled of them shaded) or bar (a strip, part of whole shaded, with its percentage).",
-      "type": "object",
-      "required": ["kind"],
-      "properties": {
-        "kind": {
-          "enum": ["hundred-grid", "bar"]
-        }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "hundred-grid"
-              }
-            },
-            "required": ["kind"],
-            "type": "object"
-          },
-          "then": {
-            "required": ["filled"],
-            "properties": {
-              "filled": {
-                "description": "How many of the 100 squares are shaded.",
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 100
-              }
-            },
-            "type": "object"
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "bar"
-              }
-            },
-            "required": ["kind"],
-            "type": "object"
-          },
-          "then": {
-            "required": ["part", "whole"],
-            "properties": {
-              "part": {
-                "description": "The shaded part.",
-                "type": "number",
-                "minimum": 0
-              },
-              "whole": {
-                "description": "The whole strip, 100 %.",
-                "type": "number",
-                "exclusiveMinimum": 0
-              }
-            },
-            "type": "object"
-          }
-        }
-      ],
-      "unevaluatedProperties": false
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/drawing"
     },
     "labelledFigure": {
-      "description": "A bundled image with numbered labels at positions and a legend of the labels in order.",
-      "required": ["image", "alt", "labels", "source", "licence"],
-      "allOf": [
-        {
-          "$ref": "#/$defs/credit"
-        }
-      ],
-      "properties": {
-        "image": {
-          "$ref": "#/$defs/image"
-        },
-        "alt": {
-          "description": "What the image shows, for those who cannot see it.",
-          "$ref": "#/$defs/text"
-        },
-        "caption": {
-          "description": "What to see in the figure.",
-          "$ref": "#/$defs/markdown"
-        },
-        "labels": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["x", "y", "text"],
-            "properties": {
-              "x": {
-                "description": "From the left edge, in percent of the width.",
-                "type": "number",
-                "minimum": 0,
-                "maximum": 100
-              },
-              "y": {
-                "description": "From the top edge, in percent of the height.",
-                "type": "number",
-                "minimum": 0,
-                "maximum": 100
-              },
-              "text": {
-                "description": "What the label names.",
-                "$ref": "#/$defs/text"
-              }
-            }
-          }
-        }
-      },
-      "type": "object"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/labelledFigure"
     },
     "table": {
-      "description": "A table with a caption. Cells are restricted Markdown without paragraphs.",
-      "required": ["caption", "rows"],
-      "properties": {
-        "caption": {
-          "description": "What the table shows.",
-          "$ref": "#/$defs/text"
-        },
-        "header": {
-          "description": "The header row: one heading per column.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/markdown"
-          }
-        },
-        "rowHeaders": {
-          "description": "The first cell of each row heads the row.",
-          "type": "boolean",
-          "default": false
-        },
-        "rows": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "$ref": "#/$defs/markdown"
-            }
-          }
-        }
-      },
-      "type": "object"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/table"
     },
     "timeline": {
       "description": "Dated events, from the earliest: listed here (events) or the records of a data file (data) with the fields date, title and optional label and text; one of the two.",
@@ -865,66 +632,10 @@
       "type": "object"
     },
     "quote": {
-      "description": "A quotation, quoted exactly, with its origin, source and licence.",
-      "required": ["text", "origin", "source", "licence"],
-      "allOf": [
-        {
-          "$ref": "#/$defs/credit"
-        }
-      ],
-      "properties": {
-        "text": {
-          "description": "The quotation itself, exactly as written.",
-          "$ref": "#/$defs/markdown"
-        },
-        "origin": {
-          "description": "Who said or wrote it, where and when.",
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["author"],
-          "properties": {
-            "author": {
-              "description": "Who said or wrote it. A name is the same in every language: a string, or a map by language where it differs.",
-              "$ref": "#/$defs/text"
-            },
-            "work": {
-              "description": "Where it was said or written: the work, as it is called; a string, or a map by language where its title is translated.",
-              "$ref": "#/$defs/text"
-            },
-            "year": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "$ref": "#/$defs/text"
-                }
-              ],
-              "description": "When: a year, or a text such as um 500 v. Chr."
-            }
-          }
-        }
-      },
-      "type": "object"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/quote"
     },
     "code": {
-      "description": "Program code, highlighted at build.",
-      "required": ["language", "code"],
-      "properties": {
-        "language": {
-          "enum": ["bash", "c", "css", "html", "java", "javascript", "json", "plaintext", "python", "sql", "typescript"]
-        },
-        "code": {
-          "description": "The code, as it is.",
-          "type": "string",
-          "minLength": 1
-        },
-        "caption": {
-          "description": "What the code does.",
-          "$ref": "#/$defs/text"
-        }
-      },
-      "type": "object"
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/code"
     },
     "box": {
       "description": "A box with a heading (the next level below its place) and blocks: example for a worked example, note for a hint or something to remember. A box holds no sections and no boxes.",

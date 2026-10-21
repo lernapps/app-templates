@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json",
+  "$id": "urn:lernapps:schema:quiz.v1",
   "title": "Question bank of a lernapps quiz",
   "description": "The questions of a quiz built from the archetype quiz (runtime @lernapps/app-templates), in src/quiz.json: a quiz about things to know. Each option carries short background knowledge, each question links to further reading. The build validates the bank against this schema and fails with a message naming each problem. Every text is for learners: German, plain language, in your own words. A quiz in several languages declares them in languages, German first, and writes every text for learners as a map of texts by language ({ \"de\": …, \"en\": … }) with each of them, and the address of a link as one for every language or as a map by language; the build then writes a page per language.",
   "type": "object",
@@ -23,11 +23,11 @@
     },
     "title": {
       "description": "The title of the quiz: the page's title and its h1 heading.",
-      "$ref": "#/$defs/learnerText"
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
     },
     "intro": {
       "description": "One or two sentences under the heading: what the quiz is about and whom it is for.",
-      "$ref": "#/$defs/learnerText"
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
     },
     "rememberLastResult": {
       "description": "Keep the last result on the learner's device (localStorage, through the preset's storage) and show it at the end. Off by default: then the quiz stores nothing.",
@@ -39,7 +39,7 @@
       "type": "array",
       "minItems": 1,
       "items": {
-        "$ref": "#/$defs/question"
+        "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
       }
     },
     "sources": {
@@ -52,342 +52,6 @@
     }
   },
   "$defs": {
-    "text": {
-      "type": "string",
-      "minLength": 1,
-      "pattern": "\\S"
-    },
-    "learnerText": {
-      "description": "A text for learners: a string, or a map of texts by language ({ de: …, en: … }) in a quiz or on a page in several languages. German is required; the quiz or page checks that every language it declares is there, and that no other is.",
-      "anyOf": [
-        {
-          "$ref": "#/$defs/text"
-        },
-        {
-          "type": "object",
-          "minProperties": 1,
-          "propertyNames": {
-            "pattern": "^[a-z]{2}$"
-          },
-          "additionalProperties": {
-            "$ref": "#/$defs/text"
-          }
-        }
-      ]
-    },
-    "question": {
-      "type": "object",
-      "required": ["id", "type", "text", "explanation", "links"],
-      "properties": {
-        "id": {
-          "description": "Stable name of the question, used in its address (#frage-<id>): lower-case letters, digits and hyphens. Keep it when the text changes, so links to the question keep working.",
-          "type": "string",
-          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-        },
-        "type": {
-          "description": "The kind of question.",
-          "enum": ["single-choice", "multiple-choice", "true-false", "number", "ordering", "matching"]
-        },
-        "text": {
-          "description": "The question, complete in itself.",
-          "$ref": "#/$defs/learnerText"
-        },
-        "explanation": {
-          "description": "Why the right answer is right, in one to three sentences. For number, ordering and matching questions also the background knowledge, as their options carry none.",
-          "$ref": "#/$defs/learnerText"
-        },
-        "links": {
-          "description": "Further reading on the question, at least one link, e.g. to the article in the German Wikipedia; in a quiz or on a page in several languages to the article in each language's Wikipedia, with url as a map by language.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/link"
-          }
-        },
-        "hint": {
-          "description": "Optional: what to look at again after a wrong answer, in one sentence, without giving the answer away, e.g. \"Schau dir noch einmal an, wie hoch die Spannung im Haushalt ist.\" Shown with the feedback of a wrong answer when nothing more specific applies: a chosen option's info or a number's typical mistake come first. In an explainer, a wrong answer can be tried again, with this hint, before the solution shows.",
-          "$ref": "#/$defs/learnerText"
-        },
-        "examples": {
-          "$ref": "#/$defs/examples"
-        }
-      },
-      "allOf": [
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "const": "single-choice"
-              }
-            },
-            "required": ["type"]
-          },
-          "then": {
-            "$ref": "#/$defs/choice"
-          }
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "const": "multiple-choice"
-              }
-            },
-            "required": ["type"]
-          },
-          "then": {
-            "$ref": "#/$defs/choice"
-          }
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "const": "true-false"
-              }
-            },
-            "required": ["type"]
-          },
-          "then": {
-            "$ref": "#/$defs/trueFalse"
-          }
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "const": "number"
-              }
-            },
-            "required": ["type"]
-          },
-          "then": {
-            "$ref": "#/$defs/number"
-          }
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "const": "ordering"
-              }
-            },
-            "required": ["type"]
-          },
-          "then": {
-            "$ref": "#/$defs/ordering"
-          }
-        },
-        {
-          "if": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "const": "matching"
-              }
-            },
-            "required": ["type"]
-          },
-          "then": {
-            "$ref": "#/$defs/matching"
-          }
-        }
-      ],
-      "unevaluatedProperties": false
-    },
-    "examples": {
-      "description": "Optional: test cases for the build, never shown to learners. Before you write the question, note which answers fulfil its text and which typical wrong answers there are; write the other correct answers the text allows (also those other than the one you marked) into accepted, the typical wrong ones into rejected. The build runs each through the same check the page uses and fails when it accepts a rejected answer or rejects an accepted one: then the question checks something other than what its text asks (e.g. an ordering whose text says the order does not matter), so change the question or its text. An answer as the learner gives it, by the type: single-choice an option; multiple-choice a list of options, e.g. [0, 2]; true-false true or false; number a number, or the text as a learner types it, e.g. \"12,5\"; ordering every item in the learner's order; matching a list of pairs [left, right], one for each left entry. An option, item or entry is its index from 0 in the order written, or its text as written (in German). A number's mistakes and the info of wrong options already count as rejected.",
-      "type": "object",
-      "additionalProperties": false,
-      "minProperties": 1,
-      "properties": {
-        "accepted": {
-          "description": "Answers the text allows, each of which the check must accept.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/exampleAnswer"
-          }
-        },
-        "rejected": {
-          "description": "Typical wrong answers, each of which the check must reject.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/exampleAnswer"
-          }
-        }
-      }
-    },
-    "exampleAnswer": {
-      "description": "An answer as the learner gives it, in the shape of the question's type (see examples); the build checks its shape."
-    },
-    "choice": {
-      "type": "object",
-      "description": "Single choice: exactly one option is correct. Multiple choice: at least one option is correct, and the learner selects every correct one.",
-      "required": ["options"],
-      "properties": {
-        "options": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 8,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["text", "correct", "info"],
-            "properties": {
-              "text": {
-                "description": "The option as the learner reads it.",
-                "$ref": "#/$defs/learnerText"
-              },
-              "correct": {
-                "description": "Whether this option is correct.",
-                "type": "boolean"
-              },
-              "info": {
-                "description": "One to three sentences of background on this option itself, true whether or not it is the right answer, e.g. \"Der Uluru ist ein Inselberg in der Wüste Zentralaustraliens ...\". After an answer it shows for every option. For a wrong option it is also the reason a learner who chose it reads with the feedback, so say there why it does not fit.",
-                "$ref": "#/$defs/learnerText"
-              },
-              "link": {
-                "description": "Further reading on this option.",
-                "$ref": "#/$defs/link"
-              }
-            }
-          }
-        }
-      }
-    },
-    "trueFalse": {
-      "type": "object",
-      "description": "A statement the learner judges as true or false; the background goes into the explanation.",
-      "required": ["answer"],
-      "properties": {
-        "answer": {
-          "description": "Whether the statement is true.",
-          "type": "boolean"
-        }
-      }
-    },
-    "number": {
-      "type": "object",
-      "description": "The learner types a number; it counts when it is within the tolerance of the answer. A comma or a point both work as the decimal sign. The background goes into the explanation.",
-      "required": ["answer", "tolerance"],
-      "properties": {
-        "answer": {
-          "description": "The right number.",
-          "type": "number"
-        },
-        "tolerance": {
-          "description": "How far the learner's number may be from the answer and still count; 0 for an exact answer. Match it to the rounding the question asks for.",
-          "type": "number",
-          "minimum": 0
-        },
-        "unit": {
-          "description": "The unit, shown next to the input, e.g. \"cm\"; the learner does not type it.",
-          "$ref": "#/$defs/learnerText"
-        },
-        "mistakes": {
-          "description": "Optional: typical wrong numbers, each with a message that says what went wrong, e.g. { \"answer\": 2300, \"message\": \"Du hast mit 10 statt mit 100 multipliziert.\" }. A learner's number within the tolerance of a mistake's answer gets its message with the feedback. A mistake's answer must not count as right, and each is listed once.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["answer", "message"],
-            "properties": {
-              "answer": {
-                "description": "The wrong number, as the mistake gives it.",
-                "type": "number"
-              },
-              "message": {
-                "description": "What went wrong, in one or two sentences, without giving the right number away.",
-                "$ref": "#/$defs/learnerText"
-              }
-            }
-          }
-        }
-      }
-    },
-    "ordering": {
-      "type": "object",
-      "description": "The learner puts the items in order, e.g. by height. Write them in the right order: the page shows them mixed. The background goes into the explanation.",
-      "required": ["items"],
-      "properties": {
-        "items": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 8,
-          "items": {
-            "$ref": "#/$defs/learnerText"
-          }
-        }
-      }
-    },
-    "matching": {
-      "type": "object",
-      "description": "The learner matches each left entry with its right entry. Write the pairs as they belong together: the page shows the right entries mixed. The background goes into the explanation.",
-      "required": ["pairs"],
-      "properties": {
-        "pairs": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 8,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["left", "right"],
-            "properties": {
-              "left": {
-                "$ref": "#/$defs/learnerText"
-              },
-              "right": {
-                "$ref": "#/$defs/learnerText"
-              }
-            }
-          }
-        }
-      }
-    },
-    "link": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["title", "url"],
-      "properties": {
-        "title": {
-          "description": "The link's text: what the learner finds there, e.g. \"Uluru (Wikipedia)\".",
-          "$ref": "#/$defs/learnerText"
-        },
-        "url": {
-          "description": "The address, https only: one for every language, or, in a quiz or on a page in several languages where the page to read differs by language (the article in each language's Wikipedia), a map of addresses by language ({ \"de\": \"https://de.wikipedia.org/wiki/Uluru\", \"en\": \"https://en.wikipedia.org/wiki/Uluru\" }) with every declared language, as a text's map. Each language's page links the address of its language. Check that each opens the page you mean.",
-          "$ref": "#/$defs/address"
-        }
-      }
-    },
-    "address": {
-      "description": "An address, https only: a string, the same in every language, or a map of addresses by language ({ de: …, en: … }) in a quiz or on a page in several languages. The quiz or page checks that a map has every language it declares, and no other.",
-      "anyOf": [
-        {
-          "type": "string",
-          "pattern": "^https://[^\\s]+$"
-        },
-        {
-          "type": "object",
-          "minProperties": 1,
-          "propertyNames": {
-            "pattern": "^[a-z]{2}$"
-          },
-          "additionalProperties": {
-            "type": "string",
-            "pattern": "^https://[^\\s]+$"
-          }
-        }
-      ]
-    },
     "source": {
       "type": "object",
       "additionalProperties": false,
@@ -395,7 +59,7 @@
       "properties": {
         "title": {
           "description": "The source, e.g. the article or book.",
-          "$ref": "#/$defs/learnerText"
+          "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
         },
         "url": {
           "description": "Its address, if it is on the web; https only.",

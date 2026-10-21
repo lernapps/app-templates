@@ -34,12 +34,16 @@ export default defineConfig({
     include: ["test/**/*.test.ts"],
   },
   pack: {
-    // What apps import: the engine (browser), the build step and the end-to-end tests (Node); and what other
-    // archetypes import to embed the quiz's questions: one question at build time (Node).
+    // What apps import: the engine (browser), the build step and the end-to-end tests (Node), and the questions the
+    // quiz and the explainer share.
     entry: {
+      // the questions of every archetype that has them (shared/questions): the quiz and the explainer build on them
+      blocks: "runtime/shared/blocks/index.ts",
+      questions: "runtime/shared/questions/index.ts",
+      "questions-engine": "runtime/shared/questions/engine.ts",
+      "questions-e2e": "runtime/shared/questions/e2e.ts",
       quiz: "runtime/quiz/engine.ts",
       "quiz-plugin": "runtime/quiz/plugin.ts",
-      "quiz-question": "runtime/quiz/question.ts",
       "quiz-e2e": "runtime/quiz/e2e.ts",
       explainer: "runtime/explainer/explainer.ts",
       "explainer-plugin": "runtime/explainer/plugin.ts",

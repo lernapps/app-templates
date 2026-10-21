@@ -1,11 +1,17 @@
-// Language maps in the quiz's question schema, for the explainer that embeds the quiz's question types: every learner
+// Language maps in the schema of a question, for every archetype that has questions: every learner
 // text of a question is a string or a map { de: …, en: … }; German is required; completeness is checked against the
 // declared languages with the explainer's messages; rendering and the checker pick the page's language. A link's
 // address is one for every language, or a map of addresses by language, checked the same way. Banks with plain strings
 // stay valid as they are.
 import { describe, expect, test } from "vite-plus/test";
-import { messagesIn, questionIn, renderQuestion, renderSolution, validateQuestion } from "../runtime/quiz/question.ts";
-import { isCorrect, type Question } from "../runtime/quiz/quiz.ts";
+import {
+  questionIn,
+  questionMessagesIn as messagesIn,
+  renderQuestion,
+  renderSolution,
+  validateQuestion,
+} from "../runtime/shared/questions/index.ts";
+import { isCorrect, type Question } from "../runtime/shared/questions/question.ts";
 import type { Text } from "../runtime/shared/languages.ts";
 
 const both = (de: string, en: string) => ({ de, en });

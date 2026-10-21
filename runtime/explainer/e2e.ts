@@ -11,7 +11,7 @@
 // language, its alternates in the other languages, a language switch and the archetype marker. Previous and next
 // form one chain over all pages, in the order of the lists. Every exercise shows its text in the page's language, and
 // every "Lösung" opens and shows the answer the checker accepts. With JavaScript, in German, one exercise of each type
-// per page, whose solution shows only once it is answered: a question of the quiz's types accepts its right answer
+// per page, whose solution shows only once it is answered: a question of the question types accepts its right answer
 // and then shows its solution; it rejects a wrong one with the most specific reason it has, stays open for another
 // try, and shows its solution on "Lösung zeigen"; the feedback each time in view with the focus. A generated exercise
 // shows, at its deep link ?seed=<n>#<id>, the task of number n (the seed of its table of distinct tasks), its worked tasks hidden;
@@ -33,10 +33,12 @@ import {
   wrongReasons,
   type Answer,
   type Question,
-} from "../quiz/quiz.ts";
-import { answerQuestion, expectFeedbackInView } from "../quiz/e2e.ts";
-import { messagesIn } from "../quiz/render.ts";
-import { answerFor, fill, generate, plainText, questionFor, taskKey, taskText } from "./generated.ts";
+} from "../shared/questions/question.ts";
+import { answerQuestion, expectFeedbackInView, expectMaterial } from "../shared/questions/e2e.ts";
+import { questionMessagesIn } from "../shared/questions/render.ts";
+import { answerFor, questionFor, taskKey } from "./generated/question.ts";
+import { fill, plainText, taskText } from "./generated/texts.ts";
+import { generate } from "./generated/values.ts";
 import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
 import { nextTaskNumber, taskNumber } from "./tasks.ts";
@@ -146,21 +148,21 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     } else await expect(nojs, "the component replaces its nojs text").toBeHidden();
     if (!component.exercise) continue;
     // the component's own answered, as it emits it, with each result: one feedback, in view with the focus
-    const feedback = element.locator(":scope > .quiz-feedback");
+    const feedback = element.locator(":scope > .question-feedback");
     for (const correct of [true, false]) {
       await element.evaluate(emitAnswered, { correct });
       await expect(feedback, `${component.name}: the feedback on answered`).toHaveText(
-        messagesIn("de")[correct ? "right" : "wrong"],
+        questionMessagesIn("de")[correct ? "right" : "wrong"],
       );
       await expect(feedback).toBeFocused();
       await expect(feedback).toBeInViewport();
     }
     // a wrong answer with its reason: the reason under the feedback
     await element.evaluate(emitAnswered, { correct: false, reason: "Der Grund." });
-    await expect(feedback.locator(".quiz-diagnosis"), `${component.name}: the reason of a wrong answer`).toHaveText(
+    await expect(feedback.locator(".question-diagnosis"), `${component.name}: the reason of a wrong answer`).toHaveText(
       "Der Grund.",
     );
-    await expect(element.locator(".quiz-feedback"), "one feedback").toHaveCount(1);
+    await expect(element.locator(".question-feedback"), "one feedback").toHaveCount(1);
     await checkTaskNumber(page, item, component);
   }
   expect(errors, `${item.url}: no console error`).toEqual([]);
@@ -214,11 +216,11 @@ async function checkTaskNumber(page: Page, item: PageOutline, component: Compone
 }
 
 /** The feedback of the question `id` says `text`. */
-const feedback = (page: Page, id: string) => page.locator(`[id="${id}"] .quiz-feedback`);
+const feedback = (page: Page, id: string) => page.locator(`[id="${id}"] .question-feedback`);
 
 /** The first reason the feedback gives for the wrong `answer`: the most specific the question has. */
 function reasonFor(question: Question, answer: Answer): string {
-  const quiz = messagesIn("de");
+  const quiz = questionMessagesIn("de");
   const [first] = wrongReasons(question, answer);
   if (first !== undefined) return first.option === undefined ? first.text : `${first.option}: ${first.text}`;
   return missesRight(question, answer) ? quiz.missingRight : quiz.lookAgain;
@@ -230,19 +232,19 @@ function reasonFor(question: Question, answer: Answer): string {
  */
 async function wrongThenSolution(page: Page, exercise: string, question: Question, reason: string): Promise<void> {
   const item = page.locator(`[id="${questionId(question)}"]`);
-  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").wrong);
-  await expect(item.locator(".quiz-diagnosis").first(), `${exercise}: the reason of the wrong answer`).toHaveText(
+  await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
+  await expect(item.locator(".question-diagnosis").first(), `${exercise}: the reason of the wrong answer`).toHaveText(
     reason,
   );
   await expectFeedbackInView(page, question);
-  await expect(item.locator(".quiz-reveal"), `${exercise}: no solution after a wrong answer`).toBeHidden();
+  await expect(item.locator(".question-reveal"), `${exercise}: no solution after a wrong answer`).toBeHidden();
   await expect(item.locator("input, select").first(), `${exercise}: another try`).toBeEnabled();
-  await item.getByRole("button", { name: messagesIn("de").showSolution }).click();
-  await expect(item.locator(".quiz-reveal"), `${exercise}: the solution on Lösung zeigen`).toBeVisible();
-  await expect(item.locator(".quiz-reveal")).toBeFocused();
+  await item.getByRole("button", { name: questionMessagesIn("de").showSolution }).click();
+  await expect(item.locator(".question-reveal"), `${exercise}: the solution on Lösung zeigen`).toBeVisible();
+  await expect(item.locator(".question-reveal")).toBeFocused();
 }
 
-/** With JavaScript: a question of the quiz's types, answered before its solution shows, right and wrong. */
+/** With JavaScript: a question of the question types, answered before its solution shows, right and wrong. */
 async function checkQuestion(
   page: Page,
   url: string,
@@ -251,12 +253,13 @@ async function checkQuestion(
   const { question } = exercise;
   const item = page.locator(`[id="${exercise.id}"]`);
   await page.goto(`./${url}#${exercise.id}`);
-  await expect(item.locator(".quiz-reveal"), `${exercise.id}: no solution before the answer`).toBeHidden();
+  await expectMaterial(page, question);
+  await expect(item.locator(".question-reveal"), `${exercise.id}: no solution before the answer`).toBeHidden();
   await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung before the answer`).toBeHidden();
   await answerQuestion(page, question, rightAnswer(question));
-  await expect(feedback(page, questionId(question))).toContainText(messagesIn("de").right);
+  await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").right);
   await expectFeedbackInView(page, question);
-  await expect(item.locator(".quiz-reveal"), `${exercise.id}: the solution after the right answer`).toBeVisible();
+  await expect(item.locator(".question-reveal"), `${exercise.id}: the solution after the right answer`).toBeVisible();
   await page.reload();
   const wrong = wrongAnswer(question);
   await answerQuestion(page, question, wrong);
@@ -312,7 +315,7 @@ async function checkGenerated(
   }
   await expect(nextLegend).toBeFocused();
   await answerQuestion(page, nextQuestion, rightAnswer(nextQuestion));
-  await expect(feedback(page, questionId(nextQuestion))).toContainText(messagesIn("de").right);
+  await expect(feedback(page, questionId(nextQuestion))).toContainText(questionMessagesIn("de").right);
   await expectFeedbackInView(page, nextQuestion);
 }
 
@@ -353,7 +356,7 @@ async function expectLanguages(page: Page, item: PageOutline, languages: readonl
   for (const lang of languages) {
     await expect(page.locator(`link[rel="alternate"][hreflang="${lang}"]`)).toHaveCount(1);
     if (lang === item.lang) continue;
-    const other = page.locator(`.explainer-languages a[hreflang="${lang}"]`);
+    const other = page.locator(`.page-languages a[hreflang="${lang}"]`);
     await expect(other).toBeVisible();
     const response = await page.request.get(await other.evaluate((a) => (a as HTMLAnchorElement).href));
     expect(response.status(), `${item.url}: the switch to ${lang}`).toBe(200);

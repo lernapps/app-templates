@@ -16,81 +16,26 @@
 // its page (/<language>/) is in that language with every question and its solution, and its switch leads to the page
 // in every language; with JavaScript one question is answered, with the feedback in that language.
 // The helpers answerQuestion, expectBackground and expectFeedbackInView work per question, on any page with a question
-// that renderQuestion of @lernapps/app-templates/quiz/question rendered and startQuestion made live.
+// that renderQuestion of @lernapps/app-templates/questions rendered and startQuestion made live (shared/questions/e2e.ts).
 import { readFileSync } from "node:fs";
-import { expect, test, type Locator, type Page } from "playwright/test";
+import { expect, test } from "playwright/test";
 import type { Text } from "../shared/languages.ts";
-import de from "./messages/de.json" with { type: "json" };
-import en from "./messages/en.json" with { type: "json" };
 import {
-  questionId,
-  quizIn,
-  quizLanguages,
-  rightAnswer,
-  wrongAnswer,
-  type Answer,
-  type Question,
-  type Quiz,
-} from "./quiz.ts";
+  answerQuestion,
+  expectBackground,
+  expectFeedbackInView,
+  expectMaterial,
+  question,
+} from "../shared/questions/e2e.ts";
+import { questionId, rightAnswer, wrongAnswer } from "../shared/questions/question.ts";
+import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
+import { messagesIn, QUIZ_MESSAGES } from "./render.ts";
 
-const MESSAGES: Readonly<Record<string, typeof de>> = { de, en };
+export { answerQuestion, expectBackground, expectFeedbackInView, expectMaterial } from "../shared/questions/e2e.ts";
+
+const de = QUIZ_MESSAGES.de;
 /** The quiz's own texts in `lang`. */
-const messagesOf = (lang: string) => MESSAGES[lang] ?? de;
-
-const question = (page: Page, item: Question) => page.locator(`#${questionId(item)}`);
-
-/** Gives `answer` to the question through its controls, as a learner does, on a page in `lang`. */
-export async function answerQuestion(page: Page, item: Question, answer: Answer, lang = "de"): Promise<void> {
-  const form = question(page, item);
-  switch (item.type) {
-    case "single-choice":
-    case "multiple-choice":
-    case "true-false": {
-      const values = typeof answer === "object" ? answer.map(String) : [String(answer)];
-      for (const value of values) await form.locator(`input[value="${value}"]`).check();
-      break;
-    }
-    case "number":
-      await form.locator("input").fill(String(answer));
-      break;
-    case "ordering":
-    case "matching": {
-      if (typeof answer !== "object") throw new Error(`${item.id}: an ${item.type} answer is a list`);
-      const key = item.type === "ordering" ? "item" : "left";
-      for (const [index, value] of answer.entries()) {
-        await form.locator(`select[data-${key}="${index}"]`).selectOption(String(value));
-      }
-      break;
-    }
-  }
-  await form.getByRole("button", { name: messagesOf(lang).check }).click();
-}
-
-/** What the learner learns about a question shows in `where`: each option's background, the explanation, the links. */
-export async function expectBackground(where: Locator, item: Question): Promise<void> {
-  if (item.type === "single-choice" || item.type === "multiple-choice") {
-    for (const option of item.options) {
-      await expect(where.getByText(option.info, { exact: true })).toBeVisible();
-      if (option.link) await expect(where.locator(`a[href="${option.link.url}"]`).first()).toBeVisible();
-    }
-  }
-  await expect(where.getByText(item.explanation, { exact: true })).toBeVisible();
-  for (const link of item.links) {
-    const anchor = where.locator(`a[href="${link.url}"]`).first();
-    await expect(anchor).toBeVisible();
-    await expect(anchor).toHaveAttribute("rel", "noopener");
-  }
-}
-
-/** After an answer, the learner sees the feedback without scrolling back; it has the focus, the next button follows. */
-export async function expectFeedbackInView(page: Page, item: Question): Promise<void> {
-  const feedback = question(page, item).locator(".quiz-feedback");
-  const top = await feedback.evaluate((element) => element.getBoundingClientRect().top);
-  const height = await page.evaluate(() => innerHeight);
-  expect(top, "the top of the feedback is in the viewport").toBeGreaterThanOrEqual(0);
-  expect(top, "the top of the feedback is in the viewport").toBeLessThan(height);
-  await expect(feedback).toBeFocused();
-}
+const messagesOf = messagesIn;
 
 /** The quiz's tests, for the question bank in `bank` (relative to the app's root). */
 export function quizTests(bank = "src/quiz.json"): void {
@@ -107,35 +52,42 @@ export function quizTests(bank = "src/quiz.json"): void {
       test(`${item.id} (${item.type}): its link opens it and the right answer counts`, async ({ page }) => {
         await page.goto(`./#${questionId(item)}`);
         await expect(question(page, item)).toBeVisible();
-        await expect(page.locator(".quiz-question:visible")).toHaveCount(1);
+        await expect(page.locator(".question:visible")).toHaveCount(1);
         await answerQuestion(page, item, rightAnswer(item));
-        await expect(question(page, item).locator(".quiz-feedback")).toContainText(de.right);
+        await expect(question(page, item).locator(".question-feedback")).toContainText(de.right);
         await expectFeedbackInView(page, item);
         // from the feedback, the keyboard reaches the next question (past the links of the background)
-        const next = question(page, item).locator(".quiz-next");
+        const next = question(page, item).locator(".question-next");
         for (let tab = 0; tab < 30 && !(await next.evaluate((button) => button === document.activeElement)); tab++) {
           await page.keyboard.press("Tab");
         }
         await expect(next).toBeFocused();
-        const reveal = question(page, item).locator(".quiz-reveal");
+        const reveal = question(page, item).locator(".question-reveal");
         await expectBackground(reveal, item);
         if (item.type === "single-choice" || item.type === "multiple-choice") {
           const right = item.options.filter((option) => option.correct).length;
-          await expect(reveal.locator(".quiz-badge-right")).toHaveCount(right);
-          await expect(reveal.locator(".quiz-badge-right").first()).toHaveText(de.rightOption);
+          await expect(reveal.locator(".question-badge-right")).toHaveCount(right);
+          await expect(reveal.locator(".question-badge-right").first()).toHaveText(de.rightOption);
         } else {
           await expect(reveal).toContainText(de.rightAnswer);
         }
       });
 
+      if (item.material !== undefined) {
+        test(`${item.id} (${item.type}): what it shows is there, and its images load`, async ({ page }) => {
+          await page.goto(`./#${questionId(item)}`);
+          await expectMaterial(page, item);
+        });
+      }
+
       test(`${item.id} (${item.type}): a wrong answer does not count`, async ({ page }) => {
         await page.goto(`./#${questionId(item)}`);
         await answerQuestion(page, item, wrongAnswer(item));
-        await expect(question(page, item).locator(".quiz-feedback")).toContainText(de.wrong);
+        await expect(question(page, item).locator(".question-feedback")).toContainText(de.wrong);
         await expectFeedbackInView(page, item);
-        await expectBackground(question(page, item).locator(".quiz-reveal"), item);
+        await expectBackground(question(page, item).locator(".question-reveal"), item);
         if (item.type === "single-choice" || item.type === "multiple-choice") {
-          await expect(question(page, item).locator(".quiz-badge-chosen").first()).toHaveText(de.yourChoice);
+          await expect(question(page, item).locator(".question-badge-chosen").first()).toHaveText(de.yourChoice);
         }
       });
     }
@@ -144,7 +96,7 @@ export function quizTests(bank = "src/quiz.json"): void {
       const everything = `&n=${quiz.questions.length}`;
       const order = async (address: string) => {
         await page.goto(address);
-        return page.locator(".quiz-question").evaluateAll((items) => items.map((item) => item.id).join());
+        return page.locator(".question").evaluateAll((items) => items.map((item) => item.id).join());
       };
       const first = await order(`./?seed=11${everything}`);
       expect(await order(`./?seed=11${everything}`)).toBe(first);
@@ -162,11 +114,11 @@ export function quizTests(bank = "src/quiz.json"): void {
       if (quiz.questions.length > 1) await page.locator(".quiz-start button").click();
       expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
       for (let step = 0; step < quiz.questions.length; step++) {
-        const id = await page.locator(".quiz-question:visible").getAttribute("data-id");
+        const id = await page.locator(".question:visible").getAttribute("data-id");
         const item = quiz.questions.find((candidate) => candidate.id === id);
         if (item === undefined) throw new Error(`no visible question at step ${step + 1}`);
         await answerQuestion(page, item, rightAnswer(item));
-        await question(page, item).locator(".quiz-next").click();
+        await question(page, item).locator(".question-next").click();
       }
       const total = String(quiz.questions.length);
       await expect(page.locator(".quiz-score")).toHaveText(
@@ -187,7 +139,7 @@ export function quizTests(bank = "src/quiz.json"): void {
       test("the learner chooses how many questions to answer; the address keeps the choice", async ({ page }) => {
         await page.goto("./?seed=11");
         await expect(page.locator(".quiz-start")).toBeVisible();
-        await expect(page.locator(".quiz-question:visible")).toHaveCount(0);
+        await expect(page.locator(".question:visible")).toHaveCount(0);
         const count = page.locator("#quiz-count");
         await expect(count).toHaveValue(String(quiz.questions.length));
         await expect(count).toHaveAttribute("max", String(quiz.questions.length));
@@ -195,19 +147,19 @@ export function quizTests(bank = "src/quiz.json"): void {
         await page.locator(".quiz-start button").click();
         await expect(page.locator(".quiz-start")).toBeHidden();
         expect(new URL(page.url()).searchParams.get("n")).toBe("1");
-        await expect(page.locator(".quiz-question")).toHaveCount(1);
+        await expect(page.locator(".question")).toHaveCount(1);
         await expect(page.locator(".quiz-solution")).toHaveCount(1);
-        const id = await page.locator(".quiz-question:visible").getAttribute("data-id");
+        const id = await page.locator(".question:visible").getAttribute("data-id");
         const item = quiz.questions.find((candidate) => candidate.id === id);
         if (item === undefined) throw new Error("no visible question");
         await answerQuestion(page, item, rightAnswer(item));
-        await question(page, item).locator(".quiz-next").click();
+        await question(page, item).locator(".question-next").click();
         await expect(page.locator(".quiz-score")).toHaveText(de.score.replace("{score}", "1").replace("{total}", "1"));
         // the same address asks the same question, without asking again
         await page.goto(page.url());
         await expect(page.locator(".quiz-start")).toBeHidden();
-        await expect(page.locator(".quiz-question")).toHaveCount(1);
-        await expect(page.locator(".quiz-question")).toHaveAttribute("data-id", item.id);
+        await expect(page.locator(".question")).toHaveCount(1);
+        await expect(page.locator(".question")).toHaveAttribute("data-id", item.id);
       });
     }
 
@@ -218,6 +170,7 @@ export function quizTests(bank = "src/quiz.json"): void {
         await page.goto("./");
         for (const item of quiz.questions) {
           await expect(question(page, item).locator("legend")).toHaveText(item.text);
+          await expectMaterial(page, item, { loaded: false });
           await expectBackground(page.locator(`#loesung-${item.id}`), item);
         }
       });
@@ -241,6 +194,7 @@ export function quizTests(bank = "src/quiz.json"): void {
             await expect(page.locator("#loesungen h2")).toHaveText(words.solutions);
             for (const item of local.questions) {
               await expect(question(page, item).locator("legend")).toHaveText(item.text);
+              await expectMaterial(page, item, { loaded: false });
               await expectBackground(page.locator(`#loesung-${item.id}`), item);
             }
             for (const other of languages) {
@@ -248,12 +202,20 @@ export function quizTests(bank = "src/quiz.json"): void {
             }
             for (const other of languages.filter((candidate) => candidate !== lang)) {
               await page.goto(address);
-              await page.locator(`.quiz-languages a[hreflang="${other}"]`).click();
+              await page.locator(`.page-languages a[hreflang="${other}"]`).click();
               await expect(page.locator("html")).toHaveAttribute("lang", other);
               await expect(page.locator("h1")).toHaveText(quizIn(all, other).title);
-              await expect(page.locator('.quiz-languages a[aria-current="page"]')).toHaveAttribute("hreflang", other);
+              await expect(page.locator('.page-languages a[aria-current="page"]')).toHaveAttribute("hreflang", other);
             }
           });
+        });
+
+        test(`what a question shows, in ${lang}`, async ({ page }) => {
+          const item = local.questions.find((candidate) => candidate.material !== undefined);
+          test.skip(item === undefined, "no question shows content");
+          if (item === undefined) return;
+          await page.goto(`${address}#${questionId(item)}`);
+          await expectMaterial(page, item);
         });
 
         test(`one question, answered in ${lang}`, async ({ page }) => {
@@ -262,8 +224,8 @@ export function quizTests(bank = "src/quiz.json"): void {
           await page.goto(`${address}#${questionId(item)}`);
           await expect(question(page, item)).toBeVisible();
           await answerQuestion(page, item, rightAnswer(item), lang);
-          await expect(question(page, item).locator(".quiz-feedback")).toContainText(words.right);
-          await expectBackground(question(page, item).locator(".quiz-reveal"), item);
+          await expect(question(page, item).locator(".question-feedback")).toContainText(words.right);
+          await expectBackground(question(page, item).locator(".question-reveal"), item);
         });
       });
     }

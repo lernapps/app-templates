@@ -3,8 +3,8 @@
 The quiz's extension of the generic architecture (`docs/arc42/` at the root of `lernapps/app-templates`): a quiz
 about things to know, whose build step, rendering, validation, engine and tests the runtime `runtime/quiz/` ships, and
 whose creator writes only the question bank `src/quiz.json` (`quiz-only-data`) and keeps `src/main.ts` as generated.
-The quiz has no components, no tutor handoff, no task numbers and no exercise contract; its question types are reused
-by the explainer. The creator's assistant follows the skill `lernapps-quiz` (`if-skills`). A quiz app writes no
+The quiz has no components, no tutor handoff, no task numbers and no exercise contract; its question types are the shared
+runtime's (`bb-questions`), which the explainer builds on alike, and what a question shows besides its text (`material`: figures, tables, quotations, code, ...) is the shared runtime's content blocks (`bb-blocks`). The creator's assistant follows the skill `lernapps-quiz` (`if-skills`). A quiz app writes no
 architecture of its own: the bank's schema fixes its structure.
 
 ## Level 1 (quiz)
@@ -19,11 +19,16 @@ notation: mermaid
 
 ```mermaid
 flowchart TB
-    bb-runtime["Shared runtime"]
+    subgraph bb-runtime["Shared runtime"]
+        bb-blocks["Content blocks"]
+        bb-questions["Questions"]
+    end
     bb-tooling["Tooling helpers"]
     bb-archetype-runtime["Quiz runtime"]
     bb-quiz-bank["Question bank"]
     bb-archetype-runtime -->|"if-shared-runtime"| bb-runtime
+    bb-archetype-runtime -->|"if-questions"| bb-questions
+    bb-archetype-runtime -->|"if-blocks"| bb-blocks
     bb-archetype-runtime -->|"if-preset"| bb-tooling
 ```
 
@@ -45,7 +50,6 @@ flowchart TB
         bb-render["Quiz rendering"]
         bb-shell["Quiz engine"]
         bb-e2e["End-to-end tests"]
-        bb-question-types["Question types and checker"]
         bb-runtime-texts["Runtime texts"]
     end
     bb-quiz-bank["Question bank"]
@@ -74,7 +78,7 @@ id: bb-archetype-runtime
 title: Quiz runtime
 path: runtime/quiz
 technology: TypeScript, Vite plugin, DOM
-requires: if-shared-runtime, if-preset
+requires: if-shared-runtime, if-preset, if-questions, if-blocks
 implements: concept-archetype-extension
 :::
 ```
@@ -217,36 +221,6 @@ title: quizTests()
 provider: bb-e2e
 protocol: TypeScript import, @lernapps/app-templates/quiz/e2e
 path: runtime/quiz/e2e.ts
-:::
-```
-
-### Question types and checker
-
-Built: the six question types and what counts as a right answer, at build, in the browser and in the tests alike;
-reused by the explainer's quiz-type exercises.
-
-```arc42
-:::building-block
-id: bb-question-types
-title: Question types and checker
-parent: bb-archetype-runtime
-path: runtime/quiz/quiz.ts
-technology: TypeScript
-:::
-```
-
-#### Question exports
-
-One question's schema, validation, rendering, checker and messages, and `startQuestion` in the browser, for a page of
-another archetype.
-
-```arc42
-:::interface
-id: if-question-exports
-title: One question (renderQuestion, validateQuestion, checker, startQuestion)
-provider: bb-question-types
-protocol: TypeScript import, @lernapps/app-templates/quiz/question
-path: runtime/quiz/question.ts
 :::
 ```
 

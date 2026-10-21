@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://lernapps.net/tooling/schemas/playthrough.v1.schema.json",
+  "$id": "urn:lernapps:schema:playthrough.v1",
   "title": "A playthrough of a lernapps interactive app",
   "description": "A file src/playthroughs/<name>.yaml of an app built from the archetype interactive: what a learner does, from the start of a route with a seed: inputs (keys typed, actions of the app's root component) and time passing (ticks), and after each step what is expected: the state of the core (the fields named, compared with the state step(state, input) and tick(state, dt) give) or the announcement for screen readers (@lernapps/tooling/a11y), or both. The build plays every playthrough against the core and fails with one line per mismatch; the end-to-end tests play the same inputs and ticks in the browser. In both, no time passes but the ticks a step names.",
   "type": "object",

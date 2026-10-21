@@ -4,6 +4,7 @@
 // too. Rendered at build time; formulas become MathML.
 import { Marked, type Token, type Tokens } from "marked";
 import { formulaProblem, renderFormula } from "./formula.ts";
+import { escape } from "../html.ts";
 
 /** A problem in a text, `line` lines below its first. */
 export interface TextProblem {
@@ -26,9 +27,6 @@ interface MathToken extends Tokens.Generic {
 
 /** Where a link leads from the page being rendered; set for each render. */
 let resolveLink: (href: string) => string = (href) => href;
-
-const escape = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const marked = new Marked({
   gfm: true,

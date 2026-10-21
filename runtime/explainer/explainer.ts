@@ -2,11 +2,11 @@
 // src/main.ts. Every page is complete without JavaScript; this module only adds: it marks the page as running with
 // JavaScript (class explainer-js on <html>) and makes its exercises live. Every exercise is answered before its
 // solution shows: a wrong answer gets its reason and may be tried again, and the solution shows after the right
-// answer or "Lösung zeigen" (startQuestion of the quiz runtime with retry). A question of one of the quiz's types gets
-// the quiz's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
+// answer or "Lösung zeigen" (startQuestion of the shared questions with retry). A question of one of the question types gets
+// the question's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
 // shows the same after the answer. A generated exercise gets a live task: from the seed in the address when the
 // address names its task number (?<exercise>=<n>), else from a random one; its seed from the exercise's table
-// of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the quiz's controls, checker and feedback through its
+// of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the question's controls, checker and feedback through its
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
 // always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
 // JavaScript, unless the exercise asks for them (workedTasks: always): then they show below the live task once the
@@ -16,19 +16,19 @@
 // tutor is the only thing kept on the device.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
-import { startQuestion } from "../quiz/engine.ts";
-import { renderQuestion } from "../quiz/render.ts";
-import { questionId } from "../quiz/quiz.ts";
+import { startQuestion } from "../shared/questions/engine.ts";
+import { renderQuestion } from "../shared/questions/render.ts";
+import { questionId } from "../shared/questions/question.ts";
 import type { ExerciseData } from "./exercises.ts";
-import { diagnose, figureOf, generate, hintOf, questionFor, stepsOf, taskText } from "./generated.ts";
+import { diagnose, questionFor } from "./generated/question.ts";
+import { figureOf, hintOf, stepsOf, taskText } from "./generated/texts.ts";
+import { generate } from "./generated/values.ts";
 import { message } from "./messages.ts";
 import { pageTutorText } from "./tutorpage.ts";
 import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
+import { escape } from "../shared/html.ts";
 
-const escape = (text: string) =>
-  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-/** Makes a generated exercise live: a task from a seed, checked by the quiz runtime, and "Neue Aufgabe". */
+/** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind: "generated" }>): void {
   const live = element.querySelector<HTMLElement>(".explainer-live");
   if (!live) return;
@@ -276,7 +276,7 @@ export function startExplainer(root: Document = document): void {
     if (!element) continue;
     const data = JSON.parse(script.textContent ?? "{}") as ExerciseData;
     if (data.kind === "question") {
-      const item = element.querySelector<HTMLElement>(".quiz-question");
+      const item = element.querySelector<HTMLElement>(".question");
       if (!item) continue;
       // the question shows the same as its "Lösung" once it is answered
       const solution = element.querySelector<HTMLElement>(":scope > details.explainer-solution");

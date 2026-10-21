@@ -28,24 +28,20 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import type { Component } from "vue";
 import type { Plugin, ViteDevServer } from "vite-plus";
-import {
-  describedProblems,
-  exampleProblems,
-  propertyProblems,
-  propsIn,
-  SIZE_BUDGET,
-  type ExerciseLogic,
-} from "./components.ts";
-import type { Block, ComponentDescription, Site } from "./content.ts";
+import { describedProblems, exampleProblems, propertyProblems, type ExerciseLogic } from "./components/exercise.ts";
+import { propsIn } from "./components/props.ts";
+import { SIZE_BUDGET } from "./components/read.ts";
+import type { Block, ComponentDescription, Descriptions, Site } from "./content.ts";
 import { ContentError, loadSite } from "./load.ts";
 import { dataOf, taskSeeds } from "./exercises.ts";
 import { MAX_TASKS } from "./tasks.ts";
-import { llmsTxt, renderSite, type Descriptions, type Islands, type RenderedPage } from "./render.ts";
+import { llmsTxt, renderSite, type Islands, type RenderedPage } from "./render.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";
 import { anchorsOf, linkProblems, tutorFile, tutorFileOf } from "./tutor.ts";
 import { PROMPT_FILE, tutorPrompt, withBase } from "./prompt.ts";
+import { imageType } from "../shared/blocks/image.ts";
 
 const MARKER = "<!-- explainer -->";
 const ISLANDS = "\0lernapps-explainer-islands";
@@ -325,7 +321,7 @@ export function explainer(): Plugin[] {
         const url = new URL(request.url ?? "/", "http://localhost");
         const path = decodeURIComponent(url.pathname).replace(/^\//, "");
         if (path.startsWith("images/")) {
-          response.setHeader("content-type", path.endsWith(".svg") ? "image/svg+xml" : "application/octet-stream");
+          response.setHeader("content-type", imageType(path));
           response.end(readFileSync(join(root, "src", path)));
           return;
         }

@@ -1,41 +1,20 @@
-/* The look of an explainer (@lernapps/app-templates/explainer/style.css): plain, readable at 360 px, contrast for
-   WCAG 2.1 AA, and complete without JavaScript. */
+/* The look of an explainer (@lernapps/app-templates/explainer/style.css): the frame and the questions are shared
+   (page.css, questions.css); this is the explainer's page: chapters and pages with sections, formulas, figures, tables,
+   timelines, definitions, quotes, code and exercises, complete without JavaScript. */
+@import "../shared/page.css";
+@import "../shared/blocks/blocks.css";
+@import "../shared/questions/questions.css";
+
+/* the explainer's own colours: the boxes */
 :root {
-  --explainer-text: #1a1a1a;
-  --explainer-muted: #4a4a4a;
-  --explainer-background: #ffffff;
-  --explainer-surface: #f4f5f7;
-  --explainer-border: #8a8f98;
-  --explainer-accent: #1d4ed8;
   --explainer-example: #ecfdf3;
   --explainer-note: #fff7e0;
-  --explainer-on-accent: #ffffff;
-  --explainer-right: #14532d;
-  --explainer-right-background: #dcfce7;
-  --explainer-wrong: #7f1d1d;
-  --explainer-wrong-background: #fee2e2;
-  --explainer-hl-keyword: #7b2382;
-  --explainer-hl-string: #0f5a2e;
-  --explainer-hl-number: #8a3b00;
-  --explainer-hl-comment: #50555c;
-  color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --explainer-text: #ececec;
-    --explainer-muted: #b8bcc4;
-    --explainer-background: #121316;
-    --explainer-surface: #1d1f24;
-    --explainer-border: #7d838d;
-    --explainer-accent: #8ab4ff;
     --explainer-example: #12261b;
     --explainer-note: #2b2512;
-    --explainer-on-accent: #0b1020;
-    --explainer-right: #bbf7d0;
-    --explainer-right-background: #143522;
-    --explainer-wrong: #fecaca;
-    --explainer-wrong-background: #3f1515;
     --explainer-hl-keyword: #e0a3ff;
     --explainer-hl-string: #8fe0ac;
     --explainer-hl-number: #ffb77a;
@@ -43,56 +22,16 @@
   }
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-[hidden] {
-  display: none !important;
-}
-
-body {
-  margin: 0;
-  background: var(--explainer-background);
-  color: var(--explainer-text);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
-  font-size: 1.0625rem;
-  line-height: 1.55;
-}
-
-.explainer-header,
 .explainer-breadcrumbs,
 .explainer,
 .explainer-tutor-page,
-.explainer-pager,
-.explainer-footer {
-  max-width: 44rem;
+.explainer-pager {
+  max-width: var(--page-max-width, 44rem);
   margin: 0 auto;
   padding: 0 1rem;
   overflow-wrap: break-word;
 }
 
-a {
-  color: var(--explainer-accent);
-}
-
-.explainer-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-  align-items: baseline;
-  justify-content: flex-end;
-  padding-top: 0.75rem;
-}
-
-.explainer-languages ul,
 .explainer-breadcrumbs ol {
   display: flex;
   flex-wrap: wrap;
@@ -100,12 +39,6 @@ a {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.explainer-languages a[aria-current="page"] {
-  color: var(--explainer-text);
-  font-weight: 600;
-  text-decoration: none;
 }
 
 .explainer-breadcrumbs {
@@ -116,7 +49,7 @@ a {
 .explainer-breadcrumbs li + li::before {
   content: "›";
   margin-right: 0.75rem;
-  color: var(--explainer-muted);
+  color: var(--page-muted);
 }
 
 .explainer h1 {
@@ -134,8 +67,8 @@ a {
 .explainer-toc {
   margin: 1rem 0;
   padding: 0.5rem 1rem;
-  border-left: 4px solid var(--explainer-accent);
-  background: var(--explainer-surface);
+  border-left: 4px solid var(--page-accent);
+  background: var(--page-surface);
 }
 
 .explainer-toc-title {
@@ -143,116 +76,10 @@ a {
   font-weight: 600;
 }
 
-/* a formula wider than the page scrolls on its own; vertically, MathML may overhang its box by a pixel */
-.explainer-formula {
-  margin: 1rem 0;
-  padding: 0.25rem 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-math {
-  font-size: 1.1em;
-}
-
-.explainer-figure,
-.explainer-quote,
-.explainer-code {
-  margin: 1.25rem 0;
-}
-
-.explainer-figure img,
-.explainer-drawing {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-.explainer-hundred-grid {
-  width: 16rem;
-}
-
-.explainer-bar {
-  width: 100%;
-  max-width: 28rem;
-}
-
-figcaption {
-  margin-top: 0.5rem;
-  color: var(--explainer-muted);
-  font-size: 0.9375rem;
-}
-
-figcaption p {
-  margin: 0;
-}
-
-.explainer-credit {
-  display: block;
-  font-size: 0.875rem;
-}
-
-.explainer-labelled-image {
-  position: relative;
-  display: inline-block;
-  max-width: 100%;
-}
-
-/* an image without a size of its own (an SVG with only a viewBox) fills the width, as in a figure */
-.explainer-labelled-fill {
-  display: block;
-}
-
-.explainer-labelled-fill img {
-  width: 100%;
-}
-
-.explainer-marker {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  min-width: 1.6rem;
-  padding: 0 0.3rem;
-  border-radius: 1rem;
-  background: var(--explainer-text);
-  color: var(--explainer-background);
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1.6rem;
-  text-align: center;
-}
-
-.explainer-table {
-  margin: 1rem 0;
-  overflow-x: auto;
-}
-
-.explainer-table table {
-  border-collapse: collapse;
-}
-
-.explainer-table caption {
-  margin-bottom: 0.25rem;
-  font-weight: 600;
-  text-align: left;
-}
-
-.explainer-table th,
-.explainer-table td {
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--explainer-border);
-  text-align: left;
-  vertical-align: top;
-}
-
-.explainer-table thead th,
-.explainer-table th[scope="row"] {
-  background: var(--explainer-surface);
-}
-
 .explainer-timeline {
   margin: 1rem 0;
   padding-left: 1.25rem;
-  border-left: 3px solid var(--explainer-border);
+  border-left: 3px solid var(--page-border);
   list-style: none;
 }
 
@@ -266,7 +93,7 @@ figcaption p {
 
 .explainer-date {
   display: block;
-  color: var(--explainer-muted);
+  color: var(--page-muted);
   font-size: 0.9375rem;
 }
 
@@ -290,27 +117,10 @@ figcaption p {
   margin-top: 0.25rem;
 }
 
-.explainer-quote blockquote {
-  margin: 0;
-  padding: 0.25rem 1rem;
-  border-left: 4px solid var(--explainer-border);
-  font-style: italic;
-}
-
-.explainer-code pre {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  overflow-x: auto;
-  border-radius: 0.5rem;
-  background: var(--explainer-surface);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
 .explainer-box {
   margin: 1.25rem 0;
   padding: 0.25rem 1rem;
-  border: 1px solid var(--explainer-border);
+  border: 1px solid var(--page-border);
   border-radius: 0.5rem;
 }
 
@@ -338,7 +148,7 @@ figcaption p {
 
 .explainer-description {
   display: block;
-  color: var(--explainer-muted);
+  color: var(--page-muted);
   font-size: 0.9375rem;
 }
 
@@ -364,224 +174,50 @@ figcaption p {
   margin-left: auto;
 }
 
-.explainer-footer {
-  margin-top: 2rem;
-  padding-bottom: 1.5rem;
-  color: var(--explainer-muted);
-  font-size: 0.9375rem;
-}
-
-/* code, highlighted at build time (highlight.js classes); every colour has 4.5:1 on the code's background */
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-literal,
-.hljs-type {
-  color: var(--explainer-hl-keyword);
-}
-
-.hljs-string,
-.hljs-attr,
-.hljs-regexp {
-  color: var(--explainer-hl-string);
-}
-
-.hljs-number,
-.hljs-symbol {
-  color: var(--explainer-hl-number);
-}
-
-.hljs-comment,
-.hljs-meta {
-  color: var(--explainer-hl-comment);
-  font-style: italic;
-}
-
-.hljs-title,
-.hljs-function,
-.hljs-name,
-.hljs-built_in {
-  color: var(--explainer-accent);
-}
-
-.hljs-variable,
-.hljs-params,
-.hljs-tag {
-  color: var(--explainer-text);
-}
-
-/* Exercises: the quiz's question types and generated exercises, the quiz's controls and feedback in the explainer's
-   colours. Without JavaScript the worked tasks and every "Lösung" show; with JavaScript the live part shows, and the
-   solutions and worked tasks once the exercise is solved or its solution asked for. */
+/* Exercises: the question types and generated exercises, whose controls and feedback come from the questions'
+   stylesheet in the explainer's colours (--question-*). Without JavaScript the worked tasks and every "Lösung" show;
+   with JavaScript the live part shows, and the solutions and worked tasks once the exercise is solved or its solution
+   asked for. */
 .explainer-exercise,
 .explainer-component {
   margin: 1rem 0 1.5rem;
 }
 
-.explainer-exercise fieldset {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--explainer-border);
-  border-radius: 0.5rem;
-  background: var(--explainer-surface);
-  min-width: 0;
-}
-
-.explainer-exercise legend {
-  padding: 0 0.25rem;
-  font-weight: 600;
-}
-
-.explainer-exercise .quiz-option {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
-  padding: 0.375rem 0;
-}
-
-.explainer-exercise .quiz-option input {
-  margin-top: 0.3rem;
-  flex: none;
-}
-
-.explainer-exercise input[type="text"],
-.explainer-exercise select {
-  font: inherit;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--explainer-border);
-  border-radius: 0.25rem;
-  background: var(--explainer-background);
-  color: var(--explainer-text);
-  max-width: 100%;
-}
-
-.explainer-exercise input[type="text"] {
-  width: 8rem;
-}
-
-.explainer-exercise .quiz-pairs,
-.explainer-exercise .quiz-infos,
-.explainer-exercise .quiz-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.explainer-exercise .quiz-pairs li {
-  padding: 0.375rem 0;
-}
-
-.explainer-exercise .quiz-pairs label {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.explainer-exercise .quiz-hint {
-  margin: 0 0 0.5rem;
-  color: var(--explainer-muted);
-}
-
-.explainer-exercise button {
-  font: inherit;
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--explainer-accent);
-  border-radius: 0.375rem;
-  background: var(--explainer-accent);
-  color: var(--explainer-on-accent);
-  cursor: pointer;
-}
-
-.explainer-exercise .quiz-solve {
-  background: var(--explainer-background);
-  color: var(--explainer-accent);
-}
-
-.explainer-exercise button:focus-visible,
-.explainer-exercise input:focus-visible,
-.explainer-exercise select:focus-visible,
-.explainer-exercise summary:focus-visible {
-  outline: 3px solid var(--explainer-text);
-  outline-offset: 2px;
-}
-
-.explainer-exercise .quiz-feedback:not(:empty),
-.explainer-component .quiz-feedback:not(:empty) {
-  margin: 0.75rem 0;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--explainer-border);
-}
-
-.explainer-exercise .quiz-diagnosis {
-  margin: 0.25rem 0 0;
-}
-
-.explainer-exercise .quiz-right,
-.explainer-component .quiz-right {
-  background: var(--explainer-right-background);
-  color: var(--explainer-right);
-}
-
-.explainer-exercise .quiz-wrong,
-.explainer-component .quiz-wrong {
-  background: var(--explainer-wrong-background);
-  color: var(--explainer-wrong);
-}
-
-.explainer-exercise .quiz-info {
-  margin: 0.5rem 0;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--explainer-border);
-  border-left-width: 4px;
-  border-radius: 0.375rem;
-}
-
-.explainer-exercise .quiz-info p {
-  margin: 0.25rem 0;
-}
-
-.explainer-exercise .quiz-info-right {
-  border-left-color: var(--explainer-right);
-}
-
-.explainer-exercise .quiz-info-chosen:not(.quiz-info-right) {
-  border-left-color: var(--explainer-wrong);
-}
-
-.explainer-exercise .quiz-badge {
-  display: inline-block;
-  margin-left: 0.25rem;
-  padding: 0 0.5rem;
-  border-radius: 999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.explainer-exercise .quiz-badge-right {
-  background: var(--explainer-right-background);
-  color: var(--explainer-right);
-}
-
-.explainer-exercise .quiz-badge-chosen {
-  border: 1px solid var(--explainer-border);
-}
-
-.explainer-exercise .quiz-more {
-  margin-bottom: 0;
-  font-weight: 600;
-}
-
 .explainer-exercise details {
   margin: 0.5rem 0;
   padding: 0.25rem 0.75rem;
-  border: 1px solid var(--explainer-border);
+  border: 1px solid var(--page-border);
   border-radius: 0.375rem;
 }
 
 .explainer-exercise summary {
   cursor: pointer;
   font-weight: 600;
+}
+
+.explainer-exercise summary:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-exercise .question {
+  margin: 0;
+}
+
+/* "Neue Aufgabe" of a generated exercise; in the controls of an exercise component it is outlined (below) */
+.explainer-new-task {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  cursor: pointer;
+}
+
+.explainer-new-task:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
 }
 
 .explainer-worked {
@@ -602,14 +238,14 @@ figcaption p {
 .explainer-live:not([hidden]) + .explainer-worked-intro {
   margin-top: 1rem;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--explainer-border);
+  border-top: 1px solid var(--page-border);
 }
 
 /* A component: its island, hidden until it hydrates, and its nojs text, which it replaces or keeps folded as a text
    description under it; the reason of a wrong answer under its feedback */
 .explainer-nojs.explainer-caption {
   margin-top: 0.5rem;
-  color: var(--explainer-muted);
+  color: var(--page-muted);
   font-size: 0.9375rem;
 }
 
@@ -618,7 +254,7 @@ figcaption p {
   font-weight: 600;
 }
 
-.explainer-component .quiz-diagnosis {
+.explainer-component .question-diagnosis {
   display: block;
   margin: 0.25rem 0 0;
 }
@@ -627,7 +263,7 @@ figcaption p {
    exercise component: its number and "Neue Aufgabe", shown once it hydrates */
 .explainer-task-number {
   margin: 0 0 0.25rem;
-  color: var(--explainer-muted);
+  color: var(--page-muted);
   font-size: 0.9375rem;
   font-weight: 600;
 }
@@ -652,15 +288,15 @@ figcaption p {
   font: inherit;
   min-height: 2.75rem;
   padding: 0.5rem 1rem;
-  border: 2px solid var(--explainer-accent);
+  border: 2px solid var(--page-accent);
   border-radius: 0.375rem;
-  background: var(--explainer-background);
-  color: var(--explainer-accent);
+  background: var(--page-background);
+  color: var(--page-accent);
   cursor: pointer;
 }
 
 .explainer-task-controls button:focus-visible {
-  outline: 3px solid var(--explainer-text);
+  outline: 3px solid var(--page-text);
   outline-offset: 2px;
 }
 
@@ -669,15 +305,15 @@ figcaption p {
   font: inherit;
   min-height: 2.75rem;
   padding: 0.5rem 1rem;
-  border: 2px solid var(--explainer-accent);
+  border: 2px solid var(--page-accent);
   border-radius: 0.375rem;
-  background: var(--explainer-background);
-  color: var(--explainer-accent);
+  background: var(--page-background);
+  color: var(--page-accent);
   cursor: pointer;
 }
 
 .explainer-back button:focus-visible {
-  outline: 3px solid var(--explainer-text);
+  outline: 3px solid var(--page-text);
   outline-offset: 2px;
 }
 
@@ -704,33 +340,33 @@ figcaption p {
   font: inherit;
   min-height: 2.75rem;
   padding: 0.5rem 1rem;
-  border: 2px solid var(--explainer-accent);
+  border: 2px solid var(--page-accent);
   cursor: pointer;
 }
 
 .explainer-tutor-go {
   border-radius: 0.375rem 0 0 0.375rem;
-  background: var(--explainer-accent);
-  color: var(--explainer-on-accent);
+  background: var(--page-accent);
+  color: var(--page-on-accent);
 }
 
 .explainer-tutor-select {
   border-left-width: 1px;
   border-radius: 0 0.375rem 0.375rem 0;
   padding-inline: 0.5rem;
-  background: var(--explainer-background);
-  color: var(--explainer-accent);
+  background: var(--page-background);
+  color: var(--page-accent);
 }
 
 .explainer-tutor-go:focus-visible,
 .explainer-tutor-select:focus-visible {
-  outline: 3px solid var(--explainer-text);
+  outline: 3px solid var(--page-text);
   outline-offset: 2px;
 }
 
 .explainer-tutor-page {
   margin-top: 2rem;
-  border-top: 2px solid var(--explainer-border);
+  border-top: 2px solid var(--page-border);
 }
 
 /* Usability: sections and exercises must be told apart at a glance. */
@@ -740,7 +376,7 @@ figcaption p {
 .explainer-main > section.explainer-section {
   margin-top: 2.5rem;
   padding-top: 0.5rem;
-  border-top: 2px solid var(--explainer-border);
+  border-top: 2px solid var(--page-border);
 }
 
 .explainer section.explainer-section > h2 {
@@ -756,24 +392,24 @@ figcaption p {
 
 .explainer section.explainer-section section.explainer-section > h3 {
   padding-left: 0.6rem;
-  border-left: 4px solid var(--explainer-accent);
+  border-left: 4px solid var(--page-accent);
   font-size: 1.2rem;
 }
 
 /* An exercise is a card of its own with a label on top, apart from the explanation around it */
 .explainer-exercise {
   padding: 0 1rem 1rem;
-  border: 2px solid var(--explainer-accent);
+  border: 2px solid var(--page-accent);
   border-radius: 0.75rem;
-  background: var(--explainer-background);
+  background: var(--page-background);
 }
 
 .explainer-exercise-label {
   margin: 0 -1rem 1rem;
   padding: 0.4rem 1rem;
   border-radius: 0.5rem 0.5rem 0 0;
-  background: var(--explainer-accent);
-  color: var(--explainer-on-accent);
+  background: var(--page-accent);
+  color: var(--page-on-accent);
   font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -800,10 +436,10 @@ figcaption p {
 .explainer-exercise details.explainer-solution {
   margin: 0.75rem 0;
   padding: 0.25rem 0.75rem;
-  border: 1px solid var(--explainer-right);
+  border: 1px solid var(--page-right);
   border-left-width: 5px;
-  background: var(--explainer-right-background);
-  color: var(--explainer-right);
+  background: var(--page-right-background);
+  color: var(--page-right);
 }
 
 .explainer-exercise details.explainer-solution > summary::before {
@@ -816,7 +452,7 @@ figcaption p {
 
 .explainer-exercise details.explainer-solution p,
 .explainer-exercise details.explainer-solution li {
-  color: var(--explainer-text);
+  color: var(--page-text);
 }
 
 /* the hint is lighter than the solution */
@@ -827,7 +463,7 @@ figcaption p {
 .explainer-worked-task {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px dashed var(--explainer-border);
+  border-bottom: 1px dashed var(--page-border);
 }
 
 .explainer-worked-task:last-child {
@@ -835,17 +471,17 @@ figcaption p {
 }
 
 .explainer-drawing .fig-on {
-  fill: var(--explainer-accent);
+  fill: var(--page-accent);
 }
 
 .explainer-drawing .fig-off {
-  fill: var(--explainer-background);
+  fill: var(--page-background);
 }
 
 .explainer-drawing .fig-line {
-  stroke: var(--explainer-muted);
+  stroke: var(--page-muted);
 }
 
 .explainer-drawing .fig-text {
-  fill: var(--explainer-text);
+  fill: var(--page-text);
 }

@@ -3,13 +3,15 @@
 // a box one level below the heading it is under), their sections with their anchors, the number of formulas and the
 // name of every figure, its exercises with what each must accept, and its components with their nojs text; and the
 // other pages (start, chapters, glossary) with their titles.
-import { questionIn, type Question } from "../quiz/quiz.ts";
-import { answerText } from "../quiz/render.ts";
+import { questionIn, type Question } from "../shared/questions/question.ts";
+import { answerText } from "../shared/questions/render.ts";
 import { inLanguage, timelineEvents, type Block, type Site, type Text } from "./content.ts";
 import { dataOf, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
-import { kindOf, plainText, type Data, type Generated, type Templates } from "./generated.ts";
+import { kindOf } from "./generated/comparator.ts";
+import { plainText } from "./generated/texts.ts";
+import { type Data, type Generated, type Templates } from "./generated/types.ts";
 import { loadSite } from "./load.ts";
-import { inspect, renderMarkdown } from "./markdown.ts";
+import { inspect, renderMarkdown } from "../shared/text/markdown.ts";
 import { routes } from "./routes.ts";
 
 export interface PageOutline {
@@ -46,7 +48,7 @@ export type ExerciseOutline =
   | {
       kind: "question";
       id: string;
-      /** The exercise's type, one per kind of controls: the quiz's question type. */
+      /** The exercise's type, one per kind of controls: the question type. */
       type: string;
       question: Question;
       /** The right answer as its "Lösung" states it: each right option, or the answer. */
@@ -162,7 +164,7 @@ function walk(
       default: {
         // the formulas in the texts of a question (question, options, background, explanation) are rendered, and the
         // page shows some of them more than once: count what the renderer writes, not the texts
-        const html = renderExercise(block, lang, site.data, (href) => href);
+        const html = renderExercise(block, lang, site.data, (href) => href, { lang, href: (image) => image });
         into.formulas += (html.split('<script type="application/json"')[0] ?? "").split("<math").length - 1;
         const question = questionIn(block, lang);
         into.exercises.push({

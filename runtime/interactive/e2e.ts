@@ -32,7 +32,7 @@ async function expectFrame(page: Page, lang: string, languages: readonly string[
   for (const other of languages) {
     await expect(page.locator(`link[rel="alternate"][hreflang="${other}"]`)).toHaveCount(1);
     if (other === lang) continue;
-    const link = page.locator(`.interactive-languages a[hreflang="${other}"]`);
+    const link = page.locator(`.page-languages a[hreflang="${other}"]`);
     await expect(link).toBeVisible();
     const response = await page.request.get(await link.evaluate((a) => (a as HTMLAnchorElement).href));
     expect(response.status(), `the switch to ${other}`).toBe(200);
