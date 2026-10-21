@@ -91,7 +91,9 @@ test.describe("without JavaScript", () => {
       await details.getByText(messages.solution, { exact: true }).click();
       await expectBackground(details, item);
       if (item.type === "single-choice" || item.type === "multiple-choice") {
-        await expect(details.locator(".question-badge-right")).toHaveCount(item.options.filter((o) => o.correct).length);
+        await expect(details.locator(".question-badge-right")).toHaveCount(
+          item.options.filter((o) => o.correct).length,
+        );
       } else {
         await expect(details).toContainText(messages.rightAnswer);
       }
