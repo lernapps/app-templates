@@ -12,7 +12,7 @@ import {
   QUESTION_REF,
   questionId,
   questionIn,
-  questionSchema,
+  questionSchemas,
   renderQuestion,
   renderSolution,
   rightAnswer,
@@ -40,7 +40,7 @@ const plain = (html: string) =>
 
 describe("the schema of a question, from another schema", () => {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
-  ajv.addSchema(questionSchema);
+  for (const each of questionSchemas) ajv.addSchema(each);
   const validate = ajv.compile({
     $id: "https://example.org/exercise.schema.json",
     type: "object",

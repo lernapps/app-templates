@@ -1,7 +1,7 @@
 // The texts of a task: its template filled in with the values (the placeholders ⟦name⟧ the build leaves), the numbers
 // as a locale writes them, the checks of the placeholders, the steps, the hint and the figure.
 import { evaluate, ExpressionError, Localized, parse, type Value, variables } from "../expression.ts";
-import { bar, hundredGrid } from "../figures.ts";
+import { bar, hundredGrid } from "../../shared/blocks/figures.ts";
 import { Fraction } from "../fraction.ts";
 import { inLanguage, localeOf, type Text } from "../../shared/languages.ts";
 import { escape } from "../../shared/html.ts";

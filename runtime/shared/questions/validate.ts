@@ -8,8 +8,12 @@
 // by language (a single address is the same in every language).
 import { Ajv2020, type ErrorObject } from "ajv/dist/2020.js";
 import { verdict } from "../examples.ts";
+import { checkMaterial, MATERIAL_DEFINITIONS, type AppChecks } from "../blocks/validate.ts";
+import { knownProperties, schemasById } from "../schema.ts";
 import { textLanguages } from "../languages.ts";
 import type { Text } from "../languages.ts";
+import blocksSchema from "../blocks/blocks.v1.schema.json" with { type: "json" };
+import textSchema from "../text/text.v1.schema.json" with { type: "json" };
 import schema from "./question.v1.schema.json" with { type: "json" };
 import {
   isComplete,
@@ -23,15 +27,28 @@ import {
   type Question,
 } from "./question.ts";
 
-/** The id of the schema of a question, to refer to it from another schema (with `questionSchema` added to its validator). */
+/** The id of the schema of a question, to refer to it from another schema (with `questionSchemas` added to its validator). */
 export const QUESTION_SCHEMA_ID = schema.$id;
 /** The reference to one question in the schema of a question, for a `$ref` from another schema. */
 export const QUESTION_REF = `${QUESTION_SCHEMA_ID}#/$defs/question`;
 /** The schema of a question (question.v1.schema.json), to add to another schema's validator. */
 export const questionSchema = schema;
+/** The schemas a question refers to, and its own: every validator of a schema that refers to a question adds them. */
+export const questionSchemas = [textSchema, blocksSchema, schema] as const;
+const schemas = schemasById(...questionSchemas);
+
+/** The definition of the fields of each type of question in its schema. */
+export const QUESTION_BRANCH: Readonly<Record<string, string>> = {
+  "single-choice": "choice",
+  "multiple-choice": "choice",
+  "true-false": "trueFalse",
+  number: "number",
+  ordering: "ordering",
+  matching: "matching",
+};
 
 const ajv = new Ajv2020({ allErrors: true, strict: true });
-ajv.addSchema(schema);
+for (const each of questionSchemas) ajv.addSchema(each);
 const validateOne = (() => {
   const validate = ajv.getSchema<Question>(QUESTION_REF);
   if (validate === undefined) throw new Error(`the question's schema has no ${QUESTION_REF}`);
@@ -107,7 +124,7 @@ function schemaMessage(error: ErrorObject, at: string): string | undefined {
     case "additionalProperties":
       return `${at}: ${String(error.params["additionalProperty"])} is not allowed here`;
     case "unevaluatedProperties":
-      return `${at}: ${String(error.params["unevaluatedProperty"])} is not allowed for this type of question`;
+      return `${at}: ${String(error.params["unevaluatedProperty"])} is not allowed ${/\/material\/\d+$/.test(error.instancePath) ? "in this type of block" : "for this type of question"}`;
     case "enum":
       return `${at}: must be one of ${(error.params["allowedValues"] as unknown[]).join(", ")}`;
     case "pattern":
@@ -134,8 +151,28 @@ export function schemaMessages(
       .filter((error) => error.keyword === "enum" && error.instancePath.endsWith("/type"))
       .map((error) => error.instancePath.slice(0, -"/type".length)),
   );
+  // a property its type knows, with an error elsewhere in its branch: that error says what is wrong
+  const isKnown = (error: ErrorObject): boolean => {
+    if (error.keyword !== "unevaluatedProperties") return false;
+    const value = valueAt(root, error.instancePath);
+    const type = typeof value === "object" && value !== null && "type" in value ? String(value.type) : "";
+    const property = String(error.params["unevaluatedProperty"]);
+    const material = /\/material\/\d+$/.test(error.instancePath)
+      ? MATERIAL_DEFINITIONS[type as keyof typeof MATERIAL_DEFINITIONS]
+      : undefined;
+    if (material !== undefined) return knownProperties(schemas, blocksSchema.$id, material).has(property);
+    const branch = QUESTION_BRANCH[type];
+    return (
+      branch !== undefined &&
+      (knownProperties(schemas, schema.$id, "question", { branches: false }).has(property) ||
+        knownProperties(schemas, schema.$id, branch).has(property))
+    );
+  };
   return errors
-    .filter((error) => !(error.keyword === "unevaluatedProperties" && unknownType.has(error.instancePath)))
+    .filter(
+      (error) =>
+        !(error.keyword === "unevaluatedProperties" && (unknownType.has(error.instancePath) || isKnown(error))),
+    )
     .filter((error) => error.keyword === "anyOf" || !underText(error.instancePath))
     .flatMap((error) => {
       if (error.keyword !== "anyOf") return schemaMessage(error, where(error.instancePath)) ?? [];
@@ -154,6 +191,8 @@ export function duplicates(values: readonly string[]): string[] {
 export interface QuestionProblem {
   path: (string | number)[];
   lang?: string;
+  /** In Markdown, the line below its first. */
+  line?: number;
   message: string;
 }
 
@@ -367,8 +406,19 @@ export function questionDetails(
   question: Question<Text>,
   languages: readonly string[] = ["de"],
   declaredIn?: string,
+  app?: AppChecks,
 ): QuestionProblem[] {
   const problems: QuestionProblem[] = [];
+  if (question.material !== undefined) {
+    const found = checkMaterial(question.material, {
+      languages,
+      ...(declaredIn === undefined ? {} : { declaredIn }),
+      // without the app's files, no image exists
+      imageExists: app?.imageExists ?? (() => false),
+      ...(app?.onLink === undefined ? {} : { onLink: app.onLink }),
+    });
+    for (const problem of found) problems.push({ ...problem, path: ["material", ...problem.path] });
+  }
   for (const { path, text } of questionTexts(question)) {
     for (const problem of textLanguages(text, languages, false, declaredIn).problems) {
       problems.push({ path, lang: problem.lang, message: problem.message });
@@ -399,14 +449,18 @@ export function validateQuestion(
   at: string,
   languages: readonly string[] = ["de"],
   declaredIn?: string,
+  app?: AppChecks,
 ): string[] {
   const schemaProblems = questionSchemaProblems(value, at);
   if (schemaProblems.length > 0) return schemaProblems;
   const question = value as Question<Text>;
   // an example is one of many: named by its place
-  return questionDetails(question, languages, declaredIn).map((problem) =>
-    problem.lang === undefined && problem.path[0] !== "examples"
+  return questionDetails(question, languages, declaredIn, app).map((problem) => {
+    // the path of a text in a language ends in the language; the message names it once
+    const path = problem.path.at(-1) === problem.lang ? problem.path.slice(0, -1) : problem.path;
+    const named = problem.lang === undefined && problem.path[0] !== "examples" && problem.path[0] !== "material";
+    return named
       ? `${at} (question "${question.id}"): ${problem.message}`
-      : `${at}${readable(problem.path.map(String))}${problem.lang === undefined ? "" : ` (${problem.lang})`} (question "${question.id}"): ${problem.message}`,
-  );
+      : `${at}${readable(path.map(String))}${problem.lang === undefined ? "" : ` (${problem.lang})`} (question "${question.id}"): ${problem.message}`;
+  });
 }

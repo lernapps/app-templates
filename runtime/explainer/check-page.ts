@@ -6,6 +6,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { questionTexts } from "../shared/questions/question.ts";
 import { questionDetails } from "../shared/questions/validate.ts";
+import { checkMaterial, type AppChecks, type MaterialBlock } from "../shared/blocks/index.ts";
 import { propsProblems, textPaths } from "./components/props.ts";
 import { readComponents } from "./components/read.ts";
 import {
@@ -16,6 +17,7 @@ import {
   type ComponentUse,
   type DataRecord,
   type Event,
+  type Text,
 } from "./content.ts";
 import { ExpressionError, parse, variables } from "./expression.ts";
 import { dataOf, templatesOf } from "./exercises.ts";
@@ -84,11 +86,34 @@ function checkEvents(check: PageCheck, yaml: YamlFile, path: Path, events: reado
   });
 }
 
-/** The image `image` (images/<name>) is bundled in src/images/. */
-function checkImage(check: PageCheck, path: Path, image: string): void {
-  const file = join(check.root, "src", image);
-  if (existsSync(file)) check.images.set(image, file);
-  else check.problems.at(check.yaml, path, `${image} is missing: put the file into src/images/`);
+/** What the checks of blocks that show content need from the app: its images, and where a link to a page goes. */
+function appChecks(check: PageCheck, at: Path): AppChecks {
+  const { yaml, texts } = check;
+  return {
+    imageExists: (image) => {
+      const file = join(check.root, "src", image);
+      if (!existsSync(file)) return false;
+      check.images.set(image, file);
+      return true;
+    },
+    onLink: (link) =>
+      texts.links.push({ yaml, path: [...at, ...link.path], lang: link.lang, offset: 0, href: link.href }),
+  };
+}
+
+/** A block that shows content, checked with the checks the quiz's questions share. */
+function checkMaterialBlock(check: PageCheck, block: MaterialBlock<Text>, at: Path): void {
+  const { yaml, problems, texts } = check;
+  // the block is the one of the list [block]: its path starts with 0, which `at` already names
+  const app = appChecks(check, at);
+  const found = checkMaterial([block], {
+    languages: texts.languages,
+    ...app,
+    onLink: (link) => app.onLink?.({ ...link, path: link.path.slice(1) }),
+  });
+  for (const problem of found) {
+    problems.at(yaml, [...at, ...problem.path.slice(1)], problem.message, problem.lang, problem.line);
+  }
 }
 
 export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Path, depth: number, box?: string): void {
@@ -134,49 +159,14 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
         checkBlocks(check, block.blocks, [...at, "blocks"], depth, block.type);
         break;
       case "text":
-        texts.check(yaml, [...at, "text"], "markdown");
-        break;
       case "formula":
-        texts.check(yaml, [...at, "formula"], "latex");
-        break;
       case "figure":
-        if ((block.draw === undefined) === (block.image === undefined)) {
-          problems.at(
-            yaml,
-            at,
-            block.draw === undefined
-              ? "draw or image is missing; a figure is drawn from data (draw) or a bundled image (image)"
-              : "draw and image: a figure is either drawn from data or a bundled image",
-          );
-        }
-        if (block.image !== undefined) checkImage(check, [...at, "image"], block.image);
-        texts.check(yaml, [...at, "alt"], "plain");
-        texts.check(yaml, [...at, "caption"], "markdown");
-        texts.check(yaml, [...at, "source"], "credit");
-        break;
       case "labelled-figure":
-        checkImage(check, [...at, "image"], block.image);
-        texts.check(yaml, [...at, "alt"], "plain");
-        texts.check(yaml, [...at, "caption"], "markdown");
-        block.labels.forEach((_label, label) => texts.check(yaml, [...at, "labels", label, "text"], "plain"));
-        texts.check(yaml, [...at, "source"], "credit");
+      case "table":
+      case "quote":
+      case "code":
+        checkMaterialBlock(check, block, at);
         break;
-      case "table": {
-        texts.check(yaml, [...at, "caption"], "plain");
-        block.header?.forEach((_cell, cell) => texts.check(yaml, [...at, "header", cell], "markdown"));
-        const columns = block.header?.length ?? block.rows[0]?.length ?? 0;
-        block.rows.forEach((row, line) => {
-          if (row.length !== columns) {
-            problems.at(
-              yaml,
-              [...at, "rows", line],
-              `${row.length} cells, but the table has ${columns} columns; give each row a cell per column`,
-            );
-          }
-          row.forEach((_cell, cell) => texts.check(yaml, [...at, "rows", line, cell], "markdown"));
-        });
-        break;
-      }
       case "timeline": {
         if ((block.events === undefined) === (block.data === undefined)) {
           problems.at(
@@ -227,16 +217,6 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
         } else check.terms.set(id, yaml.file);
         break;
       }
-      case "quote":
-        texts.check(yaml, [...at, "text"], "markdown");
-        texts.check(yaml, [...at, "origin", "author"], "name");
-        texts.check(yaml, [...at, "origin", "work"], "name");
-        if (typeof block.origin.year !== "number") texts.check(yaml, [...at, "origin", "year"], "plain");
-        texts.check(yaml, [...at, "source"], "credit");
-        break;
-      case "code":
-        texts.check(yaml, [...at, "caption"], "plain");
-        break;
       case "generated":
         checkExerciseId(check, block.id, at);
         checkGenerated(check, block, at);
@@ -246,9 +226,14 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
         break;
       default:
         checkExerciseId(check, block.id, at);
-        for (const problem of questionDetails(block, texts.languages)) {
-          const path = [...at, ...problem.path, ...(problem.lang === undefined ? [] : [problem.lang])];
-          problems.at(yaml, path, problem.message, problem.lang);
+        for (const problem of questionDetails(block, texts.languages, undefined, appChecks(check, at))) {
+          // a path that ends in the language names it already, as in a block's texts
+          const path = [
+            ...at,
+            ...problem.path,
+            ...(problem.lang === undefined || problem.path.at(-1) === problem.lang ? [] : [problem.lang]),
+          ];
+          problems.at(yaml, path, problem.message, problem.lang, problem.line);
         }
         // the texts of a question are plain text with formulas: $…$ must be a formula the build can render
         for (const { path, text } of questionTexts(block)) {

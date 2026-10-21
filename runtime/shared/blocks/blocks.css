@@ -1,0 +1,184 @@
+/* The look of blocks that show content (text, formula, figure, labelled figure, table, quotation, code), for every
+   archetype that shows them, in the colours of the page (page.css): images that fit the page, the drawings, the
+   caption and the credit, the markers of a labelled figure, tables that scroll on their own, and code, highlighted at
+   build time (highlight.js classes), every colour with 4.5:1 on the code's background. */
+
+:root {
+  --block-hl-keyword: #7b2382;
+  --block-hl-string: #0f5a2e;
+  --block-hl-number: #8a3b00;
+  --block-hl-comment: #50555c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --block-hl-keyword: #e0a3ff;
+    --block-hl-string: #8fe0ac;
+    --block-hl-number: #ffb77a;
+    --block-hl-comment: #a3a9b3;
+  }
+}
+
+.block-figure {
+  margin: 1.25rem 0;
+}
+
+.block-figure img,
+.block-drawing {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.block-hundred-grid {
+  width: 16rem;
+}
+
+.block-bar {
+  width: 100%;
+  max-width: 28rem;
+}
+
+figcaption {
+  margin-top: 0.5rem;
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+figcaption p {
+  margin: 0;
+}
+
+.block-credit {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.block-labelled-image {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* an image without a size of its own (an SVG with only a viewBox) fills the width, as in a figure */
+.block-labelled-fill {
+  display: block;
+}
+
+.block-labelled-fill img {
+  width: 100%;
+}
+
+.block-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 1.6rem;
+  padding: 0 0.3rem;
+  border-radius: 1rem;
+  background: var(--page-text);
+  color: var(--page-background);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.6rem;
+  text-align: center;
+}
+
+/* a formula wider than the page scrolls on its own; vertically, MathML may overhang its box by a pixel */
+.block-formula {
+  margin: 1rem 0;
+  padding: 0.25rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+math {
+  font-size: 1.1em;
+}
+
+.block-quote,
+.block-code {
+  margin: 1.25rem 0;
+}
+
+.block-table {
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.block-table table {
+  border-collapse: collapse;
+}
+
+.block-table caption {
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.block-table th,
+.block-table td {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--page-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.block-table thead th,
+.block-table th[scope="row"] {
+  background: var(--page-surface);
+}
+
+.block-quote blockquote {
+  margin: 0;
+  padding: 0.25rem 1rem;
+  border-left: 4px solid var(--page-border);
+  font-style: italic;
+}
+
+.block-code pre {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+/* code, highlighted at build time (highlight.js classes); every colour has 4.5:1 on the code's background */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type {
+  color: var(--block-hl-keyword);
+}
+
+.hljs-string,
+.hljs-attr,
+.hljs-regexp {
+  color: var(--block-hl-string);
+}
+
+.hljs-number,
+.hljs-symbol {
+  color: var(--block-hl-number);
+}
+
+.hljs-comment,
+.hljs-meta {
+  color: var(--block-hl-comment);
+  font-style: italic;
+}
+
+.hljs-title,
+.hljs-function,
+.hljs-name,
+.hljs-built_in {
+  color: var(--page-accent);
+}
+
+.hljs-variable,
+.hljs-params,
+.hljs-tag {
+  color: var(--page-text);
+}

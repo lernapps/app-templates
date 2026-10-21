@@ -128,6 +128,13 @@ blocks:
       - type: single-choice
         id: prozent-von-200
         text: { de: "Wie viel sind 1 % von 200?", en: "How much is 1 % of 200?" }
+        material:
+          - type: figure
+            image: images/raster.svg
+            alt: { de: "Drei Formen: Kreis, Quadrat, Dreieck", en: "Three shapes: circle, square, triangle" }
+            caption: { de: "Die Formen sind nur zum Ansehen.", en: "The shapes are only to look at." }
+            source: { de: "eigene Zeichnung", en: "own drawing" }
+            licence: CC0-1.0
         explanation:
           {
             de: "1 % ist ein Hundertstel: $\\frac{200}{100} = 2$.",

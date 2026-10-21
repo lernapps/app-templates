@@ -24,6 +24,7 @@ flowchart TB
     bb-tooling["Tooling helpers"]
     bb-archetype-runtime["Explainer runtime"]
     subgraph bb-runtime["Shared runtime"]
+        bb-blocks["Content blocks"]
         bb-questions["Questions"]
     end
     bb-explainer-content["Content"]
@@ -31,6 +32,7 @@ flowchart TB
     bb-explainer-components["Vue components (optional)"]
     bb-archetype-runtime -->|"if-shared-runtime"| bb-runtime
     bb-archetype-runtime -->|"if-questions"| bb-questions
+    bb-archetype-runtime -->|"if-blocks"| bb-blocks
     bb-archetype-runtime -->|"if-component-rules"| bb-component-rules
     bb-archetype-runtime -->|"if-preset"| bb-tooling
 ```
@@ -98,7 +100,7 @@ id: bb-archetype-runtime
 title: Explainer runtime
 path: runtime/explainer
 technology: TypeScript, Vite plugin, Vue
-requires: if-shared-runtime, if-preset, if-questions, if-component-rules
+requires: if-shared-runtime, if-preset, if-questions, if-blocks, if-component-rules
 implements: concept-archetype-extension
 :::
 ```

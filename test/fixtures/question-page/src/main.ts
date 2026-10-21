@@ -1,5 +1,5 @@
 import "@lernapps/app-templates/quiz/style.css";
-import { questionId, startQuestion, type Question } from "@lernapps/app-templates/quiz";
+import { questionId, startQuestion, type Question } from "@lernapps/app-templates/questions/engine";
 
 const questions = JSON.parse(document.getElementById("questions-data")?.textContent ?? "[]") as Question[];
 for (const question of questions) {

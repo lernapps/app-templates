@@ -1,6 +1,6 @@
 // A page of another archetype, as the explainer will be: it embeds one question of each type of the quiz
-// (src/questions.json) as an exercise, through the per-question exports of the quiz runtime only. The build
-// validates each question and fails with the quiz's messages at the question's path; it renders each one's controls
+// (src/questions.json) as an exercise, through the per-question exports of the shared questions only. The build
+// validates each question and fails with the questions' messages at the question's path; it renders each one's controls
 // and, in a <details>, its solution, so the page reads without JavaScript. src/main.ts makes each question live.
 import { readFileSync } from "node:fs";
 import { lernapps } from "@lernapps/tooling/preset";
@@ -10,7 +10,7 @@ import {
   renderSolution,
   validateQuestion,
   type Question,
-} from "@lernapps/app-templates/quiz/question";
+} from "@lernapps/app-templates/questions";
 import type { Plugin } from "vite-plus";
 
 const FILE = "src/questions.json";

@@ -4,11 +4,12 @@
 // languages declares them (languages, German first): each of its learner texts must then be a map with each of them
 // and no other, with the messages of the explainer's language check.
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
+import type { AppChecks } from "../shared/blocks/index.ts";
 import { LANGUAGES, languageListProblems, textLanguages, type Text } from "../shared/languages.ts";
 import {
   duplicates,
   inQuestion,
-  questionSchema,
+  questionSchemas,
   readable,
   schemaMessages,
   validateQuestion,
@@ -22,7 +23,7 @@ export const SCHEMA_FILE = "node_modules/@lernapps/app-templates/runtime/quiz/qu
 export const RULE_URL = "https://lernapps.net/tooling/rules/#quiz-bank-valid";
 
 const ajv = new Ajv2020({ allErrors: true, strict: true });
-ajv.addSchema(questionSchema);
+for (const each of questionSchemas) ajv.addSchema(each);
 ajv.addSchema(schema);
 function compiled<T>(ref: string): ValidateFunction<T> {
   const validate = ajv.getSchema<T>(ref);
@@ -65,7 +66,7 @@ function bankTextProblems(quiz: Quiz<Text>, languages: readonly string[]): strin
 }
 
 /** The problems of a question bank; none when it is valid. */
-export function problems(value: unknown): string[] {
+export function problems(value: unknown, app?: AppChecks): string[] {
   if (!validateBank(value)) return schemaMessages(validateBank.errors ?? [], (path) => inBank(path, value), value);
   const languages = quizLanguages(value);
   const listed = languageListProblems(languages, LANGUAGES).map(
@@ -77,20 +78,20 @@ export function problems(value: unknown): string[] {
     ...duplicates(ids).map((id) => `questions: the id "${id}" appears twice; each question needs its own id`),
     ...bankTextProblems(value, languages),
     ...value.questions.flatMap((question, index) =>
-      validateQuestion(question, `questions[${index}]`, languages, DECLARED_IN),
+      validateQuestion(question, `questions[${index}]`, languages, DECLARED_IN, app),
     ),
   ];
 }
 
 /** Reads a question bank from JSON text, in all its languages; throws an Error whose message lists every problem. */
-export function readBank(text: string, file: string): Quiz<Text> {
+export function readBank(text: string, file: string, app?: AppChecks): Quiz<Text> {
   let value: unknown;
   try {
     value = JSON.parse(text);
   } catch (error) {
     throw new Error(`${file} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
   }
-  const found = problems(value);
+  const found = problems(value, app);
   if (found.length > 0) {
     throw new Error(
       [
@@ -104,4 +105,4 @@ export function readBank(text: string, file: string): Quiz<Text> {
 }
 
 /** Reads a question bank from JSON text, in German; throws an Error whose message lists every problem. */
-export const parseBank = (text: string, file: string): Quiz => quizIn(readBank(text, file), "de");
+export const parseBank = (text: string, file: string, app?: AppChecks): Quiz => quizIn(readBank(text, file, app), "de");

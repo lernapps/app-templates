@@ -4,7 +4,10 @@
 
 import type { Question } from "../shared/questions/question.ts";
 import type { Generated } from "./generated/types.ts";
+import type { Credit, Drawing, MaterialBlock } from "../shared/blocks/block.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
+
+export type { Credit, Drawing };
 
 export { inLanguage, type Text };
 
@@ -32,14 +35,6 @@ export interface App {
   };
 }
 
-export interface Credit {
-  /** A URL, the same in every language, or a citation: a text. */
-  source?: Text;
-  licence?: string;
-}
-
-export type Drawing = { kind: "hundred-grid"; filled: number } | { kind: "bar"; part: number; whole: number };
-
 export interface Event {
   date: number | string;
   label?: Text;
@@ -48,21 +43,9 @@ export interface Event {
 }
 
 export type Block =
-  | { type: "text"; text: Text }
-  | { type: "formula"; formula: Text }
-  | ({ type: "figure"; draw?: Drawing; image?: string; alt: Text; caption: Text } & Credit)
-  | ({
-      type: "labelled-figure";
-      image: string;
-      alt: Text;
-      caption?: Text;
-      labels: readonly { x: number; y: number; text: Text }[];
-    } & Credit)
-  | { type: "table"; caption: Text; header?: readonly Text[]; rowHeaders?: boolean; rows: readonly (readonly Text[])[] }
+  | MaterialBlock<Text>
   | { type: "timeline"; events?: readonly Event[]; data?: string }
   | { type: "definition"; term: Text; explanation: Text }
-  | ({ type: "quote"; text: Text; origin: { author: Text; work?: Text; year?: number | Text } } & Credit)
-  | { type: "code"; language: string; code: string; caption?: Text }
   | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
   | { type: "section"; id: string; title: Text; blocks: readonly Block[] }
   | {

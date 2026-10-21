@@ -5,6 +5,7 @@
 // A learner text is a string; an app in several languages writes each as a map of texts by language,
 // { de: …, en: … } (Question<Text>), and questionIn gives it in the page's language. The address of a link is one
 // for every language, or a map of addresses by language where the page to read differs.
+import { materialIn, type MaterialBlock } from "../blocks/block.ts";
 import { inLanguage, type Text } from "../languages.ts";
 export type { Text };
 
@@ -25,6 +26,8 @@ export interface Option<T extends Text = string> {
 interface Base<T extends Text> {
   id: string;
   text: T;
+  /** Content the question shows between its text and its answers: figures, tables, quotations, code, ... */
+  material?: readonly MaterialBlock<T>[];
   /** Why the right answer is right; for types without options also their background. */
   explanation: T;
   links: Link<T>[];
@@ -162,6 +165,7 @@ export function questionIn(question: Question<Text>, lang: string): Question {
     explanation: t(question.explanation),
     links: question.links.map(link),
     ...(question.hint === undefined ? {} : { hint: t(question.hint) }),
+    ...(question.material === undefined ? {} : { material: materialIn(question.material, lang) }),
   };
   switch (question.type) {
     case "single-choice":

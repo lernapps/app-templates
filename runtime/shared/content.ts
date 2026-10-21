@@ -6,9 +6,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ErrorObject } from "ajv/dist/2020.js";
 import { isNode, LineCounter, parseDocument, type Document } from "yaml";
-import { textLanguages, type Text } from "./languages.ts";
-import { formulaProblem } from "./text/formula.ts";
-import { htmlTag, inspect } from "./text/markdown.ts";
+import type { Text } from "./languages.ts";
+import { checkText, type TextKind } from "./text/check.ts";
 
 export type Path = readonly (string | number)[];
 
@@ -161,9 +160,6 @@ export function schemaProblems(
   }
 }
 
-/** A source of a credit that is only a URL, rendered as a link. */
-const SOURCE_URL = /^https?:\/\/\S+$/;
-
 /** Where a link inside a text was written, to check its target once every page is known. */
 export interface TextLink {
   yaml: YamlFile;
@@ -188,37 +184,14 @@ export class Texts {
    * of a credit (a URL or a citation); a formula, a name or a URL given as a string is the same in every language, a
    * citation is a plain text.
    */
-  check(yaml: YamlFile, path: Path, kind: "plain" | "markdown" | "latex" | "name" | "credit"): void {
+  check(yaml: YamlFile, path: Path, kind: TextKind): void {
     const value = get(yaml.value, path);
     if (value === undefined) return;
-    const neutral =
-      kind === "latex" || kind === "name" || (kind === "credit" && typeof value === "string" && SOURCE_URL.test(value));
-    const { texts, problems } = textLanguages(value as Text, this.languages, neutral);
-    for (const problem of problems) this.problems.at(yaml, path, problem.message, problem.lang);
-    for (const { lang, text, keyed } of texts) {
-      const at = keyed ? [...path, lang] : path;
-      if (kind === "latex") {
-        const problem = formulaProblem(text);
-        if (problem !== undefined) this.problems.at(yaml, at, problem, keyed ? lang : undefined);
-        continue;
-      }
-      if (kind === "plain" || kind === "name" || kind === "credit") {
-        const tag = htmlTag(text);
-        if (tag !== undefined) {
-          this.problems.at(
-            yaml,
-            at,
-            `raw HTML (<${tag}>) is not allowed; write restricted Markdown: **bold**, *italics*, lists, links`,
-            lang,
-          );
-        }
-        continue;
-      }
-      const found = inspect(text);
-      for (const problem of found.problems) this.problems.at(yaml, at, problem.message, lang, problem.line);
-      for (const href of found.links.filter((link) => link.startsWith("/"))) {
-        this.links.push({ yaml, path: at, lang, offset: 0, href });
-      }
+    const { findings, links } = checkText(value as Text, kind, this.languages);
+    for (const finding of findings) {
+      this.problems.at(yaml, [...path, ...finding.path], finding.message, finding.lang, finding.line);
     }
+    for (const link of links)
+      this.links.push({ yaml, path: [...path, ...link.path], lang: link.lang, offset: 0, href: link.href });
   }
 }

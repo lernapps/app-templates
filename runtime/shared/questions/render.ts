@@ -114,6 +114,8 @@ export interface RenderQuestionOptions {
   next?: boolean;
   lang?: string;
   textHtml?: string;
+  /** The question's material as HTML, rendered by the page (renderMaterial of the blocks): shown after its text. */
+  materialHtml?: string;
   explanationHtml?: string;
 }
 
@@ -136,6 +138,7 @@ export function renderQuestion(
     next = false,
     lang = "de",
     textHtml,
+    materialHtml,
     explanationHtml,
     format = escape,
   }: RenderQuestionOptions = {},
@@ -149,6 +152,9 @@ export function renderQuestion(
     `<form class="question-form" novalidate>`,
     `<fieldset>`,
     `<legend class="question-text">${textHtml ?? format(question.text)}</legend>`,
+    ...(materialHtml === undefined || materialHtml === ""
+      ? []
+      : [`<div class="question-material">${materialHtml}</div>`]),
     controls(question, words, format),
     `</fieldset>`,
     `<div class="question-feedback" role="status"></div>`,

@@ -23,11 +23,11 @@
     },
     "title": {
       "description": "The title of the quiz: the page's title and its h1 heading.",
-      "$ref": "urn:lernapps:schema:question.v1#/$defs/learnerText"
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
     },
     "intro": {
       "description": "One or two sentences under the heading: what the quiz is about and whom it is for.",
-      "$ref": "urn:lernapps:schema:question.v1#/$defs/learnerText"
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
     },
     "rememberLastResult": {
       "description": "Keep the last result on the learner's device (localStorage, through the preset's storage) and show it at the end. Off by default: then the quiz stores nothing.",
@@ -59,7 +59,7 @@
       "properties": {
         "title": {
           "description": "The source, e.g. the article or book.",
-          "$ref": "urn:lernapps:schema:question.v1#/$defs/learnerText"
+          "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
         },
         "url": {
           "description": "Its address, if it is on the web; https only.",

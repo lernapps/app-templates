@@ -20,12 +20,18 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "playwright/test";
 import type { Text } from "../shared/languages.ts";
-import { answerQuestion, expectBackground, expectFeedbackInView, question } from "../shared/questions/e2e.ts";
+import {
+  answerQuestion,
+  expectBackground,
+  expectFeedbackInView,
+  expectMaterial,
+  question,
+} from "../shared/questions/e2e.ts";
 import { questionId, rightAnswer, wrongAnswer } from "../shared/questions/question.ts";
 import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
 import { messagesIn, QUIZ_MESSAGES } from "./render.ts";
 
-export { answerQuestion, expectBackground, expectFeedbackInView } from "../shared/questions/e2e.ts";
+export { answerQuestion, expectBackground, expectFeedbackInView, expectMaterial } from "../shared/questions/e2e.ts";
 
 const de = QUIZ_MESSAGES.de;
 /** The quiz's own texts in `lang`. */
@@ -66,6 +72,13 @@ export function quizTests(bank = "src/quiz.json"): void {
           await expect(reveal).toContainText(de.rightAnswer);
         }
       });
+
+      if (item.material !== undefined) {
+        test(`${item.id} (${item.type}): what it shows is there, and its images load`, async ({ page }) => {
+          await page.goto(`./#${questionId(item)}`);
+          await expectMaterial(page, item);
+        });
+      }
 
       test(`${item.id} (${item.type}): a wrong answer does not count`, async ({ page }) => {
         await page.goto(`./#${questionId(item)}`);
@@ -157,6 +170,7 @@ export function quizTests(bank = "src/quiz.json"): void {
         await page.goto("./");
         for (const item of quiz.questions) {
           await expect(question(page, item).locator("legend")).toHaveText(item.text);
+          await expectMaterial(page, item, { loaded: false });
           await expectBackground(page.locator(`#loesung-${item.id}`), item);
         }
       });
@@ -180,6 +194,7 @@ export function quizTests(bank = "src/quiz.json"): void {
             await expect(page.locator("#loesungen h2")).toHaveText(words.solutions);
             for (const item of local.questions) {
               await expect(question(page, item).locator("legend")).toHaveText(item.text);
+              await expectMaterial(page, item, { loaded: false });
               await expectBackground(page.locator(`#loesung-${item.id}`), item);
             }
             for (const other of languages) {
@@ -193,6 +208,14 @@ export function quizTests(bank = "src/quiz.json"): void {
               await expect(page.locator('.page-languages a[aria-current="page"]')).toHaveAttribute("hreflang", other);
             }
           });
+        });
+
+        test(`what a question shows, in ${lang}`, async ({ page }) => {
+          const item = local.questions.find((candidate) => candidate.material !== undefined);
+          test.skip(item === undefined, "no question shows content");
+          if (item === undefined) return;
+          await page.goto(`${address}#${questionId(item)}`);
+          await expectMaterial(page, item);
         });
 
         test(`one question, answered in ${lang}`, async ({ page }) => {
