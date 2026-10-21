@@ -7,6 +7,16 @@
       "id": "grand-canyon",
       "type": "single-choice",
       "text": "Welcher Fluss hat den Grand Canyon in den USA geformt?",
+      "material": [
+        {
+          "type": "figure",
+          "image": "images/grand-canyon.jpg",
+          "alt": "Blick über eine riesige Schlucht mit roten und hellen Gesteinsschichten, dahinter weitere Felswände und ein blauer Himmel",
+          "caption": "Schau auf die Wände: Sie bestehen aus vielen Schichten übereinander. Foto: Alexander Migl.",
+          "source": "https://commons.wikimedia.org/wiki/File:Grand_Canyon_South_Rim_Trail_P4140464.jpg",
+          "licence": "CC-BY-SA-4.0"
+        }
+      ],
       "options": [
         {
           "text": "Colorado",
