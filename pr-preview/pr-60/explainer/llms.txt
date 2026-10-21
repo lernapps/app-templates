@@ -1,0 +1,47 @@
+# Prozentrechnung
+
+> Prozentwert, Prozentsatz und Grundwert: Was sie bedeuten, wie du sie ausrechnest, und je ein Beispiel dazu. Für die Klassen 7 und 8.
+
+## Seiten
+
+- [Prozentwert](prozent/prozentwert/): Den Prozentwert berechnen: W = G · p : 100, mit einem Beispiel und dem Hunderterfeld.
+  - [Warum](prozent/prozentwert/#warum)
+  - [Regel](prozent/prozentwert/#regel)
+  - [Beispiel](prozent/prozentwert/#beispiel)
+  - [Übung](prozent/prozentwert/#uebung)
+- [Prozentsatz](prozent/prozentsatz/): Den Prozentsatz berechnen: p = W : G · 100, mit einem Beispiel und dem Prozentstreifen.
+  - [Warum](prozent/prozentsatz/#warum)
+  - [Regel](prozent/prozentsatz/#regel)
+  - [Beispiel](prozent/prozentsatz/#beispiel)
+  - [Übung](prozent/prozentsatz/#uebung)
+- [Grundwert](prozent/grundwert/): Den Grundwert berechnen: G = W · 100 : p, mit einem Beispiel und dem Hunderterfeld.
+  - [Warum](prozent/grundwert/#warum)
+  - [Regel](prozent/grundwert/#regel)
+  - [Beispiel](prozent/grundwert/#beispiel)
+  - [Übung](prozent/grundwert/#uebung)
+
+## Glossar
+
+- [Glossar](glossar/)
+
+## Hinweise für einen KI-Tutor
+
+- Die App ist das Arbeitsblatt, der Chat das Gespräch darüber. Gelöst wird in der App: Sie prüft die Ergebnisse, du erklärst.
+- Verlinke immer eine konkrete Aufgabe, nie nur die Startseite. Jede Übung hat einen Anker (`#<id>`); eine Aufgabe mit Nummer öffnest du mit `<seite>?<id>=<nummer>#<id>`. Die Links stehen in der Tutor-Datei jeder Seite.
+- Häng `von=tutor` an jeden Link, den du schickst, vor dem `#`: `<seite>?<id>=7&von=tutor#<id>`. Dann zeigt die Seite einen Knopf „Zurück zum Tutor“.
+- Jede Aufgabe mit Zufallszahlen hat eine Nummer: „Aufgabe Nr. 7“. Frag nach der Nummer, die auf dem Bildschirm steht, und schlag die Aufgabe in der Tutor-Datei der Seite nach. Dort stehen alle Nummern jeder Übung, von 1 bis höchstens 67, jede mit Aufgabe und Lösung; jede Nummer ist eine andere Aufgabe, und dieselbe Nummer zeigt in der App dieselbe Aufgabe.
+- Die Adresse einer Seite hält die Aufgabennummer jeder Übung: `<seite>?<id1>=3&<id2>=12`. Wer den Link der Seite teilt, teilt genau diese Aufgaben. Willst du wissen, welche Aufgaben die lernende Person gerade vor sich hat, bitte sie um die Adresse aus ihrem Browser und lies die Nummern daraus.
+- Verrate keine Lösung, bevor sich die lernende Person auf eine Antwort festgelegt hat. Die Tutor-Dateien enthalten die Lösungen: Nutze sie, um Fehler zu erkennen und gezielt Tipps zu geben, nicht um vorzusagen.
+- Bei jeder Übung stehen typische Fehler mit der Meldung der App. Benenne die Idee hinter einem Fehler, nicht nur „falsch“.
+- Die App sammelt nichts, sendet nichts und meldet dir nichts zurück. Ergebnisse kennst du nur, wenn die lernende Person sie dir sagt: Frag nach jeder verlinkten Aufgabe, was herauskam.
+- Ein kleiner Schritt pro Antwort. Prüfe Verständnis mit einer Aufgabe, nicht mit „Verstanden?“.
+
+### Ein fertiger Prompt für einen KI-Tutor (Rolle, Vorgehen, Checkliste der Seiten)
+
+- [tutor.md](tutor.md)
+
+### Tutor-Dateien der Seiten (Aufbau, Übungen, Aufgaben nach Nummer mit Lösungen)
+
+- [Prozentwert](prozent/prozentwert/tutor.md)
+- [Prozentsatz](prozent/prozentsatz/tutor.md)
+- [Grundwert](prozent/grundwert/tutor.md)
