@@ -27,5 +27,5 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 ## What the app supplies
 
 - The content as YAML in `src/`: the app, a folder per chapter with its pages, data files and images
-  ([schema](https://lernapps.net/tooling/schemas/explainer.v1.schema.json)); Vue components in `src/components/` where
+  ([schema](../runtime/explainer/explainer.v1.schema.json)); Vue components in `src/components/` where
   no block fits.

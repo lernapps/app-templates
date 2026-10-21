@@ -23,8 +23,9 @@ import {
   type Question,
 } from "./question.ts";
 
-export const QUESTION_SCHEMA_ID = "https://lernapps.net/tooling/schemas/question.v1.schema.json";
-/** The schema of one question, for a `$ref` from another schema (with `questionSchema` added to its validator). */
+/** The id of the schema of a question, to refer to it from another schema (with `questionSchema` added to its validator). */
+export const QUESTION_SCHEMA_ID = schema.$id;
+/** The reference to one question in the schema of a question, for a `$ref` from another schema. */
 export const QUESTION_REF = `${QUESTION_SCHEMA_ID}#/$defs/question`;
 /** The schema of a question (question.v1.schema.json), to add to another schema's validator. */
 export const questionSchema = schema;

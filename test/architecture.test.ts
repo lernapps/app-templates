@@ -73,17 +73,3 @@ describe("the package's public paths", () => {
     expect(unbuilt).toEqual([]);
   });
 });
-
-describe("the schema of a question", () => {
-  const read = (path: string) =>
-    JSON.parse(readFileSync(join(root, path), "utf8")) as { $defs: Record<string, unknown> };
-  const question = read("runtime/shared/questions/question.v1.schema.json");
-  const quiz = read("runtime/quiz/quiz.v1.schema.json");
-
-  test("the quiz's schema carries the same definitions, so that its published address keeps working", () => {
-    const different = Object.keys(question.$defs).filter(
-      (name) => JSON.stringify(quiz.$defs[name]) !== JSON.stringify(question.$defs[name]),
-    );
-    expect(different, "run: node scripts/sync-schemas.ts").toEqual([]);
-  });
-});

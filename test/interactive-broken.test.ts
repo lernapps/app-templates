@@ -56,7 +56,7 @@ const cases: [string, (root: string) => void, string][] = [
       rmSync(join(root, "src", PLAY));
       rmSync(join(root, "src/playthroughs/obere-reihe.yaml"));
     },
-    "src/playthroughs/: no playthrough; write at least one, <name>.yaml: a seed, and steps of keys, inputs or ticks with the state or announcement expected after them (https://lernapps.net/tooling/schemas/playthrough.v1.schema.json)",
+    "src/playthroughs/: no playthrough; write at least one, <name>.yaml: a seed, and steps of keys, inputs or ticks with the state or announcement expected after them (node_modules/@lernapps/app-templates/runtime/interactive/playthrough.v1.schema.json)",
   ],
   [
     "a playthrough of a route the app does not have",

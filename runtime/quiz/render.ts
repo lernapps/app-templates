@@ -12,20 +12,10 @@ import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
 import { alternateLinks, languageRoot, languageSwitch } from "../shared/pages.ts";
 import { QUESTION_MESSAGES, LOCALES } from "../shared/questions/render.ts";
-import { questionId, type Question, type Quiz } from "./quiz.ts";
+import { questionId, type Question } from "../shared/questions/question.ts";
+import { type Quiz } from "./quiz.ts";
 import { external, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { escape } from "../shared/html.ts";
-
-export {
-  answerText,
-  QUESTION_MESSAGES,
-  questionMessagesIn,
-  renderQuestion,
-  renderSolution,
-  type QuestionMessages,
-  type RenderQuestionOptions,
-  type RenderSolutionOptions,
-} from "../shared/questions/render.ts";
 
 /** The quiz's texts for learners: those of its page, and those of its questions. */
 export type QuizMessages = typeof de & (typeof QUESTION_MESSAGES)["de"];

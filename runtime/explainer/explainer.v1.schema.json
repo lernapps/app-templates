@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://lernapps.net/tooling/schemas/explainer.v1.schema.json",
+  "$id": "urn:lernapps:schema:explainer.v1",
   "title": "Content of a lernapps explainer",
   "description": "The content of an app built from the archetype explainer (runtime @lernapps/app-templates), as YAML in src/: the app (src/app.yaml), each chapter (src/<chapter>/chapter.yaml), each page (src/<chapter>/<page>.yaml) and data files (src/data/<name>.yaml). A page is a list of blocks from a closed set; structure comes only from section blocks. The build validates every file against this schema, then what a schema cannot say (order lists complete, depth, languages complete, formulas in the command list), and fails with one line per problem. Every text is for learners, in plain language. A text is a string while German is the app's only language, else a map of texts by language: { de: …, en: … }.",
   "allOf": [
@@ -500,7 +500,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -514,7 +514,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -528,7 +528,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -542,7 +542,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -556,7 +556,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {
@@ -570,7 +570,7 @@
             "type": "object"
           },
           "then": {
-            "$ref": "https://lernapps.net/tooling/schemas/question.v1.schema.json#/$defs/question"
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
           }
         },
         {

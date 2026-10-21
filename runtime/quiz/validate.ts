@@ -1,46 +1,36 @@
 // Validates a question bank at build time: against its JSON Schema (quiz.v1.schema.json), then what a schema
 // cannot say (unique ids, ...), then each of its questions with the validation of one question
-// (shared/questions/validate.ts), which this module passes on for the path @lernapps/app-templates/quiz/question.
-// Each problem names the question and what to change, for the assistant that wrote the bank. A bank in several
+// (shared/questions/validate.ts). Each problem names the question and what to change, for the assistant that wrote the bank. A bank in several
 // languages declares them (languages, German first): each of its learner texts must then be a map with each of them
 // and no other, with the messages of the explainer's language check.
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
 import { languageListProblems, textLanguages, type Text } from "../shared/languages.ts";
-import { duplicates, inQuestion, readable, schemaMessages, validateQuestion } from "../shared/questions/validate.ts";
+import {
+  duplicates,
+  inQuestion,
+  questionSchema,
+  readable,
+  schemaMessages,
+  validateQuestion,
+} from "../shared/questions/validate.ts";
 import schema from "./quiz.v1.schema.json" with { type: "json" };
 import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
 import { QUIZ_MESSAGES } from "./render.ts";
 
-export {
-  addressProblem,
-  exampleProblems,
-  QUESTION_REF,
-  QUESTION_SCHEMA_ID,
-  questionDetails,
-  questionSchema,
-  questionSchemaProblems,
-  validateQuestion,
-  type QuestionProblem,
-} from "../shared/questions/validate.ts";
-
-export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/quiz.v1.schema.json";
-/**
- * The schema of one question as the quiz's schema carries it, for a `$ref` from another schema (with the quiz's schema
- * added to its validator); the same definitions as question.v1.schema.json, whose address is QUESTION_REF.
- */
-export const QUESTION_SCHEMA_URL = `${SCHEMA_URL}#/$defs/question`;
+export const SCHEMA_ID = schema.$id;
+/** Where an app finds the schema of its question bank, for the message that names it. */
+export const SCHEMA_FILE = "node_modules/@lernapps/app-templates/runtime/quiz/quiz.v1.schema.json";
 export const RULE_URL = "https://lernapps.net/tooling/rules/#quiz-bank-valid";
-/** The schema of a question bank (quiz.v1.schema.json), to add to another schema's validator. */
-export const quizSchema = schema;
 
 const ajv = new Ajv2020({ allErrors: true, strict: true });
+ajv.addSchema(questionSchema);
 ajv.addSchema(schema);
 function compiled<T>(ref: string): ValidateFunction<T> {
   const validate = ajv.getSchema<T>(ref);
   if (validate === undefined) throw new Error(`the quiz's schema has no ${ref}`);
   return validate;
 }
-const validateBank = compiled<Quiz<Text>>(SCHEMA_URL);
+const validateBank = compiled<Quiz<Text>>(SCHEMA_ID);
 
 /** `/questions/2/options/1/text` as `questions[2].options[1].text`, with the id of the question. */
 function inBank(path: string, value: unknown): string {
@@ -107,7 +97,7 @@ export function readBank(text: string, file: string): Quiz<Text> {
       [
         `${file} is not a valid question bank (${RULE_URL}):`,
         ...found.map((problem) => `  - ${problem}`),
-        `Fix the question bank as its schema says: ${SCHEMA_URL}`,
+        `Fix the question bank as its schema says: ${SCHEMA_FILE}`,
       ].join("\n"),
     );
   }

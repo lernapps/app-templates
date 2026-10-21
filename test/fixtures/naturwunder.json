@@ -1,5 +1,5 @@
 {
-  "$schema": "https://lernapps.net/tooling/schemas/quiz.v1.schema.json",
+  "$schema": "../runtime/quiz/quiz.v1.schema.json",
   "title": "Naturwunder der Welt",
   "intro": "Acht Fragen zu Bergen, Flüssen, Wasserfällen und Inseln auf der ganzen Erde. Für die Klassen 5 bis 7.",
   "rememberLastResult": true,

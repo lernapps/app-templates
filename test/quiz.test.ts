@@ -1,7 +1,8 @@
 // The contract of a quiz's scoring, as the engine and the end-to-end tests of every quiz consume it: what counts as
 // the right answer to each type of question, how a typed number is read, and the score of a set of answers.
 import { describe, expect, test } from "vite-plus/test";
-import { isComplete, isCorrect, parseNumber, score, shuffled, type Question } from "../runtime/quiz/quiz.ts";
+import { isComplete, isCorrect, parseNumber, shuffled, type Question } from "../runtime/shared/questions/question.ts";
+import { score } from "../runtime/quiz/quiz.ts";
 
 const base = {
   text: "Frage",

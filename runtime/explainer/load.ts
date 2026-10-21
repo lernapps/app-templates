@@ -63,7 +63,9 @@ import {
 } from "../shared/content.ts";
 import { languageListProblems, textLanguages } from "../shared/languages.ts";
 
-export const SCHEMA_URL = "https://lernapps.net/tooling/schemas/explainer.v1.schema.json";
+export const SCHEMA_ID = schema.$id;
+/** Where an app finds the schema of its content, for the message that names it. */
+export const SCHEMA_FILE = "node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json";
 export const RULE_URL = "https://lernapps.net/tooling/rules/#explainer-content-valid";
 
 /** What src/ may hold besides the chapter folders. */
@@ -81,7 +83,7 @@ export class ContentError extends Error {
       [
         `the explainer's content in src/ is not valid (${RULE_URL}):`,
         ...problems.map((problem) => `  - ${problem}`),
-        `Fix the content as its schema says: ${SCHEMA_URL}`,
+        `Fix the content as its schema says: ${SCHEMA_FILE}`,
       ].join("\n"),
     );
     this.problems = problems;
@@ -93,7 +95,7 @@ const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true }
 ajv.addSchema(questionSchema);
 ajv.addSchema(schema);
 const validator = (name: string): ValidateFunction => {
-  const validate = ajv.getSchema(`${SCHEMA_URL}#/$defs/${name}`);
+  const validate = ajv.getSchema(`${SCHEMA_ID}#/$defs/${name}`);
   if (validate === undefined) throw new Error(`the schema has no $defs/${name}`);
   return validate;
 };
