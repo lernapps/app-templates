@@ -65,6 +65,18 @@ function stepTicks({ count, property }: { count: number; property: string }): vo
   (Reflect.get(globalThis, property) as { tick(count: number): void }).tick(count);
 }
 
+/**
+ * Presses `key` as the learner does. Playwright knows only the keys of a US keyboard by name; any other character
+ * (ä, ö, ü, ß, é) goes as the keydown event the runtime listens to, with that key.
+ */
+async function pressKey(page: Page, key: string): Promise<void> {
+  if (key.length === 1 && key > "~")
+    await page.evaluate((pressed) => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: pressed, bubbles: true, cancelable: true }));
+    }, key);
+  else await page.keyboard.press(key);
+}
+
 /** The interactive app's tests, for the app in `root`. */
 export function interactiveTests(root = "."): void {
   const { app, playthroughs } = loadInteractive(root);
@@ -155,7 +167,7 @@ export function interactiveTests(root = "."): void {
           const live = page.locator('body > [aria-live="polite"]');
           for (const [index, step] of playthrough.steps.entries()) {
             for (const input of inputsOf(step)) {
-              if (input.kind === "key") await page.keyboard.press(input.key);
+              if (input.kind === "key") await pressKey(page, input.key);
               else await host.evaluate(emitInput, input as unknown);
             }
             if (step.ticks !== undefined)
