@@ -28,19 +28,14 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import type { Component } from "vue";
 import type { Plugin, ViteDevServer } from "vite-plus";
-import {
-  describedProblems,
-  exampleProblems,
-  propertyProblems,
-  propsIn,
-  SIZE_BUDGET,
-  type ExerciseLogic,
-} from "./components.ts";
-import type { Block, ComponentDescription, Site } from "./content.ts";
+import { describedProblems, exampleProblems, propertyProblems, type ExerciseLogic } from "./components/exercise.ts";
+import { propsIn } from "./components/props.ts";
+import { SIZE_BUDGET } from "./components/read.ts";
+import type { Block, ComponentDescription, Descriptions, Site } from "./content.ts";
 import { ContentError, loadSite } from "./load.ts";
 import { dataOf, taskSeeds } from "./exercises.ts";
 import { MAX_TASKS } from "./tasks.ts";
-import { llmsTxt, renderSite, type Descriptions, type Islands, type RenderedPage } from "./render.ts";
+import { llmsTxt, renderSite, type Islands, type RenderedPage } from "./render.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";

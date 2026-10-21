@@ -69,3 +69,6 @@ export function addressOf(href: string, id: string, n: number): string {
   url.searchParams.set(id, String(n));
   return url.href;
 }
+
+/** How many worked tasks a page shows without JavaScript: the task numbers 1 to 3. */
+export const WORKED_TASKS = 3;
