@@ -355,7 +355,7 @@ async function expectLanguages(page: Page, item: PageOutline, languages: readonl
   for (const lang of languages) {
     await expect(page.locator(`link[rel="alternate"][hreflang="${lang}"]`)).toHaveCount(1);
     if (lang === item.lang) continue;
-    const other = page.locator(`.explainer-languages a[hreflang="${lang}"]`);
+    const other = page.locator(`.page-languages a[hreflang="${lang}"]`);
     await expect(other).toBeVisible();
     const response = await page.request.get(await other.evaluate((a) => (a as HTMLAnchorElement).href));
     expect(response.status(), `${item.url}: the switch to ${lang}`).toBe(200);

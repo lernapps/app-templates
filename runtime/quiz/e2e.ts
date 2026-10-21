@@ -187,10 +187,10 @@ export function quizTests(bank = "src/quiz.json"): void {
             }
             for (const other of languages.filter((candidate) => candidate !== lang)) {
               await page.goto(address);
-              await page.locator(`.quiz-languages a[hreflang="${other}"]`).click();
+              await page.locator(`.page-languages a[hreflang="${other}"]`).click();
               await expect(page.locator("html")).toHaveAttribute("lang", other);
               await expect(page.locator("h1")).toHaveText(quizIn(all, other).title);
-              await expect(page.locator('.quiz-languages a[aria-current="page"]')).toHaveAttribute("hreflang", other);
+              await expect(page.locator('.page-languages a[aria-current="page"]')).toHaveAttribute("hreflang", other);
             }
           });
         });

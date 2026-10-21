@@ -104,7 +104,7 @@ describe("a page per language", () => {
     expect(page.body).toContain(`<h2 class="quiz-heading">${messagesIn("en").questions}</h2>`);
     expect(page.body).toContain(`<h2>${messagesIn("en").solutions}</h2>`);
     expect(page.body).toContain(
-      '<nav class="quiz-languages" aria-label="Language"><ul><li><a href="../" hreflang="de" lang="de">Deutsch</a></li><li><a href="../en/" hreflang="en" lang="en" aria-current="page">English</a></li></ul></nav>',
+      '<nav class="page-languages" aria-label="Language"><ul><li><a href="../" hreflang="de" lang="de">Deutsch</a></li><li><a href="../en/" hreflang="en" lang="en" aria-current="page">English</a></li></ul></nav>',
     );
     expect(page.alternates).toEqual([
       '<link rel="alternate" hreflang="de" href="../" />',
@@ -122,7 +122,7 @@ describe("a page per language", () => {
 
   test("a German bank: no switch, no alternates", () => {
     const page = renderQuiz({ quiz: parseBank(german, "src/quiz.json") });
-    expect(page.body).not.toContain("quiz-languages");
+    expect(page.body).not.toContain("page-languages");
     expect(page.alternates).toEqual([]);
   });
 });

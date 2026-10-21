@@ -10,7 +10,7 @@
 // header holds the language switch of plain links and nothing else (no link with the app's name: the title is the h1,
 // and the way back to the catalog is the platform's); an app with one language has no header. The end-to-end tests rely on the classes and ids written here.
 import { inLanguage, type Text } from "../shared/languages.ts";
-import { alternateLinks, languageRoot, languageSwitch, relative } from "../shared/pages.ts";
+import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { plain, renderMarkdown } from "../shared/text/markdown.ts";
 import type { App } from "./load.ts";
 import { message, type Messages } from "./messages.ts";
@@ -58,15 +58,13 @@ export function renderPage(app: App, page: Page): RenderedPage {
   const markdown = (value: Text) =>
     renderMarkdown(inLanguage(value, lang), (href) => (href.startsWith("/") ? to(href.slice(1)) : href));
   const title = text(app.title);
-  const switcher = languageSwitch({
+  const header = pageHeader({
     ...page,
     languages: app.languages,
-    className: "interactive-languages",
     label: t("languages"),
     name: (other) => plain(message(other, "language")),
   });
-  const header = switcher === "" ? "" : `<header class="interactive-header">${switcher}</header>`;
-  const footer = `<footer class="interactive-footer"><p>${t("footer")} · <a href="https://lernapps.net/imprint/">${t("imprint")}</a> · <a href="https://lernapps.net/privacy/">${t("privacy")}</a></p></footer>`;
+  const footer = pageFooter({ footer: t("footer"), imprint: t("imprint"), privacy: t("privacy") });
   const routes = app.routes ?? [];
   let main: string;
   if (page.kind === "start") {

@@ -1,7 +1,6 @@
 /* The look of a question, for every archetype that has questions; the stylesheets of the quiz and of the explainer
-   import it. Its fieldset, its controls, the button to check it, its feedback and the background of its options. The
-   page that includes it sets the colours as custom properties, --question-text, -muted, -background, -surface,
-   -border, -accent, -on-accent, -right, -right-background, -wrong and -wrong-background, from its own. */
+   import it. Its fieldset, its controls, the button to check it, its feedback and the background of its options, in the
+   colours of the page (page.css). */
 
 .question {
   margin: 0 0 1.5rem;
@@ -10,9 +9,9 @@
 .question fieldset {
   margin: 0;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--question-border);
+  border: 1px solid var(--page-border);
   border-radius: 0.5rem;
-  background: var(--question-surface);
+  background: var(--page-surface);
   min-width: 0;
 }
 
@@ -37,10 +36,10 @@
 .question-pairs select {
   font: inherit;
   padding: 0.25rem 0.5rem;
-  border: 1px solid var(--question-border);
+  border: 1px solid var(--page-border);
   border-radius: 0.25rem;
-  background: var(--question-background);
-  color: var(--question-text);
+  background: var(--page-background);
+  color: var(--page-text);
   max-width: 100%;
 }
 
@@ -67,7 +66,7 @@
 
 .question-hint {
   margin: 0 0 0.5rem;
-  color: var(--question-muted);
+  color: var(--page-muted);
 }
 
 .question-actions {
@@ -80,7 +79,7 @@
   margin: 0.75rem 0;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
-  border: 1px solid var(--question-border);
+  border: 1px solid var(--page-border);
 }
 
 .question-feedback p {
@@ -88,13 +87,13 @@
 }
 
 .question-right {
-  background: var(--question-right-background);
-  color: var(--question-right);
+  background: var(--page-right-background);
+  color: var(--page-right);
 }
 
 .question-wrong {
-  background: var(--question-wrong-background);
-  color: var(--question-wrong);
+  background: var(--page-wrong-background);
+  color: var(--page-wrong);
 }
 
 .question-infos,
@@ -106,7 +105,7 @@
 .question-info {
   margin: 0.5rem 0;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--question-border);
+  border: 1px solid var(--page-border);
   border-left-width: 4px;
   border-radius: 0.375rem;
 }
@@ -116,11 +115,11 @@
 }
 
 .question-info-right {
-  border-left-color: var(--question-right);
+  border-left-color: var(--page-right);
 }
 
 .question-info-chosen:not(.question-info-right) {
-  border-left-color: var(--question-wrong);
+  border-left-color: var(--page-wrong);
 }
 
 .question-badge {
@@ -133,14 +132,14 @@
 }
 
 .question-badge-right {
-  background: var(--question-right-background);
-  color: var(--question-right);
+  background: var(--page-right-background);
+  color: var(--page-right);
 }
 
 .question-badge-chosen {
-  background: var(--question-surface);
-  color: var(--question-text);
-  border: 1px solid var(--question-border);
+  background: var(--page-surface);
+  color: var(--page-text);
+  border: 1px solid var(--page-border);
 }
 
 .question-links li {
@@ -155,16 +154,16 @@
 .question button {
   font: inherit;
   padding: 0.5rem 1rem;
-  border: 2px solid var(--question-accent);
+  border: 2px solid var(--page-accent);
   border-radius: 0.375rem;
-  background: var(--question-accent);
-  color: var(--question-on-accent);
+  background: var(--page-accent);
+  color: var(--page-on-accent);
   cursor: pointer;
 }
 
 .question button.question-solve {
-  background: var(--question-background);
-  color: var(--question-accent);
+  background: var(--page-background);
+  color: var(--page-accent);
 }
 
 .question button:focus-visible,
@@ -172,7 +171,7 @@
 .question input:focus-visible,
 .question select:focus-visible,
 .question summary:focus-visible {
-  outline: 3px solid var(--question-text);
+  outline: 3px solid var(--page-text);
   outline-offset: 2px;
 }
 

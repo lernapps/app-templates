@@ -48,7 +48,7 @@ watch(
 .game {
   padding: 1rem;
   border-radius: 0.5rem;
-  background: #f4f5f7;
+  background: var(--page-surface);
   text-align: center;
 }
 
@@ -64,21 +64,21 @@ watch(
   margin: 0.5rem auto;
   max-width: 20rem;
   border-radius: 0.25rem;
-  background: #d1d5db;
+  background: var(--page-border);
   overflow: hidden;
 }
 
 .time-left {
   height: 100%;
-  background: #1d4ed8;
+  background: var(--page-accent);
 }
 
 .again {
   padding: 0.5rem 1.25rem;
   border: 0;
   border-radius: 0.375rem;
-  background: #1d4ed8;
-  color: #ffffff;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
   font: inherit;
   font-weight: 600;
 }
