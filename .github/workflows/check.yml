@@ -133,7 +133,7 @@ jobs:
       - run: npm ci # the runtime's build tools, for file:..
       - run: npm install --no-audit --no-fund
         working-directory: quiz
-      - run: cp ../test/fixtures/quiz-material/quiz.json src/quiz.json && cp -r ../test/fixtures/quiz-material/images src/images
+      - run: cp ../test/fixtures/quiz-material/quiz.json src/quiz.json && mkdir -p src/images && cp -r ../test/fixtures/quiz-material/images/. src/images/
         working-directory: quiz
       - run: npx lernapps check --pre-push
         working-directory: quiz
