@@ -62,7 +62,7 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
       if (block.draw?.kind === "hundred-grid") picture = hundredGrid(block.draw.filled, alt);
       else if (block.draw?.kind === "bar") picture = bar(block.draw.part, block.draw.whole, alt, localeOf(lang));
       else if (block.image !== undefined)
-        picture = `<img src="${escape(context.href(block.image))}" alt="${escape(alt)}">`;
+        picture = `<img src="${escape(context.href(block.image))}" alt="${escape(alt)}" loading="lazy" decoding="async">`;
       return `<figure class="block-figure">${picture}<figcaption>${markdown(block.caption)}${renderCredit(block, lang)}</figcaption></figure>`;
     }
     case "labelled-figure": {
@@ -77,7 +77,7 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
       const fill = context.sizeless?.(block.image) === true ? " block-labelled-fill" : "";
       return [
         `<figure class="block-figure block-labelled">`,
-        `<div class="block-labelled-image${fill}"><img src="${escape(context.href(block.image))}" alt="${plain(block.alt)}">${markers}</div>`,
+        `<div class="block-labelled-image${fill}"><img src="${escape(context.href(block.image))}" alt="${plain(block.alt)}" loading="lazy" decoding="async">${markers}</div>`,
         `<ol class="block-legend">${legend}</ol>`,
         `<figcaption>${caption}${renderCredit(block, lang)}</figcaption>`,
         `</figure>`,
