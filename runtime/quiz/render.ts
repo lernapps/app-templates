@@ -11,7 +11,8 @@ import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
 import { alternateLinks, languageRoot, languageSwitch } from "../shared/pages.ts";
-import { QUESTION_MESSAGES, LOCALES } from "../shared/questions/render.ts";
+import { localeOf, textsIn, type Language } from "../shared/languages.ts";
+import { QUESTION_MESSAGES } from "../shared/questions/render.ts";
 import { questionId, type Question } from "../shared/questions/question.ts";
 import { type Quiz } from "./quiz.ts";
 import { external, renderQuestion, renderSolution } from "../shared/questions/render.ts";
@@ -20,23 +21,23 @@ import { escape } from "../shared/html.ts";
 /** The quiz's texts for learners: those of its page, and those of its questions. */
 export type QuizMessages = typeof de & (typeof QUESTION_MESSAGES)["de"];
 /** The quiz's texts for learners in each language it has them: a quiz may declare only these languages. */
-export const QUIZ_MESSAGES: Readonly<Record<string, QuizMessages>> = {
-  de: { ...QUESTION_MESSAGES["de"]!, ...de },
-  en: { ...QUESTION_MESSAGES["en"]!, ...en },
+export const QUIZ_MESSAGES: Readonly<Record<Language, QuizMessages>> = {
+  de: { ...QUESTION_MESSAGES.de, ...de },
+  en: { ...QUESTION_MESSAGES.en, ...en },
 };
 
 /** The quiz's texts in `lang`; German for a language it does not have. */
-export const messagesIn = (lang: string): QuizMessages => QUIZ_MESSAGES[lang] ?? QUIZ_MESSAGES["de"]!;
+export const messagesIn = (lang: string): QuizMessages => textsIn(QUIZ_MESSAGES, lang);
 
 /** What rendering in one language needs: its texts and its numbers. */
-interface Language {
+interface Words {
   t: (key: keyof QuizMessages, params?: Readonly<Record<string, string | number>>) => string;
 }
-const languages = new Map<string, Language>();
-function language(lang = "de"): Language {
+const languages = new Map<string, Words>();
+function wordsIn(lang = "de"): Words {
   let found = languages.get(lang);
   if (found === undefined) {
-    found = { t: translator(messagesIn(lang), LOCALES[lang] ?? "de-DE") };
+    found = { t: translator(messagesIn(lang), localeOf(lang)) };
     languages.set(lang, found);
   }
   return found;
@@ -55,7 +56,7 @@ export interface QuizData {
 export const solutionId = (question: Question) => `loesung-${question.id}`;
 
 function solutionItem(question: Question, lang: string): string {
-  const { t } = language(lang);
+  const { t } = wordsIn(lang);
   return [
     `<li class="quiz-solution" id="${solutionId(question)}">`,
     `<h3>${escape(question.text)}</h3>`,
@@ -65,7 +66,7 @@ function solutionItem(question: Question, lang: string): string {
   ].join("\n");
 }
 
-function renderSources(quiz: Quiz, { t }: Language): string[] {
+function renderSources(quiz: Quiz, { t }: Words): string[] {
   if (quiz.sources === undefined) return [];
   return [
     `<section class="quiz-sources" id="quellen">`,
@@ -96,7 +97,7 @@ export interface RenderedQuiz {
 }
 
 /** The form with which the learner chooses how many questions to answer; the engine shows it (none for one question). */
-function renderStart(total: number, t: Language["t"]): string {
+function renderStart(total: number, t: Words["t"]): string {
   if (total < 2) return "";
   return [
     `<form class="quiz-start" hidden>`,
@@ -115,7 +116,7 @@ function renderStart(total: number, t: Language["t"]): string {
 export function renderQuiz(data: QuizData, { languages = ["de"] }: QuizPages = {}): RenderedQuiz {
   const { quiz } = data;
   const lang = data.lang ?? "de";
-  const words = language(lang);
+  const words = wordsIn(lang);
   const { t } = words;
   const where = { path: languageRoot(lang), local: "", languages };
   const json = JSON.stringify(data).replace(/</g, "\\u003c");

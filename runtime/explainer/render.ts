@@ -26,6 +26,7 @@ import {
 } from "./content.ts";
 import { renderExercise } from "./exercises.ts";
 import { bar, hundredGrid } from "./figures.ts";
+import { localeOf } from "../shared/languages.ts";
 import { renderFormula } from "../shared/text/formula.ts";
 import { plain, renderInline, renderMarkdown } from "../shared/text/markdown.ts";
 import { message, type Messages } from "./messages.ts";
@@ -60,8 +61,6 @@ export type Islands = ReadonlyMap<Block, ReadonlyMap<string, string>>;
 /** What the logic of each exercise component's block describes (plugin.ts): its about, and its tasks by language. */
 export type Descriptions = ReadonlyMap<Block, ComponentDescription>;
 
-const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
-
 /** What rendering one page needs. */
 class Context {
   readonly locale: string;
@@ -76,7 +75,7 @@ class Context {
     this.route = route;
     this.islands = islands;
     this.descriptions = descriptions;
-    this.locale = LOCALES[route.lang] ?? route.lang;
+    this.locale = localeOf(route.lang);
   }
   get lang(): string {
     return this.route.lang;

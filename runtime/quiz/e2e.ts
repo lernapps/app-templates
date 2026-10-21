@@ -27,7 +27,7 @@ import { messagesIn, QUIZ_MESSAGES } from "./render.ts";
 
 export { answerQuestion, expectBackground, expectFeedbackInView } from "../shared/questions/e2e.ts";
 
-const de = QUIZ_MESSAGES["de"]!;
+const de = QUIZ_MESSAGES.de;
 /** The quiz's own texts in `lang`. */
 const messagesOf = messagesIn;
 

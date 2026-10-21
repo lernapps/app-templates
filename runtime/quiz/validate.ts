@@ -4,7 +4,7 @@
 // languages declares them (languages, German first): each of its learner texts must then be a map with each of them
 // and no other, with the messages of the explainer's language check.
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
-import { languageListProblems, textLanguages, type Text } from "../shared/languages.ts";
+import { LANGUAGES, languageListProblems, textLanguages, type Text } from "../shared/languages.ts";
 import {
   duplicates,
   inQuestion,
@@ -15,7 +15,6 @@ import {
 } from "../shared/questions/validate.ts";
 import schema from "./quiz.v1.schema.json" with { type: "json" };
 import { quizIn, quizLanguages, type Quiz } from "./quiz.ts";
-import { QUIZ_MESSAGES } from "./render.ts";
 
 export const SCHEMA_ID = schema.$id;
 /** Where an app finds the schema of its question bank, for the message that names it. */
@@ -69,7 +68,7 @@ function bankTextProblems(quiz: Quiz<Text>, languages: readonly string[]): strin
 export function problems(value: unknown): string[] {
   if (!validateBank(value)) return schemaMessages(validateBank.errors ?? [], (path) => inBank(path, value), value);
   const languages = quizLanguages(value);
-  const listed = languageListProblems(languages, Object.keys(QUIZ_MESSAGES)).map(
+  const listed = languageListProblems(languages, LANGUAGES).map(
     (problem) => `languages[${Math.max(languages.lastIndexOf(problem.lang), 0)}]: ${problem.message}`,
   );
   if (listed.length > 0) return listed;

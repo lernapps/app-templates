@@ -11,9 +11,8 @@ import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
 import schema from "./interactive.v1.schema.json" with { type: "json" };
 import playthroughSchema from "./playthrough.v1.schema.json" with { type: "json" };
 import { Problems, readYaml, schemaProblems, Texts, type YamlFile } from "../shared/content.ts";
-import { languageListProblems, type Text } from "../shared/languages.ts";
+import { LANGUAGES, languageListProblems, type Text } from "../shared/languages.ts";
 import type { Playthrough } from "./contract.ts";
-import { MESSAGES } from "./messages.ts";
 
 /** Where an app finds the schemas of its start page and of its playthroughs, for the messages that name them. */
 const SCHEMA_FILE = "node_modules/@lernapps/app-templates/runtime/interactive/interactive.v1.schema.json";
@@ -106,7 +105,7 @@ export function check(root: string): { interactive?: Interactive; problems: stri
   const appYaml = readYaml(root, APP, problems);
   if (appYaml === undefined || !validate(appYaml, "app", problems)) return { problems: problems.lines };
   const app = appYaml.value as App;
-  const languageList = languageListProblems(app.languages, Object.keys(MESSAGES));
+  const languageList = languageListProblems(app.languages, LANGUAGES);
   for (const problem of languageList) {
     problems.at(appYaml, ["languages", Math.max(app.languages.lastIndexOf(problem.lang), 0)], problem.message);
   }
