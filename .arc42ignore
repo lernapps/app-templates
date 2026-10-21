@@ -8,6 +8,9 @@ runtime/interactive
 # entry, which hands the app's parts to its archetype's shell, and type declarations, configuration rather than
 # architecture; and the explainer's example chapter, part of bb-explainer-content (which claims src/app.yaml).
 quiz/src/main.ts
+# The quiz's image files: the content of the question bank (bb-quiz-bank claims src/quiz.json, whose figures name them),
+# data like the bank and not a part of its own.
+quiz/src/images
 explainer/src/main.ts
 explainer/src/prozent
 interactive/src/main.ts
