@@ -8,6 +8,7 @@
 //   startQuestion(element, question);
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { translator } from "@lernapps/tooling/i18n";
+import { textsIn } from "../languages.ts";
 import { QUESTION_MESSAGES } from "./render.ts";
 import {
   hash,
@@ -82,7 +83,7 @@ export interface StartQuestionOptions {
  * answer is asked to be completed.
  */
 export function startQuestion(item: HTMLElement, question: Question, options: StartQuestionOptions = {}): void {
-  const t = translator(QUESTION_MESSAGES[options.lang ?? "de"] ?? QUESTION_MESSAGES["de"]!);
+  const t = translator(textsIn(QUESTION_MESSAGES, options.lang ?? "de"));
   const form = item.querySelector("form");
   const feedback = item.querySelector<HTMLElement>(".question-feedback");
   const check = item.querySelector<HTMLButtonElement>(".question-check");

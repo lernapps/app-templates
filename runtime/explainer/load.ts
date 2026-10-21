@@ -44,7 +44,6 @@ import {
   type Templates,
 } from "./generated.ts";
 import { formulaProblems } from "../shared/text/markdown.ts";
-import { MESSAGES } from "./messages.ts";
 import { allBlocks } from "./routes.ts";
 import { RESERVED_PARAMS } from "./tasks.ts";
 import { appName } from "../shared/appname.ts";
@@ -61,7 +60,7 @@ import {
   type Path,
   type YamlFile,
 } from "../shared/content.ts";
-import { languageListProblems, textLanguages } from "../shared/languages.ts";
+import { LANGUAGES, languageListProblems, textLanguages } from "../shared/languages.ts";
 
 export const SCHEMA_ID = schema.$id;
 /** Where an app finds the schema of its content, for the message that names it. */
@@ -790,7 +789,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   const appYaml = readYaml(root, "src/app.yaml", problems);
   if (appYaml === undefined || !validate(appYaml, "app", problems)) return { problems: problems.lines };
   const app = appYaml.value as App;
-  const languageList = languageListProblems(app.languages, Object.keys(MESSAGES));
+  const languageList = languageListProblems(app.languages, LANGUAGES);
   for (const problem of languageList) {
     problems.at(appYaml, ["languages", Math.max(app.languages.lastIndexOf(problem.lang), 0)], problem.message);
   }

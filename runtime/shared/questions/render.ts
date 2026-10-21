@@ -12,26 +12,26 @@ import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
 import { escape } from "../html.ts";
+import { localeOf, textsIn, type Language } from "../languages.ts";
 import { mixed, questionId, type Link, type Question } from "./question.ts";
 
 export type QuestionMessages = typeof de;
 /** The texts of a question for learners in each language it has them: an app may declare only these languages. */
-export const QUESTION_MESSAGES: Readonly<Record<string, QuestionMessages>> = { de, en };
-export const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
+export const QUESTION_MESSAGES: Readonly<Record<Language, QuestionMessages>> = { de, en };
 
 /** The question's texts in `lang`; German for a language it does not have. */
-export const questionMessagesIn = (lang: string): QuestionMessages => QUESTION_MESSAGES[lang] ?? de;
+export const questionMessagesIn = (lang: string): QuestionMessages => textsIn(QUESTION_MESSAGES, lang);
 
 /** What rendering in one language needs: its texts and its numbers. */
-export interface Language {
+export interface Words {
   t: (key: keyof QuestionMessages, params?: Readonly<Record<string, string | number>>) => string;
   numbers: Intl.NumberFormat;
 }
-const languages = new Map<string, Language>();
-export function questionLanguage(lang = "de"): Language {
+const languages = new Map<string, Words>();
+export function questionWords(lang = "de"): Words {
   let found = languages.get(lang);
   if (found === undefined) {
-    const locale = LOCALES[lang] ?? "de-DE";
+    const locale = localeOf(lang);
     found = {
       t: translator(questionMessagesIn(lang), locale),
       numbers: new Intl.NumberFormat(locale, { maximumFractionDigits: 10 }),
@@ -40,12 +40,11 @@ export function questionLanguage(lang = "de"): Language {
   }
   return found;
 }
-const language = questionLanguage;
 
 /** How a learner text becomes HTML. */
 export type Format = (text: string) => string;
 
-function controls(question: Question, { t }: Language, format: Format): string {
+function controls(question: Question, { t }: Words, format: Format): string {
   const name = questionId(question);
   switch (question.type) {
     case "single-choice":
@@ -141,7 +140,7 @@ export function renderQuestion(
     format = escape,
   }: RenderQuestionOptions = {},
 ): string {
-  const words = language(lang);
+  const words = questionWords(lang);
   const { t } = words;
   const id = questionId(question);
   const nextButton = next ? ` <button type="button" class="question-next" hidden>${t("next")}</button>` : "";
@@ -164,10 +163,10 @@ export function renderQuestion(
 
 /** The right answer as the solution states it, in `lang`: the right options, the number, the order, the pairs. */
 export function answerText(question: Question, lang = "de", format: Format = escape): string {
-  return rightAnswerText(question, language(lang), format);
+  return rightAnswerText(question, questionWords(lang), format);
 }
 
-function rightAnswerText(question: Question, { t, numbers }: Language, format: Format): string {
+function rightAnswerText(question: Question, { t, numbers }: Words, format: Format): string {
   switch (question.type) {
     case "single-choice":
     case "multiple-choice":
@@ -196,7 +195,7 @@ function rightAnswerText(question: Question, { t, numbers }: Language, format: F
 export const external = (link: Link) => `<a href="${escape(link.url)}" rel="noopener">${escape(link.title)}</a>`;
 
 /** Every option with its background, the right ones marked; the engine marks the learner's choice. */
-function optionInfo(question: Question, words: Language, format: Format): string {
+function optionInfo(question: Question, words: Words, format: Format): string {
   const { t } = words;
   if (question.type !== "single-choice" && question.type !== "multiple-choice") {
     return `<p><strong>${t("rightAnswer")}</strong> ${rightAnswerText(question, words, format)}</p>`;
@@ -224,7 +223,7 @@ export function renderSolution(
   question: Question,
   { lang = "de", explanationHtml, format = escape }: RenderSolutionOptions = {},
 ): string {
-  const words = language(lang);
+  const words = questionWords(lang);
   const links =
     question.links.length === 0
       ? []

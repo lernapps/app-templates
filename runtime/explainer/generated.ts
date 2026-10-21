@@ -41,7 +41,7 @@ import {
   type Question,
 } from "../shared/questions/question.ts";
 import { verdict } from "../shared/examples.ts";
-import { inLanguage, type Text } from "../shared/languages.ts";
+import { inLanguage, localeOf, type Text } from "../shared/languages.ts";
 import { escape } from "../shared/html.ts";
 
 /** A literal of a list in the content: a number, a string, or a text by language. */
@@ -133,7 +133,6 @@ export interface Task {
 
 /** How many draws a seed may take until `where` holds. */
 const ATTEMPTS = 100;
-export const LOCALES: Readonly<Record<string, string>> = { de: "de-DE", en: "en-GB" };
 const PATH = String.raw`[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*`;
 /** A placeholder: two braces around a name or a name's field, nothing else inside. */
 const PLACEHOLDER = new RegExp(String.raw`\{\{(${PATH})\}\}`, "g");
@@ -312,7 +311,7 @@ export function formatNumber(value: Fraction, lang: string, decimals?: number): 
   const key = `${lang}:${decimals ?? ""}`;
   let format = formats.get(key);
   if (format === undefined) {
-    format = new Intl.NumberFormat(LOCALES[lang] ?? lang, {
+    format = new Intl.NumberFormat(localeOf(lang), {
       maximumFractionDigits: decimals ?? 6,
       ...(decimals === undefined ? {} : { minimumFractionDigits: decimals }),
       useGrouping: false,
@@ -612,7 +611,7 @@ export function figureOf(spec: Generated, task: Task, lang: string, templates: T
   const n = (value: Value | undefined) => (value instanceof Fraction ? value.toNumber() : 0);
   return figure.kind === "hundred-grid"
     ? hundredGrid(n(values.filled), alt)
-    : bar(n(values.part), n(values.whole), alt, LOCALES[lang] ?? lang, false);
+    : bar(n(values.part), n(values.whole), alt, localeOf(lang), false);
 }
 
 // ------------------------------------------------------------------------------------- the question

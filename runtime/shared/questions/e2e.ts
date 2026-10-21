@@ -3,11 +3,12 @@
 // the question's controls, as a learner does; expectBackground and expectFeedbackInView check what the learner then
 // sees. Run by the end-to-end tests of the archetypes that have questions.
 import { expect, type Locator, type Page } from "playwright/test";
+import { textsIn } from "../languages.ts";
 import { QUESTION_MESSAGES } from "./render.ts";
 import { questionId, type Answer, type Question } from "./question.ts";
 
 /** The question's own texts in `lang`. */
-const messagesOf = (lang: string) => QUESTION_MESSAGES[lang] ?? QUESTION_MESSAGES["de"]!;
+const messagesOf = (lang: string) => textsIn(QUESTION_MESSAGES, lang);
 
 export const question = (page: Page, item: Question) => page.locator(`#${questionId(item)}`);
 
