@@ -165,6 +165,9 @@ export function startQuiz(root: Document = document): void {
       progress.textContent = t("progress", { current: index + 1, total: order.length });
       const legend = items.get(order[index]?.id ?? "")?.querySelector<HTMLElement>("legend");
       if (focus && legend) moveFocus(legend);
+      // the previous question was longer than this one, so the page shrank and the browser left the view at the top:
+      // the heading "Frage N" comes into view, after the focus, which scrolls on its own
+      if (focus) progress.scrollIntoView({ block: "start" });
     };
 
     const finish = () => {
