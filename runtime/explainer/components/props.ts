@@ -1,5 +1,6 @@
 // The props of a vue-component block against the prop types of its component: what is wrong with a value at a path
-// below props, the paths of the learner texts among them, and the props in the page's language.
+// below props, the paths of the learner texts among them, and the props in the page's language. A list prop may be
+// given as { data: <name> }, the records of src/data/<name>.yaml (withData).
 import { inLanguage, type Text } from "../../shared/languages.ts";
 import { type ComponentInfo, type Field, type PropType } from "../content.ts";
 
@@ -106,6 +107,62 @@ function fieldProblems(
     problems.push(...valueProblems(value[key], field.type, [...path, key], component, declaration ?? field.source));
   }
   return problems;
+}
+
+/**
+ * `value`, a `type`, with each { data: <name> } where a list is declared replaced by the records of src/data/<name>.yaml,
+ * cut to the fields of the declared item type; a file that does not exist is a problem at the reference.
+ */
+function dataIn(
+  value: unknown,
+  type: PropType,
+  files: Readonly<Record<string, readonly object[]>>,
+  path: readonly (string | number)[],
+  problems: PropProblem[],
+): unknown {
+  if (type.kind === "array" && Array.isArray(value)) {
+    return value.map((item, index) => dataIn(item, type.of, files, [...path, index], problems));
+  }
+  if (type.kind === "array" && typeof value === "object" && value !== null) {
+    const keys = Object.keys(value);
+    const name = (value as { data?: unknown }).data;
+    if (keys.length !== 1 || typeof name !== "string") return value;
+    const records = files[name];
+    if (records === undefined) {
+      problems.push({ path, message: `src/data/${name}.yaml does not exist (vue-component-props-valid)` });
+      return value;
+    }
+    const item = type.of;
+    return item.kind !== "object"
+      ? records
+      : records.map((record) =>
+          Object.fromEntries(
+            Object.keys(item.fields).flatMap((key) =>
+              key in record ? [[key, (record as Record<string, unknown>)[key]]] : [],
+            ),
+          ),
+        );
+  }
+  if (type.kind === "object" && typeof value === "object" && value !== null && !Array.isArray(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => {
+        const field = type.fields[key];
+        return [key, field === undefined ? item : dataIn(item, field.type, files, [...path, key], problems)];
+      }),
+    );
+  }
+  return value;
+}
+
+/** A block's `props` with the data references replaced by their records, and the problems of the references. */
+export function withData(
+  props: unknown,
+  component: ComponentInfo,
+  files: Readonly<Record<string, readonly object[]>>,
+): { props: unknown; problems: PropProblem[] } {
+  const problems: PropProblem[] = [];
+  const resolved = dataIn(props, { kind: "object", fields: component.props }, files, [], problems);
+  return { props: resolved, problems };
 }
 
 /** The problems of a block's `props` against the props of `component`. */

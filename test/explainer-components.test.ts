@@ -8,6 +8,8 @@ import { describe, expect, test } from "vite-plus/test";
 import { build } from "vite-plus";
 import { describedProblems, exampleProblems, propertyProblems } from "../runtime/explainer/components/exercise.ts";
 import { explainer } from "../runtime/explainer/plugin.ts";
+import { withData } from "../runtime/explainer/components/props.ts";
+import type { ComponentInfo } from "../runtime/explainer/content.ts";
 
 const FIXTURE = join(import.meta.dirname, "fixtures/explainer-history");
 
@@ -51,6 +53,24 @@ async function problems(root: string): Promise<string[]> {
       .filter((line) => line.startsWith("  - "))
       .map((line) => line.slice(4));
   }
+}
+
+/** Adds the component Dates, which lists the titles of events, and a block of it with `props` to the history page. */
+function withDates(root: string, declared: string, props: string): void {
+  writeFileSync(
+    join(root, "src/components/Dates.vue"),
+    `<script setup lang="ts">\ndefineProps<{ events: { ${declared} }[] }>();\n</script>\n\n<template>\n  <ul>\n    <li v-for="(event, index) in events" :key="index">{{ event.title }}</li>\n  </ul>\n</template>\n`,
+  );
+  writeFileSync(
+    join(root, "src/components/Dates.test.ts"),
+    `import { test } from "vite-plus/test";\ntest("dates", () => {});\n`,
+  );
+  edit(
+    root,
+    "revolution/staende.yaml",
+    "      - type: vue-component\n        component: AssignLabels\n",
+    `      - type: vue-component\n        component: Dates\n        props: { events: ${props} }\n        nojs: { de: Die Ereignisse als Liste., en: The events as a list. }\n      - type: vue-component\n        component: AssignLabels\n`,
+  );
 }
 
 const VUE = "components/AssignLabels.vue";
@@ -176,6 +196,16 @@ const cases: [string, (root: string) => void, string][] = [
       ),
     "src/components/AssignLabels.vue:29:14: window outside onMounted; the build renders the component where there is no window, so use it only inside onMounted (vue-component-browser-globals)",
   ],
+  [
+    "a list prop that names a data file that does not exist",
+    (root) => withDates(root, "title: string", "{ data: gibtsnicht }"),
+    "src/revolution/staende.yaml:52: blocks[0].blocks[3].props.events: src/data/gibtsnicht.yaml does not exist (vue-component-props-valid)",
+  ],
+  [
+    "a list prop whose data file has records without a declared field",
+    (root) => withDates(root, "title: string; ort: string", "{ data: ereignisse }"),
+    "src/revolution/staende.yaml:52: blocks[0].blocks[3].props.events[0]: ort is missing; Dates declares ort: string (vue-component-props-valid)",
+  ],
 ];
 
 describe("a broken component fails the build with its one line", () => {
@@ -281,4 +311,47 @@ describe("what an exercise component's logic describes", () => {
       'for seed 1 describe(task, props, "de") is {"task":"t"}; describe returns { task, solution }: the task as the learner sees it and its solution, each a text in the page\'s language',
     ]);
   });
+});
+
+describe("a list prop given as { data: <name> }", () => {
+  const component = {
+    name: "Dates",
+    props: {
+      events: {
+        type: {
+          kind: "array",
+          of: {
+            kind: "object",
+            fields: { title: { type: { kind: "string" }, optional: false, source: "title: string" } },
+          },
+        },
+        optional: false,
+        source: "events: { title: string }[]",
+      },
+    },
+  } as unknown as ComponentInfo;
+  const files = {
+    ereignisse: [
+      { title: "Ballhausschwur", date: "1789-06-20" },
+      { title: "Bastille", date: "1789-07-14" },
+    ],
+  };
+
+  test("is the records of the file, cut to the fields the component declares", () => {
+    expect(withData({ events: { data: "ereignisse" } }, component, files)).toEqual({
+      props: { events: [{ title: "Ballhausschwur" }, { title: "Bastille" }] },
+      problems: [],
+    });
+  });
+
+  test("leaves a list written out in the block as it is", () => {
+    const props = { events: [{ title: "Eins" }] };
+    expect(withData(props, component, files)).toEqual({ props, problems: [] });
+  });
+
+  test("builds, for a data file whose records have the declared fields", async () => {
+    const root = app();
+    withDates(root, "title: string", "{ data: ereignisse }");
+    expect(await problems(root)).toEqual([]);
+  }, 30_000);
 });
