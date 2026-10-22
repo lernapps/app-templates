@@ -3,8 +3,16 @@
 import { evaluate, type Expression, ExpressionError, Localized, parse, type Rec, type Value } from "../expression.ts";
 import { Fraction } from "../fraction.ts";
 import { hash, random, shuffled } from "../../shared/questions/question.ts";
-import { type Text } from "../../shared/languages.ts";
-import { type Arbitrary, type Data, type Generated, type Literal, type Source, type Task } from "./types.ts";
+import {
+  type Arbitrary,
+  type Data,
+  type DataRecord,
+  type DataValue,
+  type Generated,
+  type Literal,
+  type Source,
+  type Task,
+} from "./types.ts";
 import { kindOf } from "./comparator.ts";
 
 /** How many draws a seed may take until `where` holds. */
@@ -13,17 +21,19 @@ export const ATTEMPTS = 100;
 const literal = (value: Literal): Value =>
   typeof value === "number" ? Fraction.from(value) : typeof value === "string" ? value : new Localized(value);
 
-export function record(source: Readonly<Record<string, number | boolean | Text>>): Rec {
-  const fields: Record<string, Value> = {};
-  for (const [key, value] of Object.entries(source)) {
-    fields[key] =
-      typeof value === "number"
-        ? Fraction.from(value)
-        : typeof value === "boolean" || typeof value === "string"
-          ? value
-          : new Localized(value);
-  }
-  return fields;
+/** A value of a data record: a map of strings is a text by language, any other map a record. */
+function dataValue(value: DataValue): Value {
+  if (typeof value === "number") return Fraction.from(value);
+  if (typeof value === "boolean" || typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map(dataValue);
+  const fields = Object.entries(value as Record<string, DataValue>);
+  return fields.every(([, field]) => typeof field === "string")
+    ? new Localized(value as Readonly<Record<string, string>>)
+    : record(value as DataRecord);
+}
+
+export function record(source: DataRecord): Rec {
+  return Object.fromEntries(Object.entries(source).map(([key, value]) => [key, dataValue(value)]));
 }
 
 export function items(source: Source, data: Data): Value[] {

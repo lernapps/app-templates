@@ -163,12 +163,17 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   texts.check(appYaml, ["intro"], "markdown");
   texts.check(appYaml, ["tutor", "rules"], "markdown");
   app.sources?.forEach((_source, index) => texts.check(appYaml, ["sources", index, "title"], "plain"));
+  // a text by language anywhere in a record, also in the lists and records of a record
+  const checkDataTexts = (yaml: YamlFile, path: (string | number)[], value: unknown): void => {
+    if (Array.isArray(value)) value.forEach((item, index) => checkDataTexts(yaml, [...path, index], item));
+    else if (isObject(value)) {
+      const fields = Object.entries(value);
+      if (fields.every(([, field]) => typeof field === "string")) texts.check(yaml, path, "plain");
+      else for (const [field, item] of fields) checkDataTexts(yaml, [...path, field], item);
+    }
+  };
   for (const yaml of dataFiles.values()) {
-    (yaml.value as DataRecord[]).forEach((record, index) => {
-      for (const [field, value] of Object.entries(record)) {
-        if (isObject(value)) texts.check(yaml, [index, field], "plain");
-      }
-    });
+    (yaml.value as DataRecord[]).forEach((record, index) => checkDataTexts(yaml, [index], record));
   }
   const chaptersOk = checkOrder(
     appYaml,

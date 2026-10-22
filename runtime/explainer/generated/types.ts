@@ -72,8 +72,15 @@ export interface Generated {
   readonly examples?: { readonly accepted?: readonly string[]; readonly rejected?: readonly string[] };
 }
 
+/**
+ * A value of a data record: a number, a truth value, a text (a string, or a map by language), or, for what a component
+ * shows, a list or a record of values.
+ */
+export type DataValue = number | boolean | Text | readonly DataValue[] | { readonly [field: string]: DataValue };
+/** A record of a data file: its fields by name. */
+export type DataRecord = Readonly<Record<string, DataValue>>;
 /** The records of the data files, by name. */
-export type Data = Readonly<Record<string, readonly Readonly<Record<string, number | boolean | Text>>[]>>;
+export type Data = Readonly<Record<string, readonly DataRecord[]>>;
 
 /** The templates of an exercise in one language, rendered by the build, with tokens for the placeholders. */
 export interface LanguageTemplates {
