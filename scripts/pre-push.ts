@@ -64,6 +64,8 @@ export const ROOT_ONLY = [
   ".agents/", // the skills agents load in this repo (skills-lock.json), not part of a template
   ".claude/",
   "skills-lock.json",
+  "AGENTS.md", // what agents in this repo read (CLAUDE.md imports it)
+  "CLAUDE.md",
 ];
 
 /** Whether a path (relative to the repo root, with "/") is one of the patterns: the path, or below a folder "x/". */
