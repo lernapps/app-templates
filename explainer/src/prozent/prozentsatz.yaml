@@ -78,7 +78,6 @@ blocks:
         where: ["W < G", "decimals(W * 100 / G) == 0"]
         task:
           text: "In einer Klasse sind {{G}} Schüler. {{W}} davon haben ein Haustier. Wie viel Prozent der Klasse sind das?"
-          figure: { kind: bar, part: W, whole: G }
         answer: { value: "W * 100 / G", compare: { number: { format: percent, decimals: 0 } } }
         mistakes:
           - {

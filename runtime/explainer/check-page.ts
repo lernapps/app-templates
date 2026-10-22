@@ -334,7 +334,7 @@ function checkExerciseId(check: PageCheck, id: string, at: Path): void {
   } else check.exercises.set(id, at);
 }
 
-const ARBITRARIES = ["int", "decimal", "oneOf", "pick", "shuffle"] as const;
+const ARBITRARIES = ["int", "decimal", "oneOf", "pick"] as const;
 
 /** The parsed expression at `path`, or a problem; the variables it uses must be declared. */
 function checkExpression(check: PageCheck, path: Path, source: string, declared: ReadonlySet<string>): boolean {
@@ -398,17 +398,16 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
     }
     if (arbitrary.distinct !== undefined && arbitrary.pick === undefined)
       problems.at(yaml, path, "distinct goes with pick");
-    const source = arbitrary.from ?? arbitrary.shuffle;
-    const key = arbitrary.from !== undefined ? "from" : "shuffle";
+    const source = arbitrary.from;
     let size: number | undefined;
     if (source !== undefined && !Array.isArray(source)) {
-      size = data((source as { data: string }).data, [...path, key, "data"])?.length;
+      size = data((source as { data: string }).data, [...path, "from", "data"])?.length;
     } else if (Array.isArray(source)) size = source.length;
     if (arbitrary.distinct === true && arbitrary.pick !== undefined && size !== undefined && arbitrary.pick > size) {
       problems.at(yaml, path, `${arbitrary.pick} distinct picks from a list of ${size}; pick fewer`);
     }
     const literals = arbitrary.oneOf ?? (Array.isArray(source) ? source : []);
-    const listKey = arbitrary.oneOf !== undefined ? "oneOf" : key;
+    const listKey = arbitrary.oneOf !== undefined ? "oneOf" : "from";
     literals.forEach((item, index) => {
       if (isObject(item)) texts.check(yaml, [...path, listKey, index], "plain");
     });
@@ -428,34 +427,14 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
   }
   const compare = block.answer.compare;
   if (typeof compare === "object") {
-    for (const kind of ["choice", "set"] as const) {
-      const options = (compare as Record<string, unknown>)[kind];
-      if (typeof options === "string") checkExpression(check, [...at, "answer", "compare", kind], options, declared);
-      else if (Array.isArray(options)) {
-        options.forEach((item, index) => {
-          if (isObject(item)) texts.check(yaml, [...at, "answer", "compare", kind, index], "plain");
-        });
-      }
+    const options = (compare as Record<string, unknown>)["choice"];
+    if (typeof options === "string") checkExpression(check, [...at, "answer", "compare", "choice"], options, declared);
+    else if (Array.isArray(options)) {
+      options.forEach((item, index) => {
+        if (isObject(item)) texts.check(yaml, [...at, "answer", "compare", "choice", index], "plain");
+      });
     }
     if ("number" in compare) texts.check(yaml, [...at, "answer", "compare", "number", "unit"], "plain");
-  }
-  const figure = block.task.figure;
-  if (figure !== undefined) {
-    const needed = figure.kind === "hundred-grid" ? ["filled"] : ["part", "whole"];
-    for (const key of ["filled", "part", "whole"] as const) {
-      const value = figure[key];
-      if (value === undefined) {
-        if (needed.includes(key))
-          problems.at(
-            yaml,
-            [...at, "task", "figure"],
-            `${key} is missing; a ${figure.kind} needs ${needed.join(" and ")}`,
-          );
-      } else if (!needed.includes(key)) {
-        problems.at(yaml, [...at, "task", "figure", key], `${key} is not a value of a ${figure.kind}`);
-      } else if (typeof value === "string") checkExpression(check, [...at, "task", "figure", key], value, declared);
-    }
-    texts.check(yaml, [...at, "task", "figure", "alt"], "plain");
   }
   texts.check(yaml, [...at, "task", "text"], "markdown");
   texts.check(yaml, [...at, "hint"], "markdown");

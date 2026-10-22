@@ -1,5 +1,5 @@
 // Generated exercises (`generated`), the explainer's native notation for exercises drawn from a seed, in the style of
-// property-based testing: arbitraries (`given`), preconditions (`where`), a task template with an optional figure,
+// property-based testing: arbitraries (`given`), preconditions (`where`), a task template,
 // an answer with a comparator, typical mistakes with their messages, a hint and the steps, and examples: answers
 // the build runs through the check of every seed's task (exampleProblems), never shown to learners. The same code runs at build
 // time (the worked tasks without JavaScript, the property test over fixed seeds) and in the browser (a live task for
@@ -27,7 +27,7 @@ export type Literal = number | string | Readonly<Record<string, string>>;
 /** A list of literals, or the records of a data file src/data/<name>.yaml. */
 export type Source = readonly Literal[] | { readonly data: string };
 
-/** One arbitrary of `given`: exactly one of int, decimal, oneOf, pick (with from), shuffle. */
+/** One arbitrary of `given`: exactly one of int, decimal, oneOf, pick (with from). */
 export interface Arbitrary {
   readonly int?: readonly [number, number];
   readonly decimal?: readonly [number, number];
@@ -36,15 +36,6 @@ export interface Arbitrary {
   readonly pick?: number;
   readonly from?: Source;
   readonly distinct?: boolean;
-  readonly shuffle?: Source;
-}
-
-export interface GeneratedFigure {
-  readonly kind: "hundred-grid" | "bar";
-  readonly filled?: number | string;
-  readonly part?: number | string;
-  readonly whole?: number | string;
-  readonly alt?: Text;
 }
 
 export interface NumberCompare {
@@ -60,7 +51,6 @@ export type Compare =
   | "pairs"
   | { readonly number: NumberCompare }
   | { readonly choice: readonly Literal[] | string }
-  | { readonly set: readonly Literal[] | string }
   | { readonly pairs: { readonly left: string; readonly right: string } };
 
 export interface Generated {
@@ -68,15 +58,13 @@ export interface Generated {
   readonly id: string;
   readonly given: Readonly<Record<string, Arbitrary>>;
   readonly where?: readonly string[];
-  readonly task: { readonly text: Text; readonly figure?: GeneratedFigure };
+  readonly task: { readonly text: Text };
   readonly answer: { readonly value: string; readonly compare: Compare };
   readonly mistakes?: readonly { readonly value: string; readonly message: Text }[];
   readonly hint?: Text;
   readonly steps?: readonly Text[];
   /** The sentence above the live task; the page's own when absent. */
   readonly practice?: Text;
-  /** Whether the worked tasks show with JavaScript too ("always"); by default they show only without it. */
-  readonly workedTasks?: "without-javascript" | "always";
   /**
    * Test cases for the build, never shown to learners: answers as expressions of given and answer, which the check
    * of every seed's task must accept or reject (exampleProblems).
@@ -95,8 +83,6 @@ export interface LanguageTemplates {
   hint?: string | undefined;
   /** The mistakes' messages, plain text. */
   messages: string[];
-  /** The figure's alternative text, plain text. */
-  alt?: string | undefined;
 }
 export type Templates = Readonly<Record<string, LanguageTemplates>>;
 

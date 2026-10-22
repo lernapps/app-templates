@@ -10,7 +10,7 @@ with three worked tasks, each component's `nojs` text. With JavaScript `startExp
 quiz-type exercise gets the quiz's controls and checker, a generated exercise a live task from its task number and
 "Neue Aufgabe", which writes the next number into the address; the islands hydrate their components. A wrong answer
 gets its reason, the solution shows after the right answer or "Lösung zeigen", the feedback in view with the focus.
-The worked tasks stay hidden with JavaScript unless the exercise sets `workedTasks: always`; the sentence above the live
+The worked tasks stay hidden with JavaScript; the sentence above the live
 task is the exercise's `practice`, else a neutral default.
 
 ```arc42

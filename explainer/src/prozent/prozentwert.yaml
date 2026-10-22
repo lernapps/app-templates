@@ -65,7 +65,6 @@ blocks:
         where: ["decimals(G * p / 100) <= 2"]
         task:
           text: "Ein Fahrrad kostet {{G}} €. Im Angebot gibt es {{p}} % Rabatt. Wie viel Euro sparst du?"
-          figure: { kind: hundred-grid, filled: p }
         answer: { value: "G * p / 100", compare: { number: { format: money } } }
         mistakes:
           - { value: "G * p", message: "Du hast vergessen, durch 100 zu teilen: {{p}} % sind {{p}} Hundertstel." }

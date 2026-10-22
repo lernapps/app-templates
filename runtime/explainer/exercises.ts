@@ -10,7 +10,7 @@ import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts"
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 import type { DataRecord, Exercise, QuestionBlock } from "./content.ts";
-import { figureOf, hintOf, stepsOf, taskText, tokenize } from "./generated/texts.ts";
+import { hintOf, stepsOf, taskText, tokenize } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { questionFor, taskKey } from "./generated/question.ts";
 import { WORKED_TASKS } from "./tasks.ts";
@@ -37,8 +37,6 @@ export type ExerciseData =
       /** The seed of each task number, from 1 (taskSeeds). */
       seeds: number[];
       texts: { newTask: string; practice: string; hint: string; solution: string; taskNumber: string };
-      /** Whether the worked tasks show once the live task is solved (workedTasks: "always"). */
-      showWorked: boolean;
     };
 
 /** The templates of a generated exercise in each of `languages`; links inside them through `resolve`. */
@@ -50,19 +48,11 @@ export function templatesOf(
   const templates: Record<string, LanguageTemplates> = {};
   for (const lang of languages) {
     const inline = (text: Text) => renderInline(tokenize(inLanguage(text, lang)), resolve);
-    const figure = spec.task.figure;
-    const alt =
-      figure === undefined
-        ? undefined
-        : figure.alt !== undefined
-          ? inLanguage(figure.alt, lang)
-          : message(lang, figure.kind === "hundred-grid" ? "gridAlt" : "barAlt");
     templates[lang] = {
       task: inline(spec.task.text),
       steps: (spec.steps ?? []).map(inline),
       hint: spec.hint === undefined ? undefined : inline(spec.hint),
       messages: (spec.mistakes ?? []).map((mistake) => tokenize(inLanguage(mistake.message, lang))),
-      alt: alt === undefined ? undefined : tokenize(alt),
     };
   }
   return templates;
@@ -71,9 +61,7 @@ export function templatesOf(
 /** The data files a generated exercise draws from, by name. */
 export function dataOf(spec: Generated, all: Readonly<Record<string, readonly DataRecord[]>>): Data {
   const names = Object.values(spec.given).flatMap((arbitrary) =>
-    [arbitrary.from, arbitrary.shuffle].flatMap((source) =>
-      source !== undefined && !Array.isArray(source) ? [(source as { data: string }).data] : [],
-    ),
+    arbitrary.from !== undefined && !Array.isArray(arbitrary.from) ? [(arbitrary.from as { data: string }).data] : [],
   );
   return Object.fromEntries(names.filter((name) => all[name] !== undefined).map((name) => [name, all[name] ?? []]));
 }
@@ -108,7 +96,6 @@ export interface Worked {
   /** The task as HTML. */
   task: string;
   question: Question;
-  figure?: string;
   hint?: string;
   steps: string[];
   /** The right answer as the solution states it. */
@@ -122,7 +109,6 @@ export function workedTasks(spec: Generated, data: Data, templates: Templates, l
     .map((seed, index) => {
       const task = generate(spec, seed, data);
       const question = questionFor(spec, task, lang, templates);
-      const figure = figureOf(spec, task, lang, templates);
       const hint = hintOf(spec, task, lang, templates);
       return {
         number: index + 1,
@@ -131,7 +117,6 @@ export function workedTasks(spec: Generated, data: Data, templates: Templates, l
         question,
         steps: stepsOf(spec, task, lang, templates),
         answer: answerText(question, lang),
-        ...(figure === undefined ? {} : { figure }),
         ...(hint === undefined ? {} : { hint }),
       };
     });
@@ -182,7 +167,6 @@ function generatedExercise(
       `<li class="explainer-worked-task">`,
       `<p class="explainer-task-number">${plain(message(lang, "taskNumber", { n: String(item.number) }))}</p>`,
       `<p class="explainer-task">${item.task}</p>`,
-      item.figure === undefined ? "" : `<div class="explainer-task-figure">${item.figure}</div>`,
       item.hint === undefined
         ? ""
         : `<details class="explainer-hint"><summary>${plain(message(lang, "hint"))}</summary><p>${item.hint}</p></details>`,
@@ -206,7 +190,6 @@ function generatedExercise(
     templates,
     data,
     seeds: taskSeeds(spec, data),
-    showWorked: spec.workedTasks === "always",
     texts: {
       newTask: message(lang, "newTask"),
       practice: spec.practice === undefined ? message(lang, "practice") : inLanguage(spec.practice, lang),

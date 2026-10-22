@@ -34,18 +34,15 @@ export function questionFor(spec: Generated, task: Task, lang: string, templates
       };
     }
     case "choice":
-    case "set": {
-      const answers = kind.kind === "set" ? listOf(task.answer, "set") : [task.answer];
       return {
         ...base,
-        type: kind.kind === "set" ? "multiple-choice" : "single-choice",
+        type: "single-choice",
         options: (task.options ?? []).map((option) => ({
           text: label(option, lang),
-          correct: answers.some((answer) => same(answer, option)),
+          correct: same(task.answer, option),
           info: "",
         })),
       };
-    }
     case "order":
       return { ...base, type: "ordering", items: listOf(task.answer, "order").map((item) => label(item, lang)) };
     case "pairs":
@@ -89,11 +86,6 @@ function answerGiving(spec: Generated, task: Task, value: Value): Answer {
       if (at < 0) throw new ExpressionError(`${label(value, "de")} is not one of the choices`);
       return at;
     }
-    case "set": {
-      const chosen = listOf(value, "set").map((item) => index(task.options ?? [], item));
-      if (chosen.some((at) => at < 0)) throw new ExpressionError(`${label(value, "de")} are not all among the options`);
-      return chosen.sort((a, b) => a - b);
-    }
     case "order": {
       const order = listOf(value, "order");
       return listOf(task.answer, "order").map((item) => index(order, item));
@@ -131,11 +123,7 @@ function sameAnswer(question: Question, a: Answer, b: Answer, slack: number): bo
     const right = typeof b === "string" ? parseNumber(b, question.unit) : undefined;
     return left !== undefined && right !== undefined && Math.abs(left - right) <= slack + 1e-9;
   }
-  if (Array.isArray(a) && Array.isArray(b)) {
-    const sorted = (list: readonly number[]) =>
-      question.type === "multiple-choice" ? [...list].sort((a, b) => a - b) : list;
-    return sorted(a).join() === sorted(b).join();
-  }
+  if (Array.isArray(a) && Array.isArray(b)) return a.join() === b.join();
   return a === b;
 }
 

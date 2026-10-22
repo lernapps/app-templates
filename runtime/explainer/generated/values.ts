@@ -48,10 +48,6 @@ export function draw(arbitrary: Arbitrary, next: () => number, data: Data): Valu
     const list = arbitrary.oneOf;
     return literal(list[Math.floor(next() * list.length)] as Literal);
   }
-  if (arbitrary.shuffle !== undefined) {
-    const list = items(arbitrary.shuffle, data);
-    return shuffled(list.length, Math.floor(next() * 2 ** 31)).map((index) => list[index] as Value);
-  }
   const list = items(arbitrary.from ?? [], data);
   const count = arbitrary.pick ?? 1;
   const picked: Value[] = [];
@@ -70,26 +66,17 @@ interface Compiled {
   answer: Expression;
   mistakes: Expression[];
   options?: Expression;
-  figure: Partial<Record<"filled" | "part" | "whole", Expression>>;
 }
 const compiledCache = new WeakMap<Generated, Compiled>();
 export function compiled(spec: Generated): Compiled {
   let found = compiledCache.get(spec);
   if (found === undefined) {
     const kind = kindOf(spec.answer.compare);
-    const figure: Compiled["figure"] = {};
-    for (const key of ["filled", "part", "whole"] as const) {
-      const value = spec.task.figure?.[key];
-      if (value !== undefined) figure[key] = parse(String(value));
-    }
     found = {
       where: (spec.where ?? []).map((source) => parse(source)),
       answer: parse(spec.answer.value),
       mistakes: (spec.mistakes ?? []).map((mistake) => parse(mistake.value)),
-      figure,
-      ...((kind.kind === "choice" || kind.kind === "set") && typeof kind.options === "string"
-        ? { options: parse(kind.options) }
-        : {}),
+      ...(kind.kind === "choice" && typeof kind.options === "string" ? { options: parse(kind.options) } : {}),
     };
     compiledCache.set(spec, found);
   }
@@ -127,10 +114,10 @@ export function generate(spec: Generated, seed: number, data: Data): Task {
     const answer = evaluate(code.answer, env);
     const task: Task = { seed, values: env, answer, mistakes: code.mistakes.map((mistake) => evaluate(mistake, env)) };
     const kind = kindOf(spec.answer.compare);
-    if (kind.kind === "choice" || kind.kind === "set") {
+    if (kind.kind === "choice") {
       const options =
         code.options === undefined ? (kind.options as readonly Literal[]).map(literal) : evaluate(code.options, env);
-      if (!Array.isArray(options)) throw new ExpressionError(`the options of ${kind.kind} are not a list`);
+      if (!Array.isArray(options)) throw new ExpressionError(`the options of choice are not a list`);
       task.options = [...(options as Value[])];
     }
     return task;

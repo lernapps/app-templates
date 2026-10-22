@@ -1,11 +1,10 @@
-// The expression language of generated exercises (`where`, `answer`, `mistakes`, the figure's values): a small
+// The expression language of generated exercises (`where`, `answer`, `mistakes`): a small
 // language, parsed here into a tree and evaluated by walking it, with no eval and no access to anything but the
 // values it is given. It has
 // - arithmetic on exact fractions: + - * /, parentheses, unary minus; numbers as written (0.1 is 1/10);
 // - comparisons == != < <= > >=, and, or, not; true, false; strings in quotes;
 // - record fields (e.year), list index (xs[0]), list literals ([1, 2, 3]);
-// - the functions round(x, n), abs(x), decimals(x), len(xs), map(xs, field), sortBy(xs, field), reverse(xs),
-//   minBy(xs, field), maxBy(xs, field), contains(xs, x), distinct(xs) (whether all are different).
+// - the functions round(x, n), decimals(x), map(xs, field), sortBy(xs, field), reverse(xs).
 // Errors are ExpressionErrors whose message says what to change.
 import { Fraction } from "./fraction.ts";
 
@@ -46,16 +45,10 @@ export type Expression = Node;
 /** The functions, with their number of arguments and which arguments are field names. */
 const FUNCTIONS: Readonly<Record<string, { arity: number; field?: number }>> = {
   round: { arity: 2 },
-  abs: { arity: 1 },
   decimals: { arity: 1 },
-  len: { arity: 1 },
   map: { arity: 2, field: 1 },
   sortBy: { arity: 2, field: 1 },
   reverse: { arity: 1 },
-  minBy: { arity: 2, field: 1 },
-  maxBy: { arity: 2, field: 1 },
-  contains: { arity: 2 },
-  distinct: { arity: 1 },
 };
 const KEYWORDS = new Set(["and", "or", "not", "true", "false"]);
 
@@ -335,15 +328,11 @@ function call(fn: string, args: readonly Node[], env: Readonly<Record<string, Va
   switch (fn) {
     case "round":
       return asNumber(value(0), "round").round(integer(asNumber(value(1), "round"), "round"));
-    case "abs":
-      return asNumber(value(0), "abs").abs();
     case "decimals": {
       const places = asNumber(value(0), "decimals").decimals();
       // a decimal that never ends: more places than any limit
       return Fraction.of(places === Infinity ? 1_000_000 : places);
     }
-    case "len":
-      return Fraction.of(asList(value(0), "len").length);
     case "map":
       return asList(value(0), "map").map((item) => fieldOf(item, field()));
     case "sortBy": {
@@ -352,24 +341,6 @@ function call(fn: string, args: readonly Node[], env: Readonly<Record<string, Va
     }
     case "reverse":
       return [...asList(value(0), "reverse")].reverse();
-    case "minBy":
-    case "maxBy": {
-      const list = asList(value(0), fn);
-      const name = field();
-      if (list.length === 0) throw new ExpressionError(`${fn} needs a list that is not empty`);
-      const sign = fn === "minBy" ? -1 : 1;
-      return list.reduce((best, item) =>
-        sign * order(fieldOf(item, name), fieldOf(best, name), fn) > 0 ? item : best,
-      );
-    }
-    case "contains": {
-      const needle = value(1);
-      return asList(value(0), "contains").some((item) => same(item, needle));
-    }
-    case "distinct": {
-      const list = asList(value(0), "distinct");
-      return list.every((item, index) => list.findIndex((other) => same(other, item)) === index);
-    }
     default:
       throw new ExpressionError(`${fn} is not a function of the expression language`);
   }

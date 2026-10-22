@@ -1,13 +1,11 @@
 // The texts of a task: its template filled in with the values (the placeholders ⟦name⟧ the build leaves), the numbers
-// as a locale writes them, the checks of the placeholders, the steps, the hint and the figure.
+// as a locale writes them, the checks of the placeholders, the steps and the hint.
 import { evaluate, ExpressionError, Localized, parse, type Value, variables } from "../expression.ts";
-import { bar, hundredGrid } from "../../shared/blocks/figures.ts";
 import { Fraction } from "../fraction.ts";
 import { inLanguage, localeOf, type Text } from "../../shared/languages.ts";
 import { escape } from "../../shared/html.ts";
 import { type Generated, type LanguageTemplates, type Task, type Templates } from "./types.ts";
 import { kindOf } from "./comparator.ts";
-import { compiled } from "./values.ts";
 
 const PATH = String.raw`[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*`;
 /** A placeholder: two braces around a name or a name's field, nothing else inside. */
@@ -104,7 +102,7 @@ export interface Written {
   text: string;
 }
 
-/** The templates of an exercise as written: the task, the figure's alt, the steps, the hint and the messages. */
+/** The templates of an exercise as written: the task, the steps, the hint and the messages. */
 export function writtenTemplates(spec: Generated): Written[] {
   const written: Written[] = [];
   const add = (path: (string | number)[], text: Text | undefined) => {
@@ -113,18 +111,17 @@ export function writtenTemplates(spec: Generated): Written[] {
     else for (const [lang, each] of Object.entries(text)) written.push({ path: [...path, lang], lang, text: each });
   };
   add(["task", "text"], spec.task.text);
-  add(["task", "figure", "alt"], spec.task.figure?.alt);
   (spec.steps ?? []).forEach((step, index) => add(["steps", index], step));
   add(["hint"], spec.hint);
   (spec.mistakes ?? []).forEach((mistake, index) => add(["mistakes", index, "message"], mistake.message));
   return written;
 }
 
-/** The problems of the placeholders of an exercise's templates, each at its path; the figure's alt also has {{figure.…}}. */
+/** The problems of the placeholders of an exercise's templates, each at its path. */
 export function templateProblems(spec: Generated): { path: (string | number)[]; lang?: string; message: string }[] {
   const declared = [...Object.keys(spec.given), "answer"];
   return writtenTemplates(spec).flatMap(({ path, lang, text }) => {
-    const known = new Set(path[1] === "figure" ? [...declared, "figure"] : declared);
+    const known = new Set(declared);
     return placeholderProblems(text, known).map((message) => ({
       path,
       ...(lang === undefined ? {} : { lang }),
@@ -135,7 +132,7 @@ export function templateProblems(spec: Generated): { path: (string | number)[]; 
 
 /**
  * The variables of `given` that the exercise never uses: in no placeholder of its templates, and in none of the
- * expressions of the figure, the answer (with the options of a choice or set) and the mistakes. `where` does not
+ * expressions of the answer (with the options of a choice) and the mistakes. `where` does not
  * count: a value drawn only to be filtered is never seen.
  */
 export function unusedVariables(spec: Generated): string[] {
@@ -143,16 +140,10 @@ export function unusedVariables(spec: Generated): string[] {
   for (const { text } of writtenTemplates(spec))
     for (const path of placeholdersIn(text)) used.add(path.split(".")[0] ?? "");
   const expressions = [spec.answer.value, ...(spec.mistakes ?? []).map((mistake) => mistake.value)];
-  const figure = spec.task.figure;
-  for (const key of ["filled", "part", "whole"] as const) {
-    if (typeof figure?.[key] === "string") expressions.push(figure[key]);
-  }
   const compare = spec.answer.compare;
   if (typeof compare === "object") {
-    for (const key of ["choice", "set"] as const) {
-      const options = (compare as Record<string, unknown>)[key];
-      if (typeof options === "string") expressions.push(options);
-    }
+    const options = (compare as Record<string, unknown>)["choice"];
+    if (typeof options === "string") expressions.push(options);
   }
   for (const source of expressions) {
     try {
@@ -249,80 +240,4 @@ export function plainText(html: string): string {
     .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-/** The figure's values for a task. */
-export function figureValues(spec: Generated, task: Task): Partial<Record<"filled" | "part" | "whole", Value>> {
-  const found: Partial<Record<"filled" | "part" | "whole", Value>> = {};
-  for (const [key, expression] of Object.entries(compiled(spec).figure)) {
-    found[key as "filled"] = evaluate(expression, task.values);
-  }
-  return found;
-}
-
-/** What is wrong with a figure's values, if anything. */
-export function figureProblem(
-  spec: Generated,
-  values: Partial<Record<"filled" | "part" | "whole", Value>>,
-): string | undefined {
-  const figure = spec.task.figure;
-  if (figure === undefined) return undefined;
-  const number = (key: "filled" | "part" | "whole") => {
-    const value = values[key];
-    return value instanceof Fraction ? value : undefined;
-  };
-  if (figure.kind === "hundred-grid") {
-    const filled = number("filled");
-    if (filled === undefined || !filled.isInteger() || filled.toNumber() < 0 || filled.toNumber() > 100) {
-      return "filled of a hundred-grid is a whole number from 0 to 100";
-    }
-    return undefined;
-  }
-  const part = number("part");
-  const whole = number("whole");
-  if (part === undefined || whole === undefined || part.toNumber() < 0 || whole.toNumber() <= 0) {
-    return "part and whole of a bar are numbers, part at least 0 and whole more than 0";
-  }
-  return undefined;
-}
-
-/** The figure's alternative text for a task, plain text, with its own values as {{figure.filled}} and so on. */
-function altOf(
-  spec: Generated,
-  task: Task,
-  lang: string,
-  templates: Templates,
-  values: Readonly<Record<string, Value | undefined>> = figureValues(spec, task),
-): string {
-  const env: Task = { ...task, values: { ...task.values } };
-  for (const [key, value] of Object.entries(values)) env.values[`figure_${key}`] = value as Value;
-  return fill(
-    (templatesIn(templates, lang).alt ?? "").replace(/⟦figure\.(\w+)⟧/g, "⟦figure_$1⟧"),
-    spec,
-    env,
-    lang,
-    "text",
-  );
-}
-
-/** The alternative text, or none when the figure's values are not defined (reported on their own). */
-export function safeAlt(spec: Generated, task: Task, lang: string, templates: Templates): string {
-  try {
-    return altOf(spec, task, lang, templates);
-  } catch {
-    return "";
-  }
-}
-
-/** The figure of a task, unsolved, as inline SVG with its alternative text; undefined without a figure. */
-export function figureOf(spec: Generated, task: Task, lang: string, templates: Templates): string | undefined {
-  const figure = spec.task.figure;
-  if (figure === undefined) return undefined;
-  const values = figureValues(spec, task);
-  if (figureProblem(spec, values) !== undefined) return undefined;
-  const alt = altOf(spec, task, lang, templates, values);
-  const n = (value: Value | undefined) => (value instanceof Fraction ? value.toNumber() : 0);
-  return figure.kind === "hundred-grid"
-    ? hundredGrid(n(values.filled), alt)
-    : bar(n(values.part), n(values.whole), alt, localeOf(lang), false);
 }
