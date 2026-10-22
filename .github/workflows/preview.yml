@@ -22,9 +22,9 @@ concurrency:
 
 jobs:
   changes:
-    uses: lernapps/tooling/.github/workflows/changes.yml@1e4ba5994ff0f25dd8072b310616479c8f24523f # main
+    uses: lernapps/tooling/.github/workflows/changes.yml@7420306a53d4411fe8ef12b7d70773b63076fdf4 # main
     with:
-      tooling-ref: 1e4ba5994ff0f25dd8072b310616479c8f24523f
+      tooling-ref: 7420306a53d4411fe8ef12b7d70773b63076fdf4
 
   bundle:
     needs: changes
@@ -69,4 +69,4 @@ jobs:
       pull-requests: write
       pages: read # the address, for the comment
     steps:
-      - uses: lernapps/tooling/actions/app-preview@41bffad2afcc823c19f741a13854d575ee52f282 # main
+      - uses: lernapps/tooling/actions/app-preview@7420306a53d4411fe8ef12b7d70773b63076fdf4 # main
