@@ -667,7 +667,7 @@
       "type": "object"
     },
     "expression": {
-      "description": "An expression of the expression language, e.g. \"G * p / 100\": numbers (exact fractions), + - * /, parentheses, == != < <= > >=, and, or, not, strings in quotes, record fields (e.year), list index (xs[0]), lists ([1, 2]), and the functions round(x, n), abs, decimals, len, map(xs, field), sortBy(xs, field), reverse, minBy(xs, field), maxBy(xs, field), contains(xs, x), distinct(xs). It may use the variables of given.",
+      "description": "An expression of the expression language, e.g. \"G * p / 100\": numbers (exact fractions), + - * /, parentheses, == != < <= > >=, and, or, not, strings in quotes, record fields (e.year), list index (xs[0]), lists ([1, 2]), and the functions round(x, n), decimals, map(xs, field), sortBy(xs, field), reverse. It may use the variables of given.",
       "type": "string",
       "minLength": 1,
       "pattern": "\\S"
@@ -697,7 +697,7 @@
       }
     },
     "arbitrary": {
-      "description": "How a value of given is drawn, exactly one of: int: [min, max] with a step (default 1); decimal: [min, max] with a step (e.g. 0.1); oneOf: a list to pick one from; pick: how many, from: a list or { data: <name> }, distinct: true for no repeats (pick: 1 gives one item, more give a list); shuffle: a list or { data: <name> } in a random order.",
+      "description": "How a value of given is drawn, exactly one of: int: [min, max] with a step (default 1); decimal: [min, max] with a step (e.g. 0.1); oneOf: a list to pick one from; pick: how many, from: a list or { data: <name> }, distinct: true for no repeats (pick: 1 gives one item, more give a list).",
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
@@ -738,9 +738,6 @@
         },
         "distinct": {
           "type": "boolean"
-        },
-        "shuffle": {
-          "$ref": "#/$defs/list"
         }
       }
     },
@@ -767,7 +764,7 @@
       }
     },
     "compare": {
-      "description": "How the learner answers and what counts as right, the quiz's answer kind of the same name: number (the quiz's number question; or { number: { format, decimals, tolerance, unit } }), { choice: <options> } (single choice; the options a list, or an expression giving one), order (the answer a list in the right order; the quiz's ordering), { set: <options> } (multiple choice; the answer the list of right options), pairs (the answer a list of [left, right]; or { pairs: { left: <field>, right: <field> } } for a list of records; the quiz's matching).",
+      "description": "How the learner answers and what counts as right, the quiz's answer kind of the same name: number (the quiz's number question; or { number: { format, decimals, tolerance, unit } }), { choice: <options> } (single choice; the options a list, or an expression giving one), order (the answer a list in the right order; the quiz's ordering), pairs (the answer a list of [left, right]; or { pairs: { left: <field>, right: <field> } } for a list of records; the quiz's matching).",
       "type": ["string", "object"],
       "pattern": "^(number|order|pairs)$",
       "minProperties": 1,
@@ -778,14 +775,6 @@
           "$ref": "#/$defs/numberCompare"
         },
         "choice": {
-          "type": ["array", "string"],
-          "minItems": 2,
-          "minLength": 1,
-          "items": {
-            "$ref": "#/$defs/literal"
-          }
-        },
-        "set": {
           "type": ["array", "string"],
           "minItems": 2,
           "minLength": 1,
@@ -810,31 +799,8 @@
         }
       }
     },
-    "generatedFigure": {
-      "description": "A figure drawn from the task's values: hundred-grid with filled, or bar with part and whole, each a number or an expression. Without JavaScript and before the answer it must not show the answer; alt says what it shows, with placeholders ({{G}}; {{figure.filled}} for its own values); a default text by kind otherwise.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["kind"],
-      "properties": {
-        "kind": {
-          "enum": ["hundred-grid", "bar"]
-        },
-        "filled": {
-          "type": ["number", "string"]
-        },
-        "part": {
-          "type": ["number", "string"]
-        },
-        "whole": {
-          "type": ["number", "string"]
-        },
-        "alt": {
-          "$ref": "#/$defs/text"
-        }
-      }
-    },
     "generated": {
-      "description": "An exercise drawn from a seed, property-based: given draws the values, where filters them, task is the text with placeholders ({{G}}, {{e.name}}; {{answer}} in the steps) and an optional figure, answer is an expression with its comparator, mistakes are typical wrong answers each with a message saying what went wrong, hint and steps help. A placeholder is always two braces around a declared name or its field, nothing else inside, in prose and in formulas alike ($\\frac{{{W}}}{{{G}}}$); one brace is never a placeholder, so in a formula G and {G} are the letter. The build checks that every placeholder names a variable of given (or answer), that no prose has a placeholder with one brace or spaces inside, and that every variable of given is used in a placeholder or in an expression of the figure, answer or mistakes; then it checks it over 200 fixed seeds: where holds in at least 1 of 10 draws; the answer is defined, in its format and passes its comparator; no mistake equals it; the task is the same each time and keeps no placeholder; the figure does not show the answer. Its tasks are numbered: the build walks the seeds 1, 2, 3, … and numbers only the distinct tasks, Aufgabe Nr. 1 to N (N at most 67; fewer when the exercise has fewer distinct tasks, noted in the build output). The number is what the page shows, what a learner names to a tutor, and what the address carries: ?seed=<n>#<id> opens task number n (a number above N wraps around). Without JavaScript the page shows the tasks 1, 2 and 3 as worked tasks with their solution; with JavaScript a live task of a random number, Neue Aufgabe, which moves to the next number (after N back to 1) and writes it into the address, and the deep link: a wrong answer gets the message of the mistake it matches (else a line to look again, with the hint above) and may be tried again; the solution and the steps show after the right answer or Lösung zeigen (the worked tasks too, when workedTasks is \"always\").",
+      "description": "An exercise drawn from a seed, property-based: given draws the values, where filters them, task is the text with placeholders ({{G}}, {{e.name}}; {{answer}} in the steps), answer is an expression with its comparator, mistakes are typical wrong answers each with a message saying what went wrong, hint and steps help. A placeholder is always two braces around a declared name or its field, nothing else inside, in prose and in formulas alike ($\\frac{{{W}}}{{{G}}}$); one brace is never a placeholder, so in a formula G and {G} are the letter. The build checks that every placeholder names a variable of given (or answer), that no prose has a placeholder with one brace or spaces inside, and that every variable of given is used in a placeholder or in an expression of the answer or mistakes; then it checks it over 200 fixed seeds: where holds in at least 1 of 10 draws; the answer is defined, in its format and passes its comparator; no mistake equals it; the task is the same each time and keeps no placeholder. Its tasks are numbered: the build walks the seeds 1, 2, 3, … and numbers only the distinct tasks, Aufgabe Nr. 1 to N (N at most 67; fewer when the exercise has fewer distinct tasks, noted in the build output). The number is what the page shows, what a learner names to a tutor, and what the address carries: ?seed=<n>#<id> opens task number n (a number above N wraps around). Without JavaScript the page shows the tasks 1, 2 and 3 as worked tasks with their solution; with JavaScript a live task of a random number, Neue Aufgabe, which moves to the next number (after N back to 1) and writes it into the address, and the deep link: a wrong answer gets the message of the mistake it matches (else a line to look again, with the hint above) and may be tried again; the solution and the steps show after the right answer or Lösung zeigen.",
       "required": ["id", "given", "task", "answer"],
       "properties": {
         "id": {
@@ -867,9 +833,6 @@
             "text": {
               "description": "The task, restricted Markdown in one paragraph, with placeholders.",
               "$ref": "#/$defs/markdown"
-            },
-            "figure": {
-              "$ref": "#/$defs/generatedFigure"
             }
           }
         },
@@ -908,10 +871,6 @@
           "description": "Optional: the sentence above the live task, plain text, in the app's languages. Without it the page says \"Übe selbst, mit immer neuen Aufgaben:\"; write your own when the tasks change something other than tasks in general, e.g. \"Übe selbst, mit immer neuen Stoffen:\".",
           "$ref": "#/$defs/text"
         },
-        "workedTasks": {
-          "description": "Optional: whether the three worked tasks with their solutions show with JavaScript. \"without-javascript\" (the default): only without it; a learner with JavaScript gets as many new tasks as they like, so the worked tasks are redundant. \"always\": they show below the live task once the learner has solved it or asked for its solution.",
-          "enum": ["without-javascript", "always"]
-        },
         "hint": {
           "description": "A hint before the answer, restricted Markdown with placeholders; with JavaScript it stays folded under the live task until the learner opens it.",
           "$ref": "#/$defs/markdown"
@@ -925,7 +884,7 @@
           }
         },
         "examples": {
-          "description": "Optional: test cases for the build, never shown to learners. Before you write the exercise, note which answers fulfil its text and which typical wrong answers there are; write the other correct answers the text allows into accepted (e.g. the answer rounded as the text permits: \"round(W / G * 100, 0)\"), the typical wrong ones into rejected. Each is an expression like answer.value, of the variables of given and of answer, the task's right answer, e.g. \"answer + 1\", \"reverse(answer)\". The build evaluates each for every seed it checks and runs it through the same check the page uses: an accepted one the check rejects, or a rejected one it accepts, fails the build; then the exercise checks something other than what its text asks, so change its comparator (e.g. set instead of order), its tolerance or its text. The mistakes already count as rejected.",
+          "description": "Optional: test cases for the build, never shown to learners. Before you write the exercise, note which answers fulfil its text and which typical wrong answers there are; write the other correct answers the text allows into accepted (e.g. the answer rounded as the text permits: \"round(W / G * 100, 0)\"), the typical wrong ones into rejected. Each is an expression like answer.value, of the variables of given and of answer, the task's right answer, e.g. \"answer + 1\", \"reverse(answer)\". The build evaluates each for every seed it checks and runs it through the same check the page uses: an accepted one the check rejects, or a rejected one it accepts, fails the build; then the exercise checks something other than what its text asks, so change its comparator, its tolerance or its text. The mistakes already count as rejected.",
           "type": "object",
           "additionalProperties": false,
           "minProperties": 1,

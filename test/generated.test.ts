@@ -23,7 +23,6 @@ function templates(spec: Generated, languages: readonly string[] = ["de"]): Temp
         steps: (spec.steps ?? []).map((step) => tokenize(pick(step, lang))),
         hint: spec.hint === undefined ? undefined : tokenize(pick(spec.hint, lang)),
         messages: (spec.mistakes ?? []).map((mistake) => tokenize(pick(mistake.message, lang))),
-        alt: tokenize("Ein Hunderterfeld, {{figure.filled}} Kästchen sind gefärbt."),
       },
     ]),
   ) as Templates;
@@ -36,7 +35,6 @@ const prozentwert: Generated = {
   where: ["decimals(G * p / 100) <= 2"],
   task: {
     text: "Ein Fahrrad kostet {{G}} €. Im Angebot gibt es {{p}} % Rabatt. Wie viel Euro sparst du?",
-    figure: { kind: "hundred-grid", filled: "p" },
   },
   answer: { value: "G * p / 100", compare: { number: { format: "money" } } },
   mistakes: [
@@ -58,7 +56,7 @@ const ordnen: Generated = {
   type: "generated",
   id: "ereignisse-ordnen",
   given: { events: { pick: 3, distinct: true, from: { data: "ereignisse" } } },
-  where: ["distinct(map(events, date))"],
+  where: ["events[0].date != events[1].date and events[0].date != events[2].date and events[1].date != events[2].date"],
   task: { text: { de: "Bringe die Ereignisse in die richtige Reihenfolge.", en: "Put the events in order." } },
   answer: { value: "map(sortBy(events, date), title)", compare: "order" },
   mistakes: [
@@ -131,7 +129,7 @@ describe("a task from a seed", () => {
     );
   });
 
-  test("choice, set and pairs are the quiz's single-choice, multiple-choice and matching", () => {
+  test("choice and pairs are the quiz's single-choice and matching", () => {
     const elemente: DataRecord[] = [
       { symbol: "Na", name: "Natrium", group: 1, period: 3 },
       { symbol: "Mg", name: "Magnesium", group: 2, period: 3 },
@@ -147,13 +145,6 @@ describe("a task from a seed", () => {
       answer: { value: "e.group", compare: { choice: [1, 2, 3, 4, 5, 6, 7, 8] } },
       mistakes: [{ value: "e.period", message: "Das ist die Periode." }],
     };
-    const set: Generated = {
-      type: "generated",
-      id: "gerade",
-      given: { xs: { shuffle: [1, 2, 3, 4, 5, 6] } },
-      task: { text: "Welche Zahlen sind gerade?" },
-      answer: { value: "[2, 4, 6]", compare: { set: "xs" } },
-    };
     const pairs: Generated = {
       type: "generated",
       id: "symbole",
@@ -164,7 +155,6 @@ describe("a task from a seed", () => {
     const data = { elemente };
     for (const [spec, type] of [
       [choice, "single-choice"],
-      [set, "multiple-choice"],
       [pairs, "matching"],
     ] as const) {
       const task = generate(spec, 5, data);
@@ -224,16 +214,6 @@ describe("the property test over fixed seeds", () => {
     const problems = soundness(spec, {}, templates(spec), ["de"]);
     expect(problems[0]?.path).toEqual(["answer", "value"]);
     expect(problems[0]?.message).toMatch(/has more than 2 decimals; round it in the answer, or narrow given or where/);
-  });
-
-  test("a figure that shows the answer", () => {
-    const spec = {
-      ...prozentwert,
-      task: { ...prozentwert.task, figure: { kind: "hundred-grid", filled: "G * p / 100" } },
-      where: ["decimals(G * p / 100) == 0", "G * p / 100 <= 100"],
-    } as Generated;
-    const t = templates(spec);
-    expect(soundness(spec, {}, t, ["de"]).map((problem) => problem.path)).toContainEqual(["task", "figure"]);
   });
 
   test("the answer not defined", () => {

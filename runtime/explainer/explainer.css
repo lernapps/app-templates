@@ -228,13 +228,6 @@
   margin: 0 0 1rem;
 }
 
-.explainer-task-figure svg {
-  display: block;
-  width: 100%;
-  max-width: 14rem;
-  height: auto;
-}
-
 .explainer-live:not([hidden]) + .explainer-worked-intro {
   margin-top: 1rem;
   padding-top: 0.5rem;

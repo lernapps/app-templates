@@ -15,8 +15,7 @@
 // and then shows its solution; it rejects a wrong one with the most specific reason it has, stays open for another
 // try, and shows its solution on "Lösung zeigen"; the feedback each time in view with the focus. A generated exercise
 // shows, at its deep link ?seed=<n>#<id>, the task of number n (the seed of its table of distinct tasks), its worked tasks hidden;
-// it rejects a wrong one (a mistake, with its message), shows its solution on "Lösung zeigen" (and the worked tasks too, only when it
-// asks for them: workedTasks: always),
+// it rejects a wrong one (a mistake, with its message), shows its solution on "Lösung zeigen",
 // "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
 // console error, folds a nojs text it keeps, and an exercise component's answered gives the feedback, once for each
 // answer, with the reason of a wrong one, in view with the focus; at its address ?<id>=<n> it shows "Aufgabe
@@ -296,10 +295,8 @@ async function checkGenerated(
     await answerQuestion(page, question, wrong);
     await wrongThenSolution(page, exercise.id, question, reasonFor(question, wrong));
   }
-  // the worked tasks stay hidden with JavaScript, unless the exercise asks for them
-  if (spec.workedTasks === "always") {
-    await expect(worked, `${exercise.id}: the worked tasks with the solution`).toBeVisible();
-  } else await expect(worked, `${exercise.id}: the worked tasks stay hidden with JavaScript`).toBeHidden();
+  // the worked tasks stay hidden with JavaScript
+  await expect(worked, `${exercise.id}: the worked tasks stay hidden with JavaScript`).toBeHidden();
   // "Neue Aufgabe": another task, its seed in the address; its right answer counts
   await page.locator(`[id="${exercise.id}"] .explainer-new-task`).click();
   const number = Number(new URL(page.url()).searchParams.get(exercise.id));

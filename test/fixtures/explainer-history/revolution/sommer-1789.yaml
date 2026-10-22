@@ -61,7 +61,8 @@ blocks:
         id: ereignisse-ordnen
         given:
           events: { pick: 3, distinct: true, from: { data: ereignisse } }
-        where: ["distinct(map(events, date))"]
+        where:
+          ["events[0].date != events[1].date and events[0].date != events[2].date and events[1].date != events[2].date"]
         task:
           text:
             de: Bringe die Ereignisse in die richtige Reihenfolge, das früheste zuerst.

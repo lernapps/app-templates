@@ -9,8 +9,7 @@
 // of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the question's controls, checker and feedback through its
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
 // always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
-// JavaScript, unless the exercise asks for them (workedTasks: always): then they show below the live task once the
-// learner has solved it or asked for its solution. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
+// JavaScript. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
 // which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
 // with it on a click (a page's button also gives it the tasks of the page's address); the learner's chosen way to the
 // tutor is the only thing kept on the device.
@@ -21,7 +20,7 @@ import { renderQuestion } from "../shared/questions/render.ts";
 import { questionId } from "../shared/questions/question.ts";
 import type { ExerciseData } from "./exercises.ts";
 import { diagnose, questionFor } from "./generated/question.ts";
-import { figureOf, hintOf, stepsOf, taskText } from "./generated/texts.ts";
+import { hintOf, stepsOf, taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { message } from "./messages.ts";
 import { pageTutorText } from "./tutorpage.ts";
@@ -33,13 +32,10 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   const live = element.querySelector<HTMLElement>(".explainer-live");
   if (!live) return;
   const { spec, templates, lang, texts } = data;
-  // the worked tasks with their solutions: hidden with JavaScript (the learner gets new tasks), unless the exercise
-  // asks for them (workedTasks: always), then once the learner has solved a live task or asked for its solution
-  const worked = [...element.querySelectorAll<HTMLElement>(".explainer-worked-intro, .explainer-worked")];
-  for (const part of worked) part.hidden = true;
-  const showWorked = () => {
-    if (data.showWorked) for (const part of worked) part.hidden = false;
-  };
+  // the worked tasks with their solutions: hidden with JavaScript (the learner gets new tasks)
+  for (const part of element.querySelectorAll<HTMLElement>(".explainer-worked-intro, .explainer-worked")) {
+    part.hidden = true;
+  }
   const { seeds } = data;
   const count = Math.max(seeds.length, 1);
   const from = numberFromAddress(location.href, spec.id);
@@ -50,13 +46,11 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
   const show = (focus: boolean) => {
     const task = generate(spec, seeds[number - 1] ?? number, data.data);
     const question = questionFor(spec, task, lang, templates);
-    const figure = figureOf(spec, task, lang, templates);
     const hint = hintOf(spec, task, lang, templates);
     const steps = stepsOf(spec, task, lang, templates);
     live.innerHTML = [
       `<p class="explainer-practice">${escape(texts.practice)}</p>`,
       `<p class="explainer-task-number">${escape(texts.taskNumber.replace("{n}", String(number)))}</p>`,
-      figure === undefined ? "" : `<div class="explainer-task-figure">${figure}</div>`,
       renderQuestion(question, {
         lang,
         textHtml: taskText(spec, task, lang, templates),
@@ -78,7 +72,6 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
         lang,
         retry: true,
         diagnose: (answer) => diagnose(spec, task, question, answer, lang, templates),
-        onReveal: showWorked,
       });
       const legend = item.querySelector<HTMLElement>("legend");
       if (focus && legend) moveFocus(legend);

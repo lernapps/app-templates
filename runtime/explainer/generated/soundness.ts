@@ -1,5 +1,5 @@
 // The property test of a generated exercise at build time: the tasks of a fixed set of seeds, each checked for
-// its figure, its formats, its answer, its mistakes and its options, and its examples run through the check.
+// its formats, its answer, its mistakes and its options, and its examples run through the check.
 import { evaluate, parse, same, type Value } from "../expression.ts";
 import { Fraction } from "../fraction.ts";
 import { type Answer, isCorrect, type Question, rightAnswer } from "../../shared/questions/question.ts";
@@ -7,20 +7,7 @@ import { verdict } from "../../shared/examples.ts";
 import { type Data, type Generated, type Task, type Templates } from "./types.ts";
 import { kindOf } from "./comparator.ts";
 import { ATTEMPTS, compiled, generate, holds, StarvedError, values } from "./values.ts";
-import {
-  answerLabel,
-  figureOf,
-  figureProblem,
-  figureValues,
-  fill,
-  hintOf,
-  label,
-  plainText,
-  safeAlt,
-  stepsOf,
-  taskText,
-  templatesIn,
-} from "./texts.ts";
+import { answerLabel, fill, hintOf, label, stepsOf, taskText, templatesIn } from "./texts.ts";
 import { answerFor, exampleGiving, pairValues, questionFor } from "./question.ts";
 
 /** A problem of an exercise: where in it, in which language, and what. */
@@ -31,10 +18,6 @@ export interface GeneratedProblem {
 }
 
 export const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
-
-/** The numbers in a text. */
-const numbersIn = (text: string): number[] =>
-  [...text.matchAll(/\d+(?:[.,]\d+)?/g)].map((match) => Number(match[0].replace(",", ".")));
 
 /** Whether the answer is in the comparator's format; a problem otherwise. */
 function formatProblem(spec: Generated, task: Task, lang: string): string | undefined {
@@ -51,13 +34,6 @@ function formatProblem(spec: Generated, task: Task, lang: string): string | unde
       if (!(task.options ?? []).some((option) => same(option, task.answer)))
         return `the answer ${shown()} is not one of the choices`;
       return undefined;
-    case "set": {
-      if (!Array.isArray(task.answer)) return "the answer of set is not a list";
-      const missing = (task.answer as readonly Value[]).find(
-        (item) => !(task.options ?? []).some((option) => same(option, item)),
-      );
-      return missing === undefined ? undefined : `${label(missing, lang)} of the answer is not one of the options`;
-    }
     case "order": {
       if (!Array.isArray(task.answer) || task.answer.length < 2) return "the answer of order is a list of at least two";
       const texts = (task.answer as readonly Value[]).map((item) => label(item, lang));
@@ -194,15 +170,6 @@ function seedProblems(
         "the message",
         fill(templatesIn(templates, each).messages[index] ?? "", spec, task, each, "text"),
       ]),
-      ...(spec.task.figure === undefined
-        ? []
-        : [
-            [["task", "figure", "alt"], "the figure's alt", safeAlt(spec, task, each, templates)] as [
-              (string | number)[],
-              string,
-              string,
-            ],
-          ]),
     ];
     for (const [path, what, text] of texts) {
       const left = /\{\{?([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\}\}?/.exec(text);
@@ -221,36 +188,13 @@ function seedProblems(
     }
   }
   if (problems.length > 0) return problems;
-  // the unsolved figure does not show the answer
-  if (spec.task.figure !== undefined) {
-    const values = figureValues(spec, task);
-    const wrong = figureProblem(spec, values);
-    if (wrong !== undefined) return [{ path: ["task", "figure"], message: `for seed ${seed} ${wrong}` }];
-    if (task.answer instanceof Fraction) {
-      const answer = task.answer.toNumber();
-      for (const each of languages) {
-        const svg = figureOf(spec, task, each, templates) ?? "";
-        const alt = /aria-label="([^"]*)"/.exec(svg)?.[1] ?? "";
-        const inText = numbersIn(plainText(taskText(spec, task, each, templates)));
-        const shown = numbersIn(`${alt} ${plainText(svg)}`).filter((n) => !inText.some((m) => Math.abs(m - n) < 1e-9));
-        if (shown.some((n) => Math.abs(n - answer) < 1e-9)) {
-          return [
-            {
-              path: ["task", "figure"],
-              message: `for seed ${seed} the figure shows the answer (${answerLabel(spec, task, each)}) before it is solved; draw it from the given values`,
-            },
-          ];
-        }
-      }
-    }
-  }
   return problems;
 }
 
 /**
  * The property test of an exercise over the seeds 1 to `seeds`: `where` holds in at least one draw of ten; for each
  * seed the answer is defined, in its format and passes its comparator, no mistake equals it, the task is the same each
- * time and has no placeholder left, and the unsolved figure does not show the answer. The problems of the first seed
+ * time and has no placeholder left The problems of the first seed
  * that has any; none when the exercise is sound.
  */
 export function soundness(

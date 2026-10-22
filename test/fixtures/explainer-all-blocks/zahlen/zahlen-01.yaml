@@ -161,7 +161,6 @@ blocks:
           p: { oneOf: [1, 2, 5, 10] }
         task:
           text: { de: "Wie viel sind {{p}} % von {{G}}?", en: "How much is {{p}} % of {{G}}?" }
-          figure: { kind: hundred-grid, filled: p }
         answer: { value: "G * p / 100", compare: { number: { format: integer } } }
         mistakes:
           - { value: "G * p", message: { de: "Du hast nicht durch 100 geteilt.", en: "You did not divide by 100." } }

@@ -43,7 +43,6 @@ describe("expressions", () => {
 
   test("round, abs and decimals", () => {
     expect(number("round(2 / 3, 2)")).toBe("67/100");
-    expect(number("abs(0 - 4)")).toBe("4");
     expect(number("decimals(12.25)")).toBe("2");
     expect(run("decimals(1 / 3) <= 2")).toBe(false);
   });
@@ -62,18 +61,11 @@ describe("expressions", () => {
       { year: Fraction.from(1843), title: new Localized({ de: "Programm", en: "Program" }) },
     ];
     const env = { events };
-    expect(number("len(events)", env)).toBe("3");
     expect(number("events[0].year", env)).toBe("1789");
-    expect(number("minBy(events, year).year", env)).toBe("1642");
-    expect(number("maxBy(events, year).year", env)).toBe("1843");
     const titles = run("map(sortBy(events, year), title)", env) as Value[];
     expect(titles.map(String)).toEqual(["Rechenmaschine", "Bastille", "Programm"]);
     const reversed = run("map(reverse(sortBy(events, year)), title)", env) as Value[];
     expect(reversed.map(String)).toEqual(["Programm", "Bastille", "Rechenmaschine"]);
-    expect(run("distinct(map(events, year))", env)).toBe(true);
-    expect(run("distinct([1, 2, 1])")).toBe(false);
-    expect(run("contains(map(events, year), 1789)", env)).toBe(true);
-    expect(run("contains([1, 2], 3)")).toBe(false);
   });
 
   test("the variables an expression uses, not its functions or field names", () => {

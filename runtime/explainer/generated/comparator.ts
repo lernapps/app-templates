@@ -7,7 +7,6 @@ type Kind =
   | { kind: "number"; decimals: number; tolerance: Fraction; unit?: Text; money: boolean }
   | { kind: "choice"; options: readonly Literal[] | string }
   | { kind: "order" }
-  | { kind: "set"; options: readonly Literal[] | string }
   | { kind: "pairs"; left?: string; right?: string };
 
 /** What the comparator of an exercise is. */
@@ -28,6 +27,5 @@ export function kindOf(compare: Compare): Kind {
     };
   }
   if ("choice" in compare) return { kind: "choice", options: compare.choice };
-  if ("set" in compare) return { kind: "set", options: compare.set };
   return { kind: "pairs", left: compare.pairs.left, right: compare.pairs.right };
 }

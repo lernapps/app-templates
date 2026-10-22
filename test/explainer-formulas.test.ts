@@ -89,16 +89,6 @@ describe("a generated exercise", () => {
         .practice,
     ).toBe("Practise with new substances:");
   });
-
-  test("shows its worked tasks with JavaScript only when it asks for them", () => {
-    expect(
-      data(renderExercise(generated, "de", {}, (href) => href, { lang: "de", href: (image) => image })).showWorked,
-    ).toBe(false);
-    const always = { ...generated, workedTasks: "always" } as Exercise;
-    expect(
-      data(renderExercise(always, "de", {}, (href) => href, { lang: "de", href: (image) => image })).showWorked,
-    ).toBe(true);
-  });
 });
 
 describe("the outline, which the end-to-end tests compare the page with", () => {
