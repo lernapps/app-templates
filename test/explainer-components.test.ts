@@ -202,6 +202,16 @@ const cases: [string, (root: string) => void, string][] = [
     "src/revolution/staende.yaml:52: blocks[0].blocks[3].props.events: src/data/gibtsnicht.yaml does not exist (vue-component-props-valid)",
   ],
   [
+    "a data file with a text in a list that lacks a language",
+    (root) => {
+      writeFileSync(
+        join(root, "src/data/profile.yaml"),
+        "- title: { de: Eins, en: One }\n  uses:\n    - { de: Nur deutsch }\n",
+      );
+    },
+    "src/data/profile.yaml:3: [0].uses[0] (en): the translation is missing",
+  ],
+  [
     "a list prop whose data file has records without a declared field",
     (root) => withDates(root, "title: string; ort: string", "{ data: ereignisse }"),
     "src/revolution/staende.yaml:52: blocks[0].blocks[3].props.events[0]: ort is missing; Dates declares ort: string (vue-component-props-valid)",
@@ -340,6 +350,33 @@ describe("a list prop given as { data: <name> }", () => {
   test("is the records of the file, cut to the fields the component declares", () => {
     expect(withData({ events: { data: "ereignisse" } }, component, files)).toEqual({
       props: { events: [{ title: "Ballhausschwur" }, { title: "Bastille" }] },
+      problems: [],
+    });
+  });
+
+  test("keeps the lists and records a declared field holds", () => {
+    const nested = {
+      name: "Dates",
+      props: {
+        events: {
+          type: {
+            kind: "array",
+            of: {
+              kind: "object",
+              fields: {
+                title: { type: { kind: "string" }, optional: false, source: "title: string" },
+                uses: { type: { kind: "array", of: { kind: "string" } }, optional: false, source: "uses: string[]" },
+              },
+            },
+          },
+          optional: false,
+          source: "events: { title: string; uses: string[] }[]",
+        },
+      },
+    } as unknown as ComponentInfo;
+    const rich = { ereignisse: [{ title: "Eins", date: "1789", uses: ["a", "b"] }] };
+    expect(withData({ events: { data: "ereignisse" } }, nested, rich)).toEqual({
+      props: { events: [{ title: "Eins", uses: ["a", "b"] }] },
       problems: [],
     });
   });

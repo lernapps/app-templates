@@ -3,7 +3,7 @@
 // components (src/components/, components.ts) with the blocks that use them.
 
 import type { Question } from "../shared/questions/question.ts";
-import type { Generated } from "./generated/types.ts";
+import type { DataRecord, Generated } from "./generated/types.ts";
 import type { Credit, Drawing, MaterialBlock } from "../shared/blocks/block.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 
@@ -79,8 +79,7 @@ export interface Chapter {
   pages: readonly Page[];
 }
 
-/** A record of a data file: numbers, booleans, and texts or language-neutral strings. */
-export type DataRecord = Readonly<Record<string, number | boolean | Text>>;
+export type { DataRecord };
 
 export interface Site {
   app: App;

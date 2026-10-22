@@ -3,13 +3,14 @@
 // fixed seeds with its messages.
 import { describe, expect, test } from "vite-plus/test";
 import { answerFor, diagnose, questionFor } from "../runtime/explainer/generated/question.ts";
-import { generate } from "../runtime/explainer/generated/values.ts";
+import { generate, record } from "../runtime/explainer/generated/values.ts";
 import { soundness } from "../runtime/explainer/generated/soundness.ts";
 import { taskText, tokenize } from "../runtime/explainer/generated/texts.ts";
 import { type Generated, type Templates } from "../runtime/explainer/generated/types.ts";
 import { isCorrect, rightAnswer, wrongAnswer } from "../runtime/shared/questions/question.ts";
 import type { DataRecord } from "../runtime/explainer/content.ts";
 import { Fraction } from "../runtime/explainer/fraction.ts";
+import { Localized } from "../runtime/explainer/expression.ts";
 
 /** The templates as the build makes them, without Markdown: the placeholders as tokens. */
 function templates(spec: Generated, languages: readonly string[] = ["de"]): Templates {
@@ -221,5 +222,24 @@ describe("the property test over fixed seeds", () => {
     expect(soundness(spec, {}, templates(spec), ["de"])).toEqual([
       { path: ["answer", "value"], message: "for seed 1 the answer is not defined: division by zero" },
     ]);
+  });
+});
+
+describe("a record of a data file with a list or a record in a field", () => {
+  const source = {
+    symbol: "H",
+    name: { de: "Wasserstoff", en: "Hydrogen" },
+    uses: [{ de: "Raketentreibstoff", en: "rocket fuel" }],
+    compounds: [{ formula: "H2O", text: { de: "Wasser", en: "Water" } }],
+  };
+
+  test("is read as numbers, texts, lists and records", () => {
+    const read = record(source);
+    expect((read["name"] as Localized).in("de")).toBe("Wasserstoff");
+    const uses = read["uses"] as Localized[];
+    expect(uses.map((use) => use.in("en"))).toEqual(["rocket fuel"]);
+    const compounds = read["compounds"] as Record<string, unknown>[];
+    expect(compounds.map((compound) => compound["formula"])).toEqual(["H2O"]);
+    expect(compounds.map((compound) => (compound["text"] as Localized).in("de"))).toEqual(["Wasser"]);
   });
 });
