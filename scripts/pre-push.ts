@@ -61,6 +61,9 @@ export const ROOT_ONLY = [
   "LICENSE",
   ".gitignore",
   "renovate.json",
+  ".agents/", // the skills agents load in this repo (skills-lock.json), not part of a template
+  ".claude/",
+  "skills-lock.json",
 ];
 
 /** Whether a path (relative to the repo root, with "/") is one of the patterns: the path, or below a folder "x/". */
