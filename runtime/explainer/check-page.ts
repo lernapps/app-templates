@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { questionTexts } from "../shared/questions/question.ts";
 import { questionDetails } from "../shared/questions/validate.ts";
 import { checkMaterial, type AppChecks, type MaterialBlock } from "../shared/blocks/index.ts";
-import { propsProblems, textPaths } from "./components/props.ts";
+import { propsProblems, textPaths, withData } from "./components/props.ts";
 import { readComponents } from "./components/read.ts";
 import {
   inLanguage,
@@ -278,7 +278,17 @@ function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: P
     for (let n = 2; check.exercises.has(id); n++) id = `${base}-${n}`;
   }
   if (id !== undefined) checkExerciseId(check, id, at);
-  const found = propsProblems(block.props, component);
+  // a list prop given as { data: <name> } is the records of that data file from here on
+  const files = Object.fromEntries([...check.dataFiles].map(([name, file]) => [name, file.value as object[]]));
+  const resolved = withData(block.props, component, files);
+  if (resolved.props !== undefined) block.props = resolved.props as NonNullable<typeof block.props>;
+  // one line for a problem all records of a data file share
+  const found =
+    resolved.problems.length > 0
+      ? resolved.problems
+      : propsProblems(block.props, component).filter(
+          (problem, index, all) => all.findIndex(({ message }) => message === problem.message) === index,
+        );
   for (const problem of found) problems.at(yaml, [...at, "props", ...problem.path], problem.message);
   if (found.length > 0) return;
   for (const [name, field] of Object.entries(component.props)) {

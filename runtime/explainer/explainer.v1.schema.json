@@ -924,7 +924,7 @@
           "pattern": "^[A-Z][A-Za-z0-9]*$"
         },
         "props": {
-          "description": "The component's props, checked against its prop types (defineProps<…>()). A prop of type string is a learner text: a string, or a map by language.",
+          "description": "The component's props, checked against its prop types (defineProps<…>()). A prop of type string is a learner text: a string, or a map by language. A prop that is a list may be given as { data: <name> }: the records of src/data/<name>.yaml, cut to the fields the component declares for an item; every record needs them.",
           "type": "object"
         },
         "nojs": {
