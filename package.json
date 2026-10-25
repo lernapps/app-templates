@@ -96,13 +96,13 @@
     "@doctc/arc42": "0.38.0",
     "@types/node": "22.20.5",
     "typescript": "6.0.3",
-    "vite-plus": "1.0.0",
+    "vite-plus": "1.4.0",
     "vue-tsc": "3.3.13"
   },
   "peerDependencies": {
     "@lernapps/tooling": "*",
     "playwright": "*",
-    "vite-plus": "1.0.0"
+    "vite-plus": "1.4.0"
   },
   "peerDependenciesMeta": {
     "@lernapps/tooling": {
