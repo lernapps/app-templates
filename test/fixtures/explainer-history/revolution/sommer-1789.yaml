@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title:
+  de: Der Sommer 1789
+  en: The summer of 1789
+blocks:
+  - type: section
+    id: zeitleiste
+    title:
+      de: Zeitleiste
+      en: Timeline
+    blocks:
+      - type: timeline
+        data: ereignisse
+  - type: section
+    id: bastille
+    title:
+      de: Der Sturm auf die Bastille
+      en: The storming of the Bastille
+    blocks:
+      - type: text
+        text:
+          de: |
+            Am 14. Juli 1789 stürmten Pariser die Bastille, eine Festung und ein Gefängnis. Sie galt als Zeichen der
+            Macht des Königs. Der 14. Juli ist heute der Nationalfeiertag Frankreichs.
+          en: |
+            On 14 July 1789 Parisians stormed the Bastille, a fortress and prison. It stood for the power of the king.
+            Today 14 July is France's national holiday.
+      - type: section
+        id: folgen
+        title:
+          de: Die Folgen
+          en: What followed
+        blocks:
+          - type: timeline
+            events:
+              - date: 1789-08-04
+                title:
+                  de: Die Vorrechte des Adels werden abgeschafft
+                  en: The privileges of the nobility are abolished
+              - date: 1789-10-05
+                title:
+                  de: Zug der Marktfrauen nach Versailles
+                  en: Women's March on Versailles
+  - type: section
+    id: weiter
+    title:
+      de: Weiter
+      en: Next
+    blocks:
+      - type: text
+        text:
+          de: Was die Nationalversammlung danach verkündete, steht auf der Seite über die [Menschenrechte](/revolution/menschenrechte/#quelle).
+          en: What the National Assembly proclaimed next is on the page about the [rights of man](/revolution/menschenrechte/#quelle).
+  - type: section
+    id: uebung
+    title:
+      de: Übung
+      en: Exercise
+    blocks:
+      - type: generated
+        id: ereignisse-ordnen
+        given:
+          events: { pick: 3, distinct: true, from: { data: ereignisse } }
+        where:
+          ["events[0].date != events[1].date and events[0].date != events[2].date and events[1].date != events[2].date"]
+        task:
+          text:
+            de: Bringe die Ereignisse in die richtige Reihenfolge, das früheste zuerst.
+            en: Put the events in the right order, the earliest first.
+        answer: { value: "map(sortBy(events, date), title)", compare: order }
+        mistakes:
+          - value: "map(reverse(sortBy(events, date)), title)"
+            message:
+              de: "Umgekehrt: Das früheste Ereignis kommt zuerst."
+              en: "The other way round: the earliest event comes first."

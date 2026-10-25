@@ -1,0 +1,31 @@
+title: { de: Eins, en: One }
+blocks:
+  - type: section
+    id: abschnitt
+    title: { de: Abschnitt, en: Section }
+    blocks:
+      - type: text
+        text: { de: Ein Text mit $a + b$., en: A text with $a + b$. }
+      - type: formula
+        formula: "a^2 + b^2 = c^2"
+      - type: section
+        id: unterabschnitt
+        title: { de: Unterabschnitt, en: Subsection }
+        blocks:
+          - type: text
+            text: { de: Noch ein Text., en: Another text. }
+  - type: section
+    id: uebung
+    title: { de: Übung, en: Exercise }
+    blocks:
+      - type: generated
+        id: summe
+        given:
+          a: { int: [1, 9] }
+          b: { int: [1, 9] }
+        where: ["a != b"]
+        task:
+          text: { de: "Was ist {{a}} + {{b}}?", en: "What is {{a}} + {{b}}?" }
+        answer: { value: "a + b", compare: { number: { format: integer } } }
+        mistakes:
+          - { value: "a * b", message: { de: Das ist das Produkt., en: That is the product. } }

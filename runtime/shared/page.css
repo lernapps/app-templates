@@ -1,0 +1,106 @@
+/* The frame of every page of an app (the stylesheets of the archetypes import it): the colours, plain and readable
+   at 360 px with contrast for WCAG 2.1 AA in the light and the dark scheme, the reset, the body, links, the header with
+   the language switch and the footer. An app that needs a wider frame sets --page-max-width in its own :root rule. */
+:root {
+  --page-text: #1a1a1a;
+  --page-muted: #4a4a4a;
+  --page-background: #ffffff;
+  --page-surface: #f4f5f7;
+  --page-border: #8a8f98;
+  --page-accent: #1d4ed8;
+  --page-on-accent: #ffffff;
+  --page-right: #14532d;
+  --page-right-background: #dcfce7;
+  --page-wrong: #7f1d1d;
+  --page-wrong-background: #fee2e2;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-text: #ececec;
+    --page-muted: #b8bcc4;
+    --page-background: #121316;
+    --page-surface: #1d1f24;
+    --page-border: #7d838d;
+    --page-accent: #8ab4ff;
+    --page-on-accent: #0b1020;
+    --page-right: #bbf7d0;
+    --page-right-background: #143522;
+    --page-wrong: #fecaca;
+    --page-wrong-background: #3f1515;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--page-background);
+  color: var(--page-text);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--page-accent);
+}
+
+:focus-visible {
+  outline: 3px solid var(--page-accent);
+  outline-offset: 2px;
+}
+
+.page-header,
+.page-footer {
+  max-width: var(--page-max-width, 44rem);
+  margin: 0 auto;
+  padding: 0 1rem;
+  overflow-wrap: break-word;
+}
+
+/* the language switch of an app in several languages: a link to the page in each language, the current one marked */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+}
+
+.page-languages ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-languages a[aria-current="page"] {
+  color: var(--page-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.page-footer {
+  margin-top: 2rem;
+  padding-bottom: 1.5rem;
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}

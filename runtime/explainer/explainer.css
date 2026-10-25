@@ -1,0 +1,551 @@
+/* The look of an explainer (@lernapps/app-templates/explainer/style.css): the frame and the questions are shared
+   (page.css, questions.css); this is the explainer's page: chapters and pages with sections, formulas, figures, tables,
+   timelines, definitions, quotes, code and exercises, complete without JavaScript. */
+@import "../shared/page.css";
+@import "../shared/blocks/blocks.css";
+@import "../shared/questions/questions.css";
+
+/* the explainer's own colours: the boxes */
+:root {
+  --explainer-example: #ecfdf3;
+  --explainer-note: #fff7e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --explainer-example: #12261b;
+    --explainer-note: #2b2512;
+    --explainer-hl-keyword: #e0a3ff;
+    --explainer-hl-string: #8fe0ac;
+    --explainer-hl-number: #ffb77a;
+    --explainer-hl-comment: #a3a9b3;
+  }
+}
+
+.explainer-breadcrumbs,
+.explainer,
+.explainer-tutor-page,
+.explainer-pager {
+  max-width: var(--page-max-width, 44rem);
+  margin: 0 auto;
+  padding: 0 1rem;
+  overflow-wrap: break-word;
+}
+
+.explainer-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-breadcrumbs {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.explainer-breadcrumbs li + li::before {
+  content: "›";
+  margin-right: 0.75rem;
+  color: var(--page-muted);
+}
+
+.explainer h1 {
+  font-size: 1.875rem;
+  line-height: 1.2;
+}
+
+.explainer h2,
+.explainer h3,
+.explainer h4 {
+  line-height: 1.25;
+  scroll-margin-top: 1rem;
+}
+
+.explainer-toc {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--page-accent);
+  background: var(--page-surface);
+}
+
+.explainer-toc-title {
+  margin: 0.25rem 0;
+  font-weight: 600;
+}
+
+.explainer-timeline {
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+  border-left: 3px solid var(--page-border);
+  list-style: none;
+}
+
+.explainer-timeline li {
+  margin-bottom: 0.75rem;
+}
+
+.explainer-event {
+  margin: 0;
+}
+
+.explainer-date {
+  display: block;
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-event-text p {
+  margin: 0.25rem 0 0;
+}
+
+.explainer-definition {
+  margin: 1rem 0;
+}
+
+.explainer-definition dt {
+  font-weight: 600;
+}
+
+.explainer-definition dd {
+  margin-left: 1rem;
+}
+
+.explainer-definition dd p:first-child {
+  margin-top: 0.25rem;
+}
+
+.explainer-box {
+  margin: 1.25rem 0;
+  padding: 0.25rem 1rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+}
+
+.explainer-example {
+  background: var(--explainer-example);
+}
+
+.explainer-note {
+  background: var(--explainer-note);
+}
+
+.explainer-box-title {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 1.0625rem;
+}
+
+.explainer-pages li,
+.explainer-chapters > li {
+  margin-bottom: 0.5rem;
+}
+
+.explainer-chapter-link {
+  font-weight: 600;
+}
+
+.explainer-description {
+  display: block;
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-glossary dt {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.explainer-glossary dd {
+  margin-left: 1rem;
+}
+
+.explainer-pager {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.explainer-pager a[rel="next"] {
+  margin-left: auto;
+}
+
+/* Exercises: the question types and generated exercises, whose controls and feedback come from the questions'
+   stylesheet in the explainer's colours (--question-*). Without JavaScript the worked tasks and every "Lösung" show;
+   with JavaScript the live part shows, and the solutions and worked tasks once the exercise is solved or its solution
+   asked for. */
+.explainer-exercise,
+.explainer-component {
+  margin: 1rem 0 1.5rem;
+}
+
+.explainer-exercise details {
+  margin: 0.5rem 0;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.375rem;
+}
+
+.explainer-exercise summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.explainer-exercise summary:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-exercise .question {
+  margin: 0;
+}
+
+/* "Neue Aufgabe" of a generated exercise; in the controls of an exercise component it is outlined (below) */
+.explainer-new-task {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  cursor: pointer;
+}
+
+.explainer-new-task:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-worked {
+  padding-left: 1.5rem;
+}
+
+.explainer-worked-task {
+  margin: 0 0 1rem;
+}
+
+.explainer-live:not([hidden]) + .explainer-worked-intro {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--page-border);
+}
+
+/* A component: its island, hidden until it hydrates, and its nojs text, which it replaces or keeps folded as a text
+   description under it; the reason of a wrong answer under its feedback */
+.explainer-nojs.explainer-caption {
+  margin-top: 0.5rem;
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-nojs.explainer-caption summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.explainer-component .question-diagnosis {
+  display: block;
+  margin: 0.25rem 0 0;
+}
+
+/* The task number of a seeded exercise ("Aufgabe Nr. 7"), which a learner can name to a tutor, and the controls of an
+   exercise component: its number and "Neue Aufgabe", shown once it hydrates */
+.explainer-task-number {
+  margin: 0 0 0.25rem;
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.explainer-task-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.explainer-task-controls[hidden] {
+  display: none;
+}
+
+.explainer-task-controls .explainer-task-number {
+  margin: 0;
+}
+
+.explainer-task-controls button {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-accent);
+  cursor: pointer;
+}
+
+.explainer-task-controls button:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+/* "Zurück zum Tutor", on a page a tutor opened (von=tutor) */
+.explainer-back button {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-accent);
+  cursor: pointer;
+}
+
+.explainer-back button:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+/* "Wie sicher bist du?" at the end of a page: three options side by side, wrapping at 360 px, each a large target */
+.explainer-self {
+  margin: 1.5rem 0 0;
+  padding: 0.5rem 1rem 0.75rem;
+  border: 2px solid var(--page-border);
+  border-radius: 0.75rem;
+}
+
+.explainer-self legend {
+  padding: 0 0.25rem;
+  font-weight: 700;
+}
+
+.explainer-self-statement {
+  font-weight: 400;
+}
+
+.explainer-self-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.explainer-self-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.explainer-self-options input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--page-accent);
+}
+
+.explainer-self-status {
+  margin-bottom: 0;
+}
+
+/* the overview on the start page and a chapter page: a page and its level per row */
+.explainer-self-table {
+  width: 100%;
+  margin: 0.75rem 0 1.25rem;
+  border-collapse: collapse;
+}
+
+.explainer-self-table caption {
+  font-weight: 700;
+  text-align: left;
+}
+
+.explainer-self-table th,
+.explainer-self-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--page-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.explainer-self-table tbody th {
+  font-weight: 400;
+}
+
+.explainer-self-level[data-level="sicher"] {
+  color: var(--page-right);
+  font-weight: 700;
+}
+
+/* "Mit einem KI-Tutor lernen": one button with a select beside it, a plain link per assistant without JavaScript */
+.explainer-tutor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.explainer-tutor-way {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.explainer-tutor-way[hidden],
+.explainer-tutor-plain[hidden] {
+  display: none;
+}
+
+.explainer-tutor-go,
+.explainer-tutor-select {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--page-accent);
+  cursor: pointer;
+}
+
+.explainer-tutor-go {
+  border-radius: 0.375rem 0 0 0.375rem;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-tutor-select {
+  border-left-width: 1px;
+  border-radius: 0 0.375rem 0.375rem 0;
+  padding-inline: 0.5rem;
+  background: var(--page-background);
+  color: var(--page-accent);
+}
+
+.explainer-tutor-go:focus-visible,
+.explainer-tutor-select:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-tutor-page {
+  margin-top: 2rem;
+  border-top: 2px solid var(--page-border);
+}
+
+/* Usability: sections and exercises must be told apart at a glance. */
+
+/* A section starts with a rule and room; a subsection is lighter */
+.explainer > section.explainer-section,
+.explainer-main > section.explainer-section {
+  margin-top: 2.5rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid var(--page-border);
+}
+
+.explainer section.explainer-section > h2 {
+  margin: 0.75rem 0 0.75rem;
+  font-size: 1.5rem;
+}
+
+.explainer section.explainer-section section.explainer-section {
+  margin-top: 1.75rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.explainer section.explainer-section section.explainer-section > h3 {
+  padding-left: 0.6rem;
+  border-left: 4px solid var(--page-accent);
+  font-size: 1.2rem;
+}
+
+/* An exercise is a card of its own with a label on top, apart from the explanation around it */
+.explainer-exercise {
+  padding: 0 1rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.75rem;
+  background: var(--page-background);
+}
+
+.explainer-exercise-label {
+  margin: 0 -1rem 1rem;
+  padding: 0.4rem 1rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.explainer-exercise-label::before {
+  content: "✎ ";
+}
+
+/* a long task text wraps inside its frame instead of over its border */
+.explainer-exercise legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.explainer-exercise legend + * {
+  clear: both;
+}
+
+/* The solution is the part of an exercise one looks for: its own colour, a label that says what is behind it */
+.explainer-exercise details.explainer-solution {
+  margin: 0.75rem 0;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--page-right);
+  border-left-width: 5px;
+  background: var(--page-right-background);
+  color: var(--page-right);
+}
+
+.explainer-exercise details.explainer-solution > summary::before {
+  content: "✔ ";
+}
+
+.explainer-exercise details.explainer-solution[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.explainer-exercise details.explainer-solution p,
+.explainer-exercise details.explainer-solution li {
+  color: var(--page-text);
+}
+
+/* the hint is lighter than the solution */
+.explainer-exercise details.explainer-hint {
+  border-style: dashed;
+}
+
+.explainer-worked-task {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--page-border);
+}
+
+.explainer-worked-task:last-child {
+  border-bottom: 0;
+}
+
+.explainer-drawing .fig-on {
+  fill: var(--page-accent);
+}
+
+.explainer-drawing .fig-off {
+  fill: var(--page-background);
+}
+
+.explainer-drawing .fig-line {
+  stroke: var(--page-muted);
+}
+
+.explainer-drawing .fig-text {
+  fill: var(--page-text);
+}

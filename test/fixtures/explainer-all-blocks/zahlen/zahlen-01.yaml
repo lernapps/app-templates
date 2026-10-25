@@ -1,0 +1,173 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+
+title: { de: "Zahlen 1", en: "Numbers 1" }
+description: { de: "Seite 1 der Fixture mit allen Blöcken.", en: "Page 1 of the fixture with all blocks." }
+blocks:
+  - type: text
+    text:
+      de: |
+        Diese Seite ist Seite **1** von 4. Auf ihr steht $n = 1$, und *jede* Art von Block.
+
+        - Weiter geht es mit [der nächsten Seite](/zahlen/zahlen-02/#grundlagen).
+        - Mehr steht in der [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
+      en: |
+        This page is page **1** of 4. It says $n = 1$, and has *every* kind of block.
+
+        - Go on with [the next page](/zahlen/zahlen-02/#grundlagen).
+        - Read more in [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
+  - type: section
+    id: grundlagen
+    title: { de: "Grundlagen", en: "Basics" }
+    blocks:
+      - type: formula
+        formula: '\frac{1}{100} \cdot 200 = 2'
+      - type: definition
+        term: { de: "Begriff 1", en: "Term 1" }
+        explanation:
+          { de: "Ein Begriff, den Seite 1 erklärt, mit $1\\,\\%$.", en: "A term that page 1 explains, with $1\\,\\%$." }
+      - type: figure
+        draw: { kind: hundred-grid, filled: 1 }
+        alt: { de: "Ein Hunderterfeld, 1 von 100 Kästchen gefärbt", en: "A hundred grid, 1 of 100 squares shaded" }
+        caption: { de: "1 % des Ganzen.", en: "1 % of the whole." }
+      - type: section
+        id: tabelle
+        title: { de: "Tabelle", en: "Table" }
+        blocks:
+          - type: table
+            caption: { de: "Werte der Seite 1", en: "Values of page 1" }
+            header: [{ de: "Größe", en: "Quantity" }, { de: "Wert", en: "Value" }, { de: "Formel", en: "Formula" }]
+            rowHeaders: true
+            rows:
+              - [{ de: "Prozentsatz", en: "Percentage" }, { de: "1", en: "1" }, { de: "$p = 1$", en: "$p = 1$" }]
+              - [{ de: "Grundwert", en: "Base value" }, { de: "200", en: "200" }, { de: "$G = 200$", en: "$G = 200$" }]
+          - type: figure
+            draw: { kind: bar, part: 1, whole: 4 }
+            alt: { de: "Ein Streifen, 1 von 4 Teilen gefärbt", en: "A strip, 1 of 4 parts shaded" }
+            caption: { de: "Wie weit du in der App bist.", en: "How far you are in the app." }
+      - type: section
+        id: geschichte
+        title: { de: "Geschichte", en: "History" }
+        blocks:
+          - type: timeline
+            events:
+              - date: -300
+                title: { de: "Euklid schreibt die Elemente", en: "Euclid writes the Elements" }
+              - date: 1202
+                label: { de: "im Jahr 1202", en: "in 1202" }
+                title: { de: "Fibonacci schreibt das Liber Abaci", en: "Fibonacci writes the Liber Abaci" }
+                text:
+                  {
+                    de: "Damit kommen die **arabischen Ziffern** nach Europa.",
+                    en: "With it, the **Arabic numerals** come to Europe.",
+                  }
+          - type: quote
+            text: { de: "Πάντα ῥεῖ", en: "Πάντα ῥεῖ" }
+            origin:
+              author: { de: "Heraklit", en: "Heraclitus" }
+              year: { de: "um 500 v. Chr.", en: "around 500 BC" }
+            source:
+              {
+                de: "Heraklit, Fragmente, überliefert bei Simplikios",
+                en: "Heraclitus, fragments, handed down by Simplicius",
+              }
+            licence: gemeinfrei
+  - type: section
+    id: anwendung
+    title: { de: "Anwendung", en: "Application" }
+    blocks:
+      - type: code
+        language: python
+        caption: { de: "Ein kleines Programm", en: "A small program" }
+        code: |
+          def doppelt(n):
+              return 2 * n
+
+          print(doppelt(21))
+      - type: example
+        title: { de: "Beispiel 1", en: "Example 1" }
+        blocks:
+          - type: text
+            text: { de: "Knallgas reagiert zu Wasser:", en: "Oxyhydrogen reacts to water:" }
+          - type: formula
+            formula: '\ce{2H2 + O2 -> 2H2O}'
+      - type: note
+        title: { de: "Merke", en: "Remember" }
+        blocks:
+          - type: text
+            text: { de: "Die Reaktion setzt $\\pu{572 kJ}$ frei.", en: "The reaction releases $\\pu{572 kJ}$." }
+      - type: section
+        id: bilder
+        title: { de: "Bilder", en: "Pictures" }
+        blocks:
+          - type: figure
+            image: images/raster.svg
+            alt:
+              {
+                de: "Ein blauer Kreis, ein grünes Quadrat und ein rotes Dreieck",
+                en: "A blue circle, a green square and a red triangle",
+              }
+            caption: { de: "Drei Formen.", en: "Three shapes." }
+            source: { de: "eigene Zeichnung", en: "own drawing" }
+            licence: CC0-1.0
+          - type: labelled-figure
+            image: images/raster.svg
+            alt: { de: "Drei Formen mit Nummern", en: "Three shapes with numbers" }
+            caption: { de: "Die Formen, nummeriert.", en: "The shapes, numbered." }
+            labels:
+              - { x: 20, y: 50, text: { de: "Kreis", en: "Circle" } }
+              - { x: 55, y: 50, text: { de: "Quadrat", en: "Square" } }
+              - { x: 88, y: 60, text: { de: "Dreieck", en: "Triangle" } }
+            source: https://github.com/lernapps/app-templates
+            licence: CC0-1.0
+          - type: timeline
+            data: ereignisse
+  - type: section
+    id: uebung
+    title: { de: "Übung", en: "Exercise" }
+    blocks:
+      - type: single-choice
+        id: prozent-von-200
+        text: { de: "Wie viel sind 1 % von 200?", en: "How much is 1 % of 200?" }
+        material:
+          - type: figure
+            image: images/raster.svg
+            alt: { de: "Drei Formen: Kreis, Quadrat, Dreieck", en: "Three shapes: circle, square, triangle" }
+            caption: { de: "Die Formen sind nur zum Ansehen.", en: "The shapes are only to look at." }
+            source: { de: "eigene Zeichnung", en: "own drawing" }
+            licence: CC0-1.0
+        explanation:
+          {
+            de: "1 % ist ein Hundertstel: $\\frac{200}{100} = 2$.",
+            en: "1 % is one hundredth: $\\frac{200}{100} = 2$.",
+          }
+        links:
+          - title: { de: "Prozentrechnung (Wikipedia)", en: "Percentage (Wikipedia, German)" }
+            url: https://de.wikipedia.org/wiki/Prozentrechnung
+        options:
+          - text: { de: "2", en: "2" }
+            correct: true
+            info: { de: "$200 : 100$ ergibt 2.", en: "$200 : 100$ gives 2." }
+          - text: { de: "20", en: "20" }
+            correct: false
+            info: { de: "Das sind 10 % von 200.", en: "That is 10 % of 200." }
+          - text: { de: "1", en: "1" }
+            correct: false
+            info: { de: "Das ist 1 % von 100.", en: "That is 1 % of 100." }
+        examples: { accepted: ["2"], rejected: [1] }
+      - type: generated
+        id: prozent-rechnen
+        given:
+          G: { int: [100, 900], step: 100 }
+          p: { oneOf: [1, 2, 5, 10] }
+        task:
+          text: { de: "Wie viel sind {{p}} % von {{G}}?", en: "How much is {{p}} % of {{G}}?" }
+        answer: { value: "G * p / 100", compare: { number: { format: integer } } }
+        mistakes:
+          - { value: "G * p", message: { de: "Du hast nicht durch 100 geteilt.", en: "You did not divide by 100." } }
+        examples: { accepted: ["G / 100 * p"], rejected: ["G * p / 10", "answer + 1"] }
+        hint: { de: "1 % von {{G}} ist $\\frac{{{G}}}{100}$.", en: "1 % of {{G}} is $\\frac{{{G}}}{100}$." }
+        steps:
+          - {
+              de: "$\\frac{{{G}} \\cdot {{p}}}{100} = {{answer}}$",
+              en: "$\\frac{{{G}} \\cdot {{p}}}{100} = {{answer}}$",
+            }

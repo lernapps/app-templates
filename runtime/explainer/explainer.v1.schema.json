@@ -1,0 +1,1000 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:lernapps:schema:explainer.v1",
+  "title": "Content of a lernapps explainer",
+  "description": "The content of an app built from the archetype explainer (runtime @lernapps/app-templates), as YAML in src/: the app (src/app.yaml), each chapter (src/<chapter>/chapter.yaml), each page (src/<chapter>/<page>.yaml) and data files (src/data/<name>.yaml). A page is a list of blocks from a closed set; structure comes only from section blocks. The build validates every file against this schema, then what a schema cannot say (order lists complete, depth, languages complete, formulas in the command list), and fails with one line per problem. Every text is for learners, in plain language. A text is a string while German is the app's only language, else a map of texts by language: { de: …, en: … }.",
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "required": ["chapters"],
+        "properties": {
+          "chapters": {}
+        }
+      },
+      "then": {
+        "$ref": "#/$defs/app"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["pages"],
+        "properties": {
+          "pages": {}
+        }
+      },
+      "then": {
+        "$ref": "#/$defs/chapter"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["blocks"],
+        "properties": {
+          "blocks": {}
+        }
+      },
+      "then": {
+        "$ref": "#/$defs/page"
+      }
+    },
+    {
+      "if": {
+        "type": "array"
+      },
+      "then": {
+        "$ref": "#/$defs/data"
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "description": "A stable name, part of the address: lower-case letters, digits and hyphens. Keep it once published, so that links to it keep working.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "text": {
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
+    },
+    "markdown": {
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/markdown"
+    },
+    "latex": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/latex"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": {
+          "description": "What the source is, e.g. the title of the article or book.",
+          "$ref": "#/$defs/text"
+        },
+        "url": {
+          "description": "Where to read it.",
+          "type": "string",
+          "pattern": "^https?://\\S+$"
+        }
+      },
+      "description": "Where the app's facts come from."
+    },
+    "credit": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/credit"
+    },
+    "image": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/image"
+    },
+    "app": {
+      "description": "src/app.yaml: the app, its languages and the order of its chapters.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "intro", "languages", "chapters"],
+      "properties": {
+        "title": {
+          "description": "The app's title: the start page's h1 and the title of every page.",
+          "$ref": "#/$defs/text"
+        },
+        "intro": {
+          "description": "What the app explains and for whom, under the title of the start page.",
+          "$ref": "#/$defs/markdown"
+        },
+        "languages": {
+          "description": "The languages of the app, German first. Every text is then complete in each of them; each language other than German gets its own page tree below /<language>/.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{2}$"
+          }
+        },
+        "chapters": {
+          "description": "The order of the chapters: the id of each folder src/<chapter>/, each exactly once. An app with one chapter hides it in the navigation and keeps it in the address.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "sources": {
+          "description": "Where the app's facts come from, listed on the start page.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source"
+          }
+        },
+        "selfAssessment": {
+          "description": "Optional, true when unset: the self-assessment. The end of every page's last section asks \"Wie sicher bist du?\" with three options (Sicher, Teils, Noch üben), and the start page and each chapter page show the level of each page with its link. The levels stay in the learner's browser (localStorage under the app's prefix), the same in every language; without JavaScript a sentence says that nothing is saved. false: no self-assessment and nothing kept of it.",
+          "type": "boolean"
+        },
+        "tutor": {
+          "description": "Optional: what the app adds for a KI tutor, an assistant the learner brings. The build writes, per language tree, tutor.md (a ready prompt for a tutor: its role and approach, the app's pages as a checklist, the rules for the app's links), a section \"Mit einem KI-Tutor lernen\" on the start page (a button that copies the prompt, a link per provider that opens the assistant with it, nothing loaded before a click), llms.txt with a part of generic rules for a tutor (link concrete tasks, ask for the task number, never reveal a solution before the learner has committed to an answer, the app reports nothing back) and a tutor file next to every page (<chapter>/<page>/tutor.md: its sections, every exercise with task, answer format, solution, hint and typical mistakes, and for a seeded exercise all its task numbers (its distinct tasks, at most 67) with their tasks, solutions and links ?seed=<n>#<id>).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rules": {
+              "description": "The app's own rules for a tutor, after the generic ones in llms.txt: what matters in this subject, e.g. \"Rechenwege auf Papier, das Ergebnis in die App\". Restricted Markdown, in the app's languages.",
+              "$ref": "#/$defs/markdown"
+            },
+            "providers": {
+              "description": "The assistants the start page offers to open with the prompt, in this order. Without it: Claude (https://claude.ai/new?q={prompt}); an empty list offers only the button that copies the prompt. A link carries the whole prompt while its address stays within 8000 characters, else a short prompt that points to tutor.md, and the page copies the whole prompt as well.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "url"],
+                "properties": {
+                  "name": {
+                    "description": "The assistant's name, as the link says it: \"Mit <name> öffnen\".",
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  "url": {
+                    "description": "The address that opens the assistant, https, with {prompt} where the prompt goes (URL-encoded), e.g. https://claude.ai/new?q={prompt}; without {prompt} the link opens the assistant and the page copies the prompt.",
+                    "type": "string",
+                    "pattern": "^https://\\S+$"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "chapter": {
+      "description": "src/<chapter>/chapter.yaml: a chapter and the order of its pages.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "pages"],
+      "properties": {
+        "title": {
+          "description": "The chapter's title.",
+          "$ref": "#/$defs/text"
+        },
+        "summary": {
+          "description": "What the chapter is about, on the chapter's page and in the contents.",
+          "$ref": "#/$defs/markdown"
+        },
+        "pages": {
+          "description": "The order of the pages: the id of each file src/<chapter>/<page>.yaml, each exactly once.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "page": {
+      "description": "src/<chapter>/<page>.yaml: a page, its address /<chapter>/<page>/. Its blocks in order; structure by section blocks (h2), with at most one level of sections inside them (h3). Every page has at least one exercise (one of the quiz's question types, or generated), e.g. in a last section Übung.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "blocks"],
+      "properties": {
+        "title": {
+          "description": "The page's title: its h1.",
+          "$ref": "#/$defs/text"
+        },
+        "description": {
+          "description": "One sentence on what the page explains, for search engines and llms.txt.",
+          "$ref": "#/$defs/text"
+        },
+        "canDo": {
+          "description": "Optional: what the learner can once the page is mastered, one sentence \"Ich kann …\", e.g. \"Ich kann den Prozentwert berechnen.\" The self-assessment at the end of the page asks how sure the learner is of it; without it, of the page's title.",
+          "$ref": "#/$defs/text"
+        },
+        "blocks": {
+          "$ref": "#/$defs/blocks"
+        }
+      }
+    },
+    "dataValue": {
+      "description": "A value of a data record: a number, a truth value, a text (a string, or a map by language), a list of values, or a record of values.",
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dataValue"
+          }
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/dataValue"
+          }
+        }
+      ]
+    },
+    "data": {
+      "description": "src/data/<name>.yaml: a list of records with the same fields, e.g. events with date, title and text. Blocks draw from it by its name (a timeline's data). A field may be a list or a record of values too (compounds: [{ formula, text }]), for a component that takes the file as a list prop; exercises and timelines use the flat fields.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "minProperties": 1,
+        "propertyNames": {
+          "pattern": "^[a-z][a-zA-Z0-9]*$"
+        },
+        "additionalProperties": {
+          "$ref": "#/$defs/dataValue"
+        }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/block"
+      }
+    },
+    "block": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "description": "The kind of block.",
+          "enum": [
+            "text",
+            "formula",
+            "figure",
+            "labelled-figure",
+            "table",
+            "timeline",
+            "definition",
+            "quote",
+            "code",
+            "example",
+            "note",
+            "section",
+            "single-choice",
+            "multiple-choice",
+            "true-false",
+            "number",
+            "ordering",
+            "matching",
+            "generated",
+            "vue-component"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "text"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/textBlock"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "formula"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/formula"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "figure"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/figure"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "labelled-figure"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/labelledFigure"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "table"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "timeline"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/timeline"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "definition"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/definition"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "quote"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/quote"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "code"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/code"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "example"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/box"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "note"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/box"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "section"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/section"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "single-choice"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "multiple-choice"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "true-false"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "number"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ordering"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "matching"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "generated"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/generated"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "vue-component"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/vueComponent"
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "textBlock": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/textBlock"
+    },
+    "formula": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/formula"
+    },
+    "figure": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/figure"
+    },
+    "drawing": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/drawing"
+    },
+    "labelledFigure": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/labelledFigure"
+    },
+    "table": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/table"
+    },
+    "timeline": {
+      "description": "Dated events, from the earliest: listed here (events) or the records of a data file (data) with the fields date, title and optional label and text; one of the two.",
+      "properties": {
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        },
+        "data": {
+          "description": "The name of a data file src/data/<name>.yaml.",
+          "$ref": "#/$defs/id"
+        }
+      },
+      "type": "object"
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "title"],
+      "properties": {
+        "date": {
+          "description": "The date: a year (1789; -44 for 44 BC), a month (1789-07) or a day (1789-07-14).",
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string",
+              "pattern": "^-?\\d{1,4}(-\\d{2}(-\\d{2})?)?$"
+            }
+          ]
+        },
+        "label": {
+          "description": "The date as the learner reads it, when it differs from the date itself, e.g. um 1500.",
+          "$ref": "#/$defs/text"
+        },
+        "title": {
+          "description": "What happened, in a few words.",
+          "$ref": "#/$defs/text"
+        },
+        "text": {
+          "description": "More on it.",
+          "$ref": "#/$defs/markdown"
+        }
+      }
+    },
+    "definition": {
+      "description": "A term and what it means, in place; collected into the app's glossary page, which every term links to.",
+      "required": ["term", "explanation"],
+      "properties": {
+        "term": {
+          "description": "The term.",
+          "$ref": "#/$defs/text"
+        },
+        "explanation": {
+          "description": "What it means.",
+          "$ref": "#/$defs/markdown"
+        }
+      },
+      "type": "object"
+    },
+    "quote": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/quote"
+    },
+    "code": {
+      "$ref": "urn:lernapps:schema:blocks.v1#/$defs/code"
+    },
+    "box": {
+      "description": "A box with a heading (the next level below its place) and blocks: example for a worked example, note for a hint or something to remember. A box holds no sections and no boxes.",
+      "required": ["title", "blocks"],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "blocks": {
+          "$ref": "#/$defs/blocks"
+        }
+      },
+      "type": "object"
+    },
+    "section": {
+      "description": "A section: a heading (h2, or h3 inside a section) and its blocks. Its address is #<id>, inside a section #<section>/<id>.",
+      "required": ["id", "title", "blocks"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "$ref": "#/$defs/text"
+        },
+        "blocks": {
+          "$ref": "#/$defs/blocks"
+        }
+      },
+      "type": "object"
+    },
+    "expression": {
+      "description": "An expression of the expression language, e.g. \"G * p / 100\": numbers (exact fractions), + - * /, parentheses, == != < <= > >=, and, or, not, strings in quotes, record fields (e.year), list index (xs[0]), lists ([1, 2]), and the functions round(x, n), decimals, map(xs, field), sortBy(xs, field), reverse. It may use the variables of given.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "literal": {
+      "description": "An item of a list: a number, a string, or a text by language ({ de: …, en: … }).",
+      "type": ["number", "string", "object"],
+      "minLength": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "list": {
+      "description": "A list of items, or the records of a data file: { data: <name> } for src/data/<name>.yaml.",
+      "type": ["array", "object"],
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/literal"
+      },
+      "required": ["data"],
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "arbitrary": {
+      "description": "How a value of given is drawn, exactly one of: int: [min, max] with a step (default 1); decimal: [min, max] with a step (e.g. 0.1); oneOf: a list to pick one from; pick: how many, from: a list or { data: <name> }, distinct: true for no repeats (pick: 1 gives one item, more give a list).",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "int": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "decimal": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "oneOf": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/literal"
+          }
+        },
+        "pick": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "from": {
+          "$ref": "#/$defs/list"
+        },
+        "distinct": {
+          "type": "boolean"
+        }
+      }
+    },
+    "numberCompare": {
+      "description": "The learner types a number. format: integer (no decimals), decimal (decimals, default 2), money (2 decimals, unit €) or percent (unit %); decimals: how many the answer may have; tolerance: how far the learner's number may be off (default 0); unit: shown next to the input.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "enum": ["integer", "decimal", "money", "percent"]
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "tolerance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "compare": {
+      "description": "How the learner answers and what counts as right, the quiz's answer kind of the same name: number (the quiz's number question; or { number: { format, decimals, tolerance, unit } }), { choice: <options> } (single choice; the options a list, or an expression giving one), order (the answer a list in the right order; the quiz's ordering), pairs (the answer a list of [left, right]; or { pairs: { left: <field>, right: <field> } } for a list of records; the quiz's matching).",
+      "type": ["string", "object"],
+      "pattern": "^(number|order|pairs)$",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "$ref": "#/$defs/numberCompare"
+        },
+        "choice": {
+          "type": ["array", "string"],
+          "minItems": 2,
+          "minLength": 1,
+          "items": {
+            "$ref": "#/$defs/literal"
+          }
+        },
+        "pairs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["left", "right"],
+          "properties": {
+            "left": {
+              "type": "string",
+              "minLength": 1
+            },
+            "right": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "generated": {
+      "description": "An exercise drawn from a seed, property-based: given draws the values, where filters them, task is the text with placeholders ({{G}}, {{e.name}}; {{answer}} in the steps), answer is an expression with its comparator, mistakes are typical wrong answers each with a message saying what went wrong, hint and steps help. A placeholder is always two braces around a declared name or its field, nothing else inside, in prose and in formulas alike ($\\frac{{{W}}}{{{G}}}$); one brace is never a placeholder, so in a formula G and {G} are the letter. The build checks that every placeholder names a variable of given (or answer), that no prose has a placeholder with one brace or spaces inside, and that every variable of given is used in a placeholder or in an expression of the answer or mistakes; then it checks it over 200 fixed seeds: where holds in at least 1 of 10 draws; the answer is defined, in its format and passes its comparator; no mistake equals it; the task is the same each time and keeps no placeholder. Its tasks are numbered: the build walks the seeds 1, 2, 3, … and numbers only the distinct tasks, Aufgabe Nr. 1 to N (N at most 67; fewer when the exercise has fewer distinct tasks, noted in the build output). The number is what the page shows, what a learner names to a tutor, and what the address carries: ?seed=<n>#<id> opens task number n (a number above N wraps around). Without JavaScript the page shows the tasks 1, 2 and 3 as worked tasks with their solution; with JavaScript a live task of a random number, Neue Aufgabe, which moves to the next number (after N back to 1) and writes it into the address, and the deep link: a wrong answer gets the message of the mistake it matches (else a line to look again, with the hint above) and may be tried again; the solution and the steps show after the right answer or Lösung zeigen.",
+      "required": ["id", "given", "task", "answer"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "given": {
+          "description": "The variables and how each is drawn; names of letters, digits and _, e.g. G, p, events.",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/arbitrary"
+          }
+        },
+        "where": {
+          "description": "Preconditions, each an expression that is true or false; a draw that fails one is drawn again.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/expression"
+          }
+        },
+        "task": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "text": {
+              "description": "The task, restricted Markdown in one paragraph, with placeholders.",
+              "$ref": "#/$defs/markdown"
+            }
+          }
+        },
+        "answer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value", "compare"],
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/expression"
+            },
+            "compare": {
+              "$ref": "#/$defs/compare"
+            }
+          }
+        },
+        "mistakes": {
+          "description": "Typical mistakes: the wrong answer as an expression, and a message (plain text) that says what went wrong. A learner who gives that answer reads the message with the feedback, and may try again.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value", "message"],
+            "properties": {
+              "value": {
+                "$ref": "#/$defs/expression"
+              },
+              "message": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        },
+        "practice": {
+          "description": "Optional: the sentence above the live task, plain text, in the app's languages. Without it the page says \"Übe selbst, mit immer neuen Aufgaben:\"; write your own when the tasks change something other than tasks in general, e.g. \"Übe selbst, mit immer neuen Stoffen:\".",
+          "$ref": "#/$defs/text"
+        },
+        "hint": {
+          "description": "A hint before the answer, restricted Markdown with placeholders; with JavaScript it stays folded under the live task until the learner opens it.",
+          "$ref": "#/$defs/markdown"
+        },
+        "steps": {
+          "description": "The steps of the solution, restricted Markdown with placeholders and {{answer}}.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/markdown"
+          }
+        },
+        "examples": {
+          "description": "Optional: test cases for the build, never shown to learners. Before you write the exercise, note which answers fulfil its text and which typical wrong answers there are; write the other correct answers the text allows into accepted (e.g. the answer rounded as the text permits: \"round(W / G * 100, 0)\"), the typical wrong ones into rejected. Each is an expression like answer.value, of the variables of given and of answer, the task's right answer, e.g. \"answer + 1\", \"reverse(answer)\". The build evaluates each for every seed it checks and runs it through the same check the page uses: an accepted one the check rejects, or a rejected one it accepts, fails the build; then the exercise checks something other than what its text asks, so change its comparator, its tolerance or its text. The mistakes already count as rejected.",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "accepted": {
+              "description": "Answers the text allows, each of which the check must accept for every seed.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/expression"
+              }
+            },
+            "rejected": {
+              "description": "Typical wrong answers, each of which the check must reject for every seed.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/expression"
+              }
+            }
+          }
+        }
+      },
+      "type": "object"
+    },
+    "vueComponent": {
+      "description": "A Vue single-file component of the app, src/components/<component>.vue, for what no built-in block or generated exercise can express. The build renders it into the page and checks it (what it may do, its test file, and for an exercise, one that emits answered { correct, reason? }, its logic module <component>.ts; reason, a text in the page's language, says what went wrong in a wrong answer and shows under the feedback); in the browser it hydrates in place. An exercise component declares the prop seed: number, which the explainer gives it and no block does: its task number. The build numbers its distinct tasks like a generated exercise's (seeds 1, 2, 3, …, tasks compared as the JSON of generate(seed, props), Aufgabe Nr. 1 to N, N at most 67); the page shows \"Aufgabe Nr. <n>\" and \"Neue Aufgabe\", the address ?seed=<n>#<id> opens task number n, and the component gets that task's seed and shows generate(seed, props). Its logic module exports generate(seed, props), check(task, answer), solution(task), wrong(task), describe(task, props, lang) and about: describe gives { task, solution }, the task as a learner sees it and its solution, each restricted Markdown in the language lang (props come in that language); about = { task, answer, correct, mistakes } says what the learner does, the answer's format, what counts as right and the typical mistakes, each a text (a map by language when the app has more than one). The build checks describe for every task number, and writes the no-JS text of an exercise component from the task of number 1 with its solution folded. Without JavaScript the page shows the nojs text instead of the component.",
+      "required": ["component"],
+      "properties": {
+        "id": {
+          "description": "The block's anchor on the page, a lowercase id: the address ?seed=<n>#<id> opens the task <n> of an exercise component. Optional: an exercise component without one has its name in kebab case (AssignLabels: assign-labels, assign-labels-2 for a second one on the page). Give one when the default would clash with a section or another exercise.",
+          "$ref": "#/$defs/id"
+        },
+        "component": {
+          "description": "The component's name, in PascalCase: src/components/<component>.vue.",
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "props": {
+          "description": "The component's props, checked against its prop types (defineProps<…>()). A prop of type string is a learner text: a string, or a map by language. A prop that is a list may be given as { data: <name> }: the records of src/data/<name>.yaml, cut to the fields the component declares for an item; every record needs them.",
+          "type": "object"
+        },
+        "nojs": {
+          "description": "What the component shows and does, for readers without JavaScript, with its content: the labelled diagram described. Required for a component that is no exercise. Restricted Markdown, rendered in place; once the component runs, it replaces this text, or, when the component declares defineOptions({ nojs: \"caption\" }), keeps it folded under it as a text description that one click opens. An exercise component needs none: the build writes its no-JS text from describe, the task of number 1 with its solution folded, so the page without JavaScript shows the same task as the component with seed 1; a nojs text it has goes above that task, e.g. what the figure shows.",
+          "$ref": "#/$defs/markdown"
+        },
+        "examples": {
+          "description": "Required for an exercise component (one that emits answered), else not allowed: test cases for the build, never shown to learners. Its check is the component's own code, so before you write it, note which answers fulfil the task's text and which typical wrong answers there are: at least one answer the check must accept, other than the one solution(task) gives where the text allows another (e.g. a circuit with one lamp and a switch, when the text asks for one lamp), and at least one it must reject. Each answer is written as check(task, answer) of <component>.ts takes it. The build runs each through check, for the task of its seed, or of every seed the property test draws when it gives none, and fails when an accepted one fails or a rejected one passes.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "accepted": {
+              "description": "Answers the text allows, each of which check must accept.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/componentExample"
+              }
+            },
+            "rejected": {
+              "description": "Typical wrong answers, each of which check must reject.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/componentExample"
+              }
+            }
+          }
+        }
+      },
+      "type": "object"
+    },
+    "componentExample": {
+      "description": "One answer of an exercise component's examples.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["answer"],
+      "properties": {
+        "answer": {
+          "description": "The answer as check(task, answer) of the component's logic module takes it, e.g. a list or a record."
+        },
+        "seed": {
+          "description": "Optional: the seed of the task to check it against, when the right answer depends on the task; without it, the answer is checked against the task of every seed.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
