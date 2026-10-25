@@ -8,10 +8,44 @@ Diese Datei ist für einen KI-Tutor. Sie enthält die Lösungen: Nutze sie, um a
 
 ## Abschnitte
 
-- [Warum](./#warum)
-- [Regel](./#regel)
-- [Beispiel](./#beispiel)
-- [Übung](./#uebung)
+### Warum ([./#warum](./#warum))
+
+„20 % Rabatt auf 80 €“: Wie viel sparst du wirklich? Der Prozentwert ist der Teil des Ganzen, den die
+Prozente beschreiben. Wer ihn schnell ausrechnen kann, weiß beim Einkaufen, beim Handy-Akku und in jeder
+Statistik sofort, worum es geht.
+
+### Regel ([./#regel](./#regel))
+
+$W = \frac{G \cdot p}{100}$
+
+- **Prozentwert**: Der Prozentwert $W$ ist der Anteil am Ganzen, in der Einheit des Grundwerts (€, Schüler, mAh …).
+
+Der **Grundwert** $G$ ist das Ganze, also 100 %. Der **Prozentsatz** $p\,\%$ sagt, welcher Anteil gemeint
+ist. mAh (Milliamperestunden) gibt an, wie viel Ladung ein Akku speichert.
+
+**Merke: Merkhilfe**
+
+Erst 1 % ausrechnen ($G$ geteilt durch 100), dann mal $p$ nehmen.
+
+### Beispiel ([./#beispiel](./#beispiel))
+
+**Beispiel: Rabatt auf ein Skateboard**
+
+Ein Skateboard kostet 250 €. Es gibt 12 % Rabatt. Wie viel Euro sparst du?
+
+Der Prozentwert beim Skateboard:
+- Grundwert $G$ | 250 € (der volle Preis)
+- Prozentsatz $p$ | 12 %
+- Rechnung | $W = 250 \cdot 12 : 100 = 30$
+- Prozentwert $W$ | **30 €** Rabatt
+
+Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschrift: Das Hunderterfeld ist der Grundwert, 100 Kästchen sind 100 %. Die 12 gefärbten Kästchen sind der Prozentwert.
+
+Über 1 %: 250 € : 100 = 2,50 € sind 1 %. Dann 2,50 € · 12 = 30 €.
+
+### Übung ([./#uebung](./#uebung))
+
+- Übung `prozentwert-ueben` (unten)
 
 ## Übungen
 

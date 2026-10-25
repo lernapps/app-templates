@@ -8,10 +8,42 @@ Diese Datei ist für einen KI-Tutor. Sie enthält die Lösungen: Nutze sie, um a
 
 ## Abschnitte
 
-- [Warum](./#warum)
-- [Regel](./#regel)
-- [Beispiel](./#beispiel)
-- [Übung](./#uebung)
+### Warum ([./#warum](./#warum))
+
+„18 von 24 Schülern haben ein Haustier“: Ist das viel? Erst der Prozentsatz macht solche Angaben
+vergleichbar. 75 % sagen sofort, wie groß der Anteil ist, egal ob die Klasse 24 oder 30 Schüler hat.
+
+### Regel ([./#regel](./#regel))
+
+$p = \frac{W}{G} \cdot 100$
+
+- **Prozentsatz**: Der Prozentsatz $p\,\%$ ist der Anteil des Prozentwerts $W$ (der Teil) am Grundwert $G$ (das Ganze), in Hundertsteln geschrieben.
+
+**Merke: Merkhilfe**
+
+Teil durch Ganzes, also immer durch das Ganze teilen, nie umgekehrt. Dann mal 100.
+
+### Beispiel ([./#beispiel](./#beispiel))
+
+**Beispiel: Haustiere in der Klasse**
+
+In einer Klasse sind 24 Schüler. 18 davon haben ein Haustier. Wie viel Prozent der Klasse sind das?
+
+Der Prozentsatz der Klasse:
+- Grundwert $G$ | 24 Schüler (die ganze Klasse)
+- Prozentwert $W$ | 18 Schüler (der Teil)
+- Rechnung | $p = 18 : 24 \cdot 100 = 0{,}75 \cdot 100 = 75$
+- Prozentsatz | **75 %**
+
+Bild: Ein Streifen für 24 Schüler, drei Viertel davon sind gefärbt, 75 %. Bildunterschrift: Der ganze Streifen ist der Grundwert, 24 Schüler sind 100 %. Der gefärbte Teil ist der Prozentwert, 18 Schüler sind 75 %.
+
+Probe: 75 % von 24 sind 24 · 0,75 = 18. Passt.
+
+### Übung ([./#uebung](./#uebung))
+
+- Übung `welche-rechnung` (unten)
+
+- Übung `prozentsatz-ueben` (unten)
 
 ## Übungen
 

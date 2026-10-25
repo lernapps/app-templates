@@ -8,10 +8,45 @@ Diese Datei ist für einen KI-Tutor. Sie enthält die Lösungen: Nutze sie, um a
 
 ## Abschnitte
 
-- [Warum](./#warum)
-- [Regel](./#regel)
-- [Beispiel](./#beispiel)
-- [Übung](./#uebung)
+### Warum ([./#warum](./#warum))
+
+„Du sparst 30 €, das sind 12 % Rabatt“: Wie teuer war die Sache vorher? Hier ist das Ganze unbekannt, und
+genau das verwirrt viele. Wer den Grundwert sicher zurückrechnen kann, löst auch die kniffligen Aufgaben, bei
+denen nur der Teil bekannt ist.
+
+### Regel ([./#regel](./#regel))
+
+$G = \frac{W \cdot 100}{p}$
+
+- **Grundwert**: Der Grundwert $G$ ist das Ganze, also 100 %.
+
+Du kennst den **Prozentwert** $W$ (den Teil) und den **Prozentsatz** $p\,\%$. Über 1 % kommst du zum
+Ganzen: $W$ geteilt durch $p$ ist 1 %, mal 100 ist das Ganze.
+
+**Merke: Achtung**
+
+Der Grundwert ist bei $p$ unter 100 % immer größer als der Prozentwert. Kommt etwas Kleineres heraus,
+hast du die Formel für den Prozentwert benutzt.
+
+### Beispiel ([./#beispiel](./#beispiel))
+
+**Beispiel: Der Preis eines Rollers**
+
+Beim Kauf eines Rollers sparst du 30 €. Das sind 12 % Rabatt. Wie viel hat der Roller vorher gekostet?
+
+Der Grundwert beim Roller:
+- Prozentwert $W$ | 30 € (der Teil, der bekannt ist)
+- Prozentsatz $p$ | 12 %
+- Rechnung | $G = 30 \cdot 100 : 12 = 250$
+- Grundwert $G$ | **250 €** war der alte Preis
+
+Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschrift: Die 12 gefärbten Kästchen sind der bekannte Teil, 30 €. Alle 100 Kästchen stehen für den Grundwert, 250 €.
+
+Über 1 %: 30 € : 12 = 2,50 € sind 1 %. Dann 2,50 € · 100 = 250 €.
+
+### Übung ([./#uebung](./#uebung))
+
+- Übung `grundwert-ueben` (unten)
 
 ## Übungen
 
