@@ -20,7 +20,8 @@ hosts: bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-explainer-c
 ## Explainer page
 
 The client module, the islands with the components, the generated exercises' live tasks with the quiz's question
-types, the task numbers and the explainer's texts run in the learner's browser on the pages the build rendered.
+types, the task numbers, the videos and the explainer's texts run in the learner's browser on the pages the build
+rendered.
 
 ```arc42
 :::deployment-node
@@ -28,6 +29,6 @@ id: dn-explainer-page
 title: Explainer page
 type: container
 parent: dn-learner-browser
-hosts: bb-islands, bb-generated-exercises, bb-task-numbers, bb-runtime-texts, bb-explainer-components
+hosts: bb-islands, bb-generated-exercises, bb-task-numbers, bb-video, bb-runtime-texts, bb-explainer-components
 :::
 ```

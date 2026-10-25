@@ -52,3 +52,20 @@ trigger: The learner asks for help with a task
 involves: bb-shell, bb-tutor-handoff, bb-task-numbers, bb-explainer-components
 :::
 ```
+
+## Watching a video
+
+Without JavaScript, and with it before a click, a video is its title as a link to youtube.com, its channel and the
+note that playing it sends data, among them the IP address, to YouTube/Google; the page requests nothing from another
+host. The learner clicks "Video abspielen": the player of youtube-nocookie.com loads into the figure and starts, and
+from then on YouTube gets the learner's IP address and the app's origin. Ticking "Videos immer direkt laden" keeps that
+choice on the device, so every page of the app loads its players without the click, until the learner unticks it.
+
+```arc42
+:::runtime-scenario
+id: scenario-explainer-video
+title: Watching a video on a page
+trigger: The learner clicks "Video abspielen", or opens a page after choosing to load videos directly
+involves: bb-render, bb-shell, bb-video, bb-runtime-texts, bb-tooling
+:::
+```
