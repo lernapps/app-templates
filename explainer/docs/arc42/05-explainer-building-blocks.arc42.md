@@ -192,8 +192,9 @@ path: runtime/explainer/routes.ts
 ### Client module
 
 Built. Makes a page's exercises live: answered before the solution shows, the reason of a wrong answer, "Neue
-Aufgabe", the task numbers in the address; and the tutor button. It keeps only the learner's chosen way to the tutor
-on the device.
+Aufgabe", the task numbers in the address; the tutor button; and the self-assessment, "Wie sicher bist du?" on a
+page and the levels in the overviews (`runtime/explainer/selfassessment.ts`). It keeps only the learner's chosen way
+to the tutor and the levels of the self-assessment on the device.
 
 ```arc42
 :::building-block
@@ -203,7 +204,7 @@ parent: bb-archetype-runtime
 path: runtime/explainer/explainer.ts
 technology: TypeScript, DOM
 requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y
-implements: concept-accessibility, concept-determinism
+implements: concept-accessibility, concept-determinism, concept-self-assessment
 :::
 ```
 

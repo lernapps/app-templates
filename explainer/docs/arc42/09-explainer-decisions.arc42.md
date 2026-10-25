@@ -53,6 +53,26 @@ addresses: con-component-rules, qg-explainer-readable-without-js
 :::
 ```
 
+## Self-assessment in the Runtime, Not in an App
+
+The learner needs to see where they stand, and so does a tutor; before the explainer, apps built their own checklist
+(the old Mathe-Karte). The runtime asks once per page, at the end of its last section, where the learner has just
+practised, and shows the levels on the start and chapter pages, so that every explainer has it without code of its
+own and the content contract stays YAML (an optional sentence `canDo` per page). The levels go through the tooling's
+storage wrapper, never over the network; a tutor gets them only as the parameter `stand` of the address the learner
+opens. Rejected: a component per app (code an explainer should not need), a checklist of all pages on the start page
+only (far from the practice it rates), and a per-page key (one map keeps the overview to one read).
+
+```arc42
+:::decision
+id: dec-explainer-self-assessment
+title: The self-assessment is part of the runtime, on by default, its levels only on the device
+status: accepted
+date: 2026-10-25
+addresses: qg-privacy, qg-explainer-readable-without-js, con-state-on-device, dec-explainer-only-content
+:::
+```
+
 ## Task Numbers in the Address
 
 Every seeded exercise numbers its distinct tasks, and the address holds the number of each exercise of the page, so a

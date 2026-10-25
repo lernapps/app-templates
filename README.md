@@ -76,6 +76,14 @@ feature: assistants read it before they choose an archetype.
   a prompt too long for the assistant's address goes short, with the whole one on the clipboard; the short one names every address the tutor may fetch (llms.txt and each page's tutor file), because a chat assistant fetches only addresses its user wrote into the conversation, not those it finds in a fetched file
   ([`prompt.ts`](runtime/explainer/prompt.ts)). Without JavaScript the section has a plain link per assistant. A page opened with `von=tutor`
   shows "Zurück zum Tutor", which closes the tab ([`tutor.ts`](runtime/explainer/tutor.ts)).
+- Every explainer page ends its last section with a self-assessment, "Wie sicher bist du?": three options (Sicher,
+  Teils, Noch üben) as a radio group named by their visible text, about the page's `canDo` sentence ("Ich kann …") or
+  its title. The start page and each chapter page show an overview, each page with its link and its level. The levels
+  stay on the device (`@lernapps/tooling/storage`, one map `<chapter>/<page>` → level under the key
+  `self-assessment`, shared by the language trees); without JavaScript, or where the browser blocks storage, a sentence
+  says that nothing is saved. `standOf` turns a chapter's levels into the tutor's parameter `stand`
+  (`laplace:teils,baumdiagramm:sicher`) ([`selfassessment.ts`](runtime/explainer/selfassessment.ts)).
+  `selfAssessment: false` in `app.yaml` turns it off.
 - Every exercise may carry `examples: { accepted, rejected }`, test cases that learners never see: the other correct
   answers its text allows, and typical wrong ones. The build runs each through the same check the page uses (the
   quiz's checker, a generated exercise's comparator for every seed, an exercise component's `check`) and fails on an
@@ -104,8 +112,8 @@ rendering, shell, end-to-end tests) and the parts its creator writes. An app's a
   only the last result on the device when the bank asks; no tutor.
 - **Explainer** ([`explainer/docs/arc42/`](explainer/docs/arc42/)): the page rendering writes the YAML pages and the
   component islands at build, the content validation guards the content, the client module and the islands check
-  answers in the browser and keep only the chosen way to the tutor; the tutor handoff and task numbers are built for
-  it.
+  answers in the browser and keep only the chosen way to the tutor and the self-assessment; the tutor handoff, task
+  numbers and the self-assessment are built for it.
 - **Interactive** ([`interactive/docs/arc42/`](interactive/docs/arc42/)): the start page and app page render from
   `src/app.yaml`, the build checks the core and plays the playthroughs, the shell mounts the root component and feeds
   the core inputs (today keys), ticks, route and seed; no tutor yet. Only an interactive app adds an architecture part

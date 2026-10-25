@@ -63,7 +63,7 @@ refuses, so one app can fill the origin's shared 5 MiB.
 id: risk-storage-quota-not-built
 title: Storage quota of 100 kB not built
 severity: medium
-mitigation: Build the quota into the tooling's storage wrapper, so that save refuses beyond 100 kB per app; until then apps keep only small values (the quiz's last result, the explainer's chosen way to the tutor).
+mitigation: Build the quota into the tooling's storage wrapper, so that save refuses beyond 100 kB per app; until then apps keep only small values (the quiz's last result, the explainer's chosen way to the tutor and its self-assessment).
 :::
 ```
 

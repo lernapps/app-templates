@@ -13,6 +13,9 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   place; an exercise component draws its own tasks. A component needs its logic module, a test and a text for readers
   without JavaScript.
 - Navigation, contents, glossary and an AI tutor prompt per page are generated.
+- A self-assessment at the end of every page, "Wie sicher bist du?" (Sicher, Teils, Noch üben), and an overview of
+  the levels on the start page and each chapter page. A page may say what it teaches as `canDo` ("Ich kann …");
+  `selfAssessment: false` in `app.yaml` turns it off.
 - German, plus English: a page tree per language.
 
 ## What it cannot do
@@ -22,7 +25,8 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - At most two section levels in a page.
 - An exercise component does not count as a page's required exercise: each page also needs a question or a generated
   exercise.
-- Stores nothing but the learner's choice of AI tutor.
+- Stores nothing but the learner's choice of AI tutor and the self-assessment ("Wie sicher bist du?"), only in the
+  browser.
 
 ## What the app supplies
 

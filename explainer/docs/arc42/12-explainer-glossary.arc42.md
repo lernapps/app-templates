@@ -14,6 +14,18 @@ definition: One element of an explainer page in its content YAML (a section, a t
 :::
 ```
 
+## Self-assessment
+
+The learner rates each page; the levels stay on the device.
+
+```arc42
+:::glossary-term
+id: term-self-assessment
+title: Self-assessment
+definition: The level a learner gives a page in "Wie sicher bist du?" (Sicher, Teils, Noch üben), shown in the overviews of the start and chapter pages and kept only in the browser.
+:::
+```
+
 ## Island
 
 Only a page with a component loads Vue.
