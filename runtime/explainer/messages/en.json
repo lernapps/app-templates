@@ -44,5 +44,10 @@
   "tutorCopied": "The prompt is copied. Paste it into the chat of your AI assistant.",
   "tutorCopiedShort": "The prompt is copied as well. If the chat shows only a short sentence, paste it there.",
   "tutorCopyFailed": "Copying did not work. Open the prompt as text and copy it from there.",
-  "exerciseLabel": "Exercise"
+  "exerciseLabel": "Exercise",
+  "video": "Video",
+  "videoChannel": "{channel} · YouTube",
+  "videoNote": "Playing it sends data to YouTube/Google, among them your IP address.",
+  "videoPlay": "Play video",
+  "videoAlways": "Always load videos directly"
 }

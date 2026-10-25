@@ -1,7 +1,7 @@
 // What an explainer gives a KI tutor, an assistant the learner brings and controls: static files only, because a chat
 // assistant that fetches a URL runs no JavaScript, and a static host serves the same file for any query string. Per
 // language tree, the build writes a tutor file for each page (<chapter>/<page>/tutor.md, plain Markdown): the page's
-// sections, and each exercise with its id, type, task, answer format, solution, hint, typical mistakes with the
+// sections, its videos as links to YouTube, and each exercise with its id, type, task, answer format, solution, hint, typical mistakes with the
 // messages the app shows, and for a seeded exercise (generated, exercise component) the tasks of the numbers 1 to
 // N (its distinct tasks, at most MAX_TASKS; tasks.ts), each with its solution and its link ./?<id>=<n>#<id>, which
 // opens exactly that task live. An exercise
@@ -30,6 +30,7 @@ import { questionFor } from "./generated/question.ts";
 import { type Generated } from "./generated/types.ts";
 import { allBlocks, contentPages } from "./routes.ts";
 import { MAX_TASKS } from "./tasks.ts";
+import { watchAddress } from "./video.ts";
 
 /** The name of a page's tutor file, in the page's folder. */
 export const TUTOR_FILE = "tutor.md";
@@ -60,6 +61,8 @@ interface Words {
   component: string;
   does: string;
   correct: string;
+  videos: string;
+  by: string;
   formats: Record<string, string>;
   rulesTitle: string;
   rules: string[];
@@ -96,6 +99,8 @@ const WORDS: Readonly<Record<string, Words>> = {
     component: "interaktive Übung",
     does: "Was zu tun ist",
     correct: "Was als richtig zählt",
+    videos: "Videos",
+    by: "von",
     formats: {
       "single-choice": "eine Antwort wählen",
       "multiple-choice": "alle richtigen Antworten wählen",
@@ -151,6 +156,8 @@ const WORDS: Readonly<Record<string, Words>> = {
     component: "interactive exercise",
     does: "What to do",
     correct: "What counts as right",
+    videos: "Videos",
+    by: "by",
     formats: {
       "single-choice": "choose one answer",
       "multiple-choice": "choose all right answers",
@@ -303,7 +310,10 @@ function componentPart(description: ComponentDescription, lang: string, words: W
   return lines;
 }
 
-/** The tutor file of `page` in `lang`: its sections, and every exercise with tasks, solutions and typical mistakes. */
+/**
+ * The tutor file of `page` in `lang`: its sections, its videos (a link to YouTube, the channel, the section), and every
+ * exercise with tasks, solutions and typical mistakes.
+ */
 export function tutorFile(site: Site, page: Page, lang: string, descriptions: Descriptions): string {
   const words = wordsIn(lang);
   const own = (text: Text) => line(inLanguage(text, lang));
@@ -311,10 +321,16 @@ export function tutorFile(site: Site, page: Page, lang: string, descriptions: De
   if (page.description !== undefined) lines.push(`> ${own(page.description)}`, "");
   lines.push(`${words.app}: ${own(site.app.title)}. ${words.page}: [${own(page.title)}](./)`, "", words.forTutor, "");
   const sections: string[] = [];
+  const videos: string[] = [];
   const exercises: string[] = [];
   const walk = (blocks: readonly Block[], anchor: string[], depth: number, section: string | undefined): void => {
     for (const block of blocks) {
-      if (block.type === "section") {
+      if (block.type === "video") {
+        const where = section === undefined ? "" : `, ${words.inSection} „${section}“ (./#${anchor.join("/")})`;
+        videos.push(
+          `- [${line(block.title)}](${watchAddress(block.youtube)}) ${words.by} ${line(block.channel)}${where}`,
+        );
+      } else if (block.type === "section") {
         const id = [...anchor, block.id].join("/");
         sections.push(`${"  ".repeat(depth)}- [${own(block.title)}](./#${id})`);
         walk(block.blocks, [...anchor, block.id], depth + 1, own(block.title));
@@ -336,6 +352,7 @@ export function tutorFile(site: Site, page: Page, lang: string, descriptions: De
   };
   walk(page.blocks, [], 0, undefined);
   if (sections.length > 0) lines.push(`## ${words.sections}`, "", ...sections, "");
+  if (videos.length > 0) lines.push(`## ${words.videos}`, "", ...videos, "");
   if (exercises.length > 0) lines.push(`## ${words.exercises}`, "", ...exercises);
   return `${lines.join("\n").trimEnd()}\n`;
 }

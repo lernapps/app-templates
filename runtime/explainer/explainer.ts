@@ -11,8 +11,9 @@
 // always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
 // JavaScript. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
 // which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
-// with it on a click (a page's button also gives it the tasks of the page's address); the learner's chosen way to the
-// tutor is the only thing kept on the device.
+// with it on a click (a page's button also gives it the tasks of the page's address). A video gets its button, which
+// loads its player, and the choice "Videos immer direkt laden" (video.ts). The learner's chosen way to the tutor and
+// that choice are the only things kept on the device.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { startQuestion } from "../shared/questions/engine.ts";
@@ -26,6 +27,7 @@ import { message } from "./messages.ts";
 import { pageTutorText } from "./tutorpage.ts";
 import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
 import { escape } from "../shared/html.ts";
+import { startVideos } from "./video.ts";
 
 /** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind: "generated" }>): void {
@@ -264,6 +266,7 @@ export function startExplainer(root: Document = document): void {
   const main = root.querySelector<HTMLElement>("main");
   if (main && fromTutor(root.location.href)) startBackToTutor(root, main);
   startTutor(root);
+  startVideos(root);
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;
     if (!element) continue;

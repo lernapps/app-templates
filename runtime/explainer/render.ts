@@ -6,7 +6,8 @@
 // the component's markup as the build rendered it (`hidden` until it hydrates), its nojs text, its props in the page's
 // language, and for an exercise its anchor, its task number with "Neue Aufgabe", the task of number 1 as its describe
 // states it with the solution folded, and the place of its feedback. Links to other sites are plain links with rel="noopener":
-// nothing is loaded from another server before a click. The end-to-end tests rely on the classes, ids and rel
+// nothing is loaded from another server before a click; a video is such a link, with its player only after a click
+// (video.ts). The end-to-end tests rely on the classes, ids and rel
 // attributes written here.
 import { questionMessagesIn } from "../shared/questions/render.ts";
 import { propsIn } from "./components/props.ts";
@@ -28,9 +29,10 @@ import { localeOf } from "../shared/languages.ts";
 import { plain, renderInline, renderMarkdown } from "../shared/text/markdown.ts";
 import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
-import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
+import { allBlocks, contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { llmsTutorPart, TUTOR_FILE } from "./tutor.ts";
 import { BASE, MAX_URL, plainAddress, PROMPT_FILE, providersOf, shortPrompt, tutorPrompt } from "./prompt.ts";
+import { renderVideo, watchAddress } from "./video.ts";
 
 function sizeless(site: Site, image: string): boolean {
   const file = site.images.get(image);
@@ -179,6 +181,8 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
     case "quote":
     case "code":
       return renderMaterial([block], context.material);
+    case "video":
+      return renderVideo(block, context.lang, context.site.storage ?? "explainer");
     case "vue-component":
       return renderComponent(context, block);
     default:
@@ -489,8 +493,8 @@ export function renderSite(
 }
 
 /**
- * llms.txt of a language tree: the app, its pages with their sections as deep links, from that tree's root, and the
- * part for a KI tutor (tutor.ts): the generic rules, the app's own, and the links to the pages' tutor files.
+ * llms.txt of a language tree: the app, its pages with their sections as deep links, from that tree's root, and their
+ * videos as links to YouTube, and the part for a KI tutor (tutor.ts): the generic rules, the app's own, and the links to the pages' tutor files.
  */
 export function llmsTxt(site: Site, lang: string): string {
   const t = (key: keyof Messages) => message(lang, key);
@@ -522,6 +526,12 @@ export function llmsTxt(site: Site, lang: string): string {
         }
       };
       sections(page.blocks, [], 1);
+      for (const block of allBlocks(page.blocks)) {
+        if (block.type !== "video") continue;
+        lines.push(
+          `  - ${t("video")}: [${own(block.title)}](${watchAddress(block.youtube)}), ${own(block.channel)} (YouTube)`,
+        );
+      }
     }
     lines.push("");
   }

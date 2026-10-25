@@ -44,5 +44,10 @@
   "tutorCopied": "Der Prompt ist kopiert. Füg ihn in den Chat deines KI-Assistenten ein.",
   "tutorCopiedShort": "Der Prompt ist auch kopiert. Steht im Chat nur ein kurzer Satz, füg ihn dort ein.",
   "tutorCopyFailed": "Kopieren ging nicht. Öffne den Prompt als Text und kopiere ihn von dort.",
-  "exerciseLabel": "Übung"
+  "exerciseLabel": "Übung",
+  "video": "Video",
+  "videoChannel": "{channel} · YouTube",
+  "videoNote": "Beim Abspielen gehen Daten an YouTube/Google, darunter deine IP-Adresse.",
+  "videoPlay": "Video abspielen",
+  "videoAlways": "Videos immer direkt laden"
 }

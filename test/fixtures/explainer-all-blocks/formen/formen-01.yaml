@@ -120,6 +120,10 @@ blocks:
             licence: CC0-1.0
           - type: timeline
             data: ereignisse
+          - type: video
+            youtube: D_D4gvqNDdE
+            title: 1.binomische Formel – mit grafischer Erklärung
+            channel: Lehrerschmidt
   - type: section
     id: uebung
     title: { de: "Übung", en: "Exercise" }
