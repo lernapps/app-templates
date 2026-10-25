@@ -21,7 +21,12 @@
 // answer, with the reason of a wrong one, in view with the focus; at its address ?<id>=<n> it shows "Aufgabe
 // Nr. n" and gets the seed of task number n from its table, and "Neue Aufgabe" moves to the next number in the address and on the page.
 // Without JavaScript, each component's nojs text is visible and not empty, an exercise component's with its task of
-// number 1 and the solution folded, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
+// number 1 and the solution folded, and its island hidden. The self-assessment (unless app.yaml turns it off): without
+// JavaScript every page shows "Wie sicher bist du?" with three options, each named by its visible text, and the
+// sentence that nothing is saved, as do the overviews of the start and chapter pages; with JavaScript a level picked
+// on a page stays after a reload and shows in the overviews, and with localStorage blocked the page keeps working and
+// says that it saves nothing. No page stores anything on the device before the learner picks a level or a way to the
+// tutor. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type Page } from "playwright/test";
 import {
@@ -41,7 +46,8 @@ import { generate } from "./generated/values.ts";
 import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
 import { nextTaskNumber, taskNumber } from "./tasks.ts";
-import { outline, type ComponentOutline, type ExerciseOutline, type PageOutline } from "./outline.ts";
+import { outline, type ComponentOutline, type ExerciseOutline, type Outline, type PageOutline } from "./outline.ts";
+import { LEVEL_MESSAGE, LEVELS } from "./selfassessment.ts";
 
 /** The task number of the deep link the tests open a generated exercise with. */
 const SEED = 7;
@@ -316,6 +322,101 @@ async function checkGenerated(
   await expectFeedbackInView(page, nextQuestion);
 }
 
+/**
+ * Without JavaScript: a content page asks "Wie sicher bist du?" with three options, each named by its visible text, and
+ * says that nothing is saved; the start and chapter pages show the overview's heading and that sentence, the table
+ * hidden; an app with selfAssessment: false shows none of it.
+ */
+async function expectSelfAssessment(page: Page, app: Outline, item: PageOutline): Promise<void> {
+  const self = page.locator("fieldset.explainer-self, .explainer-self-overview");
+  if (!app.selfAssessment || item.kind === "glossary") {
+    await expect(self, `${item.url}: no self-assessment`).toHaveCount(0);
+    return;
+  }
+  await expect(self, `${item.url}: the self-assessment`).toHaveCount(1);
+  await expect(self).toBeVisible();
+  await expect(self.locator(".explainer-self-nojs")).toHaveText(messageOf(item.lang, "selfNoJs"));
+  if (item.kind !== "page") {
+    await expect(self.locator("h2")).toHaveText(messageOf(item.lang, "selfOverview"));
+    await expect(self.locator(".explainer-self-table").first()).toBeHidden();
+    return;
+  }
+  const radios = self.getByRole("radio");
+  await expect(radios).toHaveCount(LEVELS.length);
+  for (const [index, level] of LEVELS.entries()) {
+    // its accessible name is its visible text, so that axe finds no label-content-name-mismatch
+    const text = messageOf(item.lang, LEVEL_MESSAGE[level]);
+    await expect(radios.nth(index)).toHaveAccessibleName(text);
+    await expect(self.locator("label").nth(index)).toHaveText(text);
+  }
+}
+
+/** The self-assessment's tests: a level that stays and shows in the overviews, and a page without localStorage. */
+function selfAssessmentTests(app: Outline): void {
+  const item = app.pages["de"]?.[0];
+  if (!app.selfAssessment || item === undefined) return;
+  const overviews = (app.others["de"] ?? []).filter(
+    (other) => other.kind === "start" || (other.kind === "chapter" && item.url.startsWith(other.url)),
+  );
+  const radio = (page: Page, level: (typeof LEVELS)[number]) =>
+    page.locator("fieldset.explainer-self").getByRole("radio", { name: messageOf("de", LEVEL_MESSAGE[level]) });
+
+  test(`${item.url}: a level picked in "Wie sicher bist du?" stays after a reload and shows in the overview`, async ({
+    page,
+    baseURL,
+  }) => {
+    await page.goto(`./${item.url}`);
+    const self = page.locator("fieldset.explainer-self");
+    await expect(self.locator(".explainer-self-nojs")).toBeHidden();
+    await expect(self.getByRole("radio", { checked: true }), "no level before a choice").toHaveCount(0);
+    await radio(page, "teils").check();
+    await expect(self.locator(".explainer-self-status")).toHaveText(messageOf("de", "selfSaved"));
+    await page.reload();
+    await expect(radio(page, "teils"), "the level after a reload").toBeChecked();
+    for (const other of overviews) {
+      await page.goto(`./${other.url}`);
+      const overview = page.locator(".explainer-self-overview");
+      await expect(overview.locator(".explainer-self-nojs")).toBeHidden();
+      const row = overview.locator(`tr[data-page="${item.key ?? ""}"]`);
+      await expect(row, `${other.url || "./"}: the page's level in the overview`).toBeVisible();
+      await expect(row.locator(".explainer-self-level")).toHaveText(messageOf("de", "selfTeils"));
+      const href = await row.getByRole("link").evaluate((link) => (link as HTMLAnchorElement).href);
+      expect(href, "the row links to the page").toBe(new URL(`./${item.url}`, baseURL).href);
+      // every other page is not rated yet
+      const others = overview.locator(`tr[data-page]:not([data-page="${item.key ?? ""}"]) .explainer-self-level`);
+      for (const text of await others.allTextContents()) expect(text).toBe(messageOf("de", "selfNone"));
+    }
+  });
+
+  test(`${item.url}: with localStorage blocked, "Wie sicher bist du?" works and says that it saves nothing`, async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.addInitScript(() => {
+      Object.defineProperty(window, "localStorage", {
+        configurable: true,
+        get() {
+          throw new DOMException("The storage is blocked.", "SecurityError");
+        },
+      });
+    });
+    await page.goto(`./${item.url}`);
+    const self = page.locator("fieldset.explainer-self");
+    await expect(self.locator(".explainer-self-nojs")).toBeHidden();
+    await radio(page, "sicher").check();
+    await expect(radio(page, "sicher")).toBeChecked();
+    await expect(self.locator(".explainer-self-status")).toHaveText(messageOf("de", "selfNotSaved"));
+    const start = overviews.find((other) => other.kind === "start");
+    if (start !== undefined) {
+      await page.goto(`./${start.url}`);
+      const row = page.locator(`.explainer-self-overview tr[data-page="${item.key ?? ""}"]`);
+      await expect(row.locator(".explainer-self-level")).toHaveText(messageOf("de", "selfNone"));
+    }
+    expect(errors, "no error on the page").toEqual([]);
+  });
+}
+
 /** Whether the page at `url` (absolute) has an element with the id `id`, fetched once per page. */
 const known = new Map<string, Promise<string>>();
 async function hasAnchor(page: Page, url: string, id: string): Promise<boolean> {
@@ -402,6 +503,7 @@ export function explainerTests(root = "."): void {
             await expectLanguages(page, item, app.languages);
             await expectExercises(page, item);
             await expectNojs(page, item);
+            await expectSelfAssessment(page, app, item);
           });
         }
 
@@ -411,6 +513,7 @@ export function explainerTests(root = "."): void {
             await expect(page.locator("main h1")).toHaveText(item.title);
             await expectAnchors(page);
             await expectLanguages(page, item, app.languages);
+            await expectSelfAssessment(page, app, item);
             if (item.kind === "start") {
               // the tutor section without JavaScript: no button with a select, plain links to the assistants and to tutor.md
               const tutor = page.locator(".explainer-tutor");
@@ -559,7 +662,9 @@ export function explainerTests(root = "."): void {
       });
     }
 
-    test("nothing is stored on the device", async ({ page, context }) => {
+    selfAssessmentTests(app);
+
+    test("nothing is stored on the device before a choice", async ({ page, context }) => {
       const urls = app.languages.flatMap((lang) => [...(app.others[lang] ?? []), ...(app.pages[lang] ?? [])]);
       for (const item of urls) {
         await page.goto(`./${item.url}`);

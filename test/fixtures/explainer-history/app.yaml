@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
 # A history app with one chapter, which the navigation hides and the addresses keep, with an ordering exercise, the
 # generated events exercise from a data file, and a component: a figure whose levels the learner labels
-# (components/AssignLabels.vue, with its logic module and its test).
+# (components/AssignLabels.vue, with its logic module and its test); without the self-assessment, which it turns off.
 title:
   de: Die Französische Revolution
   en: The French Revolution
@@ -19,3 +19,4 @@ sources:
       de: Erklärung der Menschen- und Bürgerrechte (Wikipedia)
       en: Declaration of the Rights of Man and of the Citizen (Wikipedia)
     url: https://de.wikipedia.org/wiki/Erklärung_der_Menschen-_und_Bürgerrechte
+selfAssessment: false

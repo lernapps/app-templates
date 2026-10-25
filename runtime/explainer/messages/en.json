@@ -44,5 +44,18 @@
   "tutorCopied": "The prompt is copied. Paste it into the chat of your AI assistant.",
   "tutorCopiedShort": "The prompt is copied as well. If the chat shows only a short sentence, paste it there.",
   "tutorCopyFailed": "Copying did not work. Open the prompt as text and copy it from there.",
-  "exerciseLabel": "Exercise"
+  "exerciseLabel": "Exercise",
+  "selfQuestion": "How sure are you?",
+  "selfAbout": "How sure are you about “{title}”?",
+  "selfSicher": "Sure",
+  "selfTeils": "Partly",
+  "selfUeben": "Need practice",
+  "selfNone": "Not rated yet",
+  "selfNoJs": "Without JavaScript your rating is not saved.",
+  "selfSaved": "Saved, only in this browser.",
+  "selfNotSaved": "Your browser does not let the app save anything: your rating lasts only while this page is open.",
+  "selfOverview": "Your rating",
+  "selfOverviewIntro": "At the end of each page you rate yourself: sure, partly or need practice. It stays in this browser; the app sends it nowhere.",
+  "selfPage": "Page",
+  "selfLevel": "Level"
 }

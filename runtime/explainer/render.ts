@@ -16,7 +16,9 @@ import {
   timelineEvents,
   type Block,
   type BlockOf,
+  type Chapter,
   type Event,
+  type Page,
   type Site,
   type Text,
   type Descriptions,
@@ -31,6 +33,7 @@ import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { llmsTutorPart, TUTOR_FILE } from "./tutor.ts";
 import { BASE, MAX_URL, plainAddress, PROMPT_FILE, providersOf, shortPrompt, tutorPrompt } from "./prompt.ts";
+import { LEVEL_MESSAGE, LEVELS, pageKey, selfAssessed } from "./selfassessment.ts";
 
 function sizeless(site: Site, image: string): boolean {
   const file = site.images.get(image);
@@ -305,6 +308,77 @@ function pageList(context: Context, pages: readonly NonNullable<Route["page"]>[]
     .join("")}</ol>`;
 }
 
+/**
+ * "Wie sicher bist du?" at the end of a page: a radio group of the three levels, each named by its visible text (no
+ * aria-label, so that the name starts with what the learner sees), the page's own sentence "Ich kann …" or its title
+ * in the legend, a status line, and the sentence that nothing is saved without JavaScript, which the client module
+ * hides. Its key and the app's storage name are the client module's.
+ */
+function selfAssessment(context: Context, page: Page): string {
+  const { site } = context;
+  if (!selfAssessed(site)) return "";
+  const legend =
+    page.canDo === undefined
+      ? plain(context.t("selfAbout", { title: inLanguage(page.title, context.lang) }))
+      : `${plain(context.t("selfQuestion"))} <span class="explainer-self-statement">${context.text(page.canDo)}</span>`;
+  const options = LEVELS.map(
+    (level) =>
+      `<label><input type="radio" name="explainer-self" value="${level}"> ${plain(context.t(LEVEL_MESSAGE[level]))}</label>`,
+  ).join("\n");
+  return [
+    `<fieldset class="explainer-self" data-page="${pageKey(page.chapter, page.id)}" data-storage="${plain(site.storage ?? "explainer")}">`,
+    `<legend>${legend}</legend>`,
+    `<p class="explainer-self-options">${options}</p>`,
+    `<p class="explainer-self-nojs">${plain(context.t("selfNoJs"))}</p>`,
+    `<p class="explainer-self-status" role="status" aria-live="polite"></p>`,
+    `</fieldset>`,
+  ].join("\n");
+}
+
+/**
+ * The overview of the self-assessment on the start page and a chapter page: a table per chapter of its pages, each
+ * with its link and its level, which the client module fills from the device and shows; without JavaScript the
+ * heading, what the self-assessment is, and the sentence that nothing is saved.
+ */
+function selfOverview(context: Context, chapters: readonly Chapter[]): string {
+  const { site } = context;
+  if (!selfAssessed(site)) return "";
+  const caption = !hiddenChapter(site) && chapters.length > 1;
+  const tables = chapters.map((chapter) => {
+    const rows = chapter.pages.map(
+      (page) =>
+        `<tr data-page="${pageKey(page.chapter, page.id)}"><th scope="row"><a href="${context.to(`${page.chapter}/${page.id}/`)}">${context.text(page.title)}</a></th><td class="explainer-self-level">${plain(context.t("selfNone"))}</td></tr>`,
+    );
+    return [
+      `<table class="explainer-self-table" hidden>`,
+      caption ? `<caption>${context.text(chapter.title)}</caption>` : "",
+      `<thead><tr><th scope="col">${plain(context.t("selfPage"))}</th><th scope="col">${plain(context.t("selfLevel"))}</th></tr></thead>`,
+      `<tbody>${rows.join("")}</tbody>`,
+      `</table>`,
+    ]
+      .filter((part) => part !== "")
+      .join("");
+  });
+  return [
+    `<section class="explainer-self-overview" aria-labelledby="einschaetzung" data-storage="${plain(site.storage ?? "explainer")}">`,
+    `<h2 id="einschaetzung">${plain(context.t("selfOverview"))}</h2>`,
+    `<p>${plain(context.t("selfOverviewIntro"))}</p>`,
+    `<p class="explainer-self-nojs">${plain(context.t("selfNoJs"))}</p>`,
+    ...tables,
+    `</section>`,
+  ].join("\n");
+}
+
+/** The blocks of a page, with the self-assessment at the end of its last section, or of the page when it ends otherwise. */
+function pageBlocks(context: Context, page: Page): string {
+  const html = renderBlocks(context, page.blocks, 1);
+  const self = selfAssessment(context, page);
+  if (self === "") return html;
+  return page.blocks.at(-1)?.type === "section"
+    ? html.replace(/<\/section>$/, `${self}\n</section>`)
+    : `${html}\n${self}`;
+}
+
 function main(context: Context): string {
   const { route, site } = context;
   const title = `<h1>${plain(route.title)}</h1>`;
@@ -335,6 +409,7 @@ function main(context: Context): string {
         title,
         `<div class="explainer-intro">${context.markdown(site.app.intro)}</div>`,
         `<nav class="explainer-contents" aria-labelledby="inhalt"><h2 id="inhalt">${plain(context.t("contents"))}</h2>${contents}</nav>`,
+        selfOverview(context, site.chapters),
         glossary,
         tutorSection(context),
         sources,
@@ -349,7 +424,10 @@ function main(context: Context): string {
         title,
         summary,
         `<nav class="explainer-contents" aria-label="${plain(context.t("pages"))}">${pageList(context, chapter.pages)}</nav>`,
-      ].join("\n");
+        selfOverview(context, [chapter]),
+      ]
+        .filter((part) => part !== "")
+        .join("\n");
     }
     case "glossary": {
       const collator = new Intl.Collator(context.locale);
@@ -369,7 +447,7 @@ function main(context: Context): string {
     case "page": {
       const page = route.page;
       if (page === undefined) return title;
-      return [title, pageContents(context, page.blocks), renderBlocks(context, page.blocks, 1)].join("\n");
+      return [title, pageContents(context, page.blocks), pageBlocks(context, page)].join("\n");
     }
   }
 }

@@ -2,7 +2,7 @@
 // tests: per language, the content pages in order with their headings by nesting (page h1, section h2, subsection h3,
 // a box one level below the heading it is under), their sections with their anchors, the number of formulas and the
 // name of every figure, its exercises with what each must accept, and its components with their nojs text; and the
-// other pages (start, chapters, glossary) with their titles.
+// other pages (start, chapters, glossary) with their titles; and whether the app has the self-assessment.
 import { questionIn, type Question } from "../shared/questions/question.ts";
 import { answerText } from "../shared/questions/render.ts";
 import { inLanguage, timelineEvents, type Block, type Site, type Text } from "./content.ts";
@@ -13,6 +13,7 @@ import { type Data, type Generated, type Templates } from "./generated/types.ts"
 import { loadSite } from "./load.ts";
 import { inspect, renderMarkdown } from "../shared/text/markdown.ts";
 import { routes } from "./routes.ts";
+import { pageKey, selfAssessed } from "./selfassessment.ts";
 
 export interface PageOutline {
   /** What page it is: the start page, a chapter, a content page, the glossary. */
@@ -21,6 +22,8 @@ export interface PageOutline {
   url: string;
   lang: string;
   title: string;
+  /** The key of a content page in the self-assessment, <chapter>/<page>. */
+  key?: string;
   headings: { level: number; text: string }[];
   sections: { id: string; title: string }[];
   formulas: number;
@@ -72,6 +75,8 @@ export interface Outline {
   pages: Readonly<Record<string, PageOutline[]>>;
   /** The start page, the chapter pages and the glossary of each language. */
   others: Readonly<Record<string, PageOutline[]>>;
+  /** Whether the pages ask "Wie sicher bist du?" and the start and chapter pages show the levels. */
+  selfAssessment: boolean;
 }
 
 /** The headings, sections, formulas and figures of `blocks` in `lang`, under a heading of level `level`. */
@@ -194,6 +199,7 @@ export function outline(root = "."): Outline {
       url: route.path,
       lang: route.lang,
       title: route.title,
+      ...(route.page === undefined ? {} : { key: pageKey(route.page.chapter, route.page.id) }),
       headings: [{ level: 1, text: route.title }],
       sections: [],
       formulas: 0,
@@ -207,5 +213,5 @@ export function outline(root = "."): Outline {
       (pages[route.lang] ??= []).push(item);
     }
   }
-  return { languages: site.app.languages, pages, others };
+  return { languages: site.app.languages, pages, others, selfAssessment: selfAssessed(site) };
 }

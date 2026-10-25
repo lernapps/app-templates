@@ -12,7 +12,8 @@
 // JavaScript. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
 // which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
 // with it on a click (a page's button also gives it the tasks of the page's address); the learner's chosen way to the
-// tutor is the only thing kept on the device.
+// tutor and the learner's self-assessment, the level of each page from "Wie sicher bist du?", are all that is kept on
+// the device.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { startQuestion } from "../shared/questions/engine.ts";
@@ -26,6 +27,7 @@ import { message } from "./messages.ts";
 import { pageTutorText } from "./tutorpage.ts";
 import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
 import { escape } from "../shared/html.ts";
+import { isLevel, isRecord, LEVEL_MESSAGE, levelsFrom, SELF_KEY, withLevel, type Level } from "./selfassessment.ts";
 
 /** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind: "generated" }>): void {
@@ -258,12 +260,57 @@ function startTutor(root: Document): void {
   });
 }
 
+/**
+ * The self-assessment (selfassessment.ts): on a page, "Wie sicher bist du?" shows the page's level kept on the device
+ * and keeps the one the learner picks, and its status line says whether it is saved; where the browser does not let
+ * the app save, the level holds while the page is open. On the start page and a chapter page, the overview shows each
+ * page's level. Without the levels on the device, every page is not rated yet. The sentence for readers without
+ * JavaScript goes.
+ */
+function startSelfAssessment(root: Document): void {
+  const lang = root.documentElement.lang;
+  const question = root.querySelector<HTMLFieldSetElement>("fieldset.explainer-self");
+  const overviews = root.querySelectorAll<HTMLElement>(".explainer-self-overview");
+  const name = question?.dataset["storage"] ?? overviews[0]?.dataset["storage"];
+  if (name === undefined) return;
+  const storage = createStorage(name);
+  let levels = levelsFrom(storage.load(SELF_KEY, isRecord));
+  for (const nojs of root.querySelectorAll<HTMLElement>(".explainer-self-nojs")) nojs.hidden = true;
+
+  const key = question?.dataset["page"];
+  if (question && key !== undefined) {
+    const status = question.querySelector<HTMLElement>(".explainer-self-status");
+    for (const input of question.querySelectorAll<HTMLInputElement>('input[type="radio"]')) {
+      input.checked = input.value === levels[key];
+      input.addEventListener("change", () => {
+        if (!input.checked || !isLevel(input.value)) return;
+        levels = withLevel(levels, key, input.value);
+        const saved = storage.save(SELF_KEY, levels);
+        if (status) status.textContent = message(lang, saved ? "selfSaved" : "selfNotSaved");
+      });
+    }
+  }
+
+  for (const overview of overviews) {
+    for (const row of overview.querySelectorAll<HTMLTableRowElement>("tr[data-page]")) {
+      const level: Level | undefined = levels[row.dataset["page"] ?? ""];
+      const cell = row.querySelector<HTMLElement>(".explainer-self-level");
+      if (!cell) continue;
+      cell.textContent = message(lang, level === undefined ? "selfNone" : LEVEL_MESSAGE[level]);
+      if (level === undefined) delete cell.dataset["level"];
+      else cell.dataset["level"] = level;
+    }
+    for (const table of overview.querySelectorAll<HTMLElement>(".explainer-self-table")) table.hidden = false;
+  }
+}
+
 /** Starts the explainer on the page. */
 export function startExplainer(root: Document = document): void {
   root.documentElement.classList.add("explainer-js");
   const main = root.querySelector<HTMLElement>("main");
   if (main && fromTutor(root.location.href)) startBackToTutor(root, main);
   startTutor(root);
+  startSelfAssessment(root);
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;
     if (!element) continue;

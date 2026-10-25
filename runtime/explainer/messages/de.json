@@ -44,5 +44,18 @@
   "tutorCopied": "Der Prompt ist kopiert. Füg ihn in den Chat deines KI-Assistenten ein.",
   "tutorCopiedShort": "Der Prompt ist auch kopiert. Steht im Chat nur ein kurzer Satz, füg ihn dort ein.",
   "tutorCopyFailed": "Kopieren ging nicht. Öffne den Prompt als Text und kopiere ihn von dort.",
-  "exerciseLabel": "Übung"
+  "exerciseLabel": "Übung",
+  "selfQuestion": "Wie sicher bist du?",
+  "selfAbout": "Wie sicher bist du bei „{title}“?",
+  "selfSicher": "Sicher",
+  "selfTeils": "Teils",
+  "selfUeben": "Noch üben",
+  "selfNone": "Noch nicht eingeschätzt",
+  "selfNoJs": "Ohne JavaScript wird deine Einschätzung nicht gespeichert.",
+  "selfSaved": "Gespeichert, nur in diesem Browser.",
+  "selfNotSaved": "Dein Browser lässt nichts speichern: Deine Einschätzung gilt nur, solange diese Seite offen ist.",
+  "selfOverview": "Deine Einschätzung",
+  "selfOverviewIntro": "Am Ende jeder Seite schätzt du dich ein: sicher, teils oder noch üben. Das bleibt in diesem Browser; die App schickt es nirgendwohin.",
+  "selfPage": "Seite",
+  "selfLevel": "Stufe"
 }

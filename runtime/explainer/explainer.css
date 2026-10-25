@@ -310,6 +310,77 @@
   outline-offset: 2px;
 }
 
+/* "Wie sicher bist du?" at the end of a page: three options side by side, wrapping at 360 px, each a large target */
+.explainer-self {
+  margin: 1.5rem 0 0;
+  padding: 0.5rem 1rem 0.75rem;
+  border: 2px solid var(--page-border);
+  border-radius: 0.75rem;
+}
+
+.explainer-self legend {
+  padding: 0 0.25rem;
+  font-weight: 700;
+}
+
+.explainer-self-statement {
+  font-weight: 400;
+}
+
+.explainer-self-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.explainer-self-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.explainer-self-options input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--page-accent);
+}
+
+.explainer-self-status {
+  margin-bottom: 0;
+}
+
+/* the overview on the start page and a chapter page: a page and its level per row */
+.explainer-self-table {
+  width: 100%;
+  margin: 0.75rem 0 1.25rem;
+  border-collapse: collapse;
+}
+
+.explainer-self-table caption {
+  font-weight: 700;
+  text-align: left;
+}
+
+.explainer-self-table th,
+.explainer-self-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--page-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.explainer-self-table tbody th {
+  font-weight: 400;
+}
+
+.explainer-self-level[data-level="sicher"] {
+  color: var(--page-right);
+  font-weight: 700;
+}
+
 /* "Mit einem KI-Tutor lernen": one button with a select beside it, a plain link per assistant without JavaScript */
 .explainer-tutor-actions {
   display: flex;

@@ -238,6 +238,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       const page = yaml.value as Omit<Page, "id" | "chapter" | "file">;
       texts.check(yaml, ["title"], "plain");
       texts.check(yaml, ["description"], "plain");
+      texts.check(yaml, ["canDo"], "plain");
       const pageAnchors = new Set<string>();
       const exercises = new Map<string, Path>();
       checkBlocks(

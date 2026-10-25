@@ -33,6 +33,8 @@ export interface App {
     /** The assistants the start page offers, {prompt} in the address where the prompt goes; Claude when none. */
     providers?: readonly { name: string; url: string }[];
   };
+  /** Whether every page asks "Wie sicher bist du?" and the start and chapter pages show the levels; true when unset. */
+  selfAssessment?: boolean;
 }
 
 export interface Event {
@@ -69,6 +71,8 @@ export interface Page {
   file: string;
   title: Text;
   description?: Text;
+  /** What the learner can once the page is mastered, "Ich kann …", for the self-assessment; else its title. */
+  canDo?: Text;
   blocks: readonly Block[];
 }
 
