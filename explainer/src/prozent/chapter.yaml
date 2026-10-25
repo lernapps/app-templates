@@ -1,4 +1,0 @@
-# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
-title: Prozent
-summary: Mit Prozenten vergleichst du Anteile, egal wie groß das Ganze ist.
-pages: [prozentwert, prozentsatz, grundwert]

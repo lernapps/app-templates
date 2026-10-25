@@ -1,6 +1,0 @@
-# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
-title: { de: "Zahlen", en: "Numbers" }
-summary: { de: "Zwei Seiten über Zahlen.", en: "Two pages about numbers." }
-pages:
-  - zahlen-01
-  - zahlen-02
