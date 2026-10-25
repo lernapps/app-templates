@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:lernapps:schema:quiz.v1",
+  "title": "Question bank of a lernapps quiz",
+  "description": "The questions of a quiz built from the archetype quiz (runtime @lernapps/app-templates), in src/quiz.json: a quiz about things to know. Each option carries short background knowledge, each question links to further reading. The build validates the bank against this schema and fails with a message naming each problem. Every text is for learners: German, plain language, in your own words. A quiz in several languages declares them in languages, German first, and writes every text for learners as a map of texts by language ({ \"de\": …, \"en\": … }) with each of them, and the address of a link as one for every language or as a map by language; the build then writes a page per language.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "intro", "questions"],
+  "properties": {
+    "$schema": {
+      "description": "This schema, for the editor.",
+      "type": "string"
+    },
+    "languages": {
+      "description": "The languages of the quiz, German first: [\"de\", \"en\"]. The build writes a page per language: German at the root, every other below /<language>/, with a language switch. Each language needs every text for learners as a map of texts by language; without languages, the quiz is German only and its texts are strings.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z]{2}$"
+      },
+      "default": ["de"]
+    },
+    "title": {
+      "description": "The title of the quiz: the page's title and its h1 heading.",
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
+    },
+    "intro": {
+      "description": "One or two sentences under the heading: what the quiz is about and whom it is for.",
+      "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
+    },
+    "rememberLastResult": {
+      "description": "Keep the last result on the learner's device (localStorage, through the preset's storage) and show it at the end. Off by default: then the quiz stores nothing.",
+      "type": "boolean",
+      "default": false
+    },
+    "questions": {
+      "description": "The questions, in the order of the page without JavaScript. With JavaScript, the order is shuffled by the seed in the address (?seed=<number>).",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "urn:lernapps:schema:question.v1#/$defs/question"
+      }
+    },
+    "sources": {
+      "description": "Where the facts of the quiz come from, listed at the end of the page.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": {
+          "description": "The source, e.g. the article or book.",
+          "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
+        },
+        "url": {
+          "description": "Its address, if it is on the web; https only.",
+          "type": "string",
+          "pattern": "^https://[^\\s]+$"
+        }
+      }
+    }
+  }
+}

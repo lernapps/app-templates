@@ -1,0 +1,94 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title: Prozentsatz
+description: "Den Prozentsatz berechnen: p = W : G · 100, mit einem Beispiel und dem Prozentstreifen."
+blocks:
+  - type: section
+    id: warum
+    title: Warum
+    blocks:
+      - type: text
+        text: |
+          „18 von 24 Schülern haben ein Haustier“: Ist das viel? Erst der Prozentsatz macht solche Angaben
+          vergleichbar. 75 % sagen sofort, wie groß der Anteil ist, egal ob die Klasse 24 oder 30 Schüler hat.
+  - type: section
+    id: regel
+    title: Regel
+    blocks:
+      - type: formula
+        formula: 'p = \frac{W}{G} \cdot 100'
+      - type: definition
+        term: Prozentsatz
+        explanation: |
+          Der Prozentsatz $p\,\%$ ist der Anteil des Prozentwerts $W$ (der Teil) am Grundwert $G$ (das Ganze), in
+          Hundertsteln geschrieben.
+      - type: note
+        title: Merkhilfe
+        blocks:
+          - type: text
+            text: Teil durch Ganzes, also immer durch das Ganze teilen, nie umgekehrt. Dann mal 100.
+  - type: section
+    id: beispiel
+    title: Beispiel
+    blocks:
+      - type: example
+        title: Haustiere in der Klasse
+        blocks:
+          - type: text
+            text: In einer Klasse sind 24 Schüler. 18 davon haben ein Haustier. Wie viel Prozent der Klasse sind das?
+          - type: table
+            caption: Der Prozentsatz der Klasse
+            rowHeaders: true
+            rows:
+              - [Grundwert $G$, 24 Schüler (die ganze Klasse)]
+              - [Prozentwert $W$, 18 Schüler (der Teil)]
+              - [Rechnung, '$p = 18 : 24 \cdot 100 = 0{,}75 \cdot 100 = 75$']
+              - [Prozentsatz, "**75 %**"]
+          - type: figure
+            draw: { kind: bar, part: 18, whole: 24 }
+            alt: Ein Streifen für 24 Schüler, drei Viertel davon sind gefärbt, 75 %.
+            caption: Der ganze Streifen ist der Grundwert, 24 Schüler sind 100 %. Der gefärbte Teil ist der Prozentwert, 18 Schüler sind 75 %.
+          - type: text
+            text: "Probe: 75 % von 24 sind 24 · 0,75 = 18. Passt."
+  - type: section
+    id: uebung
+    title: Übung
+    blocks:
+      - type: single-choice
+        id: welche-rechnung
+        text: In einer Klasse mit 25 Schülern haben 10 ein Haustier. Mit welcher Rechnung bekommst du den Prozentsatz?
+        explanation: "Der Prozentsatz ist Teil durch Ganzes, mal 100. Der Teil sind die 10 Schüler mit Haustier, das Ganze die 25 Schüler der Klasse, also 10 : 25 · 100 = 40 %."
+        links:
+          - title: Prozentrechnung mittels Formeln (Serlo)
+            url: https://de.serlo.org/mathe/2193/prozentrechnung-mittels-formeln
+        options:
+          - text: "10 : 25 · 100"
+            correct: true
+            info: Teil durch Ganzes, dann mal 100. So kommt der Anteil in Hundertsteln heraus.
+          - text: "25 : 10 · 100"
+            correct: false
+            info: Hier wird das Ganze durch den Teil geteilt. Das ergibt 250 %, mehr als die ganze Klasse.
+          - text: "10 · 25 : 100"
+            correct: false
+            info: So rechnest du einen Prozentwert aus, nicht einen Prozentsatz. Es kommen 2,5 heraus.
+      - type: generated
+        id: prozentsatz-ueben
+        given:
+          G: { int: [16, 32] }
+          W: { int: [1, 31] }
+        where: ["W < G", "decimals(W * 100 / G) == 0"]
+        task:
+          text: "In einer Klasse sind {{G}} Schüler. {{W}} davon haben ein Haustier. Wie viel Prozent der Klasse sind das?"
+        answer: { value: "W * 100 / G", compare: { number: { format: percent, decimals: 0 } } }
+        mistakes:
+          - {
+              value: "W / G",
+              message: "Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.",
+            }
+          - {
+              value: "G * 100 / W",
+              message: "Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.",
+            }
+        hint: "Teile den Teil ({{W}} Schüler) durch das Ganze ({{G}} Schüler) und nimm das Ergebnis mal 100."
+        steps:
+          - '$p = \frac{W}{G} \cdot 100$'
+          - '$p = \frac{{{W}}}{{{G}}} \cdot 100 = {{answer}}$, also {{answer}} %.'

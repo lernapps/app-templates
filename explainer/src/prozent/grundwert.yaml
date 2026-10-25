@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title: Grundwert
+description: "Den Grundwert berechnen: G = W · 100 : p, mit einem Beispiel und dem Hunderterfeld."
+blocks:
+  - type: section
+    id: warum
+    title: Warum
+    blocks:
+      - type: text
+        text: |
+          „Du sparst 30 €, das sind 12 % Rabatt“: Wie teuer war die Sache vorher? Hier ist das Ganze unbekannt, und
+          genau das verwirrt viele. Wer den Grundwert sicher zurückrechnen kann, löst auch die kniffligen Aufgaben, bei
+          denen nur der Teil bekannt ist.
+  - type: section
+    id: regel
+    title: Regel
+    blocks:
+      - type: formula
+        formula: 'G = \frac{W \cdot 100}{p}'
+      - type: definition
+        term: Grundwert
+        explanation: Der Grundwert $G$ ist das Ganze, also 100 %.
+      - type: text
+        text: |
+          Du kennst den **Prozentwert** $W$ (den Teil) und den **Prozentsatz** $p\,\%$. Über 1 % kommst du zum
+          Ganzen: $W$ geteilt durch $p$ ist 1 %, mal 100 ist das Ganze.
+      - type: note
+        title: Achtung
+        blocks:
+          - type: text
+            text: |
+              Der Grundwert ist bei $p$ unter 100 % immer größer als der Prozentwert. Kommt etwas Kleineres heraus,
+              hast du die Formel für den Prozentwert benutzt.
+  - type: section
+    id: beispiel
+    title: Beispiel
+    blocks:
+      - type: example
+        title: Der Preis eines Rollers
+        blocks:
+          - type: text
+            text: Beim Kauf eines Rollers sparst du 30 €. Das sind 12 % Rabatt. Wie viel hat der Roller vorher gekostet?
+          - type: table
+            caption: Der Grundwert beim Roller
+            rowHeaders: true
+            rows:
+              - [Prozentwert $W$, "30 € (der Teil, der bekannt ist)"]
+              - [Prozentsatz $p$, 12 %]
+              - [Rechnung, '$G = 30 \cdot 100 : 12 = 250$']
+              - [Grundwert $G$, "**250 €** war der alte Preis"]
+          - type: figure
+            draw: { kind: hundred-grid, filled: 12 }
+            alt: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt.
+            caption: Die 12 gefärbten Kästchen sind der bekannte Teil, 30 €. Alle 100 Kästchen stehen für den Grundwert, 250 €.
+          - type: text
+            text: "Über 1 %: 30 € : 12 = 2,50 € sind 1 %. Dann 2,50 € · 100 = 250 €."
+  - type: section
+    id: uebung
+    title: Übung
+    blocks:
+      - type: generated
+        id: grundwert-ueben
+        given:
+          W: { int: [5, 150] }
+          p: { oneOf: [5, 10, 12, 15, 20, 25, 30, 40, 50] }
+        where: ["decimals(W * 100 / p) == 0", "W * 100 / p >= 50", "W * 100 / p <= 500"]
+        task:
+          text: "Beim Kauf eines Rollers sparst du {{W}} €. Das sind {{p}} % Rabatt. Wie viel hat der Roller vorher gekostet?"
+        answer: { value: "W * 100 / p", compare: { number: { format: money } } }
+        mistakes:
+          - {
+              value: "W * p / 100",
+              message: "Du hast {{p}} % von {{W}} € berechnet. Gesucht ist aber das Ganze, von dem die {{W}} € ein Teil sind.",
+            }
+          - { value: "W / p", message: "Das ist erst 1 %. Nimm es noch mal 100, dann hast du das Ganze." }
+        hint: "Gesucht ist das Ganze, 100 %. Rechne erst aus, was 1 % ist: {{W}} € geteilt durch {{p}}. Dann mal 100."
+        steps:
+          - '$G = \frac{W \cdot 100}{p}$'
+          - '$G = \frac{{{W}} \cdot 100}{{{p}}} = {{answer}}$, also {{answer}} €.'

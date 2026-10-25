@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "commit": {
+      "source": "mrsimpson/skills-coding",
+      "sourceType": "github",
+      "skillPath": "commit/SKILL.md",
+      "computedHash": "fc628c7d577d2d9cf3cb0a917d3c5e2e35b460fdc62c353595b7472b6f1c6548"
+    }
+  }
+}

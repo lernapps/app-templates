@@ -1,0 +1,5 @@
+# Paths the architecture does not claim (arc42 H021), relative to this template folder.
+# The entry, which hands the app's core and root component to the shell (if-start), and type declarations for Vite
+# and Vue single-file components: configuration rather than architecture.
+src/main.ts
+src/env.d.ts

@@ -1,0 +1,177 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+
+title: { de: "Formen 1", en: "Shapes 1" }
+description: { de: "Seite 3 der Fixture mit allen Blöcken.", en: "Page 3 of the fixture with all blocks." }
+blocks:
+  - type: text
+    text:
+      de: |
+        Diese Seite ist Seite **3** von 4. Auf ihr steht $n = 3$, und *jede* Art von Block.
+
+        - Weiter geht es mit [der nächsten Seite](/formen/formen-02/#grundlagen).
+        - Mehr steht in der [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
+      en: |
+        This page is page **3** of 4. It says $n = 3$, and has *every* kind of block.
+
+        - Go on with [the next page](/formen/formen-02/#grundlagen).
+        - Read more in [Wikipedia](https://de.wikipedia.org/wiki/Prozentrechnung).
+  - type: section
+    id: grundlagen
+    title: { de: "Grundlagen", en: "Basics" }
+    blocks:
+      - type: formula
+        formula: '\frac{3}{100} \cdot 200 = 6'
+      - type: definition
+        term: { de: "Begriff 3", en: "Term 3" }
+        explanation:
+          { de: "Ein Begriff, den Seite 3 erklärt, mit $3\\,\\%$.", en: "A term that page 3 explains, with $3\\,\\%$." }
+      - type: figure
+        draw: { kind: hundred-grid, filled: 3 }
+        alt: { de: "Ein Hunderterfeld, 3 von 100 Kästchen gefärbt", en: "A hundred grid, 3 of 100 squares shaded" }
+        caption: { de: "3 % des Ganzen.", en: "3 % of the whole." }
+      - type: section
+        id: tabelle
+        title: { de: "Tabelle", en: "Table" }
+        blocks:
+          - type: table
+            caption: { de: "Werte der Seite 3", en: "Values of page 3" }
+            header: [{ de: "Größe", en: "Quantity" }, { de: "Wert", en: "Value" }, { de: "Formel", en: "Formula" }]
+            rowHeaders: true
+            rows:
+              - [{ de: "Prozentsatz", en: "Percentage" }, { de: "3", en: "3" }, { de: "$p = 3$", en: "$p = 3$" }]
+              - [{ de: "Grundwert", en: "Base value" }, { de: "200", en: "200" }, { de: "$G = 200$", en: "$G = 200$" }]
+          - type: figure
+            draw: { kind: bar, part: 3, whole: 4 }
+            alt: { de: "Ein Streifen, 3 von 4 Teilen gefärbt", en: "A strip, 3 of 4 parts shaded" }
+            caption: { de: "Wie weit du in der App bist.", en: "How far you are in the app." }
+      - type: section
+        id: geschichte
+        title: { de: "Geschichte", en: "History" }
+        blocks:
+          - type: timeline
+            events:
+              - date: -300
+                title: { de: "Euklid schreibt die Elemente", en: "Euclid writes the Elements" }
+              - date: 1202
+                label: { de: "im Jahr 1202", en: "in 1202" }
+                title: { de: "Fibonacci schreibt das Liber Abaci", en: "Fibonacci writes the Liber Abaci" }
+                text:
+                  {
+                    de: "Damit kommen die **arabischen Ziffern** nach Europa.",
+                    en: "With it, the **Arabic numerals** come to Europe.",
+                  }
+          - type: quote
+            text: { de: "Πάντα ῥεῖ", en: "Πάντα ῥεῖ" }
+            origin:
+              author: { de: "Heraklit", en: "Heraclitus" }
+              year: { de: "um 500 v. Chr.", en: "around 500 BC" }
+            source:
+              {
+                de: "Heraklit, Fragmente, überliefert bei Simplikios",
+                en: "Heraclitus, fragments, handed down by Simplicius",
+              }
+            licence: gemeinfrei
+  - type: section
+    id: anwendung
+    title: { de: "Anwendung", en: "Application" }
+    blocks:
+      - type: code
+        language: javascript
+        caption: { de: "Ein kleines Programm", en: "A small program" }
+        code: |
+          const doppelt = (n) => 2 * n;
+          console.log(doppelt(21));
+      - type: example
+        title: { de: "Beispiel 3", en: "Example 3" }
+        blocks:
+          - type: text
+            text: { de: "Knallgas reagiert zu Wasser:", en: "Oxyhydrogen reacts to water:" }
+          - type: formula
+            formula: '\ce{2H2 + O2 -> 2H2O}'
+      - type: note
+        title: { de: "Merke", en: "Remember" }
+        blocks:
+          - type: text
+            text: { de: "Die Reaktion setzt $\\pu{572 kJ}$ frei.", en: "The reaction releases $\\pu{572 kJ}$." }
+      - type: section
+        id: bilder
+        title: { de: "Bilder", en: "Pictures" }
+        blocks:
+          - type: figure
+            image: images/raster.svg
+            alt:
+              {
+                de: "Ein blauer Kreis, ein grünes Quadrat und ein rotes Dreieck",
+                en: "A blue circle, a green square and a red triangle",
+              }
+            caption: { de: "Drei Formen.", en: "Three shapes." }
+            source: { de: "eigene Zeichnung", en: "own drawing" }
+            licence: CC0-1.0
+          # an SVG with only a viewBox, no width and height: the labelled image still has a size
+          - type: labelled-figure
+            image: images/umriss.svg
+            alt: { de: "Drei Umrisse mit Nummern", en: "Three outlines with numbers" }
+            caption: { de: "Die Formen, nummeriert.", en: "The shapes, numbered." }
+            labels:
+              - { x: 20, y: 50, text: { de: "Kreis", en: "Circle" } }
+              - { x: 55, y: 50, text: { de: "Quadrat", en: "Square" } }
+              - { x: 88, y: 60, text: { de: "Dreieck", en: "Triangle" } }
+            source: { de: "eigene Zeichnung", en: "own drawing" }
+            licence: CC0-1.0
+          - type: timeline
+            data: ereignisse
+          - type: video
+            youtube: D_D4gvqNDdE
+            title: 1.binomische Formel – mit grafischer Erklärung
+            channel: Lehrerschmidt
+  - type: section
+    id: uebung
+    title: { de: "Übung", en: "Exercise" }
+    blocks:
+      - type: number
+        id: ecken
+        text: { de: "Wie viele Ecken hat ein Sechseck?", en: "How many corners does a hexagon have?" }
+        answer: 6
+        tolerance: 0
+        unit: { de: "Ecken", en: "corners" }
+        mistakes:
+          - answer: 12
+            message:
+              { de: "Du hast die Ecken und die Seiten zusammengezählt.", en: "You added up the corners and the sides." }
+        examples: { accepted: [6, "6 Ecken"], rejected: [5] }
+        explanation: { de: "Sechs Ecken und sechs Seiten.", en: "Six corners and six sides." }
+        links:
+          - title: { de: "Sechseck (Wikipedia)", en: "Hexagon (Wikipedia)" }
+            url: { de: "https://de.wikipedia.org/wiki/Sechseck", en: "https://en.wikipedia.org/wiki/Hexagon" }
+      - type: ordering
+        id: formen-ordnen
+        text:
+          {
+            de: "Ordne nach der Zahl der Ecken, die wenigsten zuerst.",
+            en: "Order by the number of corners, fewest first.",
+          }
+        items:
+          - { de: "Dreieck", en: "Triangle" }
+          - { de: "Quadrat", en: "Square" }
+          - { de: "Fünfeck", en: "Pentagon" }
+        explanation: { de: "Drei, vier, fünf Ecken.", en: "Three, four, five corners." }
+        hint: { de: "Zähle bei jeder Form die Ecken.", en: "Count the corners of each shape." }
+        examples: { accepted: [[Dreieck, Quadrat, Fünfeck]], rejected: [[2, 1, 0]] }
+        links:
+          - title: { de: "Vieleck (Wikipedia)", en: "Polygon (Wikipedia, German)" }
+            url: https://de.wikipedia.org/wiki/Polygon
+      - type: generated
+        id: erfindungen-ordnen
+        given:
+          events: { pick: 2, distinct: true, from: { data: ereignisse } }
+        task:
+          text:
+            {
+              de: "Bringe die Ereignisse in ihre Reihenfolge, das früheste zuerst.",
+              en: "Put the events in order, the earliest first.",
+            }
+        answer: { value: "map(sortBy(events, date), title)", compare: order }
+        mistakes:
+          - value: "map(reverse(sortBy(events, date)), title)"
+            message:
+              { de: "Umgekehrt: Das früheste kommt zuerst.", en: "The other way round: the earliest comes first." }

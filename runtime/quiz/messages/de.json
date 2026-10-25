@@ -1,0 +1,23 @@
+{
+  "howto": "Beantworte die Fragen der Reihe nach. Nach jeder Antwort siehst du, ob sie stimmt, und erfährst mehr über jede Antwort. Am Ende siehst du dein Ergebnis.",
+  "noscript": "Ohne JavaScript kannst du alle Fragen lesen. Die Lösungen mit mehr Wissen zu jeder Antwort stehen am Ende der Seite.",
+  "questions": "Fragen",
+  "countLabel": "Wie viele Fragen möchtest du beantworten?",
+  "countOf": "von {total}",
+  "start": "Los geht’s",
+  "progress": "Frage {current} von {total}",
+  "toResult": "Zum Ergebnis",
+  "result": "Ergebnis",
+  "score": "Du hast {score} von {total} Fragen richtig beantwortet.",
+  "last": "Beim letzten Mal waren es {score} von {total}.",
+  "restart": "Noch einmal",
+  "solutions": "Lösungen",
+  "toQuestion": "Zur Frage",
+  "footer": "Ein Quiz auf lernapps.net",
+  "imprint": "Impressum",
+  "privacy": "Datenschutz",
+  "sources": "Quellen",
+  "sourcesIntro": "Die Fakten in diesem Quiz stammen aus diesen Quellen:",
+  "language": "Deutsch",
+  "languages": "Sprache"
+}
