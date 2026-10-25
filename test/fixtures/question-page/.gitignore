@@ -1,7 +1,0 @@
-node_modules/
-dist/
-_site/
-test-results/
-playwright-report/
-# installed fresh in CI, as the template folders are
-package-lock.json

@@ -1,6 +1,0 @@
-# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
-title: { de: "Formen", en: "Shapes" }
-summary: { de: "Zwei Seiten über Formen.", en: "Two pages about shapes." }
-pages:
-  - formen-01
-  - formen-02

@@ -1,8 +1,0 @@
-title: { de: Kaputt, en: Broken }
-intro:
-  {
-    de: "Eine kleine App, an der jeder Fehler einzeln geprüft wird.",
-    en: "A small app on which each error is checked by itself.",
-  }
-languages: [de, en]
-chapters: [kapitel]

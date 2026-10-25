@@ -1,4 +1,0 @@
-# The pre-push hook of this repo: the change scope first (nothing for only the plan or only docs), then the root
-# checks and `lernapps check --pre-push` in the template folders the push affects (scripts/pre-push.ts, the positive
-# list); CI runs everything. Quiet: on a failure one line names the log in node_modules/.cache/lernapps/.
-node scripts/pre-push.ts "$@"
