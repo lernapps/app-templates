@@ -1,0 +1,17 @@
+Aufgabe Nr. 59 – grundwert-ueben (generated, number)
+Lern-App „Prozentrechnung“, Kapitel „Prozent“, Seite „Grundwert“.
+
+Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den Fehler zu besprechen, nicht um vorzusagen.
+
+- Aufgabe: Beim Kauf eines Rollers sparst du 85 €. Das sind 20 % Rabatt. Wie viel hat der Roller vorher gekostet?
+- Antwortformat: eine Zahl eintippen (€)
+- Lösung: 425 €
+- Lösungsweg:
+  - $G = \frac{W \cdot 100}{p}$
+  - $G = \frac{85 \cdot 100}{20} = 425$, also 425 €.
+- Tipp, den die App zeigt: Gesucht ist das Ganze, 100 %. Rechne erst aus, was 1 % ist: 85 € geteilt durch 20. Dann mal 100.
+- Typische Fehler und die Meldung der App:
+  - ✗ 17: Du hast 20 % von 85 € berechnet. Gesucht ist aber das Ganze, von dem die 85 € ein Teil sind.
+  - ✗ 4,25: Das ist erst 1 %. Nimm es noch mal 100, dann hast du das Ganze.
+- In der App: ../?grundwert-ueben=59&von=tutor#grundwert-ueben
+- Tutor-Seite des Kapitels: ../../tutor/

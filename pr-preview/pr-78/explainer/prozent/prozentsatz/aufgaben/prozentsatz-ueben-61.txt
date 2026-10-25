@@ -1,0 +1,17 @@
+Aufgabe Nr. 61 – prozentsatz-ueben (generated, number)
+Lern-App „Prozentrechnung“, Kapitel „Prozent“, Seite „Prozentsatz“.
+
+Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den Fehler zu besprechen, nicht um vorzusagen.
+
+- Aufgabe: In einer Klasse sind 30 Schüler. 18 davon haben ein Haustier. Wie viel Prozent der Klasse sind das?
+- Antwortformat: eine Zahl eintippen (%)
+- Lösung: 60 %
+- Lösungsweg:
+  - $p = \frac{W}{G} \cdot 100$
+  - $p = \frac{18}{30} \cdot 100 = 60$, also 60 %.
+- Tipp, den die App zeigt: Teile den Teil (18 Schüler) durch das Ganze (30 Schüler) und nimm das Ergebnis mal 100.
+- Typische Fehler und die Meldung der App:
+  - ✗ 0,6: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+  - ✗ 166,666667: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+- In der App: ../?prozentsatz-ueben=61&von=tutor#prozentsatz-ueben
+- Tutor-Seite des Kapitels: ../../tutor/

@@ -1,0 +1,17 @@
+Aufgabe Nr. 36 – grundwert-ueben (generated, number)
+Lern-App „Prozentrechnung“, Kapitel „Prozent“, Seite „Grundwert“.
+
+Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den Fehler zu besprechen, nicht um vorzusagen.
+
+- Aufgabe: Beim Kauf eines Rollers sparst du 38 €. Das sind 40 % Rabatt. Wie viel hat der Roller vorher gekostet?
+- Antwortformat: eine Zahl eintippen (€)
+- Lösung: 95 €
+- Lösungsweg:
+  - $G = \frac{W \cdot 100}{p}$
+  - $G = \frac{38 \cdot 100}{40} = 95$, also 95 €.
+- Tipp, den die App zeigt: Gesucht ist das Ganze, 100 %. Rechne erst aus, was 1 % ist: 38 € geteilt durch 40. Dann mal 100.
+- Typische Fehler und die Meldung der App:
+  - ✗ 15,2: Du hast 40 % von 38 € berechnet. Gesucht ist aber das Ganze, von dem die 38 € ein Teil sind.
+  - ✗ 0,95: Das ist erst 1 %. Nimm es noch mal 100, dann hast du das Ganze.
+- In der App: ../?grundwert-ueben=36&von=tutor#grundwert-ueben
+- Tutor-Seite des Kapitels: ../../tutor/

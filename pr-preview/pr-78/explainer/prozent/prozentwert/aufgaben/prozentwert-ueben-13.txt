@@ -1,0 +1,17 @@
+Aufgabe Nr. 13 – prozentwert-ueben (generated, number)
+Lern-App „Prozentrechnung“, Kapitel „Prozent“, Seite „Prozentwert“.
+
+Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den Fehler zu besprechen, nicht um vorzusagen.
+
+- Aufgabe: Ein Fahrrad kostet 880 €. Im Angebot gibt es 15 % Rabatt. Wie viel Euro sparst du?
+- Antwortformat: eine Zahl eintippen (€)
+- Lösung: 132 €
+- Lösungsweg:
+  - $W = \frac{G \cdot p}{100}$
+  - $W = \frac{880 \cdot 15}{100} = 132$, also 132 € Rabatt.
+- Tipp, den die App zeigt: Rechne erst 1 % aus: 880 € geteilt durch 100. Dann nimm das mal 15.
+- Typische Fehler und die Meldung der App:
+  - ✗ 13200: Du hast vergessen, durch 100 zu teilen: 15 % sind 15 Hundertstel.
+  - ✗ 748: Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.
+- In der App: ../?prozentwert-ueben=13&von=tutor#prozentwert-ueben
+- Tutor-Seite des Kapitels: ../../tutor/

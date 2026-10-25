@@ -1,0 +1,17 @@
+Aufgabe Nr. 4 – prozentwert-ueben (generated, number)
+Lern-App „Prozentrechnung“, Kapitel „Prozent“, Seite „Prozentwert“.
+
+Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den Fehler zu besprechen, nicht um vorzusagen.
+
+- Aufgabe: Ein Fahrrad kostet 450 €. Im Angebot gibt es 25 % Rabatt. Wie viel Euro sparst du?
+- Antwortformat: eine Zahl eintippen (€)
+- Lösung: 112,5 €
+- Lösungsweg:
+  - $W = \frac{G \cdot p}{100}$
+  - $W = \frac{450 \cdot 25}{100} = 112,50$, also 112,50 € Rabatt.
+- Tipp, den die App zeigt: Rechne erst 1 % aus: 450 € geteilt durch 100. Dann nimm das mal 25.
+- Typische Fehler und die Meldung der App:
+  - ✗ 11250: Du hast vergessen, durch 100 zu teilen: 25 % sind 25 Hundertstel.
+  - ✗ 337,5: Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.
+- In der App: ../?prozentwert-ueben=4&von=tutor#prozentwert-ueben
+- Tutor-Seite des Kapitels: ../../tutor/

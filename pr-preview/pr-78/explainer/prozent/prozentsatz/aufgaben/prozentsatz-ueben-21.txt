@@ -1,0 +1,17 @@
+Aufgabe Nr. 21 – prozentsatz-ueben (generated, number)
+Lern-App „Prozentrechnung“, Kapitel „Prozent“, Seite „Prozentsatz“.
+
+Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den Fehler zu besprechen, nicht um vorzusagen.
+
+- Aufgabe: In einer Klasse sind 16 Schüler. 4 davon haben ein Haustier. Wie viel Prozent der Klasse sind das?
+- Antwortformat: eine Zahl eintippen (%)
+- Lösung: 25 %
+- Lösungsweg:
+  - $p = \frac{W}{G} \cdot 100$
+  - $p = \frac{4}{16} \cdot 100 = 25$, also 25 %.
+- Tipp, den die App zeigt: Teile den Teil (4 Schüler) durch das Ganze (16 Schüler) und nimm das Ergebnis mal 100.
+- Typische Fehler und die Meldung der App:
+  - ✗ 0,25: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
+  - ✗ 400: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
+- In der App: ../?prozentsatz-ueben=21&von=tutor#prozentsatz-ueben
+- Tutor-Seite des Kapitels: ../../tutor/
