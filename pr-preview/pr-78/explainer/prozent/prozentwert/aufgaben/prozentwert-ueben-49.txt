@@ -14,4 +14,4 @@ Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den
   - ✗ 17600: Du hast vergessen, durch 100 zu teilen: 40 % sind 40 Hundertstel.
   - ✗ 264: Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.
 - In der App: ../?prozentwert-ueben=49&von=tutor#prozentwert-ueben
-- Tutor-Seite des Kapitels: ../../tutor/
+- Tutor-Seite: ../tutor/

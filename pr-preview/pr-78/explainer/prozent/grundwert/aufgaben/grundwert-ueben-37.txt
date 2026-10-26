@@ -14,4 +14,4 @@ Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den
   - ✗ 66: Du hast 50 % von 132 € berechnet. Gesucht ist aber das Ganze, von dem die 132 € ein Teil sind.
   - ✗ 2,64: Das ist erst 1 %. Nimm es noch mal 100, dann hast du das Ganze.
 - In der App: ../?grundwert-ueben=37&von=tutor#grundwert-ueben
-- Tutor-Seite des Kapitels: ../../tutor/
+- Tutor-Seite: ../tutor/

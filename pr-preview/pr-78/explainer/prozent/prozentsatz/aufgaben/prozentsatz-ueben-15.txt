@@ -14,4 +14,4 @@ Diese Datei ist für einen KI-Tutor. Sie enthält die Lösung: Nutze sie, um den
   - ✗ 0,95: Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.
   - ✗ 105,263158: Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.
 - In der App: ../?prozentsatz-ueben=15&von=tutor#prozentsatz-ueben
-- Tutor-Seite des Kapitels: ../../tutor/
+- Tutor-Seite: ../tutor/
