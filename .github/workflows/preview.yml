@@ -22,9 +22,9 @@ concurrency:
 
 jobs:
   changes:
-    uses: lernapps/tooling/.github/workflows/changes.yml@64a8b538ddbbc2538f0da30a44e4edaf3e155601 # main
+    uses: lernapps/tooling/.github/workflows/changes.yml@73b90426ed503aa73e9e4f5f909724fd137b121c # main
     with:
-      tooling-ref: 64a8b538ddbbc2538f0da30a44e4edaf3e155601
+      tooling-ref: 73b90426ed503aa73e9e4f5f909724fd137b121c
 
   bundle:
     needs: changes
