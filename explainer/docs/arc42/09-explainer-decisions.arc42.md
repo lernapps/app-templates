@@ -144,3 +144,27 @@ date: 2026-10-26
 addresses: qg-privacy, qg-understandable, con-no-request-before-click
 :::
 ```
+
+## A Video Loads Only After a Click
+
+A video block is a link to YouTube until the learner asks for the player. Before the click the page shows the title,
+the channel and a note that playing sends data, among them the IP address, to YouTube/Google, and it requests nothing
+from another host: `con-no-request-before-click` holds, and the page needs no consent banner. The click on "Video
+abspielen" is the learner's consent for this one video, given with the note in view; only then does the player load,
+from YouTube's privacy-enhanced host youtube-nocookie.com, with the app's origin as its only referrer, so YouTube never
+sees the task numbers or `von=tutor` in the address. "Videos immer direkt laden" is a standing consent: kept on the
+device under the app's prefix (`con-state-on-device`), shown ticked on every video, and withdrawn by unticking it. No
+thumbnail, as YouTube's image would load before the click and an own one needs the rights to it. An app with a video
+loads from another server after a click, so its catalog entry says `fitness.thirdParty: on-click`. Rejected: a direct
+embed (requests to Google on opening the page, a consent banner); only a link (the learner leaves the page for
+YouTube's recommendations); the video in the bundle (rights, size).
+
+```arc42
+:::decision
+id: dec-explainer-video-two-click
+title: A video is a link until the learner's click loads its player from youtube-nocookie.com
+status: accepted
+date: 2026-10-26
+addresses: qg-privacy, qg-explainer-readable-without-js, con-no-request-before-click, con-state-on-device, risk-explainer-video-after-click
+:::
+```
