@@ -1,7 +1,8 @@
 // The logic of an exercise component: that it exports what an exercise needs (describedProblems), the exercise with
 // its inputs and outputs for a tutor when it declares it (exerciseProblems), its property test over fixed seeds (propertyProblems) and its
-// examples (exampleProblems). An exercise component emits answered, declares the
-// prop seed: number and shows the task generate(seed, props); the build runs its logic module outside the browser.
+// examples (exampleProblems). An exercise component emits answer, declares the
+// prop seed: number and shows the task generate(seed, props); the build runs its logic module outside the browser,
+// and the islands call it on "Prüfen" (check, reason, show).
 import { textLanguages } from "../../shared/languages.ts";
 import { verdict } from "../../shared/examples.ts";
 import {
