@@ -27,7 +27,7 @@ import { answerText } from "../shared/questions/render.ts";
 import {
   inLanguage,
   type Block,
-  type ComponentTable,
+  type ComponentExercise,
   type Descriptions,
   type Page,
   type Site,
@@ -323,16 +323,16 @@ function generatedLines(spec: Generated, site: Site, lang: string, format: strin
  * The table of tasks of an exercise component, as a generated exercise has it: each task number's inputs, its
  * solution and what each typical mistake gives, all as the learner reads them ("–" for a mistake without one answer).
  */
-function componentTable(table: ComponentTable, lang: string): string[] {
+function componentTable(exercise: ComponentExercise, lang: string): string[] {
   const words = wordsIn(lang);
-  const count = table.rows[0]?.mistakes.length ?? 0;
+  const count = exercise.tasks[0]?.mistakes.length ?? 0;
   const header = [
     words.number,
-    ...table.inputs,
+    ...exercise.inputs,
     tutorWords(lang).solution,
     ...Array.from({ length: count }, (_mistake, index) => `F${index + 1}`),
   ].join(" | ");
-  const rows = table.rows.map((row, index) =>
+  const rows = exercise.tasks.map((row, index) =>
     [String(index + 1), ...row.inputs, row.solution, ...row.mistakes].map(cell).join(" | "),
   );
   return [`- ${words.table}`, "", "```", header, ...rows, "```"];
@@ -346,7 +346,7 @@ function componentTable(table: ComponentTable, lang: string): string[] {
 export function tableHint(site: Site, descriptions: Descriptions): string | undefined {
   const without = site.components.filter((use) => {
     const description = descriptions.get(use.block);
-    return description !== undefined && description.tables === undefined;
+    return description !== undefined && description.exercise === undefined;
   });
   if (without.length === 0) return undefined;
   const one = without.length === 1;
@@ -381,7 +381,7 @@ export function tutorPage(
   for (const exercise of exercises) {
     if (exercise.block.type !== "vue-component" || exercise.count === 0) continue;
     // a component with its table of tasks has all its numbers there
-    if (descriptions.get(exercise.block)?.tables?.[lang] !== undefined) continue;
+    if (descriptions.get(exercise.block)?.exercise?.[lang] !== undefined) continue;
     const tasks = descriptions.get(exercise.block)?.tasks[lang] ?? [];
     rows.set(
       exercise.id,
@@ -509,12 +509,12 @@ function pageMarkdown(
           return `${indent}${line(rest)}`;
         }),
       );
-      const table = descriptions.get(exercise.block)?.tables?.[lang];
+      const declared = descriptions.get(exercise.block)?.exercise?.[lang];
       if (exercise.count > 0) {
         lines.push(`- ${words.linkNumber}: \`../?${exercise.id}=n&von=tutor#${exercise.id}\``);
         const all = rows.get(exercise.id) ?? [];
         const n = shown.get(exercise.id) ?? all.length;
-        if (table !== undefined) lines.push(...componentTable(table, lang));
+        if (declared !== undefined) lines.push(...componentTable(declared, lang));
         else if (n > 0) lines.push(`- ${words.tasks}:`, ...all.slice(0, n));
         if (n === 0 && all.length > 0) lines.push(`- ${words.none}`);
         else if (n < all.length) {

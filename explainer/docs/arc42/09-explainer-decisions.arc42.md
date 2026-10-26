@@ -84,8 +84,7 @@ steps and its typical mistakes as F1, F2 … with the app's messages, and below 
 inputs and outputs, all worked out: the values of the placeholders, the solution, what each mistake gives. So the
 tutor fills in and calculates nothing, can give any further task with its link, and never asks the learner to copy
 one. An exercise component has its `about` and the same table from its exercise logic (`dec-component-table`), or
-without one each number's task and solution from its `describe`, as many as fit into 64 kB
-(`risk-tutor-component-numbers`). The guide stands on the tutor page alone: the prompt of way A, the lines
+without one each number's task and solution from its `describe`, as many as fit into 64 kB. The guide stands on the tutor page alone: the prompt of way A, the lines
 of way B and the result line speak in the learner's voice and carry no rule, and the app writes no `llms.txt`, so that
 no two texts can tell the tutor different things. Learners come with one of two needs, and each gets its own way. A, "Mit
 <name> lernen", a bar beside the title of every content page, where the learner is at work, once an assistant is on
@@ -116,7 +115,7 @@ id: dec-tutor-page
 title: One short tutor page per page, the one source of what the tutor gets, two ways to it
 status: accepted
 date: 2026-10-26
-addresses: qg-privacy, qg-understandable, con-no-request-before-click, risk-tutor-component-numbers
+addresses: qg-privacy, qg-understandable, con-no-request-before-click
 :::
 ```
 
@@ -146,7 +145,7 @@ id: dec-component-table
 title: An exercise component computes its table of tasks for the tutor, checked against check
 status: accepted
 date: 2026-10-26
-addresses: qg-checkable, qg-understandable, risk-tutor-component-numbers
+addresses: qg-checkable, qg-understandable
 :::
 ```
 

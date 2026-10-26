@@ -183,9 +183,9 @@ describe("the tutor page of a content page", () => {
     expect(part).toContain(
       "- Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt.\n\n```\nNr. | Wahl | Lösung | F1 | F2\n",
     );
-    const table = descriptions.get(use.block)?.tables?.["de"];
-    expect(table?.rows.length).toBeGreaterThan(1);
-    table?.rows.forEach((row, index) =>
+    const exercise = descriptions.get(use.block)?.exercise?.["de"];
+    expect(exercise?.tasks.length).toBeGreaterThan(1);
+    exercise?.tasks.forEach((row, index) =>
       expect(part).toContain(`\n${[String(index + 1), ...row.inputs, row.solution, ...row.mistakes].join(" | ")}\n`),
     );
     // no task by number from describe

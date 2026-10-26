@@ -166,20 +166,21 @@ function generatedPart(spec: Generated, lang: string, words: Words): string[] {
 }
 
 /**
- * An exercise component: what it says about itself (its about); with a table of tasks also its task once as its
- * template, and its typical mistakes as F1, F2 …, the columns of the table. Its tasks by number are the tutor page's.
+ * An exercise component: what it says about itself (its about); when it declares its exercise also its task once as
+ * its template, and its typical mistakes as F1, F2 …, the columns of its table of tasks. Its tasks by number are the
+ * tutor page's.
  */
 function componentPart(description: ComponentDescription, lang: string, words: Words): string[] {
   const { about } = description;
-  const table = description.tables?.[lang];
+  const exercise = description.exercise?.[lang];
   const t = (text: Text) => line(inLanguage(text, lang));
   const lines = [`- ${words.does}: ${t(about.task)}`];
-  if (table !== undefined) lines.push(`- ${words.task}: „${line(table.template)}“`);
+  if (exercise !== undefined) lines.push(`- ${words.task}: „${line(exercise.template)}“`);
   lines.push(`- ${words.answerFormat}: ${t(about.answer)}`, `- ${words.correct}: ${t(about.correct)}`);
   if (about.mistakes.length > 0) {
     lines.push(
       `- ${words.mistakes}:`,
-      ...about.mistakes.map((mistake, index) => `  - ${table === undefined ? "" : `F${index + 1}: `}${t(mistake)}`),
+      ...about.mistakes.map((mistake, index) => `  - ${exercise === undefined ? "" : `F${index + 1}: `}${t(mistake)}`),
     );
   }
   return lines;

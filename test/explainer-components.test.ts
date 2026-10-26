@@ -340,27 +340,27 @@ describe("the table of tasks an exercise component declares for a tutor", () => 
     const logic = await load();
     const { description, problems } = describedProblems(logic, props, ["de", "en"]);
     expect(problems).toEqual([]);
-    const de = description?.tables?.["de"];
+    const de = description?.exercise?.["de"];
     expect(de?.template).toBe(
       "Welche? Die Stufen, von oben nach unten: Stufe 1, Stufe 2, Stufe 3. Zur Wahl stehen, in dieser Reihenfolge: {Wahl}.",
     );
     expect(de?.inputs).toEqual(["Wahl"]);
-    expect(de?.rows).toHaveLength(5);
+    expect(de?.tasks).toHaveLength(5);
     const task = logic.generate(1, props("de"));
-    expect(de?.rows[0]).toEqual({
+    expect(de?.tasks[0]).toEqual({
       inputs: [task.order.map((label) => ["a", "b", "c"][label]).join("; ")],
       solution: "Stufe 1: a; Stufe 2: b; Stufe 3: c",
       mistakes: ["Stufe 1: c; Stufe 2: b; Stufe 3: a", "Stufe 1: a; Stufe 2: a; Stufe 3: c"],
     });
-    expect(description?.tables?.["en"]?.inputs).toEqual(["choices"]);
-    expect(description?.tables?.["en"]?.rows[0]?.solution).toBe("Level 1: x; Level 2: y; Level 3: z");
+    expect(description?.exercise?.["en"]?.inputs).toEqual(["choices"]);
+    expect(description?.exercise?.["en"]?.tasks[0]?.solution).toBe("Level 1: x; Level 2: y; Level 3: z");
   });
 
   test("without its exports: no table, and no problem", async () => {
     const { template: _t, params: _p, mistakes: _m, show: _s, ...logic } = await load();
     const { description, problems } = describedProblems(logic, props, ["de", "en"]);
     expect(problems).toEqual([]);
-    expect(description?.tables).toBeUndefined();
+    expect(description?.exercise).toBeUndefined();
   });
 
   test.each<[string, (logic: Record<string, unknown>) => Record<string, unknown>, string]>([

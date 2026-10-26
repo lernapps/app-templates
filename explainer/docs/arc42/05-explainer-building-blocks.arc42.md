@@ -274,7 +274,7 @@ the tutor gets: a short visible guide, then the page's content and its exercises
 `generated` one once as its template with a table of each number's inputs and outputs (the values, the solution, what
 each typical mistake gives), an exercise component with its `about` and the same table from its exercise logic
 (`dec-component-table`), or without one each number's task and solution from its `describe` as far as they fit into
-64 kB (`risk-tutor-component-numbers`); its Markdown lies beside it for copying. No prompt and no line
+64 kB; its Markdown lies beside it for copying. No prompt and no line
 carries a rule for the tutor, and the app writes no `llms.txt`.
 
 ```arc42
