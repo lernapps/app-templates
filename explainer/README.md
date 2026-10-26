@@ -15,7 +15,7 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - Navigation, contents and glossary are generated, and for an AI tutor a short tutor page per page
   (`<chapter>/<page>/tutor/`), the one source of what the tutor gets: its guide, the page's content and every task of
   its exercises, a generated one as a table of inputs and outputs. The learner switches an assistant on once, on the
-  start page or beside the title of a page (Claude, ChatGPT or Le Chat), with
+  start page or beside the title of a page (one of the KI assistants the runtime offers), with
   an account of their own. Then two ways lead there: a bar beside the title of each page, for a tutor who helps with
   the page, and "Hilfe" ("Warum?" after a wrong answer) in every exercise, with the task, the input and the app's
   message. "Zurück zum Tutor" copies a result line the learner pastes into the chat.

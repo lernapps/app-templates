@@ -86,8 +86,8 @@ feature: assistants read it before they choose an archetype.
   full. There is no `llms.txt`: the tutor page and the pages themselves are what an assistant reads. The build checks
   every link and anchor of the tutor pages. Two ways lead to the tutor. The learner switches an assistant on once: on the
   start page ("Dein KI-Assistent", "Keiner" first) or beside the title of a content page ("Mit einem KI-Tutor
-  lernen", folded while none is on: a select and "Einschalten"). The choice is Claude, ChatGPT and Le Chat, the same
-  for every app, and "Ein anderer: Text kopieren"; it is kept on the
+  lernen", folded while none is on: a select and "Einschalten"). The choice is one of the KI assistants the runtime
+  offers, the same for every app, or "Ein anderer: Text kopieren"; it is kept on the
   device, per app (`@lernapps/tooling/storage`), and both places say that the learner uses an account of their own
   and that the assistant is no offer of lernapps.net, which only provides the content and the exercises. A chapter
   page starts no tutor. Way A: once an assistant is on, a bar beside the title of every content page with one button,
