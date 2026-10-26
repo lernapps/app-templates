@@ -83,6 +83,10 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain("geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht");
     expect(text).toContain("ein „Ja“ reicht nicht");
     expect(text).toContain("Setz direkt bei dieser Aufgabe an.");
+    // help after a wrong input with the app's message: first that input and the task
+    expect(text).toContain(
+      "Nennt die Nachricht eine Eingabe und „Die App sagt: …“, geh zuerst kurz auf genau diese Eingabe und die Aufgabe ein: Schlag die Nummer unten nach, such die Eingabe bei den Fehlern (F1, F2 …) und sag in einem Satz, was an ihr nicht zur Aufgabe passt. Wiederhol die Meldung nicht.",
+    );
     expect(text).toContain("Erfinde keine eigenen.");
     expect(text).toContain("Verrate keine Lösung.");
     expect(text).toContain("Bitte das Kind nie, eine Aufgabe abzuschreiben.");
