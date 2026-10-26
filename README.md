@@ -45,8 +45,10 @@ feature: assistants read it before they choose an archetype.
   `vue`, this runtime, `@lernapps/tooling/storage`, `i18n` and `a11y` and the folder itself, browser globals only in
   `onMounted`, and 20 kB gzip of the component's own code. Once it runs, it replaces its `nojs` text, or keeps it
   folded as a text description under it with `defineOptions({ nojs: "caption" })`. A component that emits
-  `answered { correct, reason? }` is an exercise (`reason`: what went wrong in a wrong answer, shown with the
-  feedback): it declares the prop `seed: number`, the seed of its task number, which the explainer gives it with "Aufgabe Nr."
+  `answered { correct, reason?, answer?, message? }` is an exercise (`reason`: what went wrong in a wrong answer,
+  shown with the feedback; `answer`: what the learner gave, as text, for the result line of "Zurück zum Tutor";
+  `message`: the text the component showed for the answer, word for word, for the lines of "Hilfe",
+  which take `reason` without it and leave the line out without both): it declares the prop `seed: number`, the seed of its task number, which the explainer gives it with "Aufgabe Nr."
   and "Neue Aufgabe" and keeps in the address (`?<id>=<n>`, the id of its block or its name in kebab case), and
   its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
   `wrong(task)`, which the build tests over 50 fixed seeds per block, `describe(task, props, lang)`, the task and its
@@ -59,23 +61,59 @@ feature: assistants read it before they choose an archetype.
   "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:
   `?<id>=<n>` opens task number n of the exercise `<id>` (a number above N wraps around). The address holds one
   parameter per exercise (`?a=3&b=12`), written on load and at every "Neue Aufgabe", so it is the page's state: a link
-  to share in class, a deep link, and what a tutor reads; `seed` and `von` are no exercise id, and `?seed=<n>#<id>`
+  to share in class, a deep link, and what a tutor reads; `seed`, `von`, `uebung` and `abschnitt` are no exercise id, and `?seed=<n>#<id>`
   still opens that exercise's task. The build ships each exercise's table of seeds. An exercise with fewer than 67 distinct tasks is
   noted in the build output.
 - For a KI tutor, an assistant the learner brings and controls, the explainer writes static files only (a chat
-  assistant that fetches a URL runs no JavaScript): per language tree a tutor file next to every page
-  (`<chapter>/<page>/tutor.md`: its sections, every exercise with task, answer format, solution, hint and typical
-  mistakes, and for a seeded exercise all its task numbers with their tasks and solutions and links
-  `./?<id>=<n>#<id>`), and in `llms.txt` generic rules for a tutor, the app's own (`tutor.rules` in `app.yaml`) and
-  links to the tutor files, and `tutor.md` at the root, a ready tutor prompt (role, approach, the pages as a checklist,
-  the rules); the build checks every link and anchor of these files. The start page and the end of every page offer
-  "Mit einem KI-Tutor lernen": one button with a select beside it (the assistants of `tutor.providers` in `app.yaml`,
-  Claude first and the default, and "Prompt kopieren"); the way the learner picks is kept on the device
-  (`@lernapps/tooling/storage`) and is the default from then on. On a page the prompt also gets the page's address and,
-  from its tutor file, the tasks and solutions of the numbers in that address ([`tutorpage.ts`](runtime/explainer/tutorpage.ts));
-  a prompt too long for the assistant's address goes short, with the whole one on the clipboard; the short one names every address the tutor may fetch (llms.txt and each page's tutor file), because a chat assistant fetches only addresses its user wrote into the conversation, not those it finds in a fetched file
-  ([`prompt.ts`](runtime/explainer/prompt.ts)). Without JavaScript the section has a plain link per assistant. A page opened with `von=tutor`
-  shows "Zurück zum Tutor", which closes the tab ([`tutor.ts`](runtime/explainer/tutor.ts)).
+  assistant that fetches a URL runs no JavaScript, and fetches only addresses its user wrote into the conversation,
+  not those it finds in a fetched file). Per language tree and content page it writes the page's tutor page
+  (`<chapter>/<page>/tutor/`, [`tutorpage.ts`](runtime/explainer/tutorpage.ts)), the one source of what a tutor gets:
+  short, lean HTML without script or menu, which parents and teachers can open too, and its Markdown beside it
+  (`index.md`). It tells the tutor that it helps a child who is at an exercise on this page of a lernapps.net app; how
+  to guide (short answers without headings or lists, the page's own examples and tasks, nothing worked out by
+  itself, explaining in the chat and solving in the app, no solution, never asking to copy a task); how to start: to
+  learn the page, ask what the child knows, then lead through the page section by section, check each with a question
+  on its content, and only then send the child to its task; with "Hilfe", start at the task; where the child is (the
+  task numbers in its address, with "Hilfe" also `uebung` and `abschnitt`, the app's message) and how to give a
+  further task; the app's own rules from `tutor.rules` in `app.yaml`. Then the page's content as context (texts,
+  formulas as `$…$`, examples, definitions, notes, figures by alt text and caption) and its exercises with every task
+  number. A `generated` one is there once as its template (`{G}`), with answer format, hint, steps, its typical
+  mistakes as F1, F2 … with the app's messages and the link pattern `../?<id>=n&von=tutor#<id>`, and below a table of
+  each task number's inputs and outputs, all worked out: `Nr. | p | G | Lösung | F1`, `27 | 15 | 1260 | 189 | 18900`.
+  An exercise component has its `about` and each task number's task and solution from its `describe`; where these
+  would make the page larger than 64 kB, the components show as many numbers as fit, the page says so, and the build
+  warns (lernapps/app-templates#80 is to give a component the table of a generated exercise). A question is there in
+  full. There is no `llms.txt`: the tutor page and the pages themselves are what an assistant reads. The build checks
+  every link and anchor of the tutor pages. Two ways lead to the tutor. The learner switches an assistant on once: on the
+  start page ("Dein KI-Assistent", "Keiner" first) or beside the title of a content page ("Mit einem KI-Tutor
+  lernen", folded while none is on: a select and "Einschalten"). The choice is the assistants of `tutor.providers` in
+  `app.yaml` (Claude, ChatGPT and Le Chat when the app names none) and "Ein anderer: Text kopieren"; it is kept on the
+  device, per app (`@lernapps/tooling/storage`), and both places say that the learner uses an account of their own
+  and that the assistant is no offer of lernapps.net, which only provides the content and the exercises. A chapter
+  page starts no tutor. Way A: once an assistant is on, a bar beside the title of every content page with one button,
+  "Mit <name> lernen", with the assistant's first letter as its symbol; the start page changes the assistant or
+  switches it off. An assistant opens with the start prompt, one sentence in the learner's voice: "Lade <tutor
+  page>?<id>=<n>&… und hilf mir, diese Seite zu verstehen.", with the page's task numbers alone, so that the tutor
+  leads through the page before it comes to a task. ([`prompt.ts`](runtime/explainer/prompt.ts),
+  [`position.ts`](runtime/explainer/position.ts)). Copying the text instead adds the tutor page's Markdown, for an
+  assistant that fetches nothing. Without JavaScript the section has a plain link per assistant. Way B: while an
+  assistant is on, every exercise (generated, question, exercise component) has one help button with its symbol, in
+  the row of "Prüfen" and "Lösung" (below an exercise component): "Hilfe" before an answer and after the right one,
+  "Warum?", standing out, after a wrong one. It gives the lines of that task ([`stuck.ts`](runtime/explainer/stuck.ts)),
+  in the learner's voice too: without a chat (B1) "Lade <tutor page>?… und hilf mir bei Übung <id>, Nr. <n>. Ich komme
+  nicht weiter.", then `Ich habe <input> eingegeben (<n> Versuche).`, `Die App sagt: „<message>“` (word for word
+  what the feedback said: a generated exercise's message of its mistake or the general one, a question's reasons, an
+  exercise component's `message`, else its `reason`) and the hint or solution opened; on a page opened with
+  `von=tutor` (B2), where the button is there without an assistant switched on, it copies `Übung <id>, Nr. <n>:`,
+  the same lines and `Tutor-Seite: <tutor page>?…` and closes the tab, as "Zurück zum Tutor" does, and once the task
+  is right or its solution shown it is "Zurück", which copies the result line. No prompt and no line carries a rule
+  for the tutor: the tutor page has them. After a wrong answer a sentence under the row says that input and message
+  leave the page only with the click. "Neue Aufgabe" is a circular arrow beside the task number. A page opened with
+  `von=tutor` shows "Zurück zum Tutor": it copies a result line (the exercise, its task number, "richtig im 2.
+  Versuch", "Lösung angesehen" or "noch nicht gelöst (1 Versuch, Eingabe …)", the count of the session on this page,
+  and the absolute address of the page's tutor page with where the learner is), waits 100 ms and closes the tab; when
+  copying fails the tab stays open with the line selected in a field. The line goes to the clipboard only
+  ([`result.ts`](runtime/explainer/result.ts)).
 - Every exercise may carry `examples: { accepted, rejected }`, test cases that learners never see: the other correct
   answers its text allows, and typical wrong ones. The build runs each through the same check the page uses (the
   quiz's checker, a generated exercise's comparator for every seed, an exercise component's `check`) and fails on an

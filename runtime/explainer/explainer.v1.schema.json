@@ -127,16 +127,16 @@
           }
         },
         "tutor": {
-          "description": "Optional: what the app adds for a KI tutor, an assistant the learner brings. The build writes, per language tree, tutor.md (a ready prompt for a tutor: its role and approach, the app's pages as a checklist, the rules for the app's links), a section \"Mit einem KI-Tutor lernen\" on the start page (a button that copies the prompt, a link per provider that opens the assistant with it, nothing loaded before a click), llms.txt with a part of generic rules for a tutor (link concrete tasks, ask for the task number, never reveal a solution before the learner has committed to an answer, the app reports nothing back) and a tutor file next to every page (<chapter>/<page>/tutor.md: its sections, every exercise with task, answer format, solution, hint and typical mistakes, and for a seeded exercise all its task numbers (its distinct tasks, at most 67) with their tasks, solutions and links ?seed=<n>#<id>).",
+          "description": "Optional: what the app adds for a KI tutor, an assistant the learner brings. The build writes, per language tree, a short tutor page per content page (<chapter>/<page>/tutor/, its Markdown beside it as index.md), the one source of what a tutor gets: lean HTML, visible to everyone: who the tutor helps and how it guides, where the child is, the app's own rules; then the page's content as context and its exercises, a generated one once as its template with a table of each task number's inputs and outputs (the values, the solution, what each typical mistake gives), an exercise component with each task number's task and solution as far as they fit. The learner switches an assistant on once, on the start page or beside the title of a page, kept on the device; then every page gets a bar beside its title, \"Mit <name> lernen\" (way A: the assistant opens with one sentence that names the page's tutor page with the page's task numbers; nothing loaded before a click), and every exercise gets \"Hilfe\", \"Warum?\" after a wrong answer (way B: the tutor page and the task, the input and the app's message word for word, as a new chat, or copied on a page opened with von=tutor); a page opened with von=tutor gets \"Zurück zum Tutor\", which copies a result line with the address of the page's tutor page.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "rules": {
-              "description": "The app's own rules for a tutor, after the generic ones in llms.txt: what matters in this subject, e.g. \"Rechenwege auf Papier, das Ergebnis in die App\". Restricted Markdown, in the app's languages.",
+              "description": "The app's own rules for a tutor, after the guide on each tutor page: what matters in this subject, e.g. \"Rechenwege auf Papier, das Ergebnis in die App\". Restricted Markdown, in the app's languages.",
               "$ref": "#/$defs/markdown"
             },
             "providers": {
-              "description": "The assistants the start page offers to open with the prompt, in this order. Without it: Claude (https://claude.ai/new?q={prompt}); an empty list offers only the button that copies the prompt. A link carries the whole prompt while its address stays within 8000 characters, else a short prompt that points to tutor.md, and the page copies the whole prompt as well.",
+              "description": "The assistants the learner can switch on, in this order. Without it: Claude (https://claude.ai/new?q={prompt}), ChatGPT (https://chatgpt.com/?q={prompt}) and Le Chat (https://chat.mistral.ai/chat?q={prompt}); an empty list offers only the button that copies the prompt. A link carries the start prompt, which names one address: the page's tutor page with the learner's position in its query.",
               "type": "array",
               "items": {
                 "type": "object",
@@ -196,7 +196,7 @@
           "$ref": "#/$defs/text"
         },
         "description": {
-          "description": "One sentence on what the page explains, for search engines and llms.txt.",
+          "description": "One sentence on what the page explains, for search engines.",
           "$ref": "#/$defs/text"
         },
         "blocks": {

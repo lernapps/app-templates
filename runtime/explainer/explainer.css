@@ -24,7 +24,6 @@
 
 .explainer-breadcrumbs,
 .explainer,
-.explainer-tutor-page,
 .explainer-pager {
   max-width: var(--page-max-width, 44rem);
   margin: 0 auto;
@@ -204,14 +203,20 @@
   margin: 0;
 }
 
-/* "Neue Aufgabe" of a generated exercise; in the controls of an exercise component it is outlined (below) */
+/* "Neue Aufgabe": a circular arrow beside the task number, its name the button's label */
 .explainer-new-task {
-  font: inherit;
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--page-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -0.5rem 0;
+  padding: 0;
+  border: 0;
   border-radius: 0.375rem;
-  background: var(--page-accent);
-  color: var(--page-on-accent);
+  background: transparent;
+  color: var(--page-accent);
+  vertical-align: middle;
   cursor: pointer;
 }
 
@@ -277,20 +282,8 @@
   margin: 0;
 }
 
-.explainer-task-controls button {
-  font: inherit;
-  min-height: 2.75rem;
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--page-accent);
-  border-radius: 0.375rem;
-  background: var(--page-background);
-  color: var(--page-accent);
-  cursor: pointer;
-}
-
-.explainer-task-controls button:focus-visible {
-  outline: 3px solid var(--page-text);
-  outline-offset: 2px;
+.explainer-task-controls {
+  gap: 0.25rem;
 }
 
 /* "Zurück zum Tutor", on a page a tutor opened (von=tutor) */
@@ -310,7 +303,23 @@
   outline-offset: 2px;
 }
 
-/* "Mit einem KI-Tutor lernen": one button with a select beside it, a plain link per assistant without JavaScript */
+/* the result line, selected for copying by hand when the clipboard refused it */
+.explainer-back-line {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0.5rem;
+  font: inherit;
+  color: var(--page-text);
+  background: var(--page-background);
+  border: 2px solid var(--page-border);
+}
+
+.explainer-back-line[hidden] {
+  display: none;
+}
+
+/* "Mit einem KI-Tutor lernen": a select with "Einschalten" beside it, a plain link per assistant without JavaScript */
 .explainer-tutor-actions {
   display: flex;
   flex-wrap: wrap;
@@ -320,7 +329,9 @@
 
 .explainer-tutor-way {
   display: inline-flex;
-  align-items: stretch;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .explainer-tutor-way[hidden],
@@ -328,38 +339,202 @@
   display: none;
 }
 
-.explainer-tutor-go,
-.explainer-tutor-select {
+/* A content page's title with way A beside it, right-aligned on a wide screen; on a narrow one way A goes below the
+   title at full width, and so does the unfolded box */
+.explainer-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0 0 1.5rem;
+}
+
+.explainer-title-row > h1 {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.explainer-title-row > .explainer-tutor-page {
+  margin: 0 0 0 auto;
+}
+
+.explainer-title-row > .explainer-tutor-page:has(> details[open]:not([hidden])) {
+  flex-basis: 100%;
+}
+
+@media (max-width: 40rem) {
+  .explainer-title-row > .explainer-tutor-page {
+    flex-basis: 100%;
+    margin: 0;
+  }
+
+  .explainer-tutor-bar .explainer-tutor-go {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Way A while no assistant is on: one folded line; unfolded, a box */
+
+.explainer-tutor-off > summary {
+  cursor: pointer;
+  color: var(--page-accent);
+  padding: 0.625rem 0;
+}
+
+.explainer-tutor-off[open] {
+  padding: 0 1rem 0.25rem;
+  border: 2px solid var(--page-border);
+  border-radius: 0.375rem;
+}
+
+.explainer-tutor-off > p {
+  margin: 0.5rem 0;
+}
+
+.explainer-tutor-status:empty {
+  display: none;
+}
+
+/* The symbol of the learner's assistant: the first letter of its name in a circle */
+.explainer-ki-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--page-surface);
+  color: var(--page-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Way A, switched on: one quiet button, the assistant's symbol and "Mit <name> lernen", outlined (the secondary kind) */
+.explainer-tutor-bar {
+  display: flex;
+  margin: 0;
+}
+
+.explainer-tutor-bar[hidden],
+.explainer-tutor-off[hidden] {
+  display: none;
+}
+
+.explainer-tutor-bar button,
+.explainer-tutor-on {
   font: inherit;
   min-height: 2.75rem;
-  padding: 0.5rem 1rem;
+  padding: 0.375rem 0.875rem;
   border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-accent);
   cursor: pointer;
 }
 
-.explainer-tutor-go {
-  border-radius: 0.375rem 0 0 0.375rem;
+.explainer-tutor-bar .explainer-tutor-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.explainer-tutor-on {
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-tutor-go .explainer-ki-icon {
   background: var(--page-accent);
   color: var(--page-on-accent);
 }
 
 .explainer-tutor-select {
-  border-left-width: 1px;
-  border-radius: 0 0.375rem 0.375rem 0;
-  padding-inline: 0.5rem;
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.375rem 0.5rem;
+  border: 2px solid var(--page-border);
+  border-radius: 0.375rem;
   background: var(--page-background);
-  color: var(--page-accent);
+  color: var(--page-text);
 }
 
-.explainer-tutor-go:focus-visible,
+.explainer-tutor-note {
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-tutor-bar button:focus-visible,
+.explainer-tutor-on:focus-visible,
 .explainer-tutor-select:focus-visible {
   outline: 3px solid var(--page-text);
   outline-offset: 2px;
 }
 
-.explainer-tutor-page {
-  margin-top: 2rem;
-  border-top: 2px solid var(--page-border);
+/* Way B in every exercise, while a way to the tutor is on: one button in the row of "Prüfen" and "Lösung", plain
+   ("Hilfe"), standing out after a wrong answer ("Warum?"), filled on a page a tutor opened once the task is done
+   ("Zurück") */
+.explainer-help-row {
+  margin: 0.75rem 0 0;
+}
+
+.explainer-help-row[hidden],
+button.explainer-help[hidden],
+.explainer-help-note[hidden] {
+  display: none;
+}
+
+button.explainer-help,
+.question button.explainer-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.375rem 0.75rem 0.375rem 0.375rem;
+  border: 2px solid var(--page-border);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-text);
+  cursor: pointer;
+}
+
+button.explainer-help.explainer-help-why,
+.question button.explainer-help.explainer-help-why {
+  border-color: var(--page-accent);
+  background: var(--page-surface);
+  color: var(--page-accent);
+  font-weight: 600;
+}
+
+button.explainer-help.explainer-help-back,
+.question button.explainer-help.explainer-help-back {
+  border-color: var(--page-accent);
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-help-why .explainer-ki-icon,
+.explainer-help-back .explainer-ki-icon {
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-help-back .explainer-ki-icon {
+  background: var(--page-on-accent);
+  color: var(--page-accent);
+}
+
+button.explainer-help:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-help-note {
+  margin: 0.5rem 0 0;
+  color: var(--page-muted);
 }
 
 /* Usability: sections and exercises must be told apart at a glance. */
@@ -477,4 +652,33 @@
 
 .explainer-drawing .fig-text {
   fill: var(--page-text);
+}
+
+/* The choice of the learner's assistant on the start page, shown once the client module runs */
+.explainer-tutor-choice[hidden] {
+  display: none;
+}
+
+.explainer-tutor-choice label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.explainer-tutor-choose {
+  font: inherit;
+  font-weight: 400;
+  min-height: 2.75rem;
+  max-width: 20rem;
+  padding: 0.375rem 0.5rem;
+  border: 2px solid var(--page-border);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-text);
+}
+
+.explainer-tutor-choose:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
 }

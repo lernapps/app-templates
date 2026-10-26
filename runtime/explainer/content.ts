@@ -27,7 +27,7 @@ export interface App {
   languages: readonly string[];
   chapters: readonly string[];
   sources?: readonly Source[];
-  /** What the app adds for a KI tutor: its own rules (restricted Markdown), after the generic ones in llms.txt. */
+  /** What the app adds for a KI tutor: its own rules (restricted Markdown), after the guide of each tutor page. */
   tutor?: {
     rules?: Text;
     /** The assistants the start page offers, {prompt} in the address where the prompt goes; Claude when none. */

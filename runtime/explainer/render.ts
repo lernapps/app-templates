@@ -29,8 +29,10 @@ import { plain, renderInline, renderMarkdown } from "../shared/text/markdown.ts"
 import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
-import { llmsTutorPart, TUTOR_FILE } from "./tutor.ts";
-import { BASE, MAX_URL, plainAddress, PROMPT_FILE, providersOf, shortPrompt, tutorPrompt } from "./prompt.ts";
+import { tutorPageOf } from "./tutor.ts";
+import { BASE, plainAddress, providersOf, QUERY, startPrompt } from "./prompt.ts";
+import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
+import { NEW_TASK_ICON } from "./tasks.ts";
 
 function sizeless(site: Site, image: string): boolean {
   const file = site.images.get(image);
@@ -217,7 +219,7 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
         ].join("");
   const nojs = (block.nojs === undefined ? "" : context.markdown(block.nojs)) + described;
   const controls = component.exercise
-    ? `<p class="explainer-task-controls" hidden><span class="explainer-task-number" tabindex="-1" data-template="${plain(context.t("taskNumber"))}">${number(1)}</span> <button type="button" class="explainer-new-task">${plain(context.t("newTask"))}</button></p>`
+    ? `<p class="explainer-task-controls" hidden><span class="explainer-task-number" tabindex="-1" data-template="${plain(context.t("taskNumber"))}">${number(1)}</span> <button type="button" class="explainer-new-task" aria-label="${plain(context.t("newTask"))}" title="${plain(context.t("newTask"))}">${NEW_TASK_ICON}</button></p>`
     : "";
   const attributes = [
     ...(use.id === undefined ? [] : [`id="${use.id}"`]),
@@ -336,7 +338,7 @@ function main(context: Context): string {
         `<div class="explainer-intro">${context.markdown(site.app.intro)}</div>`,
         `<nav class="explainer-contents" aria-labelledby="inhalt"><h2 id="inhalt">${plain(context.t("contents"))}</h2>${contents}</nav>`,
         glossary,
-        tutorSection(context),
+        tutorAbout(context),
         sources,
       ].join("\n");
     }
@@ -369,63 +371,117 @@ function main(context: Context): string {
     case "page": {
       const page = route.page;
       if (page === undefined) return title;
-      return [title, pageContents(context, page.blocks), renderBlocks(context, page.blocks, 1)].join("\n");
+      // the title and way A in one row: beside it on a wide screen, below it on a narrow one (explainer.css)
+      return [
+        `<div class="explainer-title-row">`,
+        title,
+        tutorSection(context),
+        `</div>`,
+        pageContents(context, page.blocks),
+        renderBlocks(context, page.blocks, 1),
+      ].join("\n");
     }
   }
 }
 
 /**
- * "Mit einem KI-Tutor lernen" on the start page and at the end of each page: the way to the tutor (a button with a select
- * beside it: an assistant, or copying the prompt; hidden until the client module runs), a plain link per assistant
- * for readers without JavaScript, the link to tutor.md, a status line, and the prompt with BASE before its links
- * (prompt.ts). On a page, the client module adds the page and the tasks of its address to the prompt (tutorpage.ts).
+ * What a KI tutor is, on the start page: a section of its own that says what the tutor does and where it shows, the
+ * choice of the learner's assistant ("Keiner" first; shown by the client module, which keeps it on the device), that the
+ * learner uses an account of their own and the assistant is no offer of lernapps.net, and that nothing leaves the app
+ * before a click. It starts no tutor itself.
+ */
+function tutorAbout(context: Context): string {
+  const { site } = context;
+  return [
+    `<section class="explainer-tutor-about" aria-labelledby="ki-tutor">`,
+    `<h2 id="ki-tutor">${plain(context.t("tutorTitle"))}</h2>`,
+    `<p>${plain(context.t("tutorAbout"))}</p>`,
+    `<p>${plain(context.t("tutorAboutStart"))}</p>`,
+    `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label></p>`,
+    `<p>${plain(context.t("tutorAccount"))}</p>`,
+    `<p>${plain(context.t("tutorAboutPrivacy"))}</p>`,
+    `</section>`,
+  ].join("\n");
+}
+
+/** The assistants of the app as options of a select, each by its name, and copying the prompt last (COPY). */
+function wayOptions(context: Context): string {
+  return [
+    ...providersOf(context.site).map(
+      (provider) => `<option value="${plain(provider.name)}">${plain(provider.name)}</option>`,
+    ),
+    `<option value="copy">${plain(context.t("tutorOther"))}</option>`,
+  ].join("");
+}
+
+/**
+ * "Mit einem KI-Tutor lernen", way A to the tutor, on each content page alone, beside its title. Folded while no
+ * assistant is switched on: unfolded, a select of the app's assistants and copying the text, "Einschalten" (hidden
+ * until the client module runs; without it a plain link per assistant), that the learner uses an account of their own
+ * and the assistant is no offer of lernapps.net, and the link to the page's tutor page. Once an assistant is on
+ * (chosen here or on the start page, kept on the device), a bar in its place: "Mit <name> lernen"; it is changed or
+ * switched off on the start page. Then a status line, and what the client module needs (prompt.ts): the start prompt
+ * with BASE before its address, the page's tutor page and its Markdown, and the page's id, title, exercises and
+ * sections, for the learner's position (position.ts), the result line of "Zurück" (result.ts) and the lines of
+ * "Hilfe" (stuck.ts), whose button the client module adds to each exercise with the way chosen here.
  */
 function tutorSection(context: Context): string {
   const { site, lang, route } = context;
-  const providers = providersOf(site);
-  const plainLinks = providers
+  const plainLinks = providersOf(site)
     .map(
       (provider) =>
         `<a class="explainer-tutor-provider" href="${plain(plainAddress(provider.url))}" rel="noopener" target="_blank">${plain(context.t("tutorOpenWith", { name: provider.name }))}</a>`,
     )
     .join(" ");
-  const options = [
-    ...providers.map((provider, index) => `<option value="${index}">${plain(provider.name)}</option>`),
-    `<option value="copy">${plain(context.t("tutorCopy"))}</option>`,
-  ].join("");
-  const first = providers[0];
-  const go = first === undefined ? context.t("tutorCopy") : context.t("tutorGo", { name: first.name });
+  const { page } = route;
   const data = {
-    prompt: tutorPrompt(site, lang),
-    short: shortPrompt(site, lang),
+    start: startPrompt(route),
     base: BASE,
-    // the root of the language tree, from this page: the base of the prompt's links is never the page's own folder
+    query: QUERY,
+    // the root of the language tree, from this page: the base of the prompt's address is never the page's own folder
     root: context.to(""),
-    max: MAX_URL,
     storage: site.storage ?? "explainer",
-    ...(route.kind === "page" ? { file: TUTOR_FILE } : {}),
-    ways: providers.map((provider) => ({ name: provider.name, url: provider.url })),
+    ...(page === undefined
+      ? {}
+      : {
+          page: {
+            id: page.id,
+            title: inLanguage(page.title, lang).replace(/\s+/g, " ").trim(),
+            exercises: pageExercises(site, page, context.descriptions).map((exercise) => ({
+              id: exercise.id,
+              ...(exercise.section === undefined ? {} : { section: exercise.section }),
+              numbered: exercise.count > 0,
+            })),
+            sections: sectionsOf(page),
+          },
+        }),
+    ...(page === undefined ? {} : { tutor: tutorPageOf(page), markdown: `${tutorPageOf(page)}${TUTOR_MARKDOWN}` }),
+    ways: providersOf(site).map((provider) => ({ name: provider.name, url: provider.url })),
     go: context.t("tutorGo"),
     copy: context.t("tutorCopy"),
     copied: context.t("tutorCopied"),
-    copiedShort: context.t("tutorCopiedShort"),
     failed: context.t("tutorCopyFailed"),
-    pageHeading: context.t("tutorPageHeading"),
-    pageNow: context.t("tutorPageNow"),
-    pageFile: context.t("tutorPageFile"),
-    shortNote: context.t("tutorShortNote"),
   };
-  const intro = route.kind === "page" ? context.t("tutorPageIntro") : context.t("tutorIntro");
+  const tutorPage =
+    page === undefined
+      ? ""
+      : `<p><a class="explainer-tutor-guide" href="${context.to(tutorPageOf(page))}">${plain(context.t("tutorPageLink"))}</a></p>`;
   return [
-    `<section class="explainer-tutor${route.kind === "page" ? " explainer-tutor-page" : ""}" aria-labelledby="ki-tutor">`,
-    `<h2 id="ki-tutor">${plain(context.t("tutorTitle"))}</h2>`,
-    `<p>${plain(intro)}</p>`,
-    `<p class="explainer-tutor-actions"><span class="explainer-tutor-way" hidden><button type="button" class="explainer-tutor-go">${plain(go)}</button> <select class="explainer-tutor-select" aria-label="${plain(context.t("tutorWay"))}">${options}</select></span> <span class="explainer-tutor-plain">${plainLinks}</span></p>`,
+    `<div class="explainer-tutor explainer-tutor-page">`,
+    `<details class="explainer-tutor-off">`,
+    `<summary>${plain(context.t("tutorTitle"))}</summary>`,
+    `<p>${plain(context.t("tutorPageIntro"))}</p>`,
+    `<p class="explainer-tutor-actions"><span class="explainer-tutor-way" hidden><select class="explainer-tutor-select" aria-label="${plain(context.t("tutorWay"))}">${wayOptions(context)}</select> <button type="button" class="explainer-tutor-on">${plain(context.t("tutorOn"))}</button></span> <span class="explainer-tutor-plain">${plainLinks}</span></p>`,
+    `<p class="explainer-tutor-note">${plain(context.t("tutorAccount"))} ${plain(context.t("tutorScope"))}</p>`,
+    tutorPage,
+    `</details>`,
+    `<p class="explainer-tutor-bar" hidden><button type="button" class="explainer-tutor-go"></button></p>`,
     `<p class="explainer-tutor-status" role="status" aria-live="polite"></p>`,
-    `<p><a class="explainer-tutor-text" href="${context.to(PROMPT_FILE)}">${plain(context.t("tutorText"))}</a></p>`,
     `<script type="application/json" class="explainer-tutor-prompt">${json(data)}</script>`,
-    `</section>`,
-  ].join("\n");
+    `</div>`,
+  ]
+    .filter((part) => part !== "")
+    .join("\n");
 }
 
 function head(context: Context): string {
@@ -469,8 +525,6 @@ export function renderPage(
     `<main class="explainer" id="inhalt-der-seite">`,
     main(context),
     `</main>`,
-    // the tutor of a page is no part of its content: after main, so that the page's outline stays its own
-    route.kind === "page" ? tutorSection(context) : "",
     pager(context),
     footer(context),
   ]
@@ -486,46 +540,4 @@ export function renderSite(
   descriptions: Descriptions = new Map(),
 ): RenderedPage[] {
   return routes(site).map((route) => renderPage(site, route, islands, descriptions));
-}
-
-/**
- * llms.txt of a language tree: the app, its pages with their sections as deep links, from that tree's root, and the
- * part for a KI tutor (tutor.ts): the generic rules, the app's own, and the links to the pages' tutor files.
- */
-export function llmsTxt(site: Site, lang: string): string {
-  const t = (key: keyof Messages) => message(lang, key);
-  const own = (text: Text) => inLanguage(text, lang).replace(/\s+/g, " ").trim();
-  const lines = [`# ${own(site.app.title)}`, "", `> ${own(site.app.intro)}`, ""];
-  if (site.app.languages.length > 1) {
-    lines.push(
-      site.app.languages
-        .filter((other) => other !== lang)
-        .map(
-          (other) => `${message(other, "language")}: ${relative(languageRoot(lang), `${languageRoot(other)}llms.txt`)}`,
-        )
-        .join("\n"),
-      "",
-    );
-  }
-  for (const chapter of site.chapters) {
-    lines.push(`## ${hiddenChapter(site) ? t("pages") : own(chapter.title)}`, "");
-    for (const page of chapter.pages) {
-      const url = `${chapter.id}/${page.id}/`;
-      const description = page.description === undefined ? "" : `: ${own(page.description)}`;
-      lines.push(`- [${own(page.title)}](${url})${description}`);
-      const sections = (blocks: readonly Block[], anchor: string[], depth: number): void => {
-        for (const block of blocks) {
-          if (block.type !== "section") continue;
-          const id = [...anchor, block.id];
-          lines.push(`${"  ".repeat(depth)}- [${own(block.title)}](${url}#${id.join("/")})`);
-          sections(block.blocks, id, depth + 1);
-        }
-      };
-      sections(page.blocks, [], 1);
-    }
-    lines.push("");
-  }
-  if (terms(site).length > 0) lines.push(`## ${t("glossary")}`, "", `- [${t("glossary")}](glossar/)`, "");
-  lines.push(...llmsTutorPart(site, lang));
-  return `${lines.join("\n").trimEnd()}\n`;
 }

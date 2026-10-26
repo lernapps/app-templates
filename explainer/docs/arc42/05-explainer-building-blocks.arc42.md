@@ -92,7 +92,7 @@ flowchart TB
 ## Explainer runtime
 
 Built. The runtime of every explainer, which the app does not change: it validates and renders the content into
-static pages, writes the tutor files, makes the exercises live in the browser and brings the end-to-end tests.
+static pages, writes the tutor pages, makes the exercises live in the browser and brings the end-to-end tests.
 
 ```arc42
 :::building-block
@@ -109,7 +109,7 @@ implements: concept-archetype-extension
 
 Built. The plugin `explainer()` reads and validates the content, runs the component rules and the property test of
 each generated exercise and exercise component over fixed seeds, and only then writes every page in each language,
-the tutor files where the tutor is on, and the 404 page; `vp dev` serves the same pages.
+the tutor pages where the tutor is on, and the 404 page; `vp dev` serves the same pages.
 
 ```arc42
 :::building-block
@@ -259,10 +259,22 @@ implements: concept-determinism
 
 ### Tutor handoff
 
-Built, optional per app. No model runs in the browser: after the learner's click the app hands the current task to the
-learner's own assistant with a prompt, a provider choice and a clipboard fallback, and "Zurück zum Tutor" leads back.
-The build writes a `tutor.md` per page (each exercise's tasks by number with their solutions, from the exercise's
-`describe` and `about` for a component) and `llms.txt`.
+Built, optional per app. No model runs in the browser: after the learner's click the app hands over to the learner's
+own assistant on one of two ways (`dec-tutor-page`), once the learner has switched an assistant on, on the start page
+or beside the title of a content page, kept on the device (`dec-tutor-assistant`). Both ways name one address, the
+page's tutor page `<chapter>/<page>/tutor/`, with where the learner is in its query: the page's task numbers as its
+own address has them (`?<id>=<n>`); way B adds the exercise (`uebung`) and its section (`abschnitt`). Way A, a bar
+beside the title of each content page, "Mit <name> lernen", opens the assistant with one sentence that asks for help
+with the page, and the tutor page tells the tutor to lead through the page first. Way B, "Hilfe" ("Warum?" after a wrong answer) in the row of "Prüfen" and "Lösung" of every exercise, adds the
+task, the input with its tries and the app's message word for word; without a chat it opens the assistant with them
+(B1), on a page a tutor opened it copies them and closes the tab (B2). "Zurück zum Tutor" leads back with a result
+line on the clipboard. A chat assistant fetches only addresses its user wrote into the conversation, so the one
+address the tutor needs comes in the prompt or in a line the learner pastes. The tutor page is the one source of what
+the tutor gets: a short visible guide, then the page's content and its exercises with every task number, a
+`generated` one once as its template with a table of each number's inputs and outputs (the values, the solution, what
+each typical mistake gives), an exercise component with each number's task and solution from its `describe` as far as
+they fit into 64 kB (`risk-tutor-component-numbers`); its Markdown lies beside it for copying. No prompt and no line
+carries a rule for the tutor, and the app writes no `llms.txt`.
 
 ```arc42
 :::building-block
@@ -276,18 +288,22 @@ implements: concept-tutor
 :::
 ```
 
-#### Tutor prompt and tutor files
+#### Tutor pages and the learner's lines
 
-The prompt names the task on the learner's screen and links the static `tutor.md` files and `llms.txt`, which give
-the assistant the tasks and their solutions; a chat assistant reads them without running JavaScript.
+The start prompt of way A, the lines of "Hilfe" (way B) and the result line of "Zurück zum Tutor" name the page's
+tutor page with the page's task numbers, those of way B also with `uebung` and `abschnitt`, absolute; the lines of way B and the result line
+add the task, the input, the app's message word for word and how far the learner got. A chat assistant reads the
+tutor page without running JavaScript; its Markdown (`index.md`) is the text "Ein anderer: Text kopieren" copies. The
+page ids, exercise ids, the query parameters, the tutor page's structure, the result line and the lines of way B are
+a contract with every tutor.
 
 ```arc42
 :::interface
 id: if-tutor-files
-title: Tutor prompt, tutor.md and llms.txt
+title: Tutor pages, start prompt and the learner's lines
 provider: bb-tutor-handoff
-protocol: Prompt text (clipboard or provider link), static Markdown files over HTTPS
-path: runtime/explainer/prompt.ts
+protocol: Prompt text (provider link or clipboard), result line and the lines of way B (clipboard), static HTML and Markdown over HTTPS
+path: runtime/explainer/tutorpage.ts
 :::
 ```
 
@@ -397,7 +413,7 @@ path: explainer/src/app.yaml
 
 ### Content interface
 
-The explainer's content: build, validation, rendering, generated exercises, tutor files and tests read it only through
+The explainer's content: build, validation, rendering, generated exercises, tutor pages and tests read it only through
 its schema.
 
 ```arc42
@@ -460,7 +476,9 @@ implements: concept-component-rules
 ### Component contract
 
 A `vue-component` block names the component with its typed props and a `nojs` text; an exercise component emits
-`answered { correct, reason? }` and takes the prop `seed`.
+`answered { correct, reason?, answer?, message? }` (`answer`: the learner's input as text, for the result line of
+"Zurück zum Tutor"; `message`: the text it showed for the answer, word for word, for the lines of "Hilfe", which take
+`reason` without it) and takes the prop `seed`.
 
 ```arc42
 :::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
@@ -476,7 +494,7 @@ protocol: Vue props and events, YAML block
 ### Exercise logic module
 
 An exercise component's `<Name>.ts` exports `generate`, `check`, `solution`, `wrong`, `describe` and `about`: the
-exercise contract, which the build tests over fixed seeds and the tutor files read (the task and its solution as text
+exercise contract, which the build tests over fixed seeds and the tutor pages read (the task and its solution as text
 in each language, and what the exercise is for a tutor).
 
 ```arc42

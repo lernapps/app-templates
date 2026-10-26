@@ -115,7 +115,7 @@ type: environment
 
 The `gh-pages` branch of the app's repo, served from its root at `lernapps.net/<repo>/` (only a repo of the lernapps
 organisation is served there; any other at its own Pages address). It serves the rendered pages in every language,
-the 404 page, the tutor files where the tutor is built, and the bundle; the preset builds with relative URLs, so the
+the 404 page, the tutor pages where the tutor is built, and the bundle; the preset builds with relative URLs, so the
 app works under any path.
 
 ```arc42

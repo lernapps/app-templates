@@ -48,7 +48,7 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "an exercise id that is a parameter of the address",
     (root) => edit(root, "kapitel/eins.yaml", "id: summe", "id: seed"),
-    "src/kapitel/eins.yaml:22: blocks[1].blocks[0].id: seed is a parameter of the page's address (seed, von), and the address holds the task number of each exercise under its id; give the exercise another id",
+    "src/kapitel/eins.yaml:22: blocks[1].blocks[0].id: seed is a parameter of the page's address (seed, von, uebung, abschnitt), and the address holds the task number of each exercise under its id; give the exercise another id",
   ],
   [
     "an unknown LaTeX command",

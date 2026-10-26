@@ -68,8 +68,12 @@ export interface StartQuestionOptions {
    * as in a quiz round, every complete answer locks the question and shows its solution at once.
    */
   retry?: boolean;
-  /** Called on each complete answer, right or wrong; once in a quiz round, where the answer locks the question. */
-  onAnswer?: (answer: Answer, right: boolean) => void;
+  /**
+   * Called on each complete answer, right or wrong; once in a quiz round, where the answer locks the question. `said`
+   * is what the feedback says about a wrong answer, word for word as the question's texts have it (its formulas as
+   * written): the reasons, each with its option, without the verdict and the offer to try again; "" for a right one.
+   */
+  onAnswer?: (answer: Answer, right: boolean, said: string) => void;
   /** Called once, when the solution shows. */
   onReveal?: () => void;
   /** How a text of the question that the feedback quotes becomes HTML (its formulas); plain text without it. */
@@ -118,7 +122,10 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     solve.hidden = true;
     check.after(" ", solve);
   }
+  // what the feedback says about the answer, for onAnswer
+  let said: string[] = [];
   const line = (text: string, option?: string) => {
+    said.push(option === undefined ? text : `${option}: ${text}`);
     const why = doc.createElement("p");
     why.className = "question-diagnosis";
     if (option !== undefined) {
@@ -167,6 +174,7 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
       return;
     }
     last = answer;
+    said = [];
     const right = isCorrect(question, answer);
     feedback.className = `question-feedback ${right ? "question-right" : "question-wrong"}`;
     feedback.textContent = t(right ? "right" : "wrong");
@@ -181,12 +189,11 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
       for (const reason of reasons) line(reason.text, reason.option);
       const missing = missesRight(question, answer);
       if (diagnosis === undefined && missing) line(t("missingRight"));
-      if (options.retry === true) {
-        if (reasons.length === 0 && !missing) line(t("lookAgain"));
-        line(t("tryAgain"));
-      }
+      if (options.retry === true && reasons.length === 0 && !missing) line(t("lookAgain"));
     }
-    options.onAnswer?.(answer, right);
+    const told = said.join(" ");
+    if (!right && options.retry === true) line(t("tryAgain"));
+    options.onAnswer?.(answer, right, told);
     if (right || options.retry !== true) reveal();
     else if (solve) solve.hidden = false;
     // the focus on the feedback, not on the button below the background: the feedback stays in view, a screen

@@ -208,7 +208,10 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         );
       } else if (!ID.test(name.slice(0, -".yaml".length))) {
         problems.file(file, `the file's name is the page's id: use lower-case letters, digits and hyphens`);
-      } else pageIds.push(name.slice(0, -".yaml".length));
+      } else {
+        const pageId = name.slice(0, -".yaml".length);
+        pageIds.push(pageId);
+      }
     }
     if (!existsSync(join(folder, "chapter.yaml"))) {
       problems.file(

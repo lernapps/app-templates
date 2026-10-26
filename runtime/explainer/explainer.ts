@@ -9,10 +9,18 @@
 // of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the question's controls, checker and feedback through its
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
 // always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
-// JavaScript. A page a tutor opened (von=tutor in the address, beside any seed) gets "Zurück zum Tutor",
-// which closes the tab; the start page's "Mit einem KI-Tutor lernen" copies the tutor prompt or opens an assistant
-// with it on a click (a page's button also gives it the tasks of the page's address); the learner's chosen way to the
-// tutor is the only thing kept on the device.
+// JavaScript. The page keeps in memory how far the learner got with each task (result.ts): a page a tutor opened
+// (von=tutor in the address, beside any seed) gets "Zurück zum Tutor", which copies a result line with the address of
+// the page's tutor page, then closes the tab. The learner switches a way to the tutor on once, on the start page or
+// beside the title of a page: an assistant of the app, or copying the text; it is the only thing kept on the device.
+// Two ways lead to the tutor, both naming the page's tutor page with where the learner is in its query (position.ts),
+// the one source of what the tutor gets (tutorpage.ts). A: while a way is on, a bar beside the title of a content
+// page, "Mit <name> lernen", opens the assistant with the start prompt (prompt.ts). B: the help button in the row of
+// "Prüfen" and "Lösung" of every exercise, there only while a way is on, "Hilfe" and after a wrong answer "Warum?",
+// gives the lines of that task (stuck.ts: the task, the input, the app's message word for word, the tutor page):
+// without a chat (B1) it opens the way switched on with them; on a page a tutor opened (B2) it copies the lines and
+// closes the tab, and once the task is done it is "Zurück", which copies the result line. Copying instead of an
+// assistant adds the tutor page's Markdown. Input and message leave the page only with the click.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { startQuestion } from "../shared/questions/engine.ts";
@@ -23,12 +31,26 @@ import { diagnose, questionFor } from "./generated/question.ts";
 import { hintOf, stepsOf, taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { message } from "./messages.ts";
-import { pageTutorText } from "./tutorpage.ts";
-import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
+import { answerShown, Progress, resultLine } from "./result.ts";
+import { stuckLines, stuckPrompt } from "./stuck.ts";
+import { currentExercise, pageQuery, taskQuery, type PagePosition } from "./position.ts";
+import {
+  addressOf,
+  NEW_TASK_ICON,
+  nextTaskNumber,
+  numberFromAddress,
+  randomTaskNumber,
+  SHOWN_EVENT,
+  taskNumber,
+} from "./tasks.ts";
 import { escape } from "../shared/html.ts";
 
 /** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
-function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind: "generated" }>): void {
+function startGenerated(
+  element: HTMLElement,
+  data: Extract<ExerciseData, { kind: "generated" }>,
+  progress: Progress,
+): void {
   const live = element.querySelector<HTMLElement>(".explainer-live");
   if (!live) return;
   const { spec, templates, lang, texts } = data;
@@ -50,7 +72,7 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
     const steps = stepsOf(spec, task, lang, templates);
     live.innerHTML = [
       `<p class="explainer-practice">${escape(texts.practice)}</p>`,
-      `<p class="explainer-task-number">${escape(texts.taskNumber.replace("{n}", String(number)))}</p>`,
+      `<p class="explainer-task-number">${escape(texts.taskNumber.replace("{n}", String(number)))} <button type="button" class="explainer-new-task" aria-label="${escape(texts.newTask)}" title="${escape(texts.newTask)}">${NEW_TASK_ICON}</button></p>`,
       renderQuestion(question, {
         lang,
         textHtml: taskText(spec, task, lang, templates),
@@ -63,19 +85,27 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
       hint === undefined
         ? ""
         : `<details class="explainer-hint"><summary>${escape(texts.hint)}</summary><p>${hint}</p></details>`,
-      `<p class="explainer-new"><button type="button" class="explainer-new-task">${escape(texts.newTask)}</button></p>`,
     ].join("\n");
     live.hidden = false;
     const item = live.querySelector<HTMLElement>(`#${questionId(question)}`);
     if (item) {
+      const shown = number;
       startQuestion(item, question, {
         lang,
         retry: true,
         diagnose: (answer) => diagnose(spec, task, question, answer, lang, templates),
+        onAnswer: (answer, right, said) =>
+          progress.answered(spec.id, shown, right, answerShown(question, answer, lang), said),
+        onReveal: () => progress.revealed(spec.id, shown),
+      });
+      const opened = live.querySelector<HTMLDetailsElement>("details.explainer-hint");
+      opened?.addEventListener("toggle", () => {
+        if (opened.open) progress.hinted(spec.id, shown);
       });
       const legend = item.querySelector<HTMLElement>("legend");
       if (focus && legend) moveFocus(legend);
     }
+    element.dispatchEvent(new CustomEvent(SHOWN_EVENT, { bubbles: true }));
     live.querySelector(".explainer-new-task")?.addEventListener("click", () => {
       // the tasks of the numbers are distinct: the next number is a new task
       number = nextTaskNumber(number, count);
@@ -89,56 +119,41 @@ function startGenerated(element: HTMLElement, data: Extract<ExerciseData, { kind
 /** Whether a tutor opened the page: von=tutor in its address, exactly so. */
 export const fromTutor = (href: string): boolean => new URL(href).searchParams.get("von") === "tutor";
 
+/** The event an island sends for an exercise component's answer (islands.ts), with { correct, answer?, message? }. */
+export const ANSWERED_EVENT = "explainer-answered";
+
 /** How long the page waits after window.close() before it tells the learner to close the tab. */
 const CLOSE_WAIT_MS = 300;
 
-/**
- * "Zurück zum Tutor" at the top of a page a tutor opened (von=tutor): it closes the tab, which the tutor's chat
- * opened; where the browser keeps it open (a tab the learner opened), a line says to close it. Nothing is sent.
- */
-function startBackToTutor(root: Document, main: HTMLElement): void {
-  const lang = root.documentElement.lang;
-  const box = root.createElement("p");
-  box.className = "explainer-back";
-  const button = root.createElement("button");
-  button.type = "button";
-  button.textContent = message(lang, "backToTutor");
-  const status = root.createElement("span");
-  status.setAttribute("role", "status");
-  status.setAttribute("aria-live", "polite");
-  button.addEventListener("click", () => {
-    status.textContent = "";
-    const view = root.defaultView;
-    view?.close();
-    setTimeout(() => {
-      if (!view?.closed) status.textContent = message(lang, "backToTutorOpen");
-    }, CLOSE_WAIT_MS);
-  });
-  box.append(button, " ", status);
-  main.prepend(box);
-}
+/** The pause between copying and closing: closed at once, headless Chromium lost 6 of 20 lines (Mathe-Karte). */
+const COPY_PAUSE_MS = 100;
 
 /** What the tutor section of a page gives the client module (render.ts, prompt.ts). */
 interface TutorData {
-  prompt: string;
-  short: string;
+  /** The start prompt a provider link carries, with `query` on a content page. */
+  start: string;
   base: string;
+  query: string;
   /** The root of the language tree, relative to this page. */
   root: string;
-  max: number;
   storage: string;
-  /** The page's tutor file, relative to the page; none on the start page. */
-  file?: string;
+  /** The content page, for the learner's position and the result line. */
+  page?: PagePosition & { title: string };
+  /** The page's tutor page, from the root of the language tree. */
+  tutor?: string;
+  /** The Markdown of the page's tutor page, from the root of the language tree, for copying. */
+  markdown?: string;
   ways: { name: string; url: string }[];
   go: string;
   copy: string;
   copied: string;
-  copiedShort: string;
   failed: string;
-  pageHeading: string;
-  pageNow: string;
-  pageFile: string;
-  shortNote: string;
+}
+
+/** The data of the page's tutor section, if it has one. */
+function tutorData(root: Document): TutorData | undefined {
+  const script = root.querySelector(".explainer-tutor script.explainer-tutor-prompt");
+  return script ? (JSON.parse(script.textContent ?? "{}") as TutorData) : undefined;
 }
 
 /** Whether `text` is now on the clipboard. */
@@ -151,109 +166,422 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-/** The key the chosen way to the tutor is kept under on the device: an assistant's name, or COPY. */
+/** The absolute address of the page's tutor page with `query`, from the page at `href`. */
+const tutorAddress = (href: string, data: TutorData, query: string): string =>
+  new URL(`${data.tutor ?? ""}${query}`, new URL(data.root, href)).href;
+
+/**
+ * `prompt` with the Markdown of the page's tutor page after it, for an assistant that fetches nothing: the app's own
+ * static file; the prompt alone when it is not reachable, as it names the tutor page.
+ */
+async function withMarkdown(prompt: string, data: TutorData, href: string): Promise<string> {
+  if (data.markdown === undefined) return prompt;
+  try {
+    const response = await fetch(new URL(data.markdown, new URL(data.root, href)).href);
+    if (response.ok) return `${prompt}\n\n${(await response.text()).trimEnd()}\n`;
+  } catch {
+    // not reachable: the prompt names the tutor page
+  }
+  return prompt;
+}
+
+/**
+ * The result line of the page at `href` (result.ts): of the exercise `id`, else of the one the learner answered last,
+ * else the one the anchor names, else the page's first; with the absolute address of the page's tutor page with the
+ * position.
+ */
+function resultOf(href: string, lang: string, data: TutorData, progress: Progress, id?: string): string | undefined {
+  const { page, tutor } = data;
+  const exercise =
+    page === undefined
+      ? undefined
+      : (page.exercises.find((candidate) => candidate.id === id) ??
+        currentExercise(href, page, progress.last) ??
+        page.exercises[0]);
+  if (page === undefined || exercise === undefined || tutor === undefined) return undefined;
+  const n = exercise.numbered ? numberFromAddress(href, exercise.id) : undefined;
+  return resultLine(
+    {
+      page: page.title,
+      exercise: exercise.id,
+      ...(n === undefined ? {} : { number: n }),
+      state: progress.state(exercise.id, n),
+      session: progress.session(),
+      tutor: tutorAddress(href, data, taskQuery(href, page, exercise.id)),
+    },
+    lang,
+  );
+}
+
+/** The texts of copying for a tutor and closing the tab: once copied, and when copying fails. */
+interface CloseTexts {
+  copied: string;
+  failed: string;
+  open: string;
+}
+
+/**
+ * Copies `text` for the chat with the tutor, waits a moment and closes the tab, which the tutor's chat opened; where
+ * the browser keeps it open (a tab the learner opened), `status` says to paste and close the tab. When copying fails,
+ * the tab stays open, with the text selected in `field` to copy by hand. Without a text it only closes the tab. The
+ * text goes to the clipboard only, never over the network ("Zurück zum Tutor", "Hilfe" and "Zurück" in B2).
+ */
+function copyAndClose(
+  root: Document,
+  text: string | undefined,
+  status: HTMLElement,
+  field: HTMLTextAreaElement,
+  texts: CloseTexts,
+): void {
+  const view = root.defaultView;
+  const close = (said: string) => {
+    view?.close();
+    setTimeout(() => {
+      if (!view?.closed) status.textContent = said;
+    }, CLOSE_WAIT_MS);
+  };
+  status.textContent = "";
+  if (text === undefined) {
+    close(texts.open);
+    return;
+  }
+  void copyText(text).then((copied) => {
+    if (!copied) {
+      // the tab stays open: the text would be lost
+      field.value = text;
+      field.hidden = false;
+      field.focus();
+      field.select();
+      status.textContent = texts.failed;
+      return;
+    }
+    setTimeout(() => close(texts.copied), COPY_PAUSE_MS);
+  });
+}
+
+/** A status line and the field for copying by hand, hidden until copying fails. */
+function statusAndField(root: Document, label: string): { status: HTMLElement; field: HTMLTextAreaElement } {
+  const status = root.createElement("span");
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  const field = root.createElement("textarea");
+  field.className = "explainer-back-line";
+  field.readOnly = true;
+  field.rows = 3;
+  field.hidden = true;
+  field.setAttribute("aria-label", label);
+  return { status, field };
+}
+
+/**
+ * "Zurück zum Tutor" at the top of a page a tutor opened (von=tutor): it copies the result line and closes the tab
+ * (copyAndClose).
+ */
+function startBackToTutor(root: Document, main: HTMLElement, data: TutorData | undefined, progress: Progress): void {
+  const lang = root.documentElement.lang;
+  const box = root.createElement("p");
+  box.className = "explainer-back";
+  const button = root.createElement("button");
+  button.type = "button";
+  button.textContent = message(lang, "backToTutor");
+  const { status, field } = statusAndField(root, message(lang, "resultLabel"));
+  button.addEventListener("click", () => {
+    const line = data === undefined ? undefined : resultOf(root.location.href, lang, data, progress);
+    copyAndClose(root, line, status, field, {
+      copied: message(lang, "backToTutorCopied"),
+      failed: message(lang, "backToTutorFailed"),
+      open: message(lang, "backToTutorOpen"),
+    });
+  });
+  box.append(button, " ", status, field);
+  main.prepend(box);
+}
+
+/** The prompts of a way to the tutor: the one a provider link carries, and the one to copy. */
+interface Prompts {
+  start: () => string;
+  copy: () => string | Promise<string>;
+}
+
+/**
+ * Opens the assistant `provider` with the start prompt, when its address takes one; else copies the prompt to copy and
+ * opens the assistant (none for copying the text), and `say` tells whether copying worked. The window opens at the
+ * click, which a browser allows; the address follows once the prompt is copied.
+ */
+function openAssistant(
+  root: Document,
+  provider: { url?: string } | undefined,
+  prompts: Prompts,
+  say: (copied: boolean | undefined) => void,
+): void {
+  const template = provider?.url;
+  if (template !== undefined && template.includes("{prompt}")) {
+    say(undefined);
+    root.defaultView?.open(template.split("{prompt}").join(encodeURIComponent(prompts.start())), "_blank", "noopener");
+    return;
+  }
+  const opened = template === undefined ? null : root.defaultView?.open("", "_blank");
+  if (opened) opened.opener = null;
+  void Promise.resolve(prompts.copy()).then(async (full) => {
+    say(await copyText(full));
+    if (template === undefined) return;
+    if (opened) opened.location.href = template;
+    else root.defaultView?.open(template, "_blank", "noopener");
+  });
+}
+
+/** The key the switched-on way to the tutor is kept under on the device: an assistant's name, or COPY; none when off. */
 const WAY_KEY = "tutor-way";
 const COPY = "copy";
 const isText = (value: unknown): value is string => typeof value === "string";
 
+/** A way to the tutor: an assistant of the app, or copying the prompt (no address). */
+interface Way {
+  name: string;
+  url?: string;
+}
+
 /**
- * "Mit einem KI-Tutor lernen": one button with a select beside it. The select holds the assistants of the app and
- * "Prompt kopieren"; the first assistant is the default, and a way the learner picks is kept on the device
- * (@lernapps/tooling/storage) and is the default from then on. The button does the chosen way: it opens the assistant
- * with the prompt in its address, or, when that address would be too long, with a short prompt that points to the tutor
- * files, and the whole prompt is copied as well; or it only copies the prompt. On a page the prompt gets the page
- * and the tasks its address names (tutorpage.ts). Nothing goes over the network but the click's own page, the page's
- * tutor file (the app's own static file) and the assistant that opens.
+ * The way to the tutor the learner switched on, kept on the device (@lernapps/tooling/storage), one per app: on the
+ * start page or under the title of a page. Whoever shows something of it listens, so that switching it on or off shows
+ * at once on the whole page.
  */
-function startTutor(root: Document): void {
+class WayChoice {
+  readonly #storage: ReturnType<typeof createStorage>;
+  readonly #ways: readonly { name: string; url: string }[];
+  readonly #listeners: (() => void)[] = [];
+  constructor(storage: string, ways: readonly { name: string; url: string }[]) {
+    this.#storage = createStorage(storage);
+    this.#ways = ways;
+  }
+  /** The way switched on, if any: an assistant the app still offers, or copying. */
+  get(): Way | undefined {
+    const name = this.#storage.load(WAY_KEY, isText);
+    if (name === COPY) return { name: COPY };
+    return this.#ways.find((way) => way.name === name);
+  }
+  /** Switches the way `name` on (an assistant's name, or COPY), or the tutor off. */
+  set(name: string | undefined): void {
+    if (name === undefined) this.#storage.remove(WAY_KEY);
+    else this.#storage.save(WAY_KEY, name);
+    for (const listener of this.#listeners) listener();
+  }
+  listen(listener: () => void): void {
+    this.#listeners.push(listener);
+  }
+}
+
+/** The name of a way as the page says it: the assistant's, or "deinen KI-Tutor" for copying. */
+const nameOf = (way: Way | undefined, lang: string): string =>
+  way?.url === undefined ? message(lang, "tutorSomeone") : way.name;
+
+/** The symbol of a way: the first letter of the assistant's name in a circle, "?" for copying. */
+function iconOf(root: Document, way: Way | undefined): HTMLElement {
+  const icon = root.createElement("span");
+  icon.className = "explainer-ki-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.textContent = way?.url === undefined ? "?" : (way.name.trim()[0] ?? "?").toUpperCase();
+  return icon;
+}
+
+/**
+ * The tutor's help button in every exercise of the page, way B, there only while a way to the tutor is switched on or
+ * on a page a tutor opened (von=tutor). It sits in the row of "Prüfen" and "Lösung" (or below an exercise component),
+ * with the assistant's symbol, and says what helps now: "Hilfe" before an answer and after the right one; "Warum?",
+ * standing out, after a wrong one, with a sentence that says what the click gives the assistant; on a page a tutor
+ * opened, "Zurück" once the task is right or its solution shown. "Hilfe" and "Warum?" give the lines of the task as the
+ * learner has it now (stuck.ts): the task, the input with the tries, the app's message word for word, the hint or
+ * solution opened, the page's tutor page with the task (taskQuery). B1, without a chat: they open the way switched
+ * on, the tutor page and the task in one sentence first. B2, on a page a tutor opened: they copy the lines and close
+ * the tab (copyAndClose), so the running chat goes on; "Zurück" copies the result line of the task the same way.
+ */
+function startHelp(root: Document, data: TutorData, progress: Progress, choice: WayChoice): void {
+  const { page, tutor } = data;
+  if (page === undefined || tutor === undefined) return;
+  const lang = root.documentElement.lang;
+  const running = fromTutor(root.location.href);
+  const updates = new Map<string, () => void>();
+  for (const exercise of page.exercises) {
+    const element = root.getElementById(exercise.id);
+    if (!element) continue;
+    const button = root.createElement("button");
+    button.type = "button";
+    button.className = "explainer-help";
+    const label = root.createElement("span");
+    // below an exercise without the row of the shared questions (a component)
+    const own = root.createElement("p");
+    own.className = "explainer-help-row";
+    const note = root.createElement("p");
+    note.className = "explainer-help-note";
+    const text = root.createElement("small");
+    const { status, field } = statusAndField(root, message(lang, "stuckLabel"));
+    note.append(text, " ", status, field);
+    const place = () => {
+      const row = element.querySelector<HTMLElement>(".question-actions");
+      if (row) {
+        row.append(" ", button);
+        own.remove();
+      } else {
+        own.append(button);
+        element.append(own);
+      }
+      element.append(note);
+    };
+    const n = () => (exercise.numbered ? numberFromAddress(root.location.href, exercise.id) : undefined);
+    let mode: "help" | "why" | "back" = "help";
+    const update = () => {
+      const way = choice.get();
+      const shown = running || way !== undefined;
+      button.hidden = !shown;
+      own.hidden = !shown;
+      const state = progress.state(exercise.id, n());
+      const done = state.rightAt !== undefined || state.revealed;
+      mode = running && done ? "back" : state.attempts > 0 && !done ? "why" : "help";
+      const name = running ? message(lang, "tutorSomeone") : nameOf(way, lang);
+      label.textContent = message(lang, mode === "back" ? "helpBack" : mode === "why" ? "helpWhy" : "help");
+      button.setAttribute(
+        "aria-label",
+        message(lang, mode === "back" ? "helpBackLabel" : mode === "why" ? "helpWhyLabel" : "helpLabel", { name }),
+      );
+      button.replaceChildren(iconOf(root, way), label);
+      button.classList.toggle("explainer-help-why", mode === "why");
+      button.classList.toggle("explainer-help-back", mode === "back");
+      text.textContent =
+        mode !== "why" ? "" : running ? message(lang, "stuckPrivacyCopy") : message(lang, "stuckPrivacy", { name });
+      note.hidden = !shown || (mode !== "why" && field.hidden && status.textContent === "");
+    };
+    const stuck = () => {
+      const href = root.location.href;
+      const number = n();
+      return {
+        exercise: exercise.id,
+        ...(number === undefined ? {} : { number }),
+        state: progress.state(exercise.id, number),
+        tutor: tutorAddress(href, data, taskQuery(href, page, exercise.id)),
+      };
+    };
+    button.addEventListener("click", () => {
+      note.hidden = false;
+      if (mode === "back") {
+        copyAndClose(root, resultOf(root.location.href, lang, data, progress, exercise.id), status, field, {
+          copied: message(lang, "backToTutorCopied"),
+          failed: message(lang, "backToTutorFailed"),
+          open: message(lang, "backToTutorOpen"),
+        });
+        return;
+      }
+      if (running) {
+        copyAndClose(root, stuckLines(stuck(), lang), status, field, {
+          copied: message(lang, "stuckCopied"),
+          failed: message(lang, "stuckFailed"),
+          open: message(lang, "backToTutorOpen"),
+        });
+        return;
+      }
+      const way = choice.get();
+      const prompt = () => stuckPrompt(stuck(), lang);
+      const copy = () => withMarkdown(prompt(), data, root.location.href);
+      openAssistant(root, way, { start: prompt, copy }, (copied) => {
+        status.textContent = copied === undefined ? "" : copied ? data.copied : data.failed;
+      });
+    });
+    place();
+    update();
+    // a generated exercise and a component show a new task in place: the button goes back into its row
+    element.addEventListener(SHOWN_EVENT, () => {
+      place();
+      update();
+    });
+    updates.set(exercise.id, update);
+  }
+  progress.listen((id) => updates.get(id)?.());
+  choice.listen(() => {
+    for (const update of updates.values()) update();
+  });
+}
+
+/**
+ * The choice of the learner's assistant on the start page: "Keiner", the app's assistants and copying the text, shown
+ * once the client module runs; a choice is kept on the device at once (WayChoice), "Keiner" switches the tutor off.
+ */
+function startChoice(root: Document): void {
+  const select = root.querySelector<HTMLSelectElement>("select.explainer-tutor-choose");
+  const box = select?.closest<HTMLElement>(".explainer-tutor-choice");
+  if (!select || !box) return;
+  const storage = createStorage(select.dataset["storage"] ?? "explainer");
+  const stored = storage.load(WAY_KEY, isText);
+  const names = [...select.options].map((option) => option.value);
+  select.value = stored !== undefined && names.includes(stored) ? stored : "";
+  select.addEventListener("change", () => {
+    if (select.value === "") storage.remove(WAY_KEY);
+    else storage.save(WAY_KEY, select.value);
+  });
+  box.hidden = false;
+}
+
+/**
+ * "Mit einem KI-Tutor lernen", way A, beside the title of a content page. While no way is switched on, it stays
+ * folded; unfolded, a select of the app's assistants and copying the text, and "Einschalten", which keeps the way on
+ * the device (WayChoice). Once a way is on, a bar takes its place: "Mit <name> lernen", with the assistant's symbol;
+ * the start page changes the way or switches it off. The bar's button does the way: it opens the assistant with the
+ * start prompt in its address, the page's tutor page with the page's task numbers (prompt.ts, pageQuery), for a
+ * tutor who leads through the page before it comes to a task; or it copies the prompt with the tutor page's Markdown, and opens
+ * an assistant whose address takes no prompt. On a page a tutor opened (von=tutor) the chat runs already: the section
+ * stays hidden. Nothing goes over the network but the click's own page, the tutor page's Markdown (the app's own
+ * static file, for copying) and the assistant that opens.
+ */
+function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
   const section = root.querySelector<HTMLElement>(".explainer-tutor");
-  const script = section?.querySelector("script.explainer-tutor-prompt");
-  if (!section || !script) return;
-  const data = JSON.parse(script.textContent ?? "{}") as TutorData;
+  if (!section) return;
+  if (fromTutor(root.location.href)) {
+    section.hidden = true;
+    return;
+  }
+  const off = section.querySelector<HTMLDetailsElement>("details.explainer-tutor-off");
+  const bar = section.querySelector<HTMLElement>(".explainer-tutor-bar");
+  const way = section.querySelector<HTMLElement>(".explainer-tutor-way");
+  const select = section.querySelector<HTMLSelectElement>(".explainer-tutor-select");
+  const on = section.querySelector<HTMLButtonElement>(".explainer-tutor-on");
+  const go = section.querySelector<HTMLButtonElement>(".explainer-tutor-go");
   const status = section.querySelector<HTMLElement>(".explainer-tutor-status");
+  if (!off || !bar || !way || !select || !on || !go) return;
   const say = (text: string) => {
     if (status) status.textContent = text;
   };
-  const way = section.querySelector<HTMLElement>(".explainer-tutor-way");
-  const go = section.querySelector<HTMLButtonElement>(".explainer-tutor-go");
-  const select = section.querySelector<HTMLSelectElement>(".explainer-tutor-select");
-  if (!way || !go || !select) return;
-  const storage = createStorage(data.storage);
-  const stored = storage.load(WAY_KEY, isText);
-  const names = [...data.ways.map((provider) => provider.name), COPY];
-  select.selectedIndex = stored !== undefined && names.includes(stored) ? names.indexOf(stored) : 0;
-  const chosen = () => data.ways[select.selectedIndex];
-  const label = () => {
-    const provider = chosen();
-    go.textContent = provider === undefined ? data.copy : data.go.replace("{name}", provider.name);
-  };
-  label();
-  select.addEventListener("change", () => {
-    storage.save(WAY_KEY, names[select.selectedIndex] ?? COPY);
-    label();
-  });
   way.hidden = false;
   const plain = section.querySelector<HTMLElement>(".explainer-tutor-plain");
   if (plain) plain.hidden = true;
-
-  // the prompt's links start at the root of the language tree, whichever page the section is on
-  const tree = new URL(data.root, root.location.href).href;
-  const resolve = (text: string) => text.split(data.base).join(tree);
-  /** The whole prompt and the short one, with the page and its tasks when the section is on a page. */
-  const build = async (): Promise<{ full: string; short: string }> => {
-    const full = resolve(data.prompt);
-    const short = resolve(data.short);
-    if (data.file === undefined) return { full, short: `${short}\n\n${data.shortNote}` };
-    const href = root.location.href;
-    const file = new URL(data.file, href).href;
-    let text: string | undefined;
-    try {
-      const response = await fetch(file);
-      if (response.ok) text = await response.text();
-    } catch {
-      // the page's tutor file is not reachable: the prompt names it instead
-    }
-    const now = `${data.pageNow} ${href}`;
-    const page = [
-      "",
-      `## ${data.pageHeading}`,
-      "",
-      now,
-      "",
-      text === undefined ? `${data.pageFile} ${file}` : pageTutorText(text, href),
-    ];
-    return {
-      full: `${full}${page.join("\n")}\n`,
-      short: `${short}\n\n${[now, `${data.pageFile} ${file}`, data.shortNote].join("\n")}`,
-    };
+  const show = () => {
+    const chosen = choice.get();
+    off.hidden = chosen !== undefined;
+    bar.hidden = chosen === undefined;
+    if (chosen === undefined) return;
+    const text = root.createElement("span");
+    text.textContent = chosen.url === undefined ? data.copy : data.go.replace("{name}", chosen.name);
+    go.replaceChildren(iconOf(root, chosen), text);
   };
+  show();
+  choice.listen(show);
+  on.addEventListener("click", () => {
+    off.open = false;
+    choice.set(select.value);
+    say("");
+    go.focus();
+  });
+
+  // the prompt's address starts at the root of the language tree, whichever page the section is on
+  const tree = new URL(data.root, root.location.href).href;
+  /** The start prompt: the page's tutor page with the page's task numbers. */
+  const start = (): string => {
+    const text = data.start.split(data.base).join(tree);
+    const { page } = data;
+    return text.split(data.query).join(page === undefined ? "" : pageQuery(root.location.href, page));
+  };
+  const whole = () => withMarkdown(start(), data, root.location.href);
   go.addEventListener("click", () => {
-    const provider = chosen();
-    const template = provider?.url;
-    // the window opens at the click, which a browser allows; the address follows once the prompt is built
-    const opened = template === undefined ? null : root.defaultView?.open("", "_blank");
-    if (opened) opened.opener = null;
-    void build().then(async ({ full, short }) => {
-      const done = (copied: boolean, text: string) => say(copied ? text : data.failed);
-      const withPrompt = (prompt: string) => (template ?? "").split("{prompt}").join(encodeURIComponent(prompt));
-      if (template === undefined || !template.includes("{prompt}")) {
-        done(await copyText(full), data.copied);
-        if (template !== undefined) {
-          if (opened) opened.location.href = template;
-          else root.defaultView?.open(template, "_blank", "noopener");
-        }
-        return;
-      }
-      let address = withPrompt(full);
-      if (address.length > data.max) {
-        // the assistant gets the short prompt; the whole one is on the clipboard for the learner to paste
-        address = withPrompt(short);
-        // an app with very many pages: the list of every tutor file goes, the first line and the page's files stay
-        if (address.length > data.max) address = withPrompt(short.replace(/\n\n[\s\S]*?(?=\n\n|$)/, ""));
-        done(await copyText(full), data.copiedShort);
-      } else say("");
-      if (opened) opened.location.href = address;
-      else root.defaultView?.open(address, "_blank", "noopener");
+    const chosen = choice.get();
+    openAssistant(root, chosen, { start, copy: whole }, (copied) => {
+      say(copied === undefined ? "" : copied ? data.copied : data.failed);
     });
   });
 }
@@ -262,8 +590,29 @@ function startTutor(root: Document): void {
 export function startExplainer(root: Document = document): void {
   root.documentElement.classList.add("explainer-js");
   const main = root.querySelector<HTMLElement>("main");
-  if (main && fromTutor(root.location.href)) startBackToTutor(root, main);
-  startTutor(root);
+  const tutor = tutorData(root);
+  const progress = new Progress();
+  if (main && fromTutor(root.location.href)) startBackToTutor(root, main, tutor, progress);
+  startChoice(root);
+  if (tutor !== undefined) {
+    const choice = new WayChoice(tutor.storage, tutor.ways);
+    startTutor(root, tutor, choice);
+    startHelp(root, tutor, progress, choice);
+  }
+  // an exercise component's answers, from its island
+  root.addEventListener(ANSWERED_EVENT, (event) => {
+    const element = event.target;
+    const detail = (event as CustomEvent<{ correct?: unknown; answer?: unknown; message?: unknown } | null>).detail;
+    if (!(element instanceof HTMLElement) || element.id === "" || detail === null) return;
+    const text = (value: unknown) => (typeof value === "string" ? value : undefined);
+    progress.answered(
+      element.id,
+      numberFromAddress(root.location.href, element.id),
+      detail.correct === true,
+      text(detail.answer),
+      text(detail.message),
+    );
+  });
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;
     if (!element) continue;
@@ -274,12 +623,16 @@ export function startExplainer(root: Document = document): void {
       // the question shows the same as its "Lösung" once it is answered
       const solution = element.querySelector<HTMLElement>(":scope > details.explainer-solution");
       if (solution) solution.hidden = true;
-      const { rendered } = data;
-      startQuestion(item, data.question, {
-        lang: data.lang,
+      const { rendered, question, lang } = data;
+      const id = element.id;
+      startQuestion(item, question, {
+        lang,
         retry: true,
         format: (text) => rendered[text] ?? escape(text),
+        onAnswer: (answer, right, said) =>
+          progress.answered(id, undefined, right, answerShown(question, answer, lang), said),
+        onReveal: () => progress.revealed(id, undefined),
       });
-    } else startGenerated(element, data);
+    } else startGenerated(element, data, progress);
   }
 }

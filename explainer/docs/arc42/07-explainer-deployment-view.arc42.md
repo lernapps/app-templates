@@ -4,7 +4,7 @@ Where the explainer's blocks run, below the generic nodes.
 
 ## Explainer build
 
-The explainer's component rules, property tests and tutor files run in CI and, through the same hooks, on the
+The explainer's component rules, property tests and tutor pages run in CI and, through the same hooks, on the
 creator's machine; the content, data and components are built into the pages and the bundle there.
 
 ```arc42

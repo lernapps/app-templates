@@ -7,7 +7,8 @@
 // runtime @lernapps/app-templates, @lernapps/tooling/storage, i18n and a11y and the component's own folder, and browser
 // globals (window, document, localStorage, …) only inside onMounted and the hooks that run after it, because the build
 // renders the component without a browser. A component that emits answered is an exercise (answered { correct,
-// reason? }, reason the text of what went wrong in a wrong answer, shown under the feedback): it declares the prop
+// reason?, answer?, message? }, reason the text of what went wrong in a wrong answer, shown under the feedback; answer
+// the learner's input as text; message the text the component showed for it, word for word, else reason counts): it declares the prop
 // seed: number, the task number the explainer gives it (tasks.ts), and shows the task generate(seed, props); its logic
 // module <Name>.ts exports generate(seed, props), check(task, answer), solution(task), wrong(task), which the build
 // tests over fixed seeds (propertyProblems), describe(task, props, lang), the task and its solution as a learner reads

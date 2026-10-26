@@ -157,6 +157,6 @@ Optional; built for the explainer only; no model runs in the browser (see `dec-t
 :::glossary-term
 id: term-tutor
 title: Tutor
-definition: The learner's own AI assistant, to which the app hands the current task after a click, through a prompt and static tutor files.
+definition: The learner's own AI assistant, to which the app hands the current task after a click, through a prompt and static tutor pages.
 :::
 ```

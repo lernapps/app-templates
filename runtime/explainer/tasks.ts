@@ -4,7 +4,7 @@
 // are the tasks "Aufgabe Nr. 1" to "Aufgabe Nr. N". The number is the one identifier a learner, a tutor and the
 // address share: ?seed=<n>#<exercise> opens task number n (the build ships each exercise's table of seeds, and the page
 // draws the task from table[n - 1]); "Neue Aufgabe" moves to the next number, from N back to 1; a number outside 1 to N
-// wraps around into it (taskNumber), so every address opens a task the tutor files list.
+// wraps around into it (taskNumber), so every address opens a task the tutor page lists (tutorpage.ts).
 
 /** The most tasks an exercise numbers. */
 export const MAX_TASKS = 67;
@@ -41,8 +41,12 @@ export const nextTaskNumber = (n: number, count: number): number => (n % count) 
 /** A task number to start with when the address names none. */
 export const randomTaskNumber = (count: number): number => 1 + Math.floor(Math.random() * count);
 
-/** Address parameters that are no exercise's: an exercise id must not be one of them (the build checks). */
-export const RESERVED_PARAMS: readonly string[] = ["seed", "von"];
+/**
+ * Address parameters that are no exercise's: the page's (seed, von) and those of its tutor page, whose address holds
+ * the page's task numbers beside them (uebung, abschnitt; position.ts). An exercise id must not be one of them (the
+ * build checks).
+ */
+export const RESERVED_PARAMS: readonly string[] = ["seed", "von", "uebung", "abschnitt"];
 
 /**
  * The task number the address `href` gives the exercise `id`: the parameter named by its id (?<id>=<n>, one per
@@ -72,3 +76,10 @@ export function addressOf(href: string, id: string, n: number): string {
 
 /** How many worked tasks a page shows without JavaScript: the task numbers 1 to 3. */
 export const WORKED_TASKS = 3;
+
+/** "Neue Aufgabe" as a symbol beside the task number: a circular arrow; the button's label is its name. */
+export const NEW_TASK_ICON =
+  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>';
+
+/** The event an exercise sends on its element once it shows a task: the tutor's help button takes its place again. */
+export const SHOWN_EVENT = "explainer-shown";
