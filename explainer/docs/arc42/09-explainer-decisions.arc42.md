@@ -93,7 +93,8 @@ task numbers alone; the tutor asks what the child knows, leads through the page 
 a question on its content, and only then sends the child to its task. With the exercise in the query of way A, the
 tutor went straight for the task (hand test on claude.ai, 2026-10-26). B, "Hilfe" in
 every exercise, before the first input too, "Warum?" after a wrong one: one sentence that names the task, then the
-input with its tries and the app's message word for word, so the tutor starts from what the learner was told;
+input with its tries and the app's message word for word, so the tutor starts from what the learner was told: the
+tutor page tells it to go first, briefly, into exactly that input and the task, which mistake of the table it is;
 without a chat they open a new one, and on a page a tutor opened (`von=tutor`) they are copied for the running chat,
 which a new chat would lose. "Zurück zum Tutor" copies a result line with the tutor page and the task. Copying
 instead of an assistant adds the tutor page's Markdown, which lies beside it. Input and message leave the page only

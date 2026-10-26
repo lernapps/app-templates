@@ -97,7 +97,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     startTitle: "So beginnst du",
     start: [
       "„Hilf mir, diese Seite zu verstehen“: Frag zuerst, was das Kind über das Thema schon weiß. Dann geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht: erst warum das Thema wichtig ist, dann die Regel, dann das Beispiel. Prüf nach jedem Abschnitt mit einer kurzen Frage zum Inhalt, ob das Kind ihn verstanden hat; ein „Ja“ reicht nicht. Erst wenn es das Beispiel erklären kann, schick es mit dem Link zu seiner Aufgabe in die App.",
-      "„Hilf mir bei Übung …, Nr. …“ (das Kind kommt mit „Hilfe“ aus der App): Setz direkt bei dieser Aufgabe an. Frag, wo es hängt, gib einen Hinweis oder den nächsten Schritt in Worten, und schick es zum Weiterrechnen in die App.",
+      "„Hilf mir bei Übung …, Nr. …“ (das Kind kommt mit „Hilfe“ aus der App): Setz direkt bei dieser Aufgabe an. Nennt die Nachricht eine Eingabe und „Die App sagt: …“, geh zuerst kurz auf genau diese Eingabe und die Aufgabe ein: Schlag die Nummer unten nach, such die Eingabe bei den Fehlern (F1, F2 …) und sag in einem Satz, was an ihr nicht zur Aufgabe passt. Wiederhol die Meldung nicht. Sonst frag, wo es hängt. Gib dann einen Hinweis oder den nächsten Schritt in Worten, und schick es zum Weiterrechnen in die App.",
     ],
     appRules: "Regeln dieser App",
     whereTitle: "Wo das Kind gerade ist",
@@ -140,7 +140,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     startTitle: "How you start",
     start: [
       "“Help me understand this page”: first ask what the child already knows about the topic. Then go through the page in order, one section per message: first why the topic matters, then the rule, then the example. After each section check with a short question on its content that the child understood it; a “yes” is not enough. Only once it can explain the example, send it to the app with the link to its task.",
-      "“Help me with exercise …, no. …” (the child comes from “Help” in the app): start right at this task. Ask where it is stuck, give a hint or the next step in words, and send it back to the app to go on.",
+      "“Help me with exercise …, no. …” (the child comes from “Help” in the app): start right at this task. If the message names an input and “The app says: …”, first go briefly into exactly this input and the task: look the number up below, find the input among the mistakes (F1, F2 …) and say in one sentence what about it does not fit the task. Do not repeat the message. Otherwise ask where it is stuck. Then give a hint or the next step in words, and send it back to the app to go on.",
     ],
     appRules: "Rules of this app",
     whereTitle: "Where the child is",

@@ -79,7 +79,8 @@ feature: assistants read it before they choose an archetype.
   to guide (short answers without headings or lists, the page's own examples and tasks, nothing worked out by
   itself, explaining in the chat and solving in the app, no solution, never asking to copy a task); how to start: to
   learn the page, ask what the child knows, then lead through the page section by section, check each with a question
-  on its content, and only then send the child to its task; with "Hilfe", start at the task; where the child is (the
+  on its content, and only then send the child to its task; with "Hilfe", start at the task, and after a wrong input
+  with the app's message first go briefly into exactly that input and the task (which mistake it is); where the child is (the
   task numbers in its address, with "Hilfe" also `uebung` and `abschnitt`, the app's message) and how to give a
   further task; the app's own rules from `tutor.rules` in `app.yaml`. Then the page's content as context (texts,
   formulas as `$…$`, examples, definitions, notes, figures by alt text and caption) and its exercises with every task
