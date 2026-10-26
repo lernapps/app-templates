@@ -170,9 +170,9 @@ function generatedPart(spec: Generated, lang: string, words: Words): string[] {
 }
 
 /**
- * An exercise component: what it says about itself (its about); when it declares its exercise also its task once as
- * its template, and its typical mistakes as F1, F2 …, the columns of its table of tasks. Its tasks by number are the
- * tutor page's.
+ * An exercise component: what it says about itself (its about), its typical mistakes as F1, F2 …, which the app's
+ * message of a wrong answer names one of, and when it declares its exercise also its task once as its template; F1, F2 …
+ * are then the columns of its table of tasks. Its tasks by number are the tutor page's.
  */
 function componentPart(description: ComponentDescription, lang: string, words: Words): string[] {
   const { about } = description;
@@ -182,10 +182,7 @@ function componentPart(description: ComponentDescription, lang: string, words: W
   if (exercise !== undefined) lines.push(`- ${words.task}: „${line(exercise.template)}“`);
   lines.push(`- ${words.answerFormat}: ${t(about.answer)}`, `- ${words.correct}: ${t(about.correct)}`);
   if (about.mistakes.length > 0) {
-    lines.push(
-      `- ${words.mistakes}:`,
-      ...about.mistakes.map((mistake, index) => `  - ${exercise === undefined ? "" : `F${index + 1}: `}${t(mistake)}`),
-    );
+    lines.push(`- ${words.mistakes}:`, ...about.mistakes.map((mistake, index) => `  - F${index + 1}: ${t(mistake)}`));
   }
   return lines;
 }

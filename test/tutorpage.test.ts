@@ -24,6 +24,7 @@ import {
 } from "../runtime/explainer/tutorpage.ts";
 import { anchorsOf, linkProblems, tutorPageOf } from "../runtime/explainer/tutor.ts";
 import * as assignLabels from "./fixtures/explainer-history/components/AssignLabels.ts";
+import type { Props, Task } from "./fixtures/explainer-history/components/AssignLabels.ts";
 
 const fixture = (name: string): Site => {
   const root = mkdtempSync(join(tmpdir(), "explainer-tutorpage-"));
@@ -82,10 +83,17 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain("Frag zuerst, was das Kind über das Thema schon weiß.");
     expect(text).toContain("geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht");
     expect(text).toContain("ein „Ja“ reicht nicht");
-    expect(text).toContain("Setz direkt bei dieser Aufgabe an.");
-    // help after a wrong input with the app's message: first that input and the task
+    expect(text).toContain("Schlag Übung und Nummer unten nach und setz bei dieser Aufgabe an.");
+    // help after a wrong input, in the order of what the message brings: the app's message, the input, else a question
     expect(text).toContain(
-      "Nennt die Nachricht eine Eingabe und „Die App sagt: …“, geh zuerst kurz auf genau diese Eingabe und die Aufgabe ein: Schlag die Nummer unten nach, such die Eingabe bei den Fehlern (F1, F2 …) und sag in einem Satz, was an ihr nicht zur Aufgabe passt. Wiederhol die Meldung nicht.",
+      "Steht da „Die App sagt: …“, such den Fehler (F1, F2 …) der Übung, zu dem die Meldung passt: Das ist der Fehler des Kindes. Nennt die Nachricht eine Eingabe und steht sie bei dieser Nummer in einer Spalte F…, bestätigt das den Fehler. Sag in einem Satz, was an genau dieser Eingabe nicht zur Aufgabe passt, und wiederhol die Meldung nicht. Fehlt beides, frag, was das Kind eingegeben oder gebaut hat und wo es hängt.",
+    );
+    // what the child does not see, and what it can do, for an exercise component
+    expect(text).toContain(
+      "„(verdeckt)“ heißt, steht nicht im Text der Aufgabe: Das Kind sieht ihn nicht, nenn ihn nicht.",
+    );
+    expect(text).toContain(
+      "steht bei der Übung unter „Was zu tun ist“ und „Antwortformat“. Beschreib keine anderen Knöpfe",
     );
     expect(text).toContain("Erfinde keine eigenen.");
     expect(text).toContain("Verrate keine Lösung.");
@@ -185,7 +193,7 @@ describe("the tutor page of a content page", () => {
     );
     expect(part).toContain("- Link zu Nummer n: `../?assign-labels=n&von=tutor#assign-labels`");
     expect(part).toContain(
-      "- Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt.\n\n```\nNr. | Wahl | Lösung | F1 | F2\n",
+      "- Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt.\n\n```\nNr. | Wahl | Lösung | F1 | F2\n",
     );
     const exercise = descriptions.get(use.block)?.exercise?.["de"];
     expect(exercise?.tasks.length).toBeGreaterThan(1);
@@ -199,6 +207,24 @@ describe("the tutor page of a content page", () => {
     expect(linkProblems(tutorPageOf(page), text, files, anchors)).toEqual([]);
   });
 
+  test("a mistake without an answer for any number has no column, and an input the task's text does not show is hidden", () => {
+    const { site, descriptions } = history({
+      ...assignLabels,
+      params: (task: Task, props: Props, lang: string) => ({
+        ...assignLabels.params(task, props, lang),
+        Erste: task.order[0] ?? 0,
+      }),
+      mistakes: (task: Task) => [assignLabels.mistakes(task)[0], undefined],
+    });
+    const page = contentPages(site).find((candidate) => candidate.id === "staende");
+    if (page === undefined) throw new Error("no page staende");
+    const { markdown: text } = tutorPage(site, page, "de", descriptions);
+    const part = text.slice(text.indexOf("### Übung assign-labels"));
+    // F2 stays as the description of a mistake, without a column
+    expect(part).toContain("  - F2: Eine Beschriftung zweimal gewählt.");
+    expect(part).toContain("```\nNr. | Wahl | Erste (verdeckt) | Lösung | F1\n1 | ");
+  });
+
   test("an exercise component without its table of tasks: what it says about itself, and each number's task and solution from its describe", () => {
     const { site, descriptions } = history(undeclared);
     const page = contentPages(site).find((candidate) => candidate.id === "staende");
@@ -210,6 +236,8 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain(
       "- Was als richtig zählt: Richtig ist es nur, wenn jede Stufe ihre eigene Beschriftung hat.",
     );
+    // its mistakes numbered all the same, which the app's message names one of
+    expect(text).toContain("  - F1: Die Reihenfolge umgedreht: unten, was oben hingehört.");
     expect(text).toContain("- Link zu Nummer n: `../?assign-labels=n&von=tutor#assign-labels`");
     const tasks = descriptions.get(use.block)?.tasks["de"] ?? [];
     expect(tasks.length).toBeGreaterThan(1);

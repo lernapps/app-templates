@@ -69,6 +69,8 @@ interface Words {
   link: string;
   linkNumber: string;
   table: string;
+  /** After an input of the table that the task's text does not show. */
+  hidden: string;
   answerIs: string;
   number: string;
   choices: string;
@@ -91,13 +93,14 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Antworte kurz: höchstens drei Sätze und eine Frage. Keine Überschriften, keine Listen.",
       "Nimm die Beispiele und Aufgaben dieser Seite. Erfinde keine eigenen. Rechne nichts selbst aus: Lösungen und Fehler stehen unten bei jeder Nummer.",
       "Im Chat erklärst du, am Beispiel der Seite. Gerechnet wird in der App: Die Aufgaben löst das Kind dort. Rechnet es eine Aufgabe im Chat, schick ihm sofort den Link zu ihr.",
-      "Verrate keine Lösung.",
+      "Verrate keine Lösung. Ein Wert, der in der Tabelle einer Übung „(verdeckt)“ heißt, steht nicht im Text der Aufgabe: Das Kind sieht ihn nicht, nenn ihn nicht.",
+      "Was das Kind in der App tun kann, steht bei der Übung unter „Was zu tun ist“ und „Antwortformat“. Beschreib keine anderen Knöpfe oder Schritte.",
       "Bitte das Kind nie, eine Aufgabe abzuschreiben. Du kennst sie aus dem Kontext unten.",
     ],
     startTitle: "So beginnst du",
     start: [
       "„Hilf mir, diese Seite zu verstehen“: Frag zuerst, was das Kind über das Thema schon weiß. Dann geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht: erst warum das Thema wichtig ist, dann die Regel, dann das Beispiel. Prüf nach jedem Abschnitt mit einer kurzen Frage zum Inhalt, ob das Kind ihn verstanden hat; ein „Ja“ reicht nicht. Erst wenn es das Beispiel erklären kann, schick es mit dem Link zu seiner Aufgabe in die App.",
-      "„Hilf mir bei Übung …, Nr. …“ (das Kind kommt mit „Hilfe“ aus der App): Setz direkt bei dieser Aufgabe an. Nennt die Nachricht eine Eingabe und „Die App sagt: …“, geh zuerst kurz auf genau diese Eingabe und die Aufgabe ein: Schlag die Nummer unten nach, such die Eingabe bei den Fehlern (F1, F2 …) und sag in einem Satz, was an ihr nicht zur Aufgabe passt. Wiederhol die Meldung nicht. Sonst frag, wo es hängt. Gib dann einen Hinweis oder den nächsten Schritt in Worten, und schick es zum Weiterrechnen in die App.",
+      "„Hilf mir bei Übung …, Nr. …“ (das Kind kommt mit „Hilfe“ aus der App): Schlag Übung und Nummer unten nach und setz bei dieser Aufgabe an. Steht da „Die App sagt: …“, such den Fehler (F1, F2 …) der Übung, zu dem die Meldung passt: Das ist der Fehler des Kindes. Nennt die Nachricht eine Eingabe und steht sie bei dieser Nummer in einer Spalte F…, bestätigt das den Fehler. Sag in einem Satz, was an genau dieser Eingabe nicht zur Aufgabe passt, und wiederhol die Meldung nicht. Fehlt beides, frag, was das Kind eingegeben oder gebaut hat und wo es hängt. Gib dann einen Hinweis oder den nächsten Schritt in Worten, und schick es zum Weiterarbeiten in die App.",
     ],
     appRules: "Regeln dieser App",
     whereTitle: "Wo das Kind gerade ist",
@@ -112,7 +115,9 @@ const WORDS: Readonly<Record<string, Words>> = {
     steps: "Lösungsweg",
     link: "Link",
     linkNumber: "Link zu Nummer n",
-    table: "Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt.",
+    table:
+      "Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt.",
+    hidden: "(verdeckt)",
     answerIs: "`{answer}` ist die Lösung.",
     number: "Nr.",
     choices: "Zur Wahl",
@@ -134,13 +139,14 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Answer briefly: three sentences and one question at most. No headings, no lists.",
       "Use the examples and tasks of this page. Do not make up your own. Work nothing out yourself: solutions and mistakes are below with each number.",
       "In the chat you explain, with the page's example. Tasks are worked out in the app: the child solves them there. If it works a task out in the chat, send it the link to the task at once.",
-      "Do not give a solution away.",
+      "Do not give a solution away. A value the table of an exercise calls “(hidden)” is not in the task's text: the child does not see it, do not name it.",
+      "What the child can do in the app is under “What to do” and “Answer format” with the exercise. Do not describe other buttons or steps.",
       "Never ask the child to copy a task. You know it from the context below.",
     ],
     startTitle: "How you start",
     start: [
       "“Help me understand this page”: first ask what the child already knows about the topic. Then go through the page in order, one section per message: first why the topic matters, then the rule, then the example. After each section check with a short question on its content that the child understood it; a “yes” is not enough. Only once it can explain the example, send it to the app with the link to its task.",
-      "“Help me with exercise …, no. …” (the child comes from “Help” in the app): start right at this task. If the message names an input and “The app says: …”, first go briefly into exactly this input and the task: look the number up below, find the input among the mistakes (F1, F2 …) and say in one sentence what about it does not fit the task. Do not repeat the message. Otherwise ask where it is stuck. Then give a hint or the next step in words, and send it back to the app to go on.",
+      "“Help me with exercise …, no. …” (the child comes from “Help” in the app): look the exercise and the number up below and start right at this task. If it says “The app says: …”, find the mistake (F1, F2 …) of the exercise that the message fits: that is the child's mistake. If the message names an input and it is in a column F… for this number, that confirms the mistake. Say in one sentence what about exactly this input does not fit the task, and do not repeat the message. If both are missing, ask what the child entered or built and where it is stuck. Then give a hint or the next step in words, and send it back to the app to go on.",
     ],
     appRules: "Rules of this app",
     whereTitle: "Where the child is",
@@ -155,7 +161,9 @@ const WORDS: Readonly<Record<string, Words>> = {
     steps: "Steps of the solution",
     link: "Link",
     linkNumber: "Link to number n",
-    table: "Tasks by number: the values for `{…}`, the solution and what the mistakes give.",
+    table:
+      "Tasks by number: the values for `{…}`, the solution and what the mistakes give. A mistake without a column has no fixed value; the app's message says whether it is there.",
+    hidden: "(hidden)",
     answerIs: "`{answer}` is the solution.",
     number: "No.",
     choices: "Choices",
@@ -326,14 +334,22 @@ function generatedLines(spec: Generated, site: Site, lang: string, format: strin
 function componentTable(exercise: ComponentExercise, lang: string): string[] {
   const words = wordsIn(lang);
   const count = exercise.tasks[0]?.mistakes.length ?? 0;
+  // a typical mistake without a single answer for any number has no column: its description above says what it is
+  const columns = Array.from({ length: count }, (_mistake, index) => index).filter((index) =>
+    exercise.tasks.some((row) => (row.mistakes[index] ?? "") !== ""),
+  );
+  // an input the task's text does not show is hidden from the child
+  const shown = new Set([...exercise.template.matchAll(/\{([^{}\s]+)\}/g)].map((match) => match[1]));
   const header = [
     words.number,
-    ...exercise.inputs,
+    ...exercise.inputs.map((input) => (shown.has(input) ? input : `${input} ${words.hidden}`)),
     tutorWords(lang).solution,
-    ...Array.from({ length: count }, (_mistake, index) => `F${index + 1}`),
+    ...columns.map((index) => `F${index + 1}`),
   ].join(" | ");
   const rows = exercise.tasks.map((row, index) =>
-    [String(index + 1), ...row.inputs, row.solution, ...row.mistakes].map(cell).join(" | "),
+    [String(index + 1), ...row.inputs, row.solution, ...columns.map((column) => row.mistakes[column] ?? "")]
+      .map(cell)
+      .join(" | "),
   );
   return [`- ${words.table}`, "", "```", header, ...rows, "```"];
 }
