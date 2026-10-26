@@ -42,6 +42,7 @@ const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
   definition: "definition",
   quote: "quote",
   code: "code",
+  video: "video",
   example: "box",
   note: "box",
   section: "section",
@@ -78,6 +79,12 @@ const describe: DescribeError = (error, path, value) => {
       const { lang, message } = addressProblem(value);
       return { message, ...(lang === undefined ? {} : { lang }) };
     }
+    case "pattern":
+      // a video's id: an address pasted whole is the likely mistake
+      if (path.at(-1) !== "youtube") return undefined;
+      return {
+        message: `${String(value)} is no YouTube id; give the 11 characters after watch?v= in the video's address, e.g. rkLmLaFHodo`,
+      };
     case "required":
     case "dependentRequired":
       return { message: missing(String(error.params["missingProperty"]), value) };

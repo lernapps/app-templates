@@ -12,7 +12,7 @@
 // JavaScript. The page keeps in memory how far the learner got with each task (result.ts): a page a tutor opened
 // (von=tutor in the address, beside any seed) gets "Zurück zum Tutor", which copies a result line with the address of
 // the page's tutor page, then closes the tab. The learner switches a way to the tutor on once, on the start page or
-// beside the title of a page: an assistant of the app, or copying the text; it is the only thing kept on the device.
+// beside the title of a page: an assistant of the app, or copying the text; it is kept on the device.
 // Two ways lead to the tutor, both naming the page's tutor page with where the learner is in its query (position.ts),
 // the one source of what the tutor gets (tutorpage.ts). A: while a way is on, a bar beside the title of a content
 // page, "Mit <name> lernen", opens the assistant with the start prompt (prompt.ts). B: the help button in the row of
@@ -20,7 +20,8 @@
 // gives the lines of that task (stuck.ts: the task, the input, the app's message word for word, the tutor page):
 // without a chat (B1) it opens the way switched on with them; on a page a tutor opened (B2) it copies the lines and
 // closes the tab, and once the task is done it is "Zurück", which copies the result line. Copying instead of an
-// assistant adds the tutor page's Markdown. Input and message leave the page only with the click.
+// assistant adds the tutor page's Markdown. Input and message leave the page only with the click. A video gets its
+// button, which loads its player, and the choice "Videos immer direkt laden" (video.ts), kept on the device too.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { startQuestion } from "../shared/questions/engine.ts";
@@ -44,6 +45,7 @@ import {
   taskNumber,
 } from "./tasks.ts";
 import { escape } from "../shared/html.ts";
+import { startVideos } from "./video.ts";
 
 /** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(
@@ -618,6 +620,7 @@ export function startExplainer(root: Document = document): void {
       text(detail.message),
     );
   });
+  startVideos(root);
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;
     if (!element) continue;

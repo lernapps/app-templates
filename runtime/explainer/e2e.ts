@@ -34,7 +34,11 @@
 // lines and the tutor page and opens nothing, and once the solution shows it is "Zurück", which copies the result
 // line. "Zurück zum Tutor" on a page a tutor opened copies the result line of a generated exercise and of an exercise
 // component, with the task number, the try and the input, and the tutor page with the task, which answers.
-// No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
+// Each video shows its title as a link to YouTube, its channel
+// and the note on privacy without JavaScript; with JavaScript it requests nothing of another host before a click (every
+// such request is blocked), loads the player of youtube-nocookie.com on "Video abspielen", and "Videos immer direkt
+// laden" is kept, loads every player directly, and goes when unticked. No page stores anything on the device before
+// a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
 import {
@@ -56,6 +60,7 @@ import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
 import { nextTaskNumber, taskNumber } from "./tasks.ts";
 import { outline, type ComponentOutline, type ExerciseOutline, type PageOutline } from "./outline.ts";
+import { embedAddress, watchAddress } from "./video.ts";
 
 /** The task number of the deep link the tests open a generated exercise with. */
 const SEED = 7;
@@ -135,6 +140,96 @@ async function expectNojs(page: Page, item: PageOutline): Promise<void> {
     await expect(element.locator(":scope > .explainer-island")).toBeHidden();
     await expect(element.locator(":scope > .explainer-task-controls")).toBeHidden();
   }
+}
+
+/** Without JavaScript: each video shows its title as the link to YouTube, its channel and the note; no player. */
+async function expectVideos(page: Page, item: PageOutline): Promise<void> {
+  if (item.videos.length === 0) return;
+  const videos = page.locator("main figure.explainer-video");
+  await expect(videos, `${item.url}: one figure per video`).toHaveCount(item.videos.length);
+  for (const [index, video] of item.videos.entries()) {
+    const figure = videos.nth(index);
+    const link = figure.getByRole("link", { name: video.title, exact: true });
+    await expect(link, `${item.url}: the video "${video.title}" as a link`).toBeVisible();
+    await expect(link).toHaveAttribute("href", watchAddress(video.youtube));
+    await expect(figure.locator(".explainer-video-channel")).toHaveText(
+      messageOf(item.lang, "videoChannel", { channel: video.channel }),
+    );
+    await expect(figure.locator(".explainer-video-note")).toHaveText(messageOf(item.lang, "videoNote"));
+    await expect(figure.locator(".explainer-video-controls"), "no button without JavaScript").toBeHidden();
+  }
+  await expect(page.locator("iframe"), `${item.url}: no player without JavaScript`).toHaveCount(0);
+}
+
+/** Whether `url` is of YouTube or Google: a player, a thumbnail, a script or a beacon of theirs. */
+const ofYoutubeOrGoogle = (url: string): boolean =>
+  /(^|\.)(youtube[a-z-]*\.com|youtu\.be|ytimg\.com|google[a-z-]*\.com|gstatic\.com|ggpht\.com|doubleclick\.net)$/.test(
+    new URL(url).hostname,
+  );
+
+/**
+ * With JavaScript: the videos of a page load nothing of another host before a click (every such request is blocked and
+ * recorded); "Video abspielen" puts the player of youtube-nocookie.com, named by the video's title, into its figure
+ * and stores nothing; "Videos immer direkt laden" is kept on the device, loads every player without the click from
+ * then on, and goes when the learner unticks it.
+ */
+async function checkVideos(page: Page, item: PageOutline, origin: string): Promise<void> {
+  const requested: string[] = [];
+  await page.route(
+    (url) => url.origin !== origin,
+    async (route) => {
+      requested.push(route.request().url());
+      await route.abort("blockedbyclient");
+    },
+  );
+  const stored = () => page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)]);
+  await page.goto(`./${item.url}`);
+  const videos = page.locator("main figure.explainer-video");
+  const [first] = item.videos;
+  if (first === undefined) return;
+  await expect(videos.first().locator(".explainer-video-controls"), "the controls show").toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(requested, `${item.url}: no request to another host before a click`).toEqual([]);
+  await expect(page.locator("iframe"), "no player before a click").toHaveCount(0);
+  // the click: the player of the first video, from youtube-nocookie.com, starting at once
+  await videos
+    .first()
+    .getByRole("button", { name: messageOf("de", "videoPlay") })
+    .click();
+  const player = videos.first().locator("iframe");
+  await expect(player).toHaveAttribute("src", embedAddress(first.youtube, true));
+  await expect(player).toHaveAttribute("title", first.title);
+  await expect(player).toBeFocused();
+  await expect(videos.first().locator(".explainer-video-play"), "the button goes").toHaveCount(0);
+  await expect
+    .poll(() => requested.filter(ofYoutubeOrGoogle), "the player loads after the click")
+    .toContain(embedAddress(first.youtube, true));
+  expect(new Set(requested.map((url) => new URL(url).hostname)), "only the player's host").toEqual(
+    new Set(["www.youtube-nocookie.com"]),
+  );
+  await expect(page.locator("iframe"), "only the clicked video").toHaveCount(1);
+  expect(await stored(), "a click on the button stores nothing").toEqual([]);
+  // "Videos immer direkt laden": kept, and every player loads without the click
+  const always = page.getByRole("checkbox", { name: messageOf("de", "videoAlways") });
+  await always.first().check();
+  expect(await stored(), "the choice is kept").toHaveLength(1);
+  await page.reload();
+  await expect(page.locator("main figure.explainer-video iframe"), "every player, without a click").toHaveCount(
+    item.videos.length,
+  );
+  for (const [index, video] of item.videos.entries()) {
+    await expect(videos.nth(index).locator("iframe")).toHaveAttribute("src", embedAddress(video.youtube, false));
+  }
+  for (const box of await always.all()) await expect(box).toBeChecked();
+  // unticked: nothing is kept, and the next visit waits for the click again
+  await always.first().uncheck();
+  for (const box of await always.all()) await expect(box).not.toBeChecked();
+  expect(await stored(), "the choice goes").toEqual([]);
+  requested.length = 0;
+  await page.reload();
+  await expect(videos.first().locator(".explainer-video-play")).toBeVisible();
+  await expect(page.locator("iframe")).toHaveCount(0);
+  expect(requested, `${item.url}: again no request before a click`).toEqual([]);
 }
 
 /** With JavaScript: each component hydrates without a console error; an exercise's answered gives the feedback. */
@@ -539,6 +634,7 @@ export function explainerTests(root = "."): void {
             await expectLanguages(page, item, app.languages);
             await expectExercises(page, item);
             await expectNojs(page, item);
+            await expectVideos(page, item);
           });
         }
 
@@ -603,6 +699,15 @@ export function explainerTests(root = "."): void {
             else await checkGenerated(page, item.url, exercise);
           }
           expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual([]);
+        });
+      }
+      for (const item of app.pages["de"] ?? []) {
+        if (item.videos.length === 0) continue;
+        test(`${item.url}: the videos load nothing before a click, the player after it, directly once chosen`, async ({
+          page,
+          baseURL,
+        }) => {
+          await checkVideos(page, item, new URL(baseURL ?? page.url()).origin);
         });
       }
       for (const item of app.pages["de"] ?? []) {

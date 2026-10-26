@@ -82,5 +82,9 @@
   "tutorPageLink": "See what your tutor gets for this page",
   "tutorCopied": "The prompt is copied. Paste it into the chat of your AI assistant.",
   "tutorCopyFailed": "Copying did not work. Try again.",
-  "exerciseLabel": "Exercise"
+  "exerciseLabel": "Exercise",
+  "videoChannel": "{channel} · YouTube",
+  "videoNote": "Playing it sends data to YouTube/Google, among them your IP address.",
+  "videoPlay": "Play video",
+  "videoAlways": "Always load videos directly"
 }

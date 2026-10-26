@@ -44,6 +44,8 @@ export type Block =
   | MaterialBlock<Text>
   | { type: "timeline"; events?: readonly Event[]; data?: string }
   | { type: "definition"; term: Text; explanation: Text }
+  /** A YouTube video behind two clicks (video.ts): its id, and its title and channel as YouTube names them. */
+  | { type: "video"; youtube: string; title: string; channel: string }
   | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
   | { type: "section"; id: string; title: Text; blocks: readonly Block[] }
   | {

@@ -21,6 +21,7 @@ import { plainText } from "./generated/texts.ts";
 import { kindOf } from "./generated/comparator.ts";
 import { type Generated } from "./generated/types.ts";
 import { allBlocks } from "./routes.ts";
+import { videoLine } from "./video.ts";
 
 interface Words {
   task: string;
@@ -41,6 +42,7 @@ interface Words {
   caption: string;
   labels: string;
   interactive: string;
+  video: string;
   exerciseHere: string;
   formats: Record<string, string>;
 }
@@ -65,6 +67,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     caption: "Bildunterschrift",
     labels: "Beschriftungen",
     interactive: "Interaktiv",
+    video: "Video",
     exerciseHere: "Übung `{id}` (unten)",
     formats: {
       "single-choice": "eine Antwort wählen",
@@ -98,6 +101,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     caption: "Caption",
     labels: "Labels",
     interactive: "Interactive",
+    video: "Video",
     exerciseHere: "Exercise `{id}` (below)",
     formats: {
       "single-choice": "choose one answer",
@@ -196,7 +200,8 @@ const unlinked = (text: string) =>
  * What a tutor reads of `blocks` in `lang`, as Markdown lines, the content of a page for its tutor page (tutorpage.ts):
  * each section as the heading `heading` makes,
  * then its content: texts, formulas as $…$, definitions, examples and notes with their kind and title, figures by their
- * alt text and caption, tables row by row, timelines, quotes, code, a component's own nojs text; an exercise by its
+ * alt text and caption, tables row by row, timelines, quotes, code, a video as a link with its title and channel, a
+ * component's own nojs text; an exercise by its
  * id, as it follows in full after the page. `inline` turns a text into what the page shows. A text keeps its lines,
  * so that its lists stay lists.
  */
@@ -283,6 +288,9 @@ export function contentLines(
             block.code.trimEnd(),
             "```",
           );
+          break;
+        case "video":
+          add(videoLine(block, words.video));
           break;
         case "vue-component": {
           const use = site.components.find((candidate) => candidate.block === block);

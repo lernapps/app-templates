@@ -247,6 +247,7 @@
             "definition",
             "quote",
             "code",
+            "video",
             "example",
             "note",
             "section",
@@ -386,6 +387,20 @@
           },
           "then": {
             "$ref": "#/$defs/code"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "video"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/video"
           }
         },
         {
@@ -631,6 +646,30 @@
     },
     "code": {
       "$ref": "urn:lernapps:schema:blocks.v1#/$defs/code"
+    },
+    "video": {
+      "description": "A video on YouTube, behind two clicks. Without JavaScript and before a click the page shows its title as a link to the video on youtube.com, its channel and a note that playing it sends data (among them the learner's IP address) to YouTube/Google; nothing loads from YouTube or Google. With JavaScript a button \"Video abspielen\" loads the player from youtube-nocookie.com; the choice \"Videos immer direkt laden\", kept on the device until the learner clears it, loads every player without that click from then on. No thumbnail: YouTube's would load before a click. llms.txt and the page's tutor file name the video as a link. An app with a video loads from another server after a click: its catalog entry says fitness.thirdParty: on-click.",
+      "required": ["youtube", "title", "channel"],
+      "properties": {
+        "youtube": {
+          "description": "The video's id on YouTube: the 11 characters after watch?v= in its address, e.g. rkLmLaFHodo for https://www.youtube.com/watch?v=rkLmLaFHodo.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{11}$"
+        },
+        "title": {
+          "description": "The video's title as YouTube shows it, in the video's language: the text of the link and the name of the player.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "channel": {
+          "description": "The channel that published it, as YouTube names it, e.g. Lehrerschmidt.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "type": "object"
     },
     "box": {
       "description": "A box with a heading (the next level below its place) and blocks: example for a worked example, note for a hint or something to remember. A box holds no sections and no boxes.",

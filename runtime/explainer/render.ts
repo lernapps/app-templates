@@ -6,7 +6,8 @@
 // the component's markup as the build rendered it (`hidden` until it hydrates), its nojs text, its props in the page's
 // language, and for an exercise its anchor, its task number with "Neue Aufgabe", the task of number 1 as its describe
 // states it with the solution folded, and the place of its feedback. Links to other sites are plain links with rel="noopener":
-// nothing is loaded from another server before a click. The end-to-end tests rely on the classes, ids and rel
+// nothing is loaded from another server before a click; a video is such a link, with its player only after a click
+// (video.ts). The end-to-end tests rely on the classes, ids and rel
 // attributes written here.
 import { questionMessagesIn } from "../shared/questions/render.ts";
 import { propsIn } from "./components/props.ts";
@@ -33,6 +34,7 @@ import { tutorPageOf } from "./tutor.ts";
 import { BASE, plainAddress, PROVIDERS, QUERY, startPrompt } from "./prompt.ts";
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
+import { renderVideo } from "./video.ts";
 
 function sizeless(site: Site, image: string): boolean {
   const file = site.images.get(image);
@@ -181,6 +183,8 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
     case "quote":
     case "code":
       return renderMaterial([block], context.material);
+    case "video":
+      return renderVideo(block, context.lang, context.site.storage ?? "explainer");
     case "vue-component":
       return renderComponent(context, block);
     default:

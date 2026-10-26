@@ -58,6 +58,7 @@ flowchart TB
         bb-generated-exercises["Generated exercises"]
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
+        bb-video["Video block"]
         bb-e2e["End-to-end tests"]
         bb-runtime-texts["Runtime texts"]
     end
@@ -85,6 +86,8 @@ flowchart TB
     bb-tutor-handoff -->|"if-archetype-content"| bb-explainer-content
     bb-tutor-handoff -->|"if-exercise-logic"| bb-explainer-components
     bb-tutor-handoff -->|"if-task-numbers"| bb-task-numbers
+    bb-video -->|"if-runtime-texts"| bb-runtime-texts
+    bb-video -->|"if-device-storage"| bb-tooling
     bb-e2e -->|"if-archetype-content"| bb-explainer-content
     bb-e2e -->|"if-runtime-texts"| bb-runtime-texts
 ```
@@ -157,7 +160,7 @@ requires: if-archetype-content, if-data-files, if-component-rules, if-questions
 ### Page rendering
 
 Built. Renders every YAML page to static HTML in each language: text in restricted Markdown, formulas as MathML,
-figures as SVG, tables, timelines, code, the exercises with their solution folded (a generated one with three worked
+figures as SVG, tables, timelines, code, videos as links (`bb-video`), the exercises with their solution folded (a generated one with three worked
 tasks), the navigation and the glossary, and each Vue component's island as the server renderer drew it, with its
 `nojs` text. Without JavaScript every page is complete.
 
@@ -192,8 +195,8 @@ path: runtime/explainer/routes.ts
 ### Client module
 
 Built. Makes a page's exercises live: answered before the solution shows, the reason of a wrong answer, "Neue
-Aufgabe", the task numbers in the address; and the tutor button. It keeps only the learner's chosen way to the tutor
-on the device.
+Aufgabe", the task numbers in the address; the tutor button; and starts the videos (`bb-video`). It keeps only the
+learner's chosen way to the tutor and their choice to load videos directly on the device.
 
 ```arc42
 :::building-block
@@ -335,6 +338,43 @@ title: Task numbers and their seeds
 provider: bb-task-numbers
 protocol: TypeScript import
 path: runtime/explainer/tasks.ts
+:::
+```
+
+### Video block
+
+Built. A YouTube video behind two clicks (`dec-explainer-video-two-click`): the page rendering writes the video as a
+figure with its title as a link to youtube.com, its channel and a note that playing it sends data, among them the IP
+address, to YouTube/Google; nothing loads from another host. The client module shows "Video abspielen", which puts
+the player of youtube-nocookie.com into the figure, and "Videos immer direkt laden", a standing choice kept on the
+device until the learner clears it. The tutor page names the video in its section as a link with its title and
+channel, as it names a figure by its alt text.
+
+```arc42
+:::building-block
+id: bb-video
+title: Video block
+parent: bb-archetype-runtime
+path: runtime/explainer/video.ts
+technology: TypeScript, DOM, iframe
+requires: if-runtime-texts, if-device-storage
+implements: concept-readable-without-js
+:::
+```
+
+#### Video player request
+
+The one request to another host an explainer makes on its own: the address of a video's player,
+`https://www.youtube-nocookie.com/embed/<id>`, in an iframe named by the video's title, with the app's origin as its
+only referrer; sent after the learner's click, or on opening the page once they chose to load videos directly.
+
+```arc42
+:::interface
+id: if-video-player
+title: Video player request to youtube-nocookie.com
+provider: bb-video
+protocol: HTML iframe over HTTPS, after a click
+path: runtime/explainer/video.ts
 :::
 ```
 

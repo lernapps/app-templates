@@ -109,6 +109,17 @@ const cases: [string, (root: string) => void, string][] = [
     "src/kapitel/eins.yaml:17: blocks[0].blocks[2].blocks[1]: a section inside a subsection; sections go two levels deep at most, so split the page",
   ],
   [
+    "a video whose YouTube id is its whole address",
+    (root) =>
+      edit(
+        root,
+        "kapitel/eins.yaml",
+        "            text: { de: Noch ein Text., en: Another text. }\n",
+        "            text: { de: Noch ein Text., en: Another text. }\n          - type: video\n            youtube: https://www.youtube.com/watch?v=rkLmLaFHodo\n            title: einstufiger Zufallsversuch\n            channel: Lehrerschmidt\n",
+      ),
+    "src/kapitel/eins.yaml:18: blocks[0].blocks[2].blocks[1].youtube: https://www.youtube.com/watch?v=rkLmLaFHodo is no YouTube id; give the 11 characters after watch?v= in the video's address, e.g. rkLmLaFHodo",
+  ],
+  [
     "an extra file in src/",
     (root) => writeFileSync(join(root, "src/notizen.txt"), "Ideen\n"),
     "src/notizen.txt: not part of an explainer; src/ holds only app.yaml, the chapter folders, data/, images/, components/ and main.ts",
