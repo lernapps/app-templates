@@ -28,7 +28,7 @@ repo root (see "Strict validation, paths and input" below).
 | Rule | Element | Reason |
 | --- | --- | --- |
 | H014 | bb-tooling, if-preset, if-lernapps-check, if-device-storage, if-a11y, if-translator | @lernapps/tooling is installed in the untracked node_modules; a path there is E011 |
-| H014 | explainer bb-explainer-data, bb-explainer-components, if-data-files, if-vue-component, if-exercise-logic | optional and not in the template; an app that adds them sets their paths in its own architecture |
+| H014 | explainer bb-explainer-data, if-data-files | optional and not in the template; an app that adds them sets their paths in its own architecture (the components have their paths since the template has ProzentFeld, 2026-10-26) |
 | H014 | interactive if-root-component | no file of its own: its props are set in runtime/interactive/interactive.ts, which carries if-start |
 | H020 | interactive if-core-contract | it and if-state-property are both defined in runtime/interactive/contract.ts |
 | H006 | con-bundled-licences, con-imprint-privacy | organisation rules verified by lernapps check or met by the runtime's footer; no decision responds to them |

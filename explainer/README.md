@@ -11,10 +11,12 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   mistakes, a hint and the way to the solution. The build tests them over fixed seeds.
 - Vue components for what no block can show or check, such as reading a scale, labelling a figure or dragging into
   place; an exercise component draws its own tasks. A component needs its logic module, a test and a text for readers
-  without JavaScript.
+  without JavaScript. An exercise component also declares its exercise for the tutor (`template`, `params`,
+  `mistakes`, `show`), so that its tutor page has a table of every task like a generated one. The example is
+  `src/components/ProzentFeld` on the page `prozent/prozentwert`: colour p % of a field of G squares.
 - Navigation, contents and glossary are generated, and for an AI tutor a short tutor page per page
   (`<chapter>/<page>/tutor/`), the one source of what the tutor gets: its guide, the page's content and every task of
-  its exercises, a generated one as a table of inputs and outputs. The learner switches an assistant on once, on the
+  its exercises, a generated one and an exercise component as a table of inputs and outputs. The learner switches an assistant on once, on the
   start page or beside the title of a page (one of the KI assistants the runtime offers), with
   an account of their own. Then two ways lead there: a bar beside the title of each page, for a tutor who helps with
   the page, and "Hilfe" ("Warum?" after a wrong answer) in every exercise, with the task, the input and the app's
