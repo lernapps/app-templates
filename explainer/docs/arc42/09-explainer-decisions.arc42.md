@@ -123,8 +123,8 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click, risk-tuto
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:
 on the start page ("Dein KI-Assistent", "Keiner" first) or beside the title of a content page, where "Mit einem
-KI-Tutor lernen" stays folded while none is on. The choice is one of the app's assistants (Claude, ChatGPT and Le
-Chat when the app names none in `tutor.providers`) or copying the text, and it is kept on the device, per app, as the
+KI-Tutor lernen" stays folded while none is on. The choice is Claude, ChatGPT or Le Chat, the same for every app,
+or copying the text, and it is kept on the device, per app, as the
 only thing the app keeps; nothing is sent. Once an assistant is on, each content page shows a small bar beside its
 title with one button, "Mit <name> lernen" (way A; changed or switched off on the start page, as it is seldom changed) and one help button in the row of "Prüfen" and "Lösung" of every exercise (way B), with the assistant's
 first letter as its symbol, so that the learner sees where a click leads: "Hilfe", "Warum?" after a wrong answer,
@@ -132,8 +132,9 @@ and "Zurück" on a page a tutor opened once the task is done; one button that ch
 is on, an exercise has no help button. Both places say that the learner uses an account of their own and that the
 assistant is no offer of lernapps.net, which only provides the content and the exercises. Rejected: the way chosen
 anew on every page (a box above every page's content); a help button for learners without a tutor (it leads
-nowhere); the providers' logos (their marks; a letter says enough); one choice for all apps of lernapps.net (apps
-offer different assistants).
+nowhere); the providers' logos (their marks; a letter says enough); assistants named per app (`tutor.providers`; no
+app named others, and a learner meets the same choice in every app); one choice for all apps of lernapps.net (each
+app keeps what it stores apart).
 
 ```arc42
 :::decision
