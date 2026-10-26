@@ -30,8 +30,6 @@ export interface App {
   /** What the app adds for a KI tutor: its own rules (restricted Markdown), after the guide of each tutor page. */
   tutor?: {
     rules?: Text;
-    /** The assistants the start page offers, {prompt} in the address where the prompt goes; Claude when none. */
-    providers?: readonly { name: string; url: string }[];
   };
 }
 

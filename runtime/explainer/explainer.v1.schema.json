@@ -134,28 +134,6 @@
             "rules": {
               "description": "The app's own rules for a tutor, after the guide on each tutor page: what matters in this subject, e.g. \"Rechenwege auf Papier, das Ergebnis in die App\". Restricted Markdown, in the app's languages.",
               "$ref": "#/$defs/markdown"
-            },
-            "providers": {
-              "description": "The assistants the learner can switch on, in this order. Without it: Claude (https://claude.ai/new?q={prompt}), ChatGPT (https://chatgpt.com/?q={prompt}) and Le Chat (https://chat.mistral.ai/chat?q={prompt}); an empty list offers only the button that copies the prompt. A link carries the start prompt, which names one address: the page's tutor page with the learner's position in its query.",
-              "type": "array",
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["name", "url"],
-                "properties": {
-                  "name": {
-                    "description": "The assistant's name, as the link says it: \"Mit <name> öffnen\".",
-                    "type": "string",
-                    "minLength": 1,
-                    "pattern": "\\S"
-                  },
-                  "url": {
-                    "description": "The address that opens the assistant, https, with {prompt} where the prompt goes (URL-encoded), e.g. https://claude.ai/new?q={prompt}; without {prompt} the link opens the assistant and the page copies the prompt.",
-                    "type": "string",
-                    "pattern": "^https://\\S+$"
-                  }
-                }
-              }
             }
           }
         }

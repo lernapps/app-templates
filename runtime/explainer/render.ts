@@ -30,7 +30,7 @@ import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { tutorPageOf } from "./tutor.ts";
-import { BASE, plainAddress, providersOf, QUERY, startPrompt } from "./prompt.ts";
+import { BASE, plainAddress, PROVIDERS, QUERY, startPrompt } from "./prompt.ts";
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
 
@@ -407,9 +407,7 @@ function tutorAbout(context: Context): string {
 /** The assistants of the app as options of a select, each by its name, and copying the prompt last (COPY). */
 function wayOptions(context: Context): string {
   return [
-    ...providersOf(context.site).map(
-      (provider) => `<option value="${plain(provider.name)}">${plain(provider.name)}</option>`,
-    ),
+    ...PROVIDERS.map((provider) => `<option value="${plain(provider.name)}">${plain(provider.name)}</option>`),
     `<option value="copy">${plain(context.t("tutorOther"))}</option>`,
   ].join("");
 }
@@ -427,12 +425,10 @@ function wayOptions(context: Context): string {
  */
 function tutorSection(context: Context): string {
   const { site, lang, route } = context;
-  const plainLinks = providersOf(site)
-    .map(
-      (provider) =>
-        `<a class="explainer-tutor-provider" href="${plain(plainAddress(provider.url))}" rel="noopener" target="_blank">${plain(context.t("tutorOpenWith", { name: provider.name }))}</a>`,
-    )
-    .join(" ");
+  const plainLinks = PROVIDERS.map(
+    (provider) =>
+      `<a class="explainer-tutor-provider" href="${plain(plainAddress(provider.url))}" rel="noopener" target="_blank">${plain(context.t("tutorOpenWith", { name: provider.name }))}</a>`,
+  ).join(" ");
   const { page } = route;
   const data = {
     start: startPrompt(route),
@@ -456,7 +452,7 @@ function tutorSection(context: Context): string {
           },
         }),
     ...(page === undefined ? {} : { tutor: tutorPageOf(page), markdown: `${tutorPageOf(page)}${TUTOR_MARKDOWN}` }),
-    ways: providersOf(site).map((provider) => ({ name: provider.name, url: provider.url })),
+    ways: PROVIDERS.map((provider) => ({ name: provider.name, url: provider.url })),
     go: context.t("tutorGo"),
     copy: context.t("tutorCopy"),
     copied: context.t("tutorCopied"),
