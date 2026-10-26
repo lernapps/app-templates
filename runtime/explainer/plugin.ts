@@ -9,10 +9,9 @@
 // entry: Vite builds the one hashed client module (src/main.ts) and stylesheet from it. The built index.html is then
 // the shell of every page: each page is the shell with its language, its head and its body where it says
 // <!-- explainer -->, written into its folder, with the shell's relative asset URLs (./assets/…) rewritten for its
-// depth. The bundled images go to images/, llms.txt to the root of each language tree with a tutor file next to each
-// page (tutor.ts) and the tutor prompt tutor.md (prompt.ts; every link of these checked), and 404.html, which leads
-// every address the app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same
-// pages, rendered on each request.
+// depth. The bundled images go to images/, the tutor page of each content page to <chapter>/<page>/tutor/ with its
+// Markdown beside it (index.md; tutorpage.ts), every link of it checked, and 404.html, which leads every address the
+// app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same pages and tutor pages, rendered on each request.
 //
 // Components (src/components/<Name>.vue, components.ts): only when the app has them, the plugin compiles them with
 // @vitejs/plugin-vue and resolves vue to the copy this runtime depends on, so that the components and the islands
@@ -35,12 +34,12 @@ import type { Block, ComponentDescription, Descriptions, Site } from "./content.
 import { ContentError, loadSite } from "./load.ts";
 import { dataOf, taskSeeds } from "./exercises.ts";
 import { MAX_TASKS } from "./tasks.ts";
-import { llmsTxt, renderSite, type Islands, type RenderedPage } from "./render.ts";
+import { renderSite, type Islands, type RenderedPage } from "./render.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";
-import { anchorsOf, linkProblems, tutorFile, tutorFileOf } from "./tutor.ts";
-import { PROMPT_FILE, tutorPrompt, withBase } from "./prompt.ts";
+import { anchorsOf, linkProblems, tutorPageOf } from "./tutor.ts";
+import { bytesOf, type Cut, TUTOR_MARKDOWN, TUTOR_PAGE_BUDGET, tutorPage, tutorPageDocument } from "./tutorpage.ts";
 import { imageType } from "../shared/blocks/image.ts";
 
 const MARKER = "<!-- explainer -->";
@@ -182,6 +181,32 @@ function islandsModule(site: Site): string {
   ].join("\n");
 }
 
+/** A tutor page as the build writes it: its Markdown, its HTML, and its exercises with numbers left out. */
+interface TutorAsset {
+  markdown: string;
+  html: string;
+  cut: Cut[];
+}
+
+/**
+ * What the build writes for a tutor beside the pages: the tutor page of each content page, by its folder from the
+ * app's root (with the language root), its HTML as index.html and its Markdown beside it.
+ */
+function tutorAssets(site: Site, descriptions: Descriptions): Map<string, TutorAsset> {
+  const pages = new Map<string, TutorAsset>();
+  for (const lang of site.app.languages) {
+    for (const page of contentPages(site)) {
+      const { markdown, cut } = tutorPage(site, page, lang, descriptions);
+      pages.set(`${languageRoot(lang)}${tutorPageOf(page)}`, {
+        markdown,
+        html: tutorPageDocument(markdown, site, page, lang),
+        cut,
+      });
+    }
+  }
+  return pages;
+}
+
 /** The build step of an explainer: validates the content in src/ and writes every page. */
 export function explainer(): Plugin[] {
   let root = process.cwd();
@@ -242,30 +267,48 @@ export function explainer(): Plugin[] {
         this.emitFile({ type: "asset", fileName: image, source: readFileSync(file) });
       }
       const problems: string[] = [];
+      const tutor = tutorAssets(content, descriptions);
       for (const lang of content.app.languages) {
-        // llms.txt and the tutor files, each link checked against the pages and anchors of the language tree
-        const written = new Map<string, string>([
-          ["llms.txt", llmsTxt(content, lang)],
-          [PROMPT_FILE, withBase(tutorPrompt(content, lang), "")],
-        ]);
-        for (const page of contentPages(content)) {
-          written.set(tutorFileOf(page), tutorFile(content, page, lang, descriptions));
-        }
         const files = new Set([
-          ...written.keys(),
           ...routes(content)
             .filter((route) => route.lang === lang)
             .map((route) => route.local),
+          ...contentPages(content).map((page) => tutorPageOf(page)),
         ]);
         const anchors = new Map(
           contentPages(content).map((page) => [`${page.chapter}/${page.id}/`, anchorsOf(content, page)]),
         );
-        for (const [file, text] of written) {
+        // the tutor page of each content page with its Markdown, each link checked against the pages and anchors of
+        // the language tree
+        for (const contentPage of contentPages(content)) {
+          const local = tutorPageOf(contentPage);
+          const page = tutor.get(`${languageRoot(lang)}${local}`);
+          if (page === undefined) continue;
           problems.push(
-            ...linkProblems(file, text, files, anchors).map((problem) => `${languageRoot(lang)}${problem}`),
+            ...linkProblems(local, page.markdown, files, anchors).map((problem) => `${languageRoot(lang)}${problem}`),
           );
-          this.emitFile({ type: "asset", fileName: `${languageRoot(lang)}${file}`, source: text });
+          this.emitFile({ type: "asset", fileName: `${languageRoot(lang)}${local}index.html`, source: page.html });
+          this.emitFile({
+            type: "asset",
+            fileName: `${languageRoot(lang)}${local}${TUTOR_MARKDOWN}`,
+            source: page.markdown,
+          });
         }
+      }
+      // a tutor page beyond its budget: noted, no problem (the tutor may get it cut off)
+      const large = [...tutor].filter(([, page]) => bytesOf(page.html) > TUTOR_PAGE_BUDGET);
+      if (large.length > 0) {
+        this.info(
+          `lernapps explainer: ${large.length} tutor page${large.length === 1 ? " is" : "s are"} larger than ${TUTOR_PAGE_BUDGET / 1000} kB, which a tutor may get cut off: ${large.map(([file, page]) => `${file} (${(bytesOf(page.html) / 1000).toFixed(0)} kB)`).join(", ")}`,
+        );
+      }
+      // an exercise component whose numbers do not all fit on its tutor page: a warning, until it declares its
+      // inputs and outputs (#80)
+      const cut = [...tutor].flatMap(([file, page]) => page.cut.map((one) => ({ file, ...one })));
+      if (cut.length > 0) {
+        this.warn(
+          `lernapps explainer: ${cut.length} exercise${cut.length === 1 ? " shows" : "s show"} only some of ${cut.length === 1 ? "its" : "their"} task numbers on the tutor page, to stay within ${TUTOR_PAGE_BUDGET / 1000} kB (see https://github.com/lernapps/app-templates/issues/80): ${cut.map((one) => `${one.file} ${one.id} (${one.shown} of ${one.count})`).join(", ")}`,
+        );
       }
       // the exercises with fewer distinct tasks than the numbers allow: noted, no problem
       const few = [
@@ -325,7 +368,8 @@ export function explainer(): Plugin[] {
           response.end(readFileSync(join(root, "src", path)));
           return;
         }
-        if (!(path === "" || path.endsWith("/"))) return next();
+        const forTutor = new RegExp(`(^|/)tutor/(${TUTOR_MARKDOWN.replace(".", "\\.")})?$`).test(path);
+        if (!(path === "" || path.endsWith("/") || forTutor)) return next();
         const fail = (error: unknown) => {
           response.statusCode = 500;
           response.setHeader("content-type", "text/plain; charset=utf-8");
@@ -343,6 +387,14 @@ export function explainer(): Plugin[] {
         renderComponents(content, (id) => dev.ssrLoadModule(id), false)
           .then(({ islands: rendered, descriptions: described, problems }) => {
             if (problems.length > 0) throw new ContentError(problems);
+            if (forTutor) {
+              const markdown = path.endsWith(TUTOR_MARKDOWN);
+              const page = tutorAssets(content, described).get(markdown ? path.slice(0, -TUTOR_MARKDOWN.length) : path);
+              if (page === undefined) return next();
+              response.setHeader("content-type", `text/${markdown ? "markdown" : "html"}; charset=utf-8`);
+              response.end(markdown ? page.markdown : page.html);
+              return undefined;
+            }
             const page = renderSite(content, rendered, described).find((candidate) => candidate.route.path === path);
             if (page === undefined) return next();
             const shell = readFileSync(join(root, "index.html"), "utf8");

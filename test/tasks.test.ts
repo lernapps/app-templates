@@ -52,5 +52,5 @@ test("a task number is written into the address with the other parameters and th
   expect(addressOf(`${page}?a=3`, "a", 4)).toBe(`${page}?a=4`);
   // the old form of the exercise becomes its own parameter
   expect(addressOf(`${page}?seed=7#a`, "a", 8)).toBe(`${page}?a=8#a`);
-  expect(RESERVED_PARAMS).toEqual(["seed", "von"]);
+  expect(RESERVED_PARAMS).toEqual(["seed", "von", "uebung", "abschnitt"]);
 });

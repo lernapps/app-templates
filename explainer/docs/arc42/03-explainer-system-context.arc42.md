@@ -13,7 +13,7 @@ files.
 id: actor-learner-assistant
 title: Learner's own AI assistant
 type: system
-description: Receives the task through the tutor prompt and the tutor files after the learner's click
+description: Receives the page's tutor page with the learner's task after the learner's click
 requires: if-tutor-files
 :::
 ```

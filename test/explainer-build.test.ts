@@ -1,8 +1,8 @@
 // The explainer's build, end to end through Vite, on the template's content and on the fixtures: one build writes
 // every page in every language, each linking the one hashed client module and stylesheet that Vite builds from
 // index.html at its own depth, with its language and the archetype marker, and an exercise on every content page (a
-// generated one with three worked tasks); and llms.txt for each language tree, with its part for a tutor and a tutor
-// file next to each page. A page with a component also loads the
+// generated one with three worked tasks); and the tutor page of each content page, with no llms.txt, tutor file or
+// task file beside it. A page with a component also loads the
 // islands module, which brings Vue; a page without one ships no Vue at all. Each language's page, complete without
 // JavaScript, credits its images and quotes and links further reading in its own language.
 import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -125,36 +125,70 @@ describe("one build writes every page", () => {
       expect(missing).toContain('<meta name="robots" content="noindex" />');
       expect(missing).toContain('<a id="start" href="/">');
       for (const lang of new Set(all.map((route) => route.lang))) {
-        const llms = readFileSync(join(root, "dist", lang === "de" ? "" : lang, "llms.txt"), "utf8");
+        // no llms.txt: the tutor page and the pages themselves are what an assistant reads
+        expect(existsSync(join(root, "dist", lang === "de" ? "" : lang, "llms.txt")), "no llms.txt").toBe(false);
         for (const route of all.filter((candidate) => candidate.kind === "page" && candidate.lang === "de")) {
-          expect(llms).toContain(`](${route.local})`);
-          // the page's tutor file, linked from llms.txt
-          expect(llms).toContain(`](${route.local}tutor.md)`);
-          const tutor = readFileSync(join(root, "dist", lang === "de" ? "" : lang, route.local, "tutor.md"), "utf8");
-          expect(tutor).toMatch(/^# .+ – (Tutor-Datei|tutor file)\n/);
+          const tree = join(root, "dist", lang === "de" ? "" : lang);
+          // no tutor file, no task files: the tutor page is the one source of what a tutor gets
+          expect(existsSync(join(tree, route.local, "tutor.md")), `${route.local}tutor.md`).toBe(false);
+          expect(existsSync(join(tree, route.local, "aufgaben")), `${route.local}aufgaben/`).toBe(false);
         }
-        expect(llms).toContain(lang === "de" ? "## Hinweise für einen KI-Tutor" : "## Notes for an AI tutor");
-        // the tutor prompt next to llms.txt, linked from it and from the start page
-        expect(llms).toContain("](tutor.md)");
-        const prompt = readFileSync(join(root, "dist", lang === "de" ? "" : lang, "tutor.md"), "utf8");
-        expect(prompt).toMatch(/^# (KI-Tutor|AI tutor): /);
-        expect(prompt).not.toContain("⟦base⟧");
+        expect(existsSync(join(root, "dist", lang === "de" ? "" : lang, "tutor.md")), "no tutor prompt").toBe(false);
+        // the tutor page of each content page: lean HTML in the page's folder, linked from the page
+        for (const chapter of site.chapters) {
+          const tree = join(root, "dist", lang === "de" ? "" : lang);
+          expect(existsSync(join(tree, chapter.id, "tutor")), "no tutor page per chapter").toBe(false);
+          for (const { id } of chapter.pages) {
+            const page = readFileSync(join(tree, chapter.id, id, "tutor", "index.html"), "utf8");
+            expect(page).toMatch(new RegExp(`^<!doctype html>\\n<html lang="${lang}">`));
+            expect(page).not.toContain("<script");
+            // its Markdown beside it, for copying
+            const markdown = readFileSync(join(tree, chapter.id, id, "tutor", "index.md"), "utf8");
+            expect(markdown).toMatch(/^# .+ – (für deinen KI-Tutor|for your AI tutor)\n/);
+            const html = readFileSync(join(tree, chapter.id, id, "index.html"), "utf8");
+            const up = lang === "de" ? "../../" : `../../../${lang}/`;
+            expect(html).toContain(`<a class="explainer-tutor-guide" href="${up}${chapter.id}/${id}/tutor/">`);
+            // way A at the top: beside the page's title, in one row with it, inside main; folded until an assistant is on, its name
+            // the summary; then a bar with one button
+            expect(html).toMatch(
+              /<main[^>]*>\n<div class="explainer-title-row">\n<h1>[^<]*<\/h1>\n<div class="explainer-tutor explainer-tutor-page">\n<details class="explainer-tutor-off">\n<summary>(Mit einem KI-Tutor lernen|Learn with an AI tutor)<\/summary>/,
+            );
+            expect(html).toMatch(
+              /<p class="explainer-tutor-bar" hidden><button type="button" class="explainer-tutor-go">/,
+            );
+            // that the learner uses an account of their own, and the assistant is no offer of lernapps.net
+            expect(html).toContain(lang === "de" ? "kein Angebot von lernapps.net" : "not offered by lernapps.net");
+            expect(html.indexOf("explainer-tutor-page"), "not after main").toBeLessThan(html.indexOf("</main>"));
+            // the way to the tutor: a select of the assistants, Claude, ChatGPT and Le Chat, copying last, "Einschalten"
+            expect(html).toContain('<select class="explainer-tutor-select"');
+            expect(html).toMatch(
+              /<option value="Claude">Claude<\/option><option value="ChatGPT">ChatGPT<\/option><option value="Le Chat">Le Chat<\/option><option value="copy">/,
+            );
+            expect(html).toContain('<button type="button" class="explainer-tutor-on">');
+            expect(html).not.toContain("explainer-tutor-text");
+          }
+          // a chapter page starts no tutor: that is each page's
+          if (existsSync(join(tree, chapter.id, "index.html"))) {
+            expect(readFileSync(join(tree, chapter.id, "index.html"), "utf8")).not.toContain("explainer-tutor");
+          }
+        }
         const start = readFileSync(join(root, "dist", lang === "de" ? "" : lang, "index.html"), "utf8");
-        expect(start).toContain(
-          `<a class="explainer-tutor-text" href="${lang === "de" ? "" : `../${lang}/`}tutor.md">`,
+        // the start page says what the tutor is and where to start it, and starts none itself
+        expect(start).toMatch(
+          /<section class="explainer-tutor-about" aria-labelledby="ki-tutor">\n<h2 id="ki-tutor">(Mit einem KI-Tutor lernen|Learn with an AI tutor)<\/h2>/,
         );
-        expect(start).toContain(
-          '<a class="explainer-tutor-provider" href="https://claude.ai/new" rel="noopener" target="_blank">',
+        expect(start).not.toMatch(/explainer-tutor-(prompt|select|go|provider)/);
+        // the choice of the assistant, "Keiner" first, shown once the client module runs
+        expect(start).toMatch(
+          /<p class="explainer-tutor-choice" hidden><label>[^<]+ <select class="explainer-tutor-choose" data-storage="[^"]+"><option value="">(Keiner|None)<\/option><option value="Claude">/,
         );
+        expect(start).toContain(lang === "de" ? "kein Angebot von lernapps.net" : "not offered by lernapps.net");
         // the header holds the language switch and nothing else (no link with the app's name), and an app with one
         // language has none
         expect(start).not.toContain("explainer-brand");
         if (site.app.languages.length > 1) {
           expect(start).toMatch(/<header class="page-header"><nav class="page-languages"/);
         } else expect(start).not.toContain("<header");
-        // the way to the tutor: a button with a select beside it, Claude first, copying last
-        expect(start).toContain('<select class="explainer-tutor-select"');
-        expect(start).toMatch(/<option value="0">Claude<\/option><option value="copy">/);
       }
     },
     60_000,
@@ -224,8 +258,8 @@ test("the tutor section of a page gives the root of its language tree as the bas
     // where the browser puts the prompt's links, from the page's own address
     return new URL(json.root, `https://app.example/${route.path}`).pathname;
   };
-  expect(rootOf("de", "")).toBe("/");
+  expect(rootOf("de", "zahlen/zahlen-01/")).toBe("/");
   expect(rootOf("de", "formen/formen-01/")).toBe("/");
-  expect(rootOf("en", "")).toBe("/en/");
+  expect(rootOf("en", "zahlen/zahlen-01/")).toBe("/en/");
   expect(rootOf("en", "formen/formen-01/")).toBe("/en/");
 });

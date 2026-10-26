@@ -2,14 +2,19 @@
 // with it Vue (plugin.ts adds it to that page alone). Each component loads when its page has it, and hydrates the
 // markup the build rendered into its island, with the props of the page's language. Then its island shows, and its
 // nojs text goes, or, when the component declares defineOptions({ nojs: "caption" }), stays as a text description
-// folded into a <details> under it. An exercise component reports each answer with answered { correct, reason? };
-// the island shows the feedback for it, with the reason of a wrong answer under it, in view with the focus.
+// folded into a <details> under it. An exercise component reports each answer with answered { correct, reason?,
+// answer?, message? }; the island shows the feedback for it, with the reason of a wrong answer under it, in view with
+// the focus, and passes it on to the client module as the event explainer-answered on its element ({ correct, answer,
+// message }: answer is what the learner gave, as text, for the result line of "Zurück zum Tutor", result.ts; message
+// is the text the component showed for it, word for word, or else its reason, for the lines of "Ich verstehe das
+// nicht", stuck.ts).
 // An exercise component gets the seed of its task number as the prop seed, from the table of its distinct tasks the
 // build ships (data-seeds; tasks.ts): the build rendered task number 1, it hydrates with it, and then moves to the
 // number the address names (?<id>=<n>, wrapped into 1 to N) or to a random one; "Aufgabe Nr. <n>" shows above
 // it, and "Neue Aufgabe" moves to the next number, writes it into the address and mounts the component afresh. Nothing is stored.
 import { createSSRApp, h, ref, type Component } from "vue";
-import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, taskNumber } from "./tasks.ts";
+import { answeredMessage } from "./stuck.ts";
+import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, SHOWN_EVENT, taskNumber } from "./tasks.ts";
 
 /** The components of the app by name, each loaded on first use. */
 export type Components = Readonly<Record<string, () => Promise<{ default: Component }>>>;
@@ -49,8 +54,21 @@ async function hydrate(element: HTMLElement, load: () => Promise<{ default: Comp
   ) as Record<string, unknown>;
   const feedback = element.querySelector<HTMLElement>(":scope > .question-feedback");
   const { default: component } = await load();
-  const onAnswered = (event: { correct?: unknown; reason?: unknown }) => {
+  const onAnswered = (event: { correct?: unknown; reason?: unknown; answer?: unknown; message?: unknown }) => {
     if (feedback) showFeedback(feedback, event.correct === true, event.reason);
+    if (element.dataset["exercise"] === undefined) return;
+    const answer = typeof event.answer === "string" && event.answer.trim() !== "" ? event.answer.trim() : undefined;
+    const message = answeredMessage(event);
+    element.dispatchEvent(
+      new CustomEvent("explainer-answered", {
+        bubbles: true,
+        detail: {
+          correct: event.correct === true,
+          ...(answer === undefined ? {} : { answer }),
+          ...(message === undefined ? {} : { message }),
+        },
+      }),
+    );
   };
   if (element.dataset["exercise"] === undefined) {
     createSSRApp(component, { ...props, onAnswered }).mount(island);
@@ -83,6 +101,7 @@ async function hydrate(element: HTMLElement, load: () => Promise<{ default: Comp
         feedback.textContent = "";
       }
       number?.focus();
+      element.dispatchEvent(new CustomEvent(SHOWN_EVENT, { bubbles: true }));
     });
   }
   island.hidden = false;

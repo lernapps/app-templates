@@ -19,11 +19,24 @@
 // "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
 // console error, folds a nojs text it keeps, and an exercise component's answered gives the feedback, once for each
 // answer, with the reason of a wrong one, in view with the focus; at its address ?<id>=<n> it shows "Aufgabe
-// Nr. n" and gets the seed of task number n from its table, and "Neue Aufgabe" moves to the next number in the address and on the page.
+// Nr. n" and gets the seed of task number n from its table, and "Neue Aufgabe", the arrow beside the number, moves to
+// the next number in the address and on the page.
 // Without JavaScript, each component's nojs text is visible and not empty, an exercise component's with its task of
-// number 1 and the solution folded, and its island hidden. No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
+// number 1 and the solution folded, and its island hidden. For a tutor: the start page switches an assistant on for
+// every page and off again; a content page has "Mit einem KI-Tutor lernen" folded under its title while none is on, and
+// once one is, a bar whose button (way A) names the page's tutor page with the page's task numbers alone, which
+// answers, or copies that prompt with the tutor page's Markdown; "Keiner" on the start page
+// takes the bar and the help away. Way B: the help button
+// in the row of "Prüfen" and "Lösung" of a generated exercise, there only while a tutor is on, "Hilfe" before the first
+// input and "Warum?" after a wrong one, opens the assistant with one sentence that names the tutor page with the
+// page's task numbers and the task, then the wrong input with its try and the app's message word for word, the
+// address answering; before the first input with the sentence alone; on a page a tutor opened it copies the task, the
+// lines and the tutor page and opens nothing, and once the solution shows it is "Zurück", which copies the result
+// line. "Zurück zum Tutor" on a page a tutor opened copies the result line of a generated exercise and of an exercise
+// component, with the task number, the try and the input, and the tutor page with the task, which answers.
+// No page stores anything on the device. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
-import { expect, test, type Page } from "playwright/test";
+import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
 import {
   missesRight,
   questionId,
@@ -35,7 +48,8 @@ import {
 } from "../shared/questions/question.ts";
 import { answerQuestion, expectFeedbackInView, expectMaterial } from "../shared/questions/e2e.ts";
 import { questionMessagesIn } from "../shared/questions/render.ts";
-import { answerFor, questionFor, taskKey } from "./generated/question.ts";
+import { answerShown } from "./result.ts";
+import { answerFor, diagnose, questionFor, taskKey } from "./generated/question.ts";
 import { fill, plainText, taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { taskSeeds } from "./exercises.ts";
@@ -172,7 +186,7 @@ type Instance = { emit(event: string, payload: unknown): void; props: Record<str
 type Mounted = { _vnode?: { component?: Instance & { subTree?: { component?: Instance } } } };
 
 /** Emits answered with `payload` from the component in the island of `node`, as the component itself does. */
-function emitAnswered(node: Element, payload: { correct: boolean; reason?: string }): void {
+function emitAnswered(node: Element, payload: { correct: boolean; reason?: string; answer?: string }): void {
   const island = node.querySelector(".explainer-island") as unknown as Mounted;
   const wrapper = island._vnode?.component;
   (wrapper?.subTree?.component ?? wrapper)?.emit("answered", payload);
@@ -360,6 +374,112 @@ async function expectLanguages(page: Page, item: PageOutline, languages: readonl
   }
 }
 
+/**
+ * The clipboard of the page, recorded in the test (nothing leaves the browser): each text the page writes, kept even
+ * when the page closes its tab right after.
+ */
+async function recordClipboard(page: Page): Promise<string[]> {
+  const copied: string[] = [];
+  await page.exposeBinding("lernappsRecordCopy", (_source, text: string) => {
+    copied.push(text);
+  });
+  await page.addInitScript(() => {
+    const recorder = window as unknown as { lernappsRecordCopy: (text: string) => Promise<void> };
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: (text: string) => recorder.lernappsRecordCopy(text) },
+    });
+  });
+  return copied;
+}
+
+/** Records the addresses the page opens with window.open, which opens nothing. */
+async function recordOpen(page: Page): Promise<() => Promise<string[]>> {
+  await page.addInitScript(() => {
+    const opened: string[] = [];
+    Object.assign(window, { opened, open: (url?: string | URL) => (opened.push(String(url ?? "")), null) });
+  });
+  return () => page.evaluate(() => (window as unknown as { opened: string[] }).opened);
+}
+
+/**
+ * Switches the way `label` to the tutor on under the title of a content page (an assistant's name, or copying the
+ * text): "Mit einem KI-Tutor lernen" is folded while none is on; then the bar with its button shows.
+ */
+async function switchOn(page: Page, label: string): Promise<Locator> {
+  const tutor = page.locator(".explainer-tutor");
+  const off = tutor.locator("details.explainer-tutor-off");
+  await expect(off, "folded at first").not.toHaveAttribute("open");
+  await expect(tutor.locator(".explainer-tutor-bar")).toBeHidden();
+  await off.locator(":scope > summary").click();
+  await tutor.locator(".explainer-tutor-select").selectOption({ label });
+  await tutor.locator(".explainer-tutor-on").click();
+  await expect(off).toBeHidden();
+  await expect(tutor.locator(".explainer-tutor-go")).toBeVisible();
+  return tutor;
+}
+
+/** The app's first assistant, from the page's tutor section: its name and its address with {prompt}. */
+async function firstAssistant(page: Page): Promise<{ name: string; url: string }> {
+  const ways = await page
+    .locator("script.explainer-tutor-prompt")
+    .evaluate((script) => (JSON.parse(script.textContent ?? "{}") as { ways: { name: string; url: string }[] }).ways);
+  return ways[0] ?? { name: "", url: "" };
+}
+
+/** The prompt in the address `opened` of the assistant `template`. */
+function promptOf(template: string, opened: string): string {
+  const [before = "", after = ""] = template.split("{prompt}");
+  return decodeURIComponent(opened.slice(before.length, opened.length - after.length));
+}
+
+/**
+ * The address of the page's tutor page with where the learner is, as the ways to the tutor name it from the page
+ * `here` (its address before the click): the tutor page beside the page, every task number of `here`, and the exercise
+ * `id` at task `n` (none for one without numbers); for way A, without `id`, no exercise and no section.
+ */
+function expectTutorAddress(address: string, here: string, id: string | undefined, n: number | undefined): void {
+  const url = new URL(address);
+  expect(`${url.origin}${url.pathname}`, "the page's tutor page").toBe(new URL("tutor/", new URL(".", here)).href);
+  for (const [key, value] of new URL(here).searchParams) {
+    if (key !== "von") expect(url.searchParams.get(key), `the task number of ${key}`).toBe(value);
+  }
+  expect(url.searchParams.get("von"), "no von=tutor").toBeNull();
+  if (id === undefined) {
+    expect(url.searchParams.get("uebung"), "no exercise").toBeNull();
+    expect(url.searchParams.get("abschnitt"), "no section").toBeNull();
+    return;
+  }
+  expect(url.searchParams.get("uebung"), "the exercise").toBe(id);
+  if (n !== undefined) expect(url.searchParams.get(id), "its task number").toBe(String(n));
+}
+
+/**
+ * The result line "Zurück zum Tutor" copies on the page `here` (its address before the click): its first line has
+ * `first`, then the page's tutor page with the task `n` of the exercise `id`, which answers and has the exercise.
+ */
+async function expectResultLine(
+  request: APIRequestContext,
+  copied: string[],
+  here: string,
+  first: string,
+  id: string,
+  n: number,
+): Promise<void> {
+  await expect.poll(() => copied.length, "the result line is copied").toBe(1);
+  const lines = (copied[0] ?? "").split("\n");
+  expect(lines, "two lines").toHaveLength(2);
+  const [line = "", tutor = ""] = lines;
+  expect(line, "the first line: exercise, number, how far, the input").toContain(first);
+  const prefix = `${messageOf("de", "resultTutor")} `;
+  expect(tutor.startsWith(prefix), "the page's tutor page").toBe(true);
+  const address = tutor.slice(prefix.length);
+  expectTutorAddress(address, here, id, n);
+  const response = await request.get(address);
+  expect(response.status(), `${address} answers`).toBe(200);
+  expect(await response.text(), "the tutor page has the exercise").toContain(id);
+}
+
 /** The explainer's tests, for the content in `root`/src. */
 export function explainerTests(root = "."): void {
   const app = outline(root);
@@ -411,19 +531,10 @@ export function explainerTests(root = "."): void {
             await expect(page.locator("main h1")).toHaveText(item.title);
             await expectAnchors(page);
             await expectLanguages(page, item, app.languages);
+            // only a content page starts a tutor; the start page says what it is
+            await expect(page.locator(".explainer-tutor"), "no way to the tutor here").toHaveCount(0);
             if (item.kind === "start") {
-              // the tutor section without JavaScript: no button with a select, plain links to the assistants and to tutor.md
-              const tutor = page.locator(".explainer-tutor");
-              await expect(tutor.locator(".explainer-tutor-way")).toBeHidden();
-              for (const href of await tutor
-                .locator("a.explainer-tutor-provider")
-                .evaluateAll((links) => links.map((link) => link.getAttribute("href") ?? ""))) {
-                expect(href, "a provider link without the prompt").not.toMatch(/\{prompt\}|%7Bprompt%7D/i);
-              }
-              const prompt = await tutor
-                .locator("a.explainer-tutor-text")
-                .evaluate((link) => (link as HTMLAnchorElement).href);
-              expect(prompt, "the link to the prompt as text").toBe(new URL("tutor.md", page.url()).href);
+              await expect(page.locator(".explainer-tutor-about h2")).toHaveText(messageOf(item.lang, "tutorTitle"));
             }
           });
         }
@@ -488,32 +599,6 @@ export function explainerTests(root = "."): void {
       }
     });
 
-    test("the start page copies the tutor prompt, with the app's addresses in its links", async ({ page }) => {
-      // the clipboard of the page, recorded: nothing leaves the browser
-      await page.addInitScript(() => {
-        const copied: string[] = [];
-        Object.assign(window, { copied });
-        Object.defineProperty(navigator, "clipboard", {
-          configurable: true,
-          value: { writeText: (text: string) => (copied.push(text), Promise.resolve()) },
-        });
-      });
-      await page.goto("./");
-      const tutor = page.locator(".explainer-tutor");
-      // the first assistant is the default way; "Prompt kopieren" is picked from the select, and stays the way
-      await expect(tutor.locator(".explainer-tutor-go")).toHaveText(messageOf("de", "tutorGo", { name: "Claude" }));
-      expect(await page.evaluate(() => Object.keys(localStorage)), "nothing is kept before a choice").toEqual([]);
-      await tutor.locator(".explainer-tutor-select").selectOption({ label: messageOf("de", "tutorCopy") });
-      await tutor.getByRole("button", { name: messageOf("de", "tutorCopy") }).click();
-      await expect(tutor.locator(".explainer-tutor-status")).toHaveText(messageOf("de", "tutorCopied"));
-      const copied = await page.evaluate(() => (window as unknown as { copied: string[] }).copied);
-      expect(copied, "one prompt copied").toHaveLength(1);
-      expect(copied[0], "the prompt links llms.txt at the app's address").toContain(
-        new URL("llms.txt", page.url()).href,
-      );
-      expect(copied[0]).not.toContain("⟦base⟧");
-    });
-
     for (const item of (app.pages["de"] ?? []).filter((candidate) =>
       candidate.exercises.some((exercise) => exercise.kind === "generated"),
     )) {
@@ -541,21 +626,282 @@ export function explainerTests(root = "."): void {
         const after = new URL(page.url()).searchParams;
         expect(after.get(first), "the exercise's task changes").not.toBe(before.get(first));
         for (const id of ids.slice(1)) expect(after.get(id), `${id} stays`).toBe(before.get(id));
-        // the button copies the prompt with the page's address once "Prompt kopieren" is the way
-        const tutor = page.locator(".explainer-tutor");
-        await tutor.locator(".explainer-tutor-select").selectOption({ label: messageOf("de", "tutorCopy") });
+        // the bar's button copies the prompt with the page's address once copying the text is switched on
+        const tutor = await switchOn(page, messageOf("de", "tutorOther"));
+        await expect(tutor.locator(".explainer-tutor-go")).toHaveText(`?${messageOf("de", "tutorCopy")}`);
         await tutor.locator(".explainer-tutor-go").click();
         await expect(tutor.locator(".explainer-tutor-status")).toHaveText(messageOf("de", "tutorCopied"));
         const copied = await page.evaluate(() => (window as unknown as { copied: string[] }).copied);
-        expect(copied[0], "the prompt names the page's address").toContain(page.url());
-        // the links of the prompt start at the root of the language tree, not at the page's folder
-        const tree = new URL("../".repeat(item.url.split("/").filter((part) => part !== "").length), page.url());
-        expect(copied[0], "llms.txt at the root of the tree").toContain(new URL("llms.txt", tree).href);
-        expect(copied[0]).not.toContain(new URL("llms.txt", page.url()).href);
-        expect(copied[0], "and the task of the exercise, with its solution").toContain(`${first}=${after.get(first)}`);
-        // the way is the default from then on
+        const [prompt = "", ...markdown] = (copied[0] ?? "").split("\n");
+        // the start prompt, the tutor page with the page's task numbers, then the tutor page's Markdown
+        const address = /https?:\/\/\S+/.exec(prompt)?.[0] ?? "";
+        expect(new URL(address).searchParams.get(first), "the task number in the tutor page's address").toBe(
+          after.get(first),
+        );
+        expect(`${new URL(address).origin}${new URL(address).pathname}`).toBe(new URL("tutor/", page.url()).href);
+        expect(markdown.join("\n"), "the tutor page's Markdown, with the guide").toContain("## So leitest du an");
+        expect(markdown.join("\n"), "and the exercise").toContain(`### Übung ${first}`);
+        // the way stays on, on this device
         await page.reload();
-        await expect(tutor.locator(".explainer-tutor-go")).toHaveText(messageOf("de", "tutorCopy"));
+        await expect(tutor.locator(".explainer-tutor-go")).toBeVisible();
+      });
+    }
+
+    const generatedPage = (app.pages["de"] ?? []).find((candidate) =>
+      candidate.exercises.some((exercise) => exercise.kind === "generated"),
+    );
+    if (generatedPage !== undefined) {
+      const exercise = generatedPage.exercises.find((candidate) => candidate.kind === "generated");
+      test(`${generatedPage.url}: way A, the provider link names the page's tutor page with the page's task numbers`, async ({
+        page,
+        request,
+      }) => {
+        if (exercise?.kind !== "generated") return;
+        const opened = await recordOpen(page);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}#${exercise.id}`);
+        const n = taskNumber(SEED, taskSeeds(exercise.spec, exercise.data).length);
+        const assistant = await firstAssistant(page);
+        const template = assistant.url;
+        test.skip(!template.includes("{prompt}"), "the app's first assistant takes no prompt in its address");
+        await (await switchOn(page, assistant.name)).locator(".explainer-tutor-go").click();
+        const addresses = await opened();
+        expect(addresses, "one assistant opens").toHaveLength(1);
+        const prompt = promptOf(template, addresses[0] ?? "");
+        const found = prompt.match(/https?:\/\/\S+/g) ?? [];
+        expect(found, "one address: the tutor page").toHaveLength(1);
+        const [address = ""] = found;
+        expectTutorAddress(address, page.url(), undefined, undefined);
+        expect(new URL(address).searchParams.get(exercise.id), "the task number").toBe(String(n));
+        expect(prompt, "in the learner's voice: help with this page").toContain("verstehen");
+        const response = await request.get(address);
+        expect(response.status(), "the tutor page answers").toBe(200);
+        expect(await response.text()).toContain('<main id="anleitung">');
+      });
+
+      /** The first line of way B1: the tutor page and the task in one sentence. */
+      const stuckFirst = (line: string, here: string, n: number) => {
+        const address = /https?:\/\/\S+/.exec(line)?.[0] ?? "";
+        expectTutorAddress(address, here, exercise?.id ?? "", n);
+        expect(line).toBe(
+          messageOf("de", "stuckAsk", {
+            url: address,
+            exercise: exercise?.id ?? "",
+            number: messageOf("de", "resultNumber", { n: String(n) }),
+          }),
+        );
+        return address;
+      };
+
+      test(`${generatedPage.url}: way B1, "Warum?" after a wrong answer opens the assistant with the input and the app's message word for word`, async ({
+        page,
+        request,
+      }) => {
+        if (exercise?.kind !== "generated") return;
+        const opened = await recordOpen(page);
+        const { spec, data, templates } = exercise;
+        const seeds = taskSeeds(spec, data);
+        const n = taskNumber(SEED, seeds.length);
+        const task = generate(spec, seeds[n - 1] ?? n, data);
+        const question = questionFor(spec, task, "de", templates);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}#${exercise.id}`);
+        const assistant = await firstAssistant(page);
+        const template = assistant.url;
+        test.skip(!template.includes("{prompt}"), "the app's first assistant takes no prompt in its address");
+        await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
+        await switchOn(page, assistant.name);
+        const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
+        await answerQuestion(page, question, wrong);
+        await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
+        // what the app shows under the verdict, without its offer to try again
+        const shown = (await feedback(page, questionId(question)).locator(".question-diagnosis").allTextContents())
+          .slice(0, -1)
+          .join(" ");
+        if (task.mistakes.length > 0) {
+          expect(shown, "the message of the mistake").toBe(diagnose(spec, task, question, wrong, "de", templates));
+        }
+        // in the row of "Prüfen" and "Lösung", "Warum?" after the wrong answer
+        const help = page.locator(`[id="${exercise.id}"] .question-actions button.explainer-help`);
+        await expect(help).toHaveText(`${assistant.name.charAt(0).toUpperCase()}${messageOf("de", "helpWhy")}`);
+        await expect(help).toHaveAttribute("aria-label", messageOf("de", "helpWhyLabel", { name: assistant.name }));
+        await help.click();
+        const addresses = await opened();
+        expect(addresses, "one assistant opens").toHaveLength(1);
+        const prompt = promptOf(template, addresses[0] ?? "");
+        const [first = "", ...rest] = prompt.split("\n");
+        const address = stuckFirst(first, page.url(), n);
+        expect(rest).toEqual([
+          messageOf("de", "stuckInput", {
+            input: answerShown(question, wrong, "de"),
+            tries: messageOf("de", "resultTry"),
+          }),
+          messageOf("de", "stuckMessage", { message: shown.replace(/\s+/g, " ").trim() }),
+        ]);
+        expect((await request.get(address)).status(), `${address} answers`).toBe(200);
+      });
+
+      test(`${generatedPage.url}: way B1 before the first input, the sentence with the tutor page and the task alone`, async ({
+        page,
+      }) => {
+        if (exercise?.kind !== "generated") return;
+        const opened = await recordOpen(page);
+        const n = taskNumber(SEED, taskSeeds(exercise.spec, exercise.data).length);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}#${exercise.id}`);
+        const assistant = await firstAssistant(page);
+        const template = assistant.url;
+        test.skip(!template.includes("{prompt}"), "the app's first assistant takes no prompt in its address");
+        const button = page.locator(`[id="${exercise.id}"] .question-actions button.explainer-help`);
+        await expect(button, "no help before a tutor is on").toBeHidden();
+        await switchOn(page, assistant.name);
+        await expect(button, "there before the first input").toHaveText(
+          `${assistant.name.charAt(0).toUpperCase()}${messageOf("de", "help")}`,
+        );
+        await button.click();
+        const addresses = await opened();
+        expect(addresses, "one assistant opens").toHaveLength(1);
+        const lines = promptOf(template, addresses[0] ?? "").split("\n");
+        expect(lines, "the sentence alone").toHaveLength(1);
+        stuckFirst(lines[0] ?? "", page.url(), n);
+      });
+
+      test(`${generatedPage.url}: way B2, on a page a tutor opened "Warum?" copies the lines and opens nothing`, async ({
+        page,
+      }) => {
+        if (exercise?.kind !== "generated") return;
+        const copied = await recordClipboard(page);
+        const opened = await recordOpen(page);
+        const { spec, data, templates } = exercise;
+        const seeds = taskSeeds(spec, data);
+        const n = taskNumber(SEED, seeds.length);
+        const task = generate(spec, seeds[n - 1] ?? n, data);
+        const question = questionFor(spec, task, "de", templates);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
+        const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
+        await answerQuestion(page, question, wrong);
+        await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
+        // on a page a tutor opened, help is there without switching a tutor on
+        await page.locator(`[id="${exercise.id}"] .question-actions button.explainer-help`).click();
+        await expect.poll(() => copied.length, "the lines are copied").toBe(1);
+        expect(await opened(), "no new chat").toEqual([]);
+        const lines = (copied[0] ?? "").split("\n");
+        expect(lines[0], "the task first").toBe(
+          messageOf("de", "stuckTask", {
+            exercise: exercise.id,
+            number: messageOf("de", "resultNumber", { n: String(n) }),
+          }),
+        );
+        expect(lines[1]).toBe(
+          messageOf("de", "stuckInput", {
+            input: answerShown(question, wrong, "de"),
+            tries: messageOf("de", "resultTry"),
+          }),
+        );
+        expect(lines[2]).toMatch(/^Die App sagt: „.+“$/);
+        const prefix = `${messageOf("de", "resultTutor")} `;
+        expect(lines.at(-1)?.startsWith(prefix), "the tutor page last").toBe(true);
+        expectTutorAddress((lines.at(-1) ?? "").slice(prefix.length), page.url(), exercise.id, n);
+      });
+
+      test(`${generatedPage.url}: on a page a tutor opened, "Zurück" in the row copies the result line once the solution shows`, async ({
+        page,
+        request,
+      }) => {
+        if (exercise?.kind !== "generated") return;
+        const copied = await recordClipboard(page);
+        const { spec, data, templates } = exercise;
+        const seeds = taskSeeds(spec, data);
+        const n = taskNumber(SEED, seeds.length);
+        const task = generate(spec, seeds[n - 1] ?? n, data);
+        const question = questionFor(spec, task, "de", templates);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
+        const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
+        await answerQuestion(page, question, wrong);
+        await page.getByRole("button", { name: questionMessagesIn("de").showSolution, exact: true }).click();
+        const back = page.locator(`[id="${exercise.id}"] .question-actions button.explainer-help`);
+        await expect(back).toHaveAttribute(
+          "aria-label",
+          messageOf("de", "helpBackLabel", { name: messageOf("de", "tutorSomeone") }),
+        );
+        const here = page.url();
+        await back.click();
+        await expectResultLine(
+          request,
+          copied,
+          here,
+          `, ${exercise.id}, Nr. ${n}: ${messageOf("de", "resultSolution")}`,
+          exercise.id,
+          n,
+        );
+      });
+
+      test(`${generatedPage.url}: "Zurück zum Tutor" copies the result line of a generated exercise`, async ({
+        page,
+        request,
+      }) => {
+        if (exercise?.kind !== "generated") return;
+        const copied = await recordClipboard(page);
+        const { spec, data, templates } = exercise;
+        const seeds = taskSeeds(spec, data);
+        const n = taskNumber(SEED, seeds.length);
+        const task = generate(spec, seeds[n - 1] ?? n, data);
+        const question = questionFor(spec, task, "de", templates);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
+        const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
+        await answerQuestion(page, question, wrong);
+        await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
+        const here = page.url();
+        await page.getByRole("button", { name: messageOf("de", "backToTutor") }).click();
+        const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}, ${messageOf("de", "resultInput", { input: answerShown(question, wrong, "de") })})`;
+        await expectResultLine(request, copied, here, `, ${exercise.id}, Nr. ${n}: ${status}.`, exercise.id, n);
+      });
+    }
+
+    const firstPage = (app.pages["de"] ?? [])[0];
+    if (firstPage !== undefined) {
+      test("the start page switches an assistant on for every page, and off again", async ({ page }) => {
+        await page.goto("./");
+        const choose = page.locator("select.explainer-tutor-choose");
+        await expect(choose, "none at first").toHaveValue("");
+        const names = await choose
+          .locator("option")
+          .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value));
+        const name = names[1] ?? "";
+        await choose.selectOption(name);
+        await page.goto(`./${firstPage.url}`);
+        const tutor = page.locator(".explainer-tutor");
+        await expect(tutor.locator(".explainer-tutor-bar")).toBeVisible();
+        await expect(tutor.locator("details.explainer-tutor-off")).toBeHidden();
+        if (name !== "copy") await expect(tutor.locator(".explainer-tutor-go")).toContainText(name);
+        await page.goto("./");
+        await expect(choose).toHaveValue(name);
+        await choose.selectOption("");
+        await page.goto(`./${firstPage.url}`);
+        await expect(tutor.locator(".explainer-tutor-bar")).toBeHidden();
+        await expect(page.locator("button.explainer-help").first(), "no help without a tutor").toBeHidden();
+      });
+    }
+
+    for (const item of app.pages["de"] ?? []) {
+      const component = item.components.find((candidate) => candidate.exercise && candidate.id !== undefined);
+      if (component?.id === undefined) continue;
+      const id = component.id;
+      test(`${item.url}: "Zurück zum Tutor" copies the result line of the exercise component ${component.name}`, async ({
+        page,
+        request,
+      }) => {
+        const copied = await recordClipboard(page);
+        await page.goto(`./${item.url}?${id}=3&von=tutor#${id}`);
+        const element = page.locator(`[id="${id}"]`);
+        await expect(element).toHaveAttribute("data-hydrated", "");
+        const seeds = JSON.parse((await element.getAttribute("data-seeds")) ?? "[1]") as number[];
+        const n = taskNumber(3, seeds.length);
+        await element.evaluate(emitAnswered, { correct: false, answer: "Die Eingabe" });
+        const here = page.url();
+        await page.getByRole("button", { name: messageOf("de", "backToTutor") }).click();
+        const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}, ${messageOf("de", "resultInput", { input: "Die Eingabe" })})`;
+        await expectResultLine(request, copied, here, `, ${id}, Nr. ${n}: ${status}.`, id, n);
       });
     }
 

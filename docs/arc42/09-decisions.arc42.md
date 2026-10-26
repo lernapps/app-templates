@@ -231,7 +231,7 @@ addresses: qg-understandable
 ## Tutor Variant
 
 The optional tutor is a handoff to the learner's own assistant: after a click, a prompt (copied or passed to a chosen
-provider) and static `tutor.md` and `llms.txt` files give it the task on the learner's screen. Rejected: a model
+provider) and a static tutor page per content page give it the task on the learner's screen. Rejected: a model
 running in the browser. Built for the explainer (its extension models it); not built for the quiz and interactive
 apps.
 

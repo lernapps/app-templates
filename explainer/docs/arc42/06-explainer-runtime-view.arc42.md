@@ -9,7 +9,7 @@ is complete: the text, formulas, figures, each exercise with its solution in a `
 with three worked tasks, each component's `nojs` text. With JavaScript `startExplainer()` makes the exercises live: a
 quiz-type exercise gets the quiz's controls and checker, a generated exercise a live task from its task number and
 "Neue Aufgabe", which writes the next number into the address; the islands hydrate their components. A wrong answer
-gets its reason, the solution shows after the right answer or "Lösung zeigen", the feedback in view with the focus.
+gets its reason, the solution shows after the right answer or "Lösung", the feedback in view with the focus.
 The worked tasks stay hidden with JavaScript; the sentence above the live
 task is the exercise's `practice`, else a neutral default.
 
@@ -26,7 +26,8 @@ involves: bb-render, bb-shell, bb-islands, bb-generated-exercises, bb-questions,
 
 The `explainer()` plugin validates the content, its data files and its components, runs the component rules and the
 property test of each generated exercise and exercise component over fixed seeds, and writes the pages and, where the
-tutor is on, a `tutor.md` per page from each exercise's tasks by number and its `describe` and `about`.
+tutor is on, the tutor page of each page from its content, each exercise's tasks by number and a component's
+`describe` and `about`; it warns when a component's numbers do not all fit on its tutor page.
 
 ```arc42
 :::runtime-scenario
@@ -39,16 +40,25 @@ involves: bb-archetype-runtime, bb-build, bb-validation, bb-component-rules, bb-
 
 ## Asking the tutor
 
-The learner clicks "Mit einem KI-Tutor lernen": a button copies a ready prompt, or a provider link opens the learner's
-own assistant with it; static `tutor.md` and `llms.txt` files give the assistant the tasks and solutions the exercise
-contract describes, numbered by the task numbers, and nothing leaves the device before the click. No model runs in
-the browser.
+The learner switches an assistant on once, on the start page or beside the title of a page; the choice stays on the
+device. Way A: the bar beside the title of a page opens the learner's own assistant with one sentence that names the
+page's tutor page with the page's task numbers, or copies that sentence with the tutor page's Markdown. The assistant
+fetches the tutor page, looks the numbers up in its tables, asks what the child does not understand, explains with
+the page's own example and sends links to tasks of the page with `von=tutor`. On such a page the learner solves the
+task and presses "Zurück zum Tutor": the page copies a result line with the try, the input and the tutor page with
+the task, closes the tab, and the learner pastes the line into the chat; the assistant knows the task's solution and
+mistakes from the tutor page and talks about the mistake. Way B: stuck at a task, the learner clicks "Hilfe"
+("Warum?" after a wrong answer) in the exercise. Without a chat the assistant opens with one sentence that names the
+tutor page and the task, then the input and the app's message word for word; on a page a tutor opened the page copies
+the task, the same lines and the tutor page and closes the tab, and the learner pastes them into the running chat.
+The assistant starts from the app's message and helps without giving the solution away, as the tutor page's guide
+says. Nothing leaves the device before a click, and the app reports nothing back. No model runs in the browser.
 
 ```arc42
 :::runtime-scenario
 id: scenario-tutor
 title: Asking the tutor
-trigger: The learner asks for help with a task
+trigger: The learner wants to learn a page with a tutor, or is stuck at a task
 involves: bb-shell, bb-tutor-handoff, bb-task-numbers, bb-explainer-components
 :::
 ```

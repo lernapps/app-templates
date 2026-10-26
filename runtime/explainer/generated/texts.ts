@@ -156,7 +156,7 @@ export function unusedVariables(spec: Generated): string[] {
 }
 
 /** The value of a placeholder's path in a task, or undefined when it has none. */
-function placeholderValue(
+export function placeholderValue(
   spec: Generated,
   task: Task,
   path: string,
@@ -201,7 +201,7 @@ export function fill(
 
 /**
  * A template as its author wrote it (restricted Markdown, formulas as $…$) with each placeholder replaced by its value
- * as the learner reads it, in `lang`: the text a tutor file gives (tutor.ts).
+ * as the learner reads it, in `lang`.
  */
 export function fillSource(text: Text, spec: Generated, task: Task, lang: string): string {
   return inLanguage(text, lang).replace(
