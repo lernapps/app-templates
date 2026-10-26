@@ -257,6 +257,28 @@
   margin: 0.25rem 0 0;
 }
 
+/* An exercise component's own buttons in its row .question-actions ("Prüfen"): those of the questions, which style
+   only buttons inside .question */
+.explainer-island .question-actions button:not(.explainer-help) {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  cursor: pointer;
+}
+
+.explainer-island .question-actions button:not(.explainer-help):disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.explainer-island .question-actions button:not(.explainer-help):focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
 /* The task number of a seeded exercise ("Aufgabe Nr. 7"), which a learner can name to a tutor, and the controls of an
    exercise component: its number and "Neue Aufgabe", shown once it hydrates */
 .explainer-task-number {

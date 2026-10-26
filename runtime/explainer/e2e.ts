@@ -160,6 +160,23 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       await expect(details).not.toHaveAttribute("open");
     } else await expect(nojs, "the component replaces its nojs text").toBeHidden();
     if (!component.exercise) continue;
+    // its own buttons in its row .question-actions ("Prüfen") look like those of the questions: filled with the
+    // accent and at least 44 px high
+    const own = element.locator(":scope > .explainer-island .question-actions button:not(.explainer-help)");
+    for (const button of await own.all()) {
+      const look = await button.evaluate((node) => {
+        const style = getComputedStyle(node);
+        const accent = getComputedStyle(document.documentElement).getPropertyValue("--page-accent").trim();
+        const probe = document.createElement("span");
+        probe.style.color = accent;
+        document.body.append(probe);
+        const filled = getComputedStyle(probe).color;
+        probe.remove();
+        return { height: node.getBoundingClientRect().height, background: style.backgroundColor, filled };
+      });
+      expect(look.height, `${component.name}: its button is at least 44 px high`).toBeGreaterThanOrEqual(44);
+      expect(look.background, `${component.name}: its button is filled with the accent`).toBe(look.filled);
+    }
     // the component's own answered, as it emits it, with each result: one feedback, in view with the focus
     const feedback = element.locator(":scope > .question-feedback");
     for (const correct of [true, false]) {
