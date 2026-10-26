@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { afterAll, describe, expect, test } from "vite-plus/test";
 import {
   covers,
+  gitEnvironment,
   prePush,
   ROOT_ONLY,
   TEMPLATE_PATHS,
@@ -25,7 +26,7 @@ const ZERO = "0".repeat(40);
 function repo() {
   const dir = mkdtempSync(join(tmpdir(), "athooks-pre-push-"));
   const git = (...args: string[]) => {
-    const result = spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+    const result = spawnSync("git", args, { cwd: dir, encoding: "utf8", env: gitEnvironment() });
     if (result.status !== 0) throw new Error(`git ${args.join(" ")}: ${result.stderr}`);
     return result.stdout.trim();
   };
@@ -163,4 +164,41 @@ test("the hook's classifier is the commit of lernapps/tooling that CI's change s
   const workflow = readFileSync(join(root, ".github/workflows/check.yml"), "utf8");
   expect(/^\s*tooling-ref: (\S+)/m.exec(workflow)?.[1]).toBe(TOOLING_REF);
   expect(/lernapps\/tooling\/\.github\/workflows\/changes\.yml@(\S+)/.exec(workflow)?.[1]).toBe(TOOLING_REF);
+});
+
+describe("git in another folder, while a hook runs", () => {
+  // git sets GIT_DIR (and in a worktree GIT_INDEX_FILE and more) for its hooks; git in a temporary folder then works
+  // on this clone instead: `git init` and `git commit` rewrote the branch being pushed and its config.
+  test("leaves out the variables that point git at a repository, and keeps the rest", () => {
+    const env = gitEnvironment({
+      GIT_DIR: "/x/.git",
+      GIT_INDEX_FILE: "/x/index",
+      GIT_WORK_TREE: "/x",
+      GIT_CONFIG_COUNT: "1",
+      HOME: "/h",
+    });
+    expect(env).toEqual({ GIT_CONFIG_COUNT: "1", HOME: "/h" });
+  });
+
+  test("a helper repo with GIT_DIR of another repo set leaves that repo alone", () => {
+    const outer = mkdtempSync(join(tmpdir(), "athooks-outer-"));
+    dirs.push(outer);
+    const git = (...args: string[]) =>
+      spawnSync("git", args, { cwd: outer, encoding: "utf8", env: gitEnvironment() }).stdout.trim();
+    git("init", "--quiet", "--initial-branch=main");
+    git("-c", "user.name=a", "-c", "user.email=a@example.invalid", "commit", "--quiet", "--allow-empty", "-m", "outer");
+    const head = git("rev-parse", "HEAD");
+    const before = process.env["GIT_DIR"];
+    process.env["GIT_DIR"] = join(outer, ".git");
+    try {
+      const { dir, push } = repo();
+      dirs.push(dir);
+      push("README.md");
+    } finally {
+      if (before === undefined) delete process.env["GIT_DIR"];
+      else process.env["GIT_DIR"] = before;
+    }
+    expect(git("rev-parse", "HEAD")).toBe(head);
+    expect(git("config", "--local", "--get", "user.name")).toBe("");
+  });
 });

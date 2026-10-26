@@ -108,12 +108,37 @@ export function lanes(files: readonly string[] | undefined): Lane[] {
 const ZERO = /^0+$/;
 
 /**
+ * The variables git sets for a hook that point it at a repository (the locating part of `git rev-parse
+ * --local-env-vars`). Inherited by git in another folder, they make it work on this clone: `git init` and `git commit`
+ * in a temporary folder then rewrite the branch being pushed and its config. The GIT_CONFIG_* variables stay, a proxy
+ * may set them.
+ */
+const REPOSITORY_VARIABLES = [
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_IMPLICIT_WORK_TREE",
+  "GIT_COMMON_DIR",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  "GIT_GRAFT_FILE",
+  "GIT_SHALLOW_FILE",
+  "GIT_PREFIX",
+];
+
+/** The environment for git that finds its repository from its folder, not from the hook that runs it. */
+export function gitEnvironment(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  return Object.fromEntries(Object.entries(env).filter(([key]) => !REPOSITORY_VARIABLES.includes(key)));
+}
+
+/**
  * The files a push changes, as the tooling's classifier reads them (pushedFiles of changes/changes.ts): what each
  * pushed ref adds to the remote's commit; for a new branch, what it adds to its merge base with origin/main.
  * Undefined when that cannot be known: no lines (run by hand), an unknown commit, no origin/main.
  */
 export function pushedFiles(lines: string, cwd: string): string[] | undefined {
-  const git = (...args: string[]) => spawnSync("git", args, { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const git = (...args: string[]) =>
+    spawnSync("git", args, { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, env: gitEnvironment() });
   const refs = lines
     .split("\n")
     .map((line) => line.trim().split(/\s+/))
@@ -145,7 +170,8 @@ function classifier(): string | undefined {
   const temp = `${dir}.${process.pid}`;
   rmSync(temp, { recursive: true, force: true });
   mkdirSync(temp, { recursive: true });
-  const git = (...args: string[]) => spawnSync("git", args, { cwd: temp, stdio: "ignore" }).status === 0;
+  const git = (...args: string[]) =>
+    spawnSync("git", args, { cwd: temp, stdio: "ignore", env: gitEnvironment() }).status === 0;
   const fetched =
     git("init", "--quiet") &&
     git("sparse-checkout", "set", "--no-cone", "/changes/", "/src/") &&
