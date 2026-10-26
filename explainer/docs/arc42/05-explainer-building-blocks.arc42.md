@@ -459,16 +459,17 @@ protocol: YAML records
 
 ## Vue components
 
-Optional, not in the template: `src/components/<Name>.vue` with its test, for what no block can express, under the
-component rules and within a fixed size each (`dec-explainer-component-size`); an exercise component adds its logic
-module.
+Optional: `src/components/<Name>.vue` with its test, for what no block can express, under the component rules and
+within a fixed size each (`dec-explainer-component-size`); an exercise component adds its logic module. The template
+has one as an example, `ProzentFeld` on the page `prozent/prozentwert`: a field of G squares of which the learner
+colours p %, with the exercise declared for the tutor (`dec-component-table`), so that a hand test shows how a tutor
+deals with its typical mistakes.
 
 ```arc42
-:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
-:::
 :::building-block
 id: bb-explainer-components
 title: Vue components
+path: explainer/src/components
 technology: Vue single-file components, TypeScript
 implements: concept-component-rules
 :::
@@ -482,12 +483,11 @@ A `vue-component` block names the component with its typed props and a `nojs` te
 `reason` without it) and takes the prop `seed`.
 
 ```arc42
-:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
-:::
 :::interface
 id: if-vue-component
 title: Component contract (props, nojs, answered)
 provider: bb-explainer-components
+path: explainer/src/components/ProzentFeld.vue
 protocol: Vue props and events, YAML block
 :::
 ```
@@ -501,12 +501,11 @@ in each language, and what the exercise is for a tutor). For its table of tasks 
 number and gives a hint for a component without them.
 
 ```arc42
-:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
-:::
 :::interface
 id: if-exercise-logic
 title: Exercise logic module (exercise contract)
 provider: bb-explainer-components
+path: explainer/src/components/ProzentFeld.ts
 protocol: TypeScript module exports
 :::
 ```

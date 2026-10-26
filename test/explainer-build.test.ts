@@ -52,22 +52,54 @@ function shipped(file: string): string[] {
   return [...found];
 }
 
-// the content, the number of its pages in German, and the pages with a component
-const contents: [string, string, number, string[]][] = [
-  ["the template", join(import.meta.dirname, "../explainer/src"), 3, []],
-  ["the all-blocks fixture", join(import.meta.dirname, "fixtures/explainer-all-blocks"), 4, []],
+/** An exercise component of a content: the pages it is on, and what each shows of it, by language. */
+interface ComponentPages {
+  pages: string[];
+  /** Its markup, rendered at build. */
+  island: RegExp;
+  /** Its anchor and the seeds of its numbers, as the page starts them. */
+  component: string;
+  /** Without JavaScript: a part of the task of number 1, and its solution folded, by language. */
+  task: Record<string, string>;
+  solution: RegExp;
+}
+
+// the content, the number of its pages in German, and its exercise component
+const contents: [string, string, number, ComponentPages | undefined][] = [
+  [
+    "the template",
+    join(import.meta.dirname, "../explainer/src"),
+    3,
+    {
+      pages: ["prozent/prozentwert/"],
+      island: /<div class="explainer-island" hidden><div class="prozent-feld"[^>]*><p[^>]*>Das Feld hat 40 Kästchen/,
+      component:
+        '<div class="explainer-component" id="prozentfeld" data-component="ProzentFeld" data-exercise data-seeds="[1,2,4,',
+      task: { de: "Färbe 5 % davon." },
+      solution: /<details class="explainer-solution"><summary>[^<]+<\/summary><p>2 Kästchen: /,
+    },
+  ],
+  ["the all-blocks fixture", join(import.meta.dirname, "fixtures/explainer-all-blocks"), 4, undefined],
   [
     "the history fixture",
     join(import.meta.dirname, "fixtures/explainer-history"),
     3,
-    ["revolution/staende/", "en/revolution/staende/"],
+    {
+      pages: ["revolution/staende/", "en/revolution/staende/"],
+      island: /<div class="explainer-island" hidden><div class="assign-labels"[^>]*><svg /,
+      component:
+        '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise data-seeds="[1,2,5,7,10]">',
+      task: { de: "Zur Wahl stehen, in dieser Reihenfolge:", en: "The choices, in this order:" },
+      solution: /<details class="explainer-solution"><summary>[^<]+<\/summary><p>(Stufe|Level) 1: /,
+    },
   ],
 ];
 
 describe("one build writes every page", () => {
   test.each(contents)(
     "%s",
-    async (_name, src, count, withComponents) => {
+    async (_name, src, count, component) => {
+      const withComponents = component?.pages ?? [];
       const root = app(src);
       await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [explainer()] });
       const assets = readdirSync(join(root, "dist/assets"));
@@ -94,22 +126,18 @@ describe("one build writes every page", () => {
         // Vue only where there is a component: its markup rendered at build, hidden until it hydrates
         const vue = shipped(file).some((script) => readFileSync(script, "utf8").includes(VUE));
         expect(vue, `${route.path}: ships Vue`).toBe(withComponents.includes(route.path));
-        if (withComponents.includes(route.path)) {
-          expect(html).toMatch(/<div class="explainer-island" hidden><div class="assign-labels"[^>]*><svg /);
+        if (component !== undefined && withComponents.includes(route.path)) {
+          expect(html).toMatch(component.island);
           // an exercise component: its anchor, its task number with "Neue Aufgabe" for JavaScript, and without it
           // the task of number 1 as its describe states it, with the solution folded
-          expect(html).toContain(
-            '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise data-seeds="[1,2,5,7,10]">',
-          );
+          expect(html).toContain(component.component);
           expect(html).toMatch(
             /<p class="explainer-task-controls" hidden><span class="explainer-task-number"[^>]*>(Aufgabe Nr\.|Task no\.) 1<\/span>/,
           );
           const nojs = html.split('<div class="explainer-nojs">')[1]?.split('<p class="question-feedback"')[0] ?? "";
           expect(nojs).toContain(route.lang === "de" ? "Aufgabe Nr. 1" : "Task no. 1");
-          expect(nojs).toContain(
-            route.lang === "de" ? "Zur Wahl stehen, in dieser Reihenfolge:" : "The choices, in this order:",
-          );
-          expect(nojs).toMatch(/<details class="explainer-solution"><summary>[^<]+<\/summary><p>(Stufe|Level) 1: /);
+          expect(nojs).toContain(component.task[route.lang]);
+          expect(nojs).toMatch(component.solution);
         }
         // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
         if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
