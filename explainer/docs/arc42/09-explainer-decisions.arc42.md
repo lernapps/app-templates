@@ -123,7 +123,7 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click, risk-tuto
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:
 on the start page ("Dein KI-Assistent", "Keiner" first) or beside the title of a content page, where "Mit einem
-KI-Tutor lernen" stays folded while none is on. The choice is Claude, ChatGPT or Le Chat, the same for every app,
+KI-Tutor lernen" stays folded while none is on. The choice is one of the KI assistants the runtime offers, the same for every app,
 or copying the text, and it is kept on the device, per app, as the
 only thing the app keeps; nothing is sent. Once an assistant is on, each content page shows a small bar beside its
 title with one button, "Mit <name> lernen" (way A; changed or switched off on the start page, as it is seldom changed) and one help button in the row of "Prüfen" and "Lösung" of every exercise (way B), with the assistant's
