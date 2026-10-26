@@ -887,6 +887,46 @@ export function explainerTests(root = "."): void {
       const component = item.components.find((candidate) => candidate.exercise && candidate.id !== undefined);
       if (component?.id === undefined) continue;
       const id = component.id;
+      // the client module places the help button of way B; the islands module hydrates the component: held back in
+      // turn, so that each loads first once
+      for (const [first, held] of [
+        ["the component", "**/assets/index-*.js"],
+        ["the client module", "**/assets/islands-*.js"],
+      ] as const) {
+        test(`${item.url}: on a page a tutor opened, ${component.name} has its help button once, ${first} loaded first`, async ({
+          page,
+        }) => {
+          const errors: string[] = [];
+          page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text());
+          });
+          page.on("pageerror", (error) => errors.push(error.message));
+          await page.route(held, async (route) => {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            await route.continue();
+          });
+          await page.goto(`./${item.url}?von=tutor#${id}`);
+          const element = page.locator(`[id="${id}"]`);
+          await expect(element).toHaveAttribute("data-hydrated", "");
+          // outside the component's island, which Vue owns: neither a mismatch nor lost with a new render
+          const help = element.locator("button.explainer-help");
+          await expect(help, "once").toHaveCount(1);
+          await expect(help).toBeVisible();
+          await expect(element.locator(".explainer-island button.explainer-help"), "not in the island").toHaveCount(0);
+          await element.locator(".explainer-new-task").click();
+          await expect(help, "once after a new task").toHaveCount(1);
+          await expect(help).toBeVisible();
+          await element.evaluate(emitAnswered, { correct: false });
+          await expect(help, "after a wrong answer").toContainText(messageOf("de", "helpWhy"));
+          expect(errors, "no console error").toEqual([]);
+        });
+      }
+    }
+
+    for (const item of app.pages["de"] ?? []) {
+      const component = item.components.find((candidate) => candidate.exercise && candidate.id !== undefined);
+      if (component?.id === undefined) continue;
+      const id = component.id;
       test(`${item.url}: "Zurück zum Tutor" copies the result line of the exercise component ${component.name}`, async ({
         page,
         request,
