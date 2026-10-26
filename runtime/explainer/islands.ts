@@ -15,7 +15,7 @@
 // build ships (data-seeds; tasks.ts): the build rendered task number 1, it hydrates with it, and then moves to the
 // number the address names (?<id>=<n>, wrapped into 1 to N) or to a random one; "Aufgabe Nr. <n>" shows above
 // it, and "Neue Aufgabe" moves to the next number, writes it into the address and mounts the component afresh. Nothing is stored.
-import { createSSRApp, h, ref, shallowRef, type Component } from "vue";
+import { createSSRApp, h, nextTick, ref, shallowRef, type Component } from "vue";
 import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, SHOWN_EVENT, taskNumber } from "./tasks.ts";
 
 /** The components of the app by name, each loaded on first use. */
@@ -117,7 +117,10 @@ async function hydrate(
       const shown = logic.show === undefined ? undefined : textOf(logic.show(answer.value, task, props, lang));
       checked.value = true;
       sync();
-      if (feedback) showFeedback(feedback, correct, message);
+      // after the component has rendered what checked changes, so that the feedback stays in view with the focus
+      void nextTick(() => {
+        if (feedback) showFeedback(feedback, correct, message);
+      });
       element.dispatchEvent(
         new CustomEvent("explainer-answered", {
           bubbles: true,
