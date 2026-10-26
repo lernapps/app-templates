@@ -17,8 +17,9 @@
 // shows, at its deep link ?seed=<n>#<id>, the task of number n (the seed of its table of distinct tasks), its worked tasks hidden;
 // it rejects a wrong one (a mistake, with its message), shows its solution on "Lösung zeigen",
 // "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
-// console error, folds a nojs text it keeps, and an exercise component's answered gives the feedback, once for each
-// answer, with the reason of a wrong one, in view with the focus; at its address ?<id>=<n> it shows "Aufgabe
+// console error, folds a nojs text it keeps, and an exercise component has the explainer's "Prüfen" under it, styled as
+// the questions' and disabled until there is an answer, which checks the first accepted and the first rejected example
+// of its block, as the component emits them, and gives the feedback, in view with the focus; at its address ?<id>=<n> it shows "Aufgabe
 // Nr. n" and gets the seed of task number n from its table, and "Neue Aufgabe", the arrow beside the number, moves to
 // the next number in the address and on the page.
 // Without JavaScript, each component's nojs text is visible and not empty, an exercise component's with its task of
@@ -137,7 +138,8 @@ async function expectNojs(page: Page, item: PageOutline): Promise<void> {
       );
       await expect(nojs.locator("details.explainer-solution")).not.toHaveAttribute("open");
     }
-    await expect(element.locator(":scope > .explainer-island")).toBeHidden();
+    await expect(element.locator(".explainer-island")).toBeHidden();
+    await expect(element.locator(".question-actions"), "no Prüfen without JavaScript").toBeHidden();
     await expect(element.locator(":scope > .explainer-task-controls")).toBeHidden();
   }
 }
@@ -232,7 +234,7 @@ async function checkVideos(page: Page, item: PageOutline, origin: string): Promi
   expect(requested, `${item.url}: again no request before a click`).toEqual([]);
 }
 
-/** With JavaScript: each component hydrates without a console error; an exercise's answered gives the feedback. */
+/** With JavaScript: each component hydrates without a console error; an exercise's "Prüfen" checks its answer. */
 async function checkComponents(page: Page, item: PageOutline): Promise<void> {
   const errors: string[] = [];
   page.on("console", (message) => {
@@ -244,7 +246,7 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
   for (const [index, component] of item.components.entries()) {
     const element = components.nth(index);
     await expect(element, `${item.url}: ${component.name} hydrates`).toHaveAttribute("data-hydrated", "");
-    await expect(element.locator(":scope > .explainer-island")).toBeVisible();
+    await expect(element.locator(".explainer-island")).toBeVisible();
     const nojs = element.locator(":scope > .explainer-nojs");
     if (component.caption) {
       // the nojs text stays as a text description, folded: its summary shows, one click opens it
@@ -255,39 +257,43 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       await expect(details).not.toHaveAttribute("open");
     } else await expect(nojs, "the component replaces its nojs text").toBeHidden();
     if (!component.exercise) continue;
-    // its own buttons in its row .question-actions ("Prüfen") look like those of the questions: filled with the
-    // accent and at least 44 px high
-    const own = element.locator(":scope > .explainer-island .question-actions button:not(.explainer-help)");
-    for (const button of await own.all()) {
-      const look = await button.evaluate((node) => {
-        const style = getComputedStyle(node);
-        const accent = getComputedStyle(document.documentElement).getPropertyValue("--page-accent").trim();
-        const probe = document.createElement("span");
-        probe.style.color = accent;
-        document.body.append(probe);
-        const filled = getComputedStyle(probe).color;
-        probe.remove();
-        return { height: node.getBoundingClientRect().height, background: style.backgroundColor, filled };
-      });
-      expect(look.height, `${component.name}: its button is at least 44 px high`).toBeGreaterThanOrEqual(44);
-      expect(look.background, `${component.name}: its button is filled with the accent`).toBe(look.filled);
-    }
-    // the component's own answered, as it emits it, with each result: one feedback, in view with the focus
+    // "Prüfen" under it, drawn by the explainer, looks like that of the questions: filled with the accent and at
+    // least 44 px high; disabled until the component emits an answer
+    const check = element.locator(":scope > form.explainer-component-form > .question-actions .question-check");
+    await expect(check, `${component.name}: "Prüfen" under it`).toHaveText(questionMessagesIn("de").check);
+    const look = await check.evaluate((node) => {
+      const style = getComputedStyle(node);
+      const accent = getComputedStyle(document.documentElement).getPropertyValue("--page-accent").trim();
+      const probe = document.createElement("span");
+      probe.style.color = accent;
+      document.body.append(probe);
+      const filled = getComputedStyle(probe).color;
+      probe.remove();
+      return { height: node.getBoundingClientRect().height, background: style.backgroundColor, filled };
+    });
+    expect(look.height, `${component.name}: "Prüfen" is at least 44 px high`).toBeGreaterThanOrEqual(44);
+    expect(look.background, `${component.name}: "Prüfen" is filled with the accent`).toBe(look.filled);
+    await expect(check, `${component.name}: "Prüfen" waits for an answer`).toBeDisabled();
+    // the block's examples, as the component emits them: "Prüfen" checks each with the logic module, one feedback, in
+    // view with the focus, and waits for the next answer
     const feedback = element.locator(":scope > .question-feedback");
-    for (const correct of [true, false]) {
-      await element.evaluate(emitAnswered, { correct });
-      await expect(feedback, `${component.name}: the feedback on answered`).toHaveText(
-        questionMessagesIn("de")[correct ? "right" : "wrong"],
+    for (const kind of ["accepted", "rejected"] as const) {
+      const example = component.examples?.[kind];
+      if (example === undefined) continue;
+      await showSeed(page, component, example.seed);
+      await element.evaluate(emitAnswer, example.answer);
+      await expect(check).toBeEnabled();
+      await check.click();
+      await expect(feedback, `${component.name}: the feedback on the ${kind} example`).toHaveText(
+        new RegExp(
+          `^${questionMessagesIn("de")[kind === "accepted" ? "right" : "wrong"].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
+        ),
       );
       await expect(feedback).toBeFocused();
       await expect(feedback).toBeInViewport();
+      await expect(check, `${component.name}: "Prüfen" waits for another answer`).toBeDisabled();
+      await expect(element.locator(".question-feedback"), "one feedback").toHaveCount(1);
     }
-    // a wrong answer with its reason: the reason under the feedback
-    await element.evaluate(emitAnswered, { correct: false, reason: "Der Grund." });
-    await expect(feedback.locator(".question-diagnosis"), `${component.name}: the reason of a wrong answer`).toHaveText(
-      "Der Grund.",
-    );
-    await expect(element.locator(".question-feedback"), "one feedback").toHaveCount(1);
     await checkTaskNumber(page, item, component);
   }
   expect(errors, `${item.url}: no console error`).toEqual([]);
@@ -297,11 +303,44 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
 type Instance = { emit(event: string, payload: unknown): void; props: Record<string, unknown> };
 type Mounted = { _vnode?: { component?: Instance & { subTree?: { component?: Instance } } } };
 
-/** Emits answered with `payload` from the component in the island of `node`, as the component itself does. */
-function emitAnswered(node: Element, payload: { correct: boolean; reason?: string; answer?: string }): void {
+/** Emits answer with `answer` from the component in the island of `node`, as the component itself does. */
+function emitAnswer(node: Element, answer: unknown): void {
   const island = node.querySelector(".explainer-island") as unknown as Mounted;
   const wrapper = island._vnode?.component;
-  (wrapper?.subTree?.component ?? wrapper)?.emit("answered", payload);
+  (wrapper?.subTree?.component ?? wrapper)?.emit("answer", answer);
+}
+
+/**
+ * Opens the page at the task number of `seed` of the exercise component, keeping the rest of its address, or leaves
+ * it as it is without one.
+ */
+async function showSeed(page: Page, component: ComponentOutline, seed: number | undefined): Promise<void> {
+  if (seed === undefined || component.id === undefined) return;
+  const element = page.locator(`[id="${component.id}"]`);
+  const seeds = JSON.parse((await element.getAttribute("data-seeds")) ?? "[1]") as number[];
+  const number = seeds.indexOf(seed) + 1;
+  if (number === 0) throw new Error(`${component.name}: no task number has the seed ${seed} of an example`);
+  const address = new URL(page.url());
+  address.searchParams.set(component.id, String(number));
+  address.hash = component.id;
+  await page.goto(address.href);
+  await expect(element).toHaveAttribute("data-hydrated", "");
+}
+
+/**
+ * Answers the exercise component with its block's first rejected example, as the component emits it, and "Prüfen";
+ * the task number it is at.
+ */
+async function answerRejected(page: Page, component: ComponentOutline): Promise<number> {
+  const example = component.examples?.rejected;
+  if (example === undefined || component.id === undefined) {
+    throw new Error(`${component.name}: its block has no rejected example`);
+  }
+  await showSeed(page, component, example.seed);
+  const element = page.locator(`[id="${component.id}"]`);
+  await element.evaluate(emitAnswer, example.answer);
+  await element.locator(":scope > form.explainer-component-form .question-check").click();
+  return Number(new URL(page.url()).searchParams.get(component.id));
 }
 
 /** The task number the component in the island of `node` was given, as its prop seed. */
@@ -1038,7 +1077,7 @@ export function explainerTests(root = "."): void {
           await element.locator(".explainer-new-task").click();
           await expect(help, "once after a new task").toHaveCount(1);
           await expect(help).toBeVisible();
-          await element.evaluate(emitAnswered, { correct: false });
+          await answerRejected(page, component);
           await expect(help, "after a wrong answer").toContainText(messageOf("de", "helpWhy"));
           expect(errors, "no console error").toEqual([]);
         });
@@ -1057,13 +1096,12 @@ export function explainerTests(root = "."): void {
         await page.goto(`./${item.url}?${id}=3&von=tutor#${id}`);
         const element = page.locator(`[id="${id}"]`);
         await expect(element).toHaveAttribute("data-hydrated", "");
-        const seeds = JSON.parse((await element.getAttribute("data-seeds")) ?? "[1]") as number[];
-        const n = taskNumber(3, seeds.length);
-        await element.evaluate(emitAnswered, { correct: false, answer: "Die Eingabe" });
+        const n = await answerRejected(page, component);
         const here = page.url();
         await page.getByRole("button", { name: messageOf("de", "backToTutor") }).click();
-        const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}, ${messageOf("de", "resultInput", { input: "Die Eingabe" })})`;
-        await expectResultLine(request, copied, here, `, ${id}, Nr. ${n}: ${status}.`, id, n);
+        // and the input, when the logic module has show, as it gives it, which the test does not know
+        const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}`;
+        await expectResultLine(request, copied, here, `, ${id}, Nr. ${n}: ${status}`, id, n);
       });
     }
 

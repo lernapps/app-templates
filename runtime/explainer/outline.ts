@@ -5,7 +5,7 @@
 // other pages (start, chapters, glossary) with their titles.
 import { questionIn, type Question } from "../shared/questions/question.ts";
 import { answerText } from "../shared/questions/render.ts";
-import { inLanguage, timelineEvents, type Block, type Site, type Text } from "./content.ts";
+import { inLanguage, timelineEvents, type Block, type ComponentExample, type Site, type Text } from "./content.ts";
 import { dataOf, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
 import { kindOf } from "./generated/comparator.ts";
 import { plainText } from "./generated/texts.ts";
@@ -39,10 +39,12 @@ export interface ComponentOutline {
   id?: string;
   /** Its own nojs text, as plain text; empty when it has none (an exercise component's no-JS task comes from describe). */
   nojs: string;
-  /** Whether it emits answered, an exercise. */
+  /** Whether it emits answer, an exercise. */
   exercise: boolean;
   /** Whether it keeps its nojs text, folded as a text description, once it runs. */
   caption: boolean;
+  /** For an exercise component: its block's first accepted and first rejected example, for "Prüfen". */
+  examples?: { accepted?: ComponentExample; rejected?: ComponentExample };
 }
 
 /** An exercise of a page, in the page's language: what it shows and what it accepts. */
@@ -144,6 +146,14 @@ function walk(
           nojs: plainText(renderMarkdown(nojs, (href) => href)),
           exercise: use?.component.exercise ?? false,
           caption: use?.component.caption ?? false,
+          ...(use?.component.exercise && block.examples !== undefined
+            ? {
+                examples: {
+                  ...(block.examples.accepted?.[0] === undefined ? {} : { accepted: block.examples.accepted[0] }),
+                  ...(block.examples.rejected?.[0] === undefined ? {} : { rejected: block.examples.rejected[0] }),
+                },
+              }
+            : {}),
         });
         break;
       }

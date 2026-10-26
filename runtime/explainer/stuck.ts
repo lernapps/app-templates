@@ -50,17 +50,6 @@ export const stuckLines = (stuck: Stuck, lang: string): string =>
     `${message(lang, "resultTutor")} ${stuck.tutor}`,
   ].join("\n");
 
-/**
- * What an exercise component's app said for an answer (its answered event), for "Die App sagt": its message, the text
- * it showed word for word, or else its reason, the text of what went wrong, which the island shows under the feedback.
- */
-export function answeredMessage(event: { message?: unknown; reason?: unknown }): string | undefined {
-  for (const value of [event.message, event.reason]) {
-    if (typeof value === "string" && value.trim() !== "") return value.trim();
-  }
-  return undefined;
-}
-
 /** The prompt of a new chat (B1), in `lang`: the tutor page and the task in one sentence, then the lines. */
 export const stuckPrompt = (stuck: Stuck, lang: string): string =>
   [message(lang, "stuckAsk", { url: stuck.tutor, ...taskOf(stuck, lang) }), ...stateLines(stuck.state, lang)].join(

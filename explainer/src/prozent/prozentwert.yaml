@@ -83,7 +83,6 @@ blocks:
           task: "Das Feld hat {G} Kästchen, zusammen sind sie 100 %. Färbe {p} % davon."
           counter: "{n} von {G} Kästchen gefärbt"
           cell: "Kästchen {n}"
-          button: Prüfen
           mistakes:
             - "Du hast {p} Kästchen gefärbt. Das wären {p} %, wenn das Feld 100 Kästchen hätte. Hier sind {G} Kästchen 100 %."
             - "Du hast den Rest gefärbt. Die gefärbten Kästchen sollen die {p} % sein, nicht das, was übrig bleibt."

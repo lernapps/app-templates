@@ -157,6 +157,7 @@ async function renderComponents(
         ...propsIn(block.props, component, lang),
         // the task of number 1, as the islands hydrate it
         ...(component.exercise ? { seed: descriptions.get(block)?.seeds[0] ?? 1 } : {}),
+        ...(component.checked ? { checked: false } : {}),
       });
       const warnings = new Set<string>();
       app.config.warnHandler = (message) => warnings.add(message);
@@ -174,16 +175,21 @@ async function renderComponents(
   return { islands, descriptions, problems };
 }
 
-/** The islands module of the app: the islands runtime, with each component the pages use, loaded on first use. */
+/**
+ * The islands module of the app: the islands runtime, with each component the pages use and the logic module of each
+ * exercise component, which checks its answers in the browser, loaded on first use.
+ */
 function islandsModule(site: Site): string {
-  const names = [...new Set(site.components.map((use) => use.component.name))];
-  const loaders = names.map(
-    (name) => `  ${JSON.stringify(name)}: () => import(${JSON.stringify(`/src/components/${name}.vue`)}),`,
-  );
+  const used = new Map(site.components.map((use) => [use.component.name, use.component]));
+  const loader = (name: string, file: string) => `  ${JSON.stringify(name)}: () => import(${JSON.stringify(file)}),`;
   return [
     `import { startIslands } from ${JSON.stringify(ISLANDS_RUNTIME)};`,
     `startIslands({`,
-    ...loaders,
+    ...[...used.keys()].map((name) => loader(name, `/src/components/${name}.vue`)),
+    `}, {`,
+    ...[...used.values()]
+      .filter((component) => component.exercise)
+      .map((component) => loader(component.name, `/src/components/${component.name}.ts`)),
     `});`,
     "",
   ].join("\n");

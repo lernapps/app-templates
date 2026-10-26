@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// A figure whose parts the learner labels: a pyramid of numbered levels, a choice of the labels for each level, and
-// "Prüfen" in a row of its own (.question-actions, as the shared questions have it), for the task of the number seed. Its logic is in AssignLabels.ts; it reports the answer with answered, and
-// the explainer gives the feedback, the task number and "Neue Aufgabe".
-import { computed, ref } from "vue";
-import { check, generate, type Answer } from "./AssignLabels.ts";
+// A figure whose parts the learner labels: a pyramid of numbered levels and a choice of the labels for each level, for
+// the task of the number seed. Its logic is in AssignLabels.ts; it emits the answer with answer once a level has a
+// label, and the explainer draws "Prüfen", checks it and gives the feedback, the task number and "Neue Aufgabe".
+import { computed, ref, watch } from "vue";
+import { generate, type Answer } from "./AssignLabels.ts";
 
 const props = defineProps<{
   /** What the figure shows, for screen readers. */
@@ -12,20 +12,23 @@ const props = defineProps<{
   question: string;
   /** The name of a level, numbered from the top: "Stufe" for "Stufe 1". */
   level: string;
-  /** The text of the button that checks the answer. */
-  button: string;
   /** The labels of the levels, from the top: the right answer. */
   parts: string[];
+  /** The app's message for each typical mistake, in the order of about.mistakes. */
+  reasons: string[];
   /** The task number, which the explainer gives. */
   seed: number;
+  /** Whether the explainer checked the answer the choices give now. */
+  checked: boolean;
 }>();
-const emit = defineEmits<{ answered: [{ correct: boolean }] }>();
+const emit = defineEmits<{ answer: [Answer | undefined] }>();
 
 const HEIGHT = 180;
 // the task of the number the explainer gives; "Neue Aufgabe" mounts the component afresh with another
 const task = computed(() => generate(props.seed, props));
 const answer = ref<Answer>(props.parts.map(() => -1));
-const done = ref(false);
+// an answer once a level has a label
+watch(answer, (value) => emit("answer", value.some((label) => label >= 0) ? [...value] : undefined), { deep: true });
 
 const levels = computed(() =>
   props.parts.map((_part, index) => {
@@ -38,11 +41,6 @@ const levels = computed(() =>
     };
   }),
 );
-
-function submit(): void {
-  done.value = true;
-  emit("answered", { correct: check(task.value, answer.value) });
-}
 </script>
 
 <template>
@@ -53,19 +51,16 @@ function submit(): void {
         <text x="100" :y="shape.y" text-anchor="middle" font-size="16">{{ index + 1 }}</text>
       </g>
     </svg>
-    <fieldset>
+    <fieldset :class="{ 'assign-labels-checked': checked }">
       <legend>{{ question }}</legend>
       <p v-for="(_part, index) in parts" :key="index">
         <label>
           {{ level }} {{ index + 1 }}
-          <select v-model.number="answer[index]" :disabled="done">
+          <select v-model.number="answer[index]">
             <option :value="-1">–</option>
             <option v-for="label in task.order" :key="label" :value="label">{{ parts[label] }}</option>
           </select>
         </label>
-      </p>
-      <p class="question-actions">
-        <button type="button" :disabled="done" @click="submit">{{ button }}</button>
       </p>
     </fieldset>
   </div>

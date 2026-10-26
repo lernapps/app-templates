@@ -20,13 +20,15 @@ export const COMPONENT_SEEDS = 50;
 
 /** The exports of an exercise component's logic module, for a message. */
 export const CONTRACT =
-  "generate(seed, props), check(task, answer), solution(task), wrong(task), describe(task, props, lang) and about";
+  "generate(seed, props), check(task, answer), solution(task), wrong(task), reason(task, answer, props, lang), describe(task, props, lang) and about";
 
 export interface ExerciseLogic {
   generate(seed: number, props: unknown): unknown;
   check(task: unknown, answer: unknown): unknown;
   solution(task: unknown): unknown;
   wrong(task: unknown): unknown;
+  /** The app's message for a wrong answer, in `lang`; undefined (or "") for none. */
+  reason?(task: unknown, answer: unknown, props: unknown, lang: string): unknown;
   describe?(task: unknown, props: unknown, lang: string): unknown;
   about?: unknown;
   // for a tutor: the exercise with its inputs and outputs, all four or none (exerciseProblems)
@@ -308,10 +310,10 @@ export function exerciseProblems(
 
 /**
  * The property test of an exercise component's logic with the props of a block, over the seeds 1 to `seeds`: the
- * task is the same for the same seed, the solution passes, the wrong answer fails, and nothing throws. The first
- * problem found, or none.
+ * task is the same for the same seed, the solution passes, the wrong answer fails, reason gives a text or none for
+ * it, and nothing throws. The first problem found, or none.
  */
-export function propertyProblems(logic: ExerciseLogic, props: unknown, seeds = COMPONENT_SEEDS): string[] {
+export function propertyProblems(logic: ExerciseLogic, props: unknown, seeds = COMPONENT_SEEDS, lang = "de"): string[] {
   const run = <T>(seed: number, call: string, act: () => T): T | string => {
     try {
       return act();
@@ -342,6 +344,16 @@ export function propertyProblems(logic: ExerciseLogic, props: unknown, seeds = C
       if (result !== want) {
         return [
           `for seed ${seed} ${call} is ${String(result)}; ${answer}(task) must give an answer that check ${want ? "accepts" : "rejects"}`,
+        ];
+      }
+    }
+    if (logic.reason !== undefined) {
+      const call = `reason(task, wrong(task), props, "${lang}")`;
+      const message = run(seed, call, () => logic.reason?.(task, logic.wrong(task), props, lang));
+      if (failed(message)) return [message.slice(1)];
+      if (message !== undefined && typeof message !== "string") {
+        return [
+          `for seed ${seed} ${call} is ${JSON.stringify(message) ?? "a function"}; reason gives the app's message for a wrong answer as a text, or undefined for none`,
         ];
       }
     }

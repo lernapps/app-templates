@@ -305,7 +305,7 @@ function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: P
       problems.at(
         yaml,
         [...at, "examples"],
-        `${component.name} is no exercise (it emits no answered), so it has no check for examples; remove them`,
+        `${component.name} is no exercise (it emits no answer), so it has no check for examples; remove them`,
       );
     }
   } else {
