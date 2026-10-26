@@ -189,7 +189,7 @@ describe("the tutor page of a content page", () => {
       "- Aufgabe: „Welcher Stand gehört auf welche Stufe der Pyramide? Die Stufen, von oben nach unten: Stufe 1, Stufe 2, Stufe 3. Zur Wahl stehen, in dieser Reihenfolge: {Wahl}.“",
     );
     expect(part).toContain(
-      "- Typische Fehler und was die App sagt:\n  - F1: Die Reihenfolge umgedreht: unten, was oben hingehört.\n  - F2: Eine Beschriftung zweimal gewählt.",
+      "- Typische Fehler (die Meldung der App passt zu einem davon):\n  - F1: Die Reihenfolge umgedreht: unten, was oben hingehört.\n  - F2: Eine Beschriftung zweimal gewählt.",
     );
     expect(part).toContain("- Link zu Nummer n: `../?assign-labels=n&von=tutor#assign-labels`");
     expect(part).toContain(

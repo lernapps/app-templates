@@ -30,6 +30,8 @@ interface Words {
   explanation: string;
   hint: string;
   mistakes: string;
+  /** The typical mistakes of an exercise component: descriptions for the tutor, not the app's messages. */
+  componentMistakes: string;
   options: string;
   right: string;
   wrong: string;
@@ -55,6 +57,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     explanation: "Erklärung",
     hint: "Tipp der App",
     mistakes: "Typische Fehler und was die App sagt",
+    componentMistakes: "Typische Fehler (die Meldung der App passt zu einem davon)",
     options: "Antworten zur Wahl (✓ richtig, ✗ falsch, mit der Meldung der App)",
     right: "✓",
     wrong: "✗",
@@ -89,6 +92,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     explanation: "Explanation",
     hint: "The app's hint",
     mistakes: "Typical mistakes and what the app says",
+    componentMistakes: "Typical mistakes (the app's message fits one of them)",
     options: "Choices (✓ right, ✗ wrong, with the app's message)",
     right: "✓",
     wrong: "✗",
@@ -182,7 +186,10 @@ function componentPart(description: ComponentDescription, lang: string, words: W
   if (exercise !== undefined) lines.push(`- ${words.task}: „${line(exercise.template)}“`);
   lines.push(`- ${words.answerFormat}: ${t(about.answer)}`, `- ${words.correct}: ${t(about.correct)}`);
   if (about.mistakes.length > 0) {
-    lines.push(`- ${words.mistakes}:`, ...about.mistakes.map((mistake, index) => `  - F${index + 1}: ${t(mistake)}`));
+    lines.push(
+      `- ${words.componentMistakes}:`,
+      ...about.mistakes.map((mistake, index) => `  - F${index + 1}: ${t(mistake)}`),
+    );
   }
   return lines;
 }
