@@ -177,6 +177,20 @@ export interface DescribedTask {
   solution: string;
 }
 
+/**
+ * The table of tasks of an exercise component for a tutor, in one language, from the exports template, params,
+ * mistakes and show of its logic: the task once with a placeholder for each input, and each number's inputs and
+ * outputs, as a generated exercise has them.
+ */
+export interface ComponentTable {
+  /** The task as a learner reads it, with {name} for each input, on one line: template(props, lang). */
+  template: string;
+  /** The names of the inputs in order, the columns before the solution: the keys of params(task, props, lang). */
+  inputs: readonly string[];
+  /** Each task number's row, from 1: the values of its inputs, its solution and what each typical mistake gives ("" for none), as text. */
+  rows: readonly { inputs: readonly string[]; solution: string; mistakes: readonly string[] }[];
+}
+
 /** What the build learnt from an exercise component's logic for one block: its about, and its tasks by language. */
 export interface ComponentDescription {
   about: ComponentAbout;
@@ -184,6 +198,8 @@ export interface ComponentDescription {
   seeds: readonly number[];
   /** The task of each number, in each language. */
   tasks: Readonly<Record<string, readonly DescribedTask[]>>;
+  /** Its table of tasks in each language, when its logic declares its inputs and outputs; else none. */
+  tables?: Readonly<Record<string, ComponentTable>>;
 }
 
 /** Whether a block is an exercise. */

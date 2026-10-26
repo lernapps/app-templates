@@ -303,11 +303,11 @@ export function explainer(): Plugin[] {
         );
       }
       // an exercise component whose numbers do not all fit on its tutor page: a warning, until it declares its
-      // inputs and outputs (#80)
+      // table of tasks (template, params, mistakes and show of its logic module)
       const cut = [...tutor].flatMap(([file, page]) => page.cut.map((one) => ({ file, ...one })));
       if (cut.length > 0) {
         this.warn(
-          `lernapps explainer: ${cut.length} exercise${cut.length === 1 ? " shows" : "s show"} only some of ${cut.length === 1 ? "its" : "their"} task numbers on the tutor page, to stay within ${TUTOR_PAGE_BUDGET / 1000} kB (see https://github.com/lernapps/app-templates/issues/80): ${cut.map((one) => `${one.file} ${one.id} (${one.shown} of ${one.count})`).join(", ")}`,
+          `lernapps explainer: ${cut.length} exercise${cut.length === 1 ? " shows" : "s show"} only some of ${cut.length === 1 ? "its" : "their"} task numbers on the tutor page, to stay within ${TUTOR_PAGE_BUDGET / 1000} kB; export template, params, mistakes and show from its logic module for a table of all its numbers: ${cut.map((one) => `${one.file} ${one.id} (${one.shown} of ${one.count})`).join(", ")}`,
         );
       }
       // the exercises with fewer distinct tasks than the numbers allow: noted, no problem
