@@ -21,6 +21,7 @@
 // an assistant that fetches nothing, checks each of its links (tutor.ts, linkProblems) and notes a page beyond the
 // budget or an exercise with numbers left out.
 import { Marked } from "marked";
+import { TABLE_CONTRACT } from "./components/exercise.ts";
 import { escape } from "../shared/html.ts";
 import { answerText } from "../shared/questions/render.ts";
 import {
@@ -335,6 +336,21 @@ function componentTable(table: ComponentTable, lang: string): string[] {
     [String(index + 1), ...row.inputs, row.solution, ...row.mistakes].map(cell).join(" | "),
   );
   return [`- ${words.table}`, "", "```", header, ...rows, "```"];
+}
+
+/**
+ * The hint of the build for the exercise components that declare no table of tasks (TABLE_CONTRACT), each by its
+ * place, or none: their tutor pages have their tasks only as text from describe, as many as fit. A hint for now;
+ * rule vue-component-tutor-table.
+ */
+export function tableHint(site: Site, descriptions: Descriptions): string | undefined {
+  const without = site.components.filter((use) => {
+    const description = descriptions.get(use.block);
+    return description !== undefined && description.tables === undefined;
+  });
+  if (without.length === 0) return undefined;
+  const one = without.length === 1;
+  return `lernapps explainer: ${without.length} exercise component${one ? " declares" : "s declare"} no table of tasks, so ${one ? "its tutor page has its" : "their tutor pages have their"} tasks only as text, as many as fit; export ${TABLE_CONTRACT} from ${one ? "its" : "their"} logic module: ${without.map((use) => `${use.place}: ${use.component.name}`).join(", ")} (vue-component-tutor-table)`;
 }
 
 /** An exercise with numbers left out of a tutor page for its size: how many of its numbers it shows. */

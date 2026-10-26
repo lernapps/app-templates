@@ -15,6 +15,7 @@ import { loadSite } from "../runtime/explainer/load.ts";
 import { contentPages, routes } from "../runtime/explainer/routes.ts";
 import {
   bytesOf,
+  tableHint,
   tutorPage,
   TUTOR_PAGE_BUDGET,
   tutorPageDocument,
@@ -234,6 +235,14 @@ describe("the tutor page of a content page", () => {
       `- Hier stehen die Nummern 1 bis ${only?.shown ?? 0} von ${only?.count ?? 0}. Sitzt das Kind an einer anderen Nummer, schick ihm den Link zu einer Nummer von hier.`,
     );
     expect(bytesOf(tutorPageDocument(markdown, site, page, "de"))).toBeLessThanOrEqual(budget);
+  });
+
+  test("a hint for each exercise component without its table of tasks, none for one with it", () => {
+    expect(tableHint(history().site, history().descriptions)).toBeUndefined();
+    const { site, descriptions } = history(undeclared);
+    expect(tableHint(site, descriptions)).toBe(
+      "lernapps explainer: 1 exercise component declares no table of tasks, so its tutor page has its tasks only as text, as many as fit; export template(props, lang), params(task, props, lang), mistakes(task, props) and show(answer, task, props, lang) from its logic module: src/revolution/staende.yaml:50: blocks[0].blocks[3]: AssignLabels (vue-component-tutor-table)",
+    );
   });
 
   test("lean HTML: its language and title, no script, no menu, a formula as written; small", () => {

@@ -83,8 +83,9 @@ context and its exercises with every task number. A `generated` exercise is ther
 steps and its typical mistakes as F1, F2 … with the app's messages, and below one line per task number with its
 inputs and outputs, all worked out: the values of the placeholders, the solution, what each mistake gives. So the
 tutor fills in and calculates nothing, can give any further task with its link, and never asks the learner to copy
-one. An exercise component has its `about` and each number's task and solution from its `describe`, as many as fit
-into 64 kB (`risk-tutor-component-numbers`). The guide stands on the tutor page alone: the prompt of way A, the lines
+one. An exercise component has its `about` and the same table from its exercise logic (`dec-component-table`), or
+without one each number's task and solution from its `describe`, as many as fit into 64 kB
+(`risk-tutor-component-numbers`). The guide stands on the tutor page alone: the prompt of way A, the lines
 of way B and the result line speak in the learner's voice and carry no rule, and the app writes no `llms.txt`, so that
 no two texts can tell the tutor different things. Learners come with one of two needs, and each gets its own way. A, "Mit
 <name> lernen", a bar beside the title of every content page, where the learner is at work, once an assistant is on
@@ -116,6 +117,36 @@ title: One short tutor page per page, the one source of what the tutor gets, two
 status: accepted
 date: 2026-10-26
 addresses: qg-privacy, qg-understandable, con-no-request-before-click, risk-tutor-component-numbers
+:::
+```
+
+## An Exercise Component Computes Its Table of Tasks
+
+An exercise component's values and results are in its code (`generate`, `check`, `solution`), not in a declaration
+the build could read, and its `describe` gives each number's task as text of about 1 kB on Mathe-Karte, so two pages
+showed only 49 to 54 of 67 numbers within 64 kB. So the component gives the tutor what a `generated` exercise gives:
+its logic module exports `template(props, lang)`, the task once with `{name}` for each input; `params(task, props,
+lang)`, the inputs of each task; `mistakes(task, props)`, the answer of each typical mistake of `about.mistakes`; and
+`show(answer, task, props, lang)`, an answer as text. The build computes the outputs itself, the solution as
+`show(solution(task))` and each mistake as `show` of its answer, and checks them for every task number: `check`
+accepts the solution and rejects each mistake's answer, the inputs have the same names for every task, and each
+placeholder is one of them. So the table cannot drift from the code. The four exports are optional, all or none; a
+component without them keeps the lines from `describe` within the budget, and the build gives a hint
+(`vue-component-tutor-table`), to become a warning once the apps have them. Measured on Mathe-Karte (`feat/explainer`,
+2026-10-26) with example declarations of `ProzentGrundbegriffe`, `ZufallPfade` and `ZufallTerm`: `grundbegriffe`
+23 kB instead of 64 kB, `pfadregel-2` 35 kB instead of 63 kB, every number on the page. Rejected: the outputs as
+expressions in the language of `generated` (`about.formula`, the first proposal of #80; terms, trees, sets and
+choices have no such expression); shorter texts from `describe` (still one text per number, and the tutor would
+read the values out of prose); a task file per number (fetched only from a line the learner pastes,
+`dec-tutor-page`).
+
+```arc42
+:::decision
+id: dec-component-table
+title: An exercise component computes its table of tasks for the tutor, checked against check
+status: accepted
+date: 2026-10-26
+addresses: qg-checkable, qg-understandable, risk-tutor-component-numbers
 :::
 ```
 
