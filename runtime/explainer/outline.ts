@@ -1,7 +1,7 @@
 // What the pages of an explainer must show, from its content in src/ (not from the rendered pages), for its end-to-end
 // tests: per language, the content pages in order with their headings by nesting (page h1, section h2, subsection h3,
 // a box one level below the heading it is under), their sections with their anchors, the number of formulas and the
-// name of every figure, its exercises with what each must accept, and its components with their nojs text; and the
+// name of every figure, its videos, its exercises with what each must accept, and its components with their nojs text; and the
 // other pages (start, chapters, glossary) with their titles.
 import { questionIn, type Question } from "../shared/questions/question.ts";
 import { answerText } from "../shared/questions/render.ts";
@@ -25,6 +25,8 @@ export interface PageOutline {
   sections: { id: string; title: string }[];
   formulas: number;
   figures: string[];
+  /** The videos, in order: each shows its title, channel and link without JavaScript, its player only after a click. */
+  videos: { youtube: string; title: string; channel: string }[];
   exercises: ExerciseOutline[];
   /** The vue-component blocks, in order. */
   components: ComponentOutline[];
@@ -129,6 +131,9 @@ function walk(
         break;
       case "code":
         break;
+      case "video":
+        into.videos.push({ youtube: block.youtube, title: block.title, channel: block.channel });
+        break;
       case "vue-component": {
         const use = site.components.find((candidate) => candidate.block === block);
         const nojs = block.nojs === undefined ? "" : text(block.nojs);
@@ -198,6 +203,7 @@ export function outline(root = "."): Outline {
       sections: [],
       formulas: 0,
       figures: [],
+      videos: [],
       exercises: [],
       components: [],
     };

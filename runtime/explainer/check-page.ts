@@ -224,6 +224,9 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
       case "vue-component":
         checkComponent(check, block, at);
         break;
+      case "video":
+        // the schema checks its id, title and channel; they are YouTube's, in the video's own language
+        break;
       default:
         checkExerciseId(check, block.id, at);
         for (const problem of questionDetails(block, texts.languages, undefined, appChecks(check, at))) {

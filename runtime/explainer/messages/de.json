@@ -82,5 +82,9 @@
   "tutorPageLink": "Ansehen, was dein Tutor zu dieser Seite bekommt",
   "tutorCopied": "Der Prompt ist kopiert. Füg ihn in den Chat deines KI-Assistenten ein.",
   "tutorCopyFailed": "Kopieren ging nicht. Versuch es noch einmal.",
-  "exerciseLabel": "Übung"
+  "exerciseLabel": "Übung",
+  "videoChannel": "{channel} · YouTube",
+  "videoNote": "Beim Abspielen gehen Daten an YouTube/Google, darunter deine IP-Adresse.",
+  "videoPlay": "Video abspielen",
+  "videoAlways": "Videos immer direkt laden"
 }

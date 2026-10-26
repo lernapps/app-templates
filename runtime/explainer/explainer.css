@@ -1,6 +1,6 @@
 /* The look of an explainer (@lernapps/app-templates/explainer/style.css): the frame and the questions are shared
    (page.css, questions.css); this is the explainer's page: chapters and pages with sections, formulas, figures, tables,
-   timelines, definitions, quotes, code and exercises, complete without JavaScript. */
+   timelines, definitions, quotes, code, videos and exercises, complete without JavaScript. */
 @import "../shared/page.css";
 @import "../shared/blocks/blocks.css";
 @import "../shared/questions/questions.css";
@@ -681,4 +681,86 @@ button.explainer-help:focus-visible {
 .explainer-tutor-choose:focus-visible {
   outline: 3px solid var(--page-text);
   outline-offset: 2px;
+}
+
+/* A video: a card with its title as a link, its channel and the note on privacy; with JavaScript the button that loads
+   the player and the choice to load every player directly; the player in the width of the page, 16:9 */
+.explainer-video {
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.375rem;
+  background: var(--page-surface);
+}
+
+.explainer-video figcaption {
+  font-weight: 600;
+}
+
+.explainer-video-channel {
+  display: block;
+  color: var(--page-muted);
+  font-weight: 400;
+  font-size: 0.9375rem;
+}
+
+.explainer-video-note {
+  margin: 0.5rem 0;
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-video-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0 0;
+}
+
+.explainer-video-controls[hidden] {
+  display: none;
+}
+
+.explainer-video-play {
+  font: inherit;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  cursor: pointer;
+}
+
+.explainer-video-play:focus-visible,
+.explainer-video-always input:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-video-always {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.explainer-video-always input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+}
+
+.explainer-video-frame {
+  margin: 0 0 0.75rem;
+  aspect-ratio: 16 / 9;
+}
+
+.explainer-video-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }

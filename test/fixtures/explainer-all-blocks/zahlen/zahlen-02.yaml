@@ -121,6 +121,10 @@ blocks:
             licence: CC0-1.0
           - type: timeline
             data: ereignisse
+          - type: video
+            youtube: rkLmLaFHodo
+            title: einstufiger Zufallsversuch | Wahrscheinlichkeitsrechnung - einfach erklärt
+            channel: Lehrerschmidt
   - type: section
     id: uebung
     title: { de: "Übung", en: "Exercise" }
