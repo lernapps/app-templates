@@ -1,5 +1,6 @@
-// The logic of an exercise component: that it exports what an exercise needs (describedProblems), its property test over
-// fixed seeds (propertyProblems) and its examples (exampleProblems). An exercise component emits answered, declares the
+// The logic of an exercise component: that it exports what an exercise needs (describedProblems), its table of tasks
+// for a tutor when it declares one (tableProblems), its property test over fixed seeds (propertyProblems) and its
+// examples (exampleProblems). An exercise component emits answered, declares the
 // prop seed: number and shows the task generate(seed, props); the build runs its logic module outside the browser.
 import { textLanguages } from "../../shared/languages.ts";
 import { verdict } from "../../shared/examples.ts";
@@ -7,6 +8,7 @@ import {
   type ComponentAbout,
   type ComponentDescription,
   type ComponentExamples,
+  type ComponentTable,
   type DescribedTask,
 } from "../content.ts";
 import { inspect } from "../../shared/text/markdown.ts";
@@ -27,7 +29,19 @@ export interface ExerciseLogic {
   wrong(task: unknown): unknown;
   describe?(task: unknown, props: unknown, lang: string): unknown;
   about?: unknown;
+  // for a tutor's table of tasks, all four or none (tableProblems)
+  template?(props: unknown, lang: string): unknown;
+  params?(task: unknown, props: unknown, lang: string): unknown;
+  mistakes?(task: unknown, props: unknown): unknown;
+  show?(answer: unknown, task: unknown, props: unknown, lang: string): unknown;
 }
+
+/** The exports of an exercise component's logic module for a tutor's table of tasks, all four or none. */
+const TABLE = ["template", "params", "mistakes", "show"] as const;
+
+/** The exports of TABLE, for a message. */
+const TABLE_CONTRACT =
+  "template(props, lang), params(task, props, lang), mistakes(task, props) and show(answer, task, props, lang)";
 
 const ABOUT: readonly (keyof ComponentAbout)[] = ["task", "answer", "correct", "mistakes"];
 
@@ -135,7 +149,156 @@ export function describedProblems(
     tasks[lang] = list;
   }
   if (problems.length > 0) return { problems };
-  return { description: { about: about as ComponentAbout, seeds, tasks }, problems };
+  const table = tableProblems(logic, propsIn, languages, seeds, (about as ComponentAbout).mistakes.length);
+  if (table.problems.length > 0) return { problems: table.problems };
+  return {
+    description: { about: about as ComponentAbout, seeds, tasks, ...(table.tables ? { tables: table.tables } : {}) },
+    problems,
+  };
+}
+
+/** A list of names, for a message: "a", "a and b", "a, b and c". */
+const names = (list: readonly string[]) =>
+  list.length < 2 ? (list[0] ?? "") : `${list.slice(0, -1).join(", ")} and ${list.at(-1) ?? ""}`;
+
+/** A value of params as text in `lang`: a number with the decimal comma in German. */
+const valueText = (value: number | string, lang: string) =>
+  typeof value === "number" && lang === "de" ? String(value).replace(".", ",") : String(value).trim();
+
+/**
+ * The table of tasks of an exercise component for a tutor, in each of `languages`, when its logic exports template,
+ * params, mistakes and show (none of them: no table, no problem): the task once, template(props, lang), with {name}
+ * for each input; for the task of each of `seeds`, params(task, props, lang), its inputs by name, the same names for
+ * every task, each a number or a text that is not empty, and each placeholder one of them; show of the solution,
+ * which check accepts (propertyProblems); and show of the answer of each typical mistake, mistakes(task, props), one
+ * for each of the `count` texts of about.mistakes, in order, each undefined or an answer that check rejects. The
+ * tables, or the problems (the first).
+ */
+export function tableProblems(
+  logic: ExerciseLogic,
+  propsIn: (lang: string) => unknown,
+  languages: readonly string[],
+  seeds: readonly number[],
+  count: number,
+): { tables?: Record<string, ComponentTable>; problems: string[] } {
+  const given = TABLE.filter((name) => typeof logic[name] === "function");
+  if (given.length === 0) return { problems: [] };
+  if (given.length < TABLE.length) {
+    const missing = TABLE.filter((name) => !given.includes(name));
+    return {
+      problems: [
+        `exports ${names(given)} but not ${names(missing)}; for a tutor's table of tasks export all four: ${TABLE_CONTRACT}`,
+      ],
+    };
+  }
+  const { template, params, mistakes, show } = logic as Required<ExerciseLogic>;
+  const fail = (problem: string) => ({ problems: [problem] });
+  const tables: Record<string, ComponentTable> = {};
+  for (const lang of languages) {
+    const props = propsIn(lang);
+    const call = (name: string) => `${name}(task, props, "${lang}")`;
+    const run = <T>(seed: number | undefined, what: string, act: () => T): T | { problems: string[] } => {
+      try {
+        return act();
+      } catch (error) {
+        const at = seed === undefined ? "" : `for seed ${seed} `;
+        return fail(`${at}${what} throws: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    };
+    const failed = (value: unknown): value is { problems: string[] } =>
+      typeof value === "object" && value !== null && "problems" in value && Array.isArray(value.problems);
+    const text = run(undefined, `template(props, "${lang}")`, () => template(props, lang));
+    if (failed(text)) return text;
+    if (typeof text !== "string" || text.trim() === "") {
+      return fail(
+        `template(props, "${lang}") is ${JSON.stringify(text) ?? "undefined"}; template gives the task as a learner reads it, with {name} for each input of params`,
+      );
+    }
+    let inputs: string[] | undefined;
+    let first = 0;
+    const rows: ComponentTable["rows"][number][] = [];
+    for (const seed of seeds) {
+      const task = logic.generate(seed, props);
+      const values = run(seed, call("params"), () => params(task, props, lang));
+      if (failed(values)) return values;
+      if (typeof values !== "object" || values === null || Array.isArray(values)) {
+        return fail(
+          `for seed ${seed} ${call("params")} is ${JSON.stringify(values) ?? "undefined"}; params gives the inputs of the task by name, { G: 340, p: 25 }`,
+        );
+      }
+      const keys = Object.keys(values);
+      if (inputs === undefined) {
+        inputs = keys;
+        first = seed;
+      } else if (keys.join("\u0000") !== inputs.join("\u0000")) {
+        return fail(
+          `for seed ${seed} ${call("params")} gives the names ${keys.join(", ")}, and for seed ${first} ${inputs.join(", ")}; give the same names for every task`,
+        );
+      }
+      const shown: string[] = [];
+      for (const [name, value] of Object.entries(values as Record<string, unknown>)) {
+        if (
+          !((typeof value === "number" && Number.isFinite(value)) || (typeof value === "string" && value.trim() !== ""))
+        ) {
+          return fail(
+            `for seed ${seed} ${call("params")}.${name} is ${JSON.stringify(value) ?? "undefined"}; give each input as a number or a text that is not empty`,
+          );
+        }
+        shown.push(valueText(value, lang));
+      }
+      const asText = (answer: unknown, what: string): string | { problems: string[] } => {
+        const result = run(seed, `show(${what}, task, props, "${lang}")`, () => show(answer, task, props, lang));
+        if (failed(result)) return result;
+        if (typeof result !== "string" || result.trim() === "") {
+          return fail(
+            `for seed ${seed} show(${what}, task, props, "${lang}") is ${JSON.stringify(result) ?? "undefined"}; show gives an answer as text, as the learner gives it`,
+          );
+        }
+        return result.trim();
+      };
+      const solution = asText(logic.solution(task), "solution(task)");
+      if (failed(solution)) return solution;
+      const answers = run(seed, "mistakes(task, props)", () => mistakes(task, props));
+      if (failed(answers)) return answers;
+      if (!Array.isArray(answers) || answers.length !== count) {
+        const length = Array.isArray(answers)
+          ? `${answers.length} answer${answers.length === 1 ? "" : "s"}`
+          : (JSON.stringify(answers) ?? "undefined");
+        return fail(
+          `for seed ${seed} mistakes(task, props) gives ${length}; give one for each of the ${count} typical mistakes of about.mistakes, in order, undefined for one without a single answer`,
+        );
+      }
+      const wrong: string[] = [];
+      for (const [index, answer] of (answers as unknown[]).entries()) {
+        if (answer === undefined) {
+          wrong.push("");
+          continue;
+        }
+        const what = `mistakes(task, props)[${index}]`;
+        const result = run(seed, `check(task, ${what})`, () => logic.check(task, answer));
+        if (failed(result)) return result;
+        if (result !== false) {
+          return fail(
+            `for seed ${seed} check(task, ${what}) is ${String(result)}; the answer of a typical mistake must be one that check rejects`,
+          );
+        }
+        const shownAnswer = asText(answer, what);
+        if (failed(shownAnswer)) return shownAnswer;
+        wrong.push(shownAnswer);
+      }
+      rows.push({ inputs: shown, solution, mistakes: wrong });
+    }
+    const unknown = [...text.matchAll(/\{([^{}\s]+)\}/g)]
+      .map((match) => match[1] ?? "")
+      .find((name) => !(inputs ?? []).includes(name));
+    if (unknown !== undefined) {
+      return fail(
+        `template(props, "${lang}") has the placeholder {${unknown}}, which ${call("params")} does not give; its names are ${(inputs ?? []).join(", ")}`,
+      );
+    }
+    tables[lang] = { template: text.replace(/\s+/g, " ").trim(), inputs: inputs ?? [], rows };
+  }
+  return { tables, problems: [] };
 }
 
 /**

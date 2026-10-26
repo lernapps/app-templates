@@ -14,15 +14,24 @@
 // child is and how a task's link looks; the app's own rules. Then the page's content as context (tutor.ts,
 // contentLines), and its exercises: a generated one once as its template, with hint, steps and its typical mistakes
 // as F1, F2 …, and below a table of each task number's inputs and outputs, the values of its placeholders, the
-// solution and what each mistake gives, all worked out; an exercise component by its about in prose and each number's
-// task and solution from its describe, as many numbers as fit into TUTOR_PAGE_BUDGET (#80 is to give it the table of
-// a generated one); a question without numbers in full. The build writes the page's Markdown beside it (index.md) for
+// solution and what each mistake gives, all worked out; an exercise component by its about in prose, and with its
+// table of tasks (template, params, mistakes and show of its logic) its task once as a template and the same table as
+// a generated one, else each number's task and solution from its describe, as many numbers as fit into
+// TUTOR_PAGE_BUDGET; a question without numbers in full. The build writes the page's Markdown beside it (index.md) for
 // an assistant that fetches nothing, checks each of its links (tutor.ts, linkProblems) and notes a page beyond the
 // budget or an exercise with numbers left out.
 import { Marked } from "marked";
 import { escape } from "../shared/html.ts";
 import { answerText } from "../shared/questions/render.ts";
-import { inLanguage, type Block, type Descriptions, type Page, type Site, type Text } from "./content.ts";
+import {
+  inLanguage,
+  type Block,
+  type ComponentTable,
+  type Descriptions,
+  type Page,
+  type Site,
+  type Text,
+} from "./content.ts";
 import { dataOf, taskSeeds, templatesOf } from "./exercises.ts";
 import { questionFor } from "./generated/question.ts";
 import { label, placeholderValue, placeholdersIn, plainText } from "./generated/texts.ts";
@@ -309,6 +318,25 @@ function generatedLines(spec: Generated, site: Site, lang: string, format: strin
   return lines;
 }
 
+/**
+ * The table of tasks of an exercise component, as a generated exercise has it: each task number's inputs, its
+ * solution and what each typical mistake gives, all as the learner reads them ("–" for a mistake without one answer).
+ */
+function componentTable(table: ComponentTable, lang: string): string[] {
+  const words = wordsIn(lang);
+  const count = table.rows[0]?.mistakes.length ?? 0;
+  const header = [
+    words.number,
+    ...table.inputs,
+    tutorWords(lang).solution,
+    ...Array.from({ length: count }, (_mistake, index) => `F${index + 1}`),
+  ].join(" | ");
+  const rows = table.rows.map((row, index) =>
+    [String(index + 1), ...row.inputs, row.solution, ...row.mistakes].map(cell).join(" | "),
+  );
+  return [`- ${words.table}`, "", "```", header, ...rows, "```"];
+}
+
 /** An exercise with numbers left out of a tutor page for its size: how many of its numbers it shows. */
 export interface Cut {
   id: string;
@@ -319,9 +347,9 @@ export interface Cut {
 /**
  * The tutor page of `page` in `lang`, as Markdown, its links relative to the page's folder <chapter>/<page>/tutor/,
  * which the build checks: who the tutor helps, how to guide, where the child is, the app's own rules; then the page's
- * content as context, and its exercises. An exercise component shows each number's task and solution; when the page
- * would grow beyond `budget`, the components share what is left, number by number in turn, and `cut` names those
- * with numbers left out.
+ * content as context, and its exercises. An exercise component shows its table of tasks with every number, or without
+ * one each number's task and solution; when the page would grow beyond `budget`, the components without a table share
+ * what is left, number by number in turn, and `cut` names those with numbers left out.
  */
 export function tutorPage(
   site: Site,
@@ -336,6 +364,8 @@ export function tutorPage(
   const rows = new Map<string, string[]>();
   for (const exercise of exercises) {
     if (exercise.block.type !== "vue-component" || exercise.count === 0) continue;
+    // a component with its table of tasks has all its numbers there
+    if (descriptions.get(exercise.block)?.tables?.[lang] !== undefined) continue;
     const tasks = descriptions.get(exercise.block)?.tasks[lang] ?? [];
     rows.set(
       exercise.id,
@@ -463,11 +493,13 @@ function pageMarkdown(
           return `${indent}${line(rest)}`;
         }),
       );
+      const table = descriptions.get(exercise.block)?.tables?.[lang];
       if (exercise.count > 0) {
         lines.push(`- ${words.linkNumber}: \`../?${exercise.id}=n&von=tutor#${exercise.id}\``);
         const all = rows.get(exercise.id) ?? [];
         const n = shown.get(exercise.id) ?? all.length;
-        if (n > 0) lines.push(`- ${words.tasks}:`, ...all.slice(0, n));
+        if (table !== undefined) lines.push(...componentTable(table, lang));
+        else if (n > 0) lines.push(`- ${words.tasks}:`, ...all.slice(0, n));
         if (n === 0 && all.length > 0) lines.push(`- ${words.none}`);
         else if (n < all.length) {
           lines.push(`- ${words.shown.replace("{shown}", String(n)).replace("{count}", String(all.length))}`);

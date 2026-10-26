@@ -134,6 +134,11 @@ const cases: [string, (root: string) => void, string][] = [
     'src/revolution/staende.yaml:50: blocks[0].blocks[3]: AssignLabels.ts: for seed 1 describe(task, props, "en") throws: no English (vue-component-exercise-contract)',
   ],
   [
+    "a typical mistake whose answer check accepts",
+    (root) => edit(root, LOGIC, "  return [[...right].reverse(),", "  return [right,"),
+    "src/revolution/staende.yaml:50: blocks[0].blocks[3]: AssignLabels.ts: for seed 1 check(task, mistakes(task, props)[0]) is true; the answer of a typical mistake must be one that check rejects (vue-component-exercise-contract)",
+  ],
+  [
     "a missing test file",
     (root) => rmSync(join(root, "src/components/AssignLabels.test.ts")),
     "src/components/AssignLabels.vue: its test file src/components/AssignLabels.test.ts is missing; every component has one (vue-component-tested)",
@@ -320,6 +325,91 @@ describe("what an exercise component's logic describes", () => {
     expect(describedProblems({ ...logic, about, describe: () => ({ task: "t" }) }, props, ["de"]).problems).toEqual([
       'for seed 1 describe(task, props, "de") is {"task":"t"}; describe returns { task, solution }: the task as the learner sees it and its solution, each a text in the page\'s language',
     ]);
+  });
+});
+
+describe("the table of tasks an exercise component declares for a tutor", () => {
+  const props = (lang: string) => ({
+    parts: lang === "de" ? ["a", "b", "c"] : ["x", "y", "z"],
+    question: lang === "de" ? "Welche?" : "Which?",
+    level: lang === "de" ? "Stufe" : "Level",
+  });
+  const load = () => import("./fixtures/explainer-history/components/AssignLabels.ts");
+
+  test("its task once with a placeholder, and each number's inputs, solution and mistakes, in each language", async () => {
+    const logic = await load();
+    const { description, problems } = describedProblems(logic, props, ["de", "en"]);
+    expect(problems).toEqual([]);
+    const de = description?.tables?.["de"];
+    expect(de?.template).toBe(
+      "Welche? Die Stufen, von oben nach unten: Stufe 1, Stufe 2, Stufe 3. Zur Wahl stehen, in dieser Reihenfolge: {Wahl}.",
+    );
+    expect(de?.inputs).toEqual(["Wahl"]);
+    expect(de?.rows).toHaveLength(5);
+    const task = logic.generate(1, props("de"));
+    expect(de?.rows[0]).toEqual({
+      inputs: [task.order.map((label) => ["a", "b", "c"][label]).join("; ")],
+      solution: "Stufe 1: a; Stufe 2: b; Stufe 3: c",
+      mistakes: ["Stufe 1: c; Stufe 2: b; Stufe 3: a", "Stufe 1: a; Stufe 2: a; Stufe 3: c"],
+    });
+    expect(description?.tables?.["en"]?.inputs).toEqual(["choices"]);
+    expect(description?.tables?.["en"]?.rows[0]?.solution).toBe("Level 1: x; Level 2: y; Level 3: z");
+  });
+
+  test("without its exports: no table, and no problem", async () => {
+    const { template: _t, params: _p, mistakes: _m, show: _s, ...logic } = await load();
+    const { description, problems } = describedProblems(logic, props, ["de", "en"]);
+    expect(problems).toEqual([]);
+    expect(description?.tables).toBeUndefined();
+  });
+
+  test.each<[string, (logic: Record<string, unknown>) => Record<string, unknown>, string]>([
+    [
+      "only some of its exports",
+      ({ show: _s, mistakes: _m, ...logic }) => logic,
+      "exports template and params but not mistakes and show; for a tutor's table of tasks export all four: template(props, lang), params(task, props, lang), mistakes(task, props) and show(answer, task, props, lang)",
+    ],
+    [
+      "a placeholder that params does not give",
+      (logic) => ({ ...logic, template: () => "Ordne {Wahl} nach {Zeit}." }),
+      'template(props, "de") has the placeholder {Zeit}, which params(task, props, "de") does not give; its names are Wahl',
+    ],
+    [
+      "other names for another task",
+      (logic) => ({
+        ...logic,
+        params: (task: { order: number[] }) => (task.order[0] === 0 ? { Wahl: "a" } : { Wahl: "b", Rest: 1 }),
+      }),
+      'for seed 10 params(task, props, "de") gives the names Wahl, and for seed 1 Wahl, Rest; give the same names for every task',
+    ],
+    [
+      "an empty input",
+      (logic) => ({ ...logic, params: () => ({ Wahl: " " }) }),
+      'for seed 1 params(task, props, "de").Wahl is " "; give each input as a number or a text that is not empty',
+    ],
+    [
+      "a mistake that check accepts",
+      (logic) => ({
+        ...logic,
+        mistakes: (task: { order: number[] }) => [task.order.map((_label, part) => part), undefined],
+      }),
+      "for seed 1 check(task, mistakes(task, props)[0]) is true; the answer of a typical mistake must be one that check rejects",
+    ],
+    [
+      "fewer mistakes than about names",
+      (logic) => ({ ...logic, mistakes: () => [[2, 1, 0]] }),
+      "for seed 1 mistakes(task, props) gives 1 answer; give one for each of the 2 typical mistakes of about.mistakes, in order, undefined for one without a single answer",
+    ],
+    [
+      "a show that gives no text",
+      (logic) => ({ ...logic, show: () => "" }),
+      'for seed 1 show(solution(task), task, props, "de") is ""; show gives an answer as text, as the learner gives it',
+    ],
+  ])("%s: its problem", async (_name, change, problem) => {
+    const logic = change({ ...(await load()) }) as unknown as Parameters<typeof describedProblems>[0];
+    const { description, problems } = describedProblems(logic, props, ["de", "en"]);
+    expect(problems).toEqual([problem]);
+    expect(description).toBeUndefined();
   });
 });
 

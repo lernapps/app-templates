@@ -30,13 +30,19 @@ const fixture = (name: string): Site => {
   return loadSite(root, 0);
 };
 
-/** The history fixture with what its component describes, as the build reads it. */
-function history(): { site: Site; descriptions: Map<Block, ComponentDescription> } {
+/** The logic of AssignLabels without its table of tasks: a component that declares no inputs and outputs. */
+const { template: _template, params: _params, mistakes: _mistakes, show: _show, ...undeclared } = assignLabels;
+
+/** The history fixture with what its component describes, as the build reads it (`logic`: its logic module). */
+function history(logic: Parameters<typeof describedProblems>[0] = assignLabels): {
+  site: Site;
+  descriptions: Map<Block, ComponentDescription>;
+} {
   const site = fixture("explainer-history");
   const use = site.components[0];
   if (use === undefined) throw new Error("no component");
   const { description } = describedProblems(
-    assignLabels,
+    logic,
     (lang) => propsIn(use.block.props, use.component, lang),
     site.app.languages,
   );
@@ -156,8 +162,40 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain("- Link: [../?von=tutor#prozent-von-200](../?von=tutor#prozent-von-200)");
   });
 
-  test("an exercise component: what it says about itself, and each number's task and solution from its describe", () => {
+  test("an exercise component with its table of tasks: its task once, its mistakes as F1, F2 …, every number's inputs and outputs", () => {
     const { site, descriptions } = history();
+    const page = contentPages(site).find((candidate) => candidate.id === "staende");
+    const use = site.components[0];
+    if (page === undefined || use === undefined) throw new Error("no page staende");
+    // all numbers, however small the budget
+    const { markdown: text, cut } = tutorPage(site, page, "de", descriptions, 1000);
+    expect(cut).toEqual([]);
+    const part = text.slice(text.indexOf("### Übung assign-labels"));
+    expect(part).toContain("- Was zu tun ist: Jede Stufe einer Pyramide");
+    expect(part).toContain(
+      "- Aufgabe: „Welcher Stand gehört auf welche Stufe der Pyramide? Die Stufen, von oben nach unten: Stufe 1, Stufe 2, Stufe 3. Zur Wahl stehen, in dieser Reihenfolge: {Wahl}.“",
+    );
+    expect(part).toContain(
+      "- Typische Fehler und was die App sagt:\n  - F1: Die Reihenfolge umgedreht: unten, was oben hingehört.\n  - F2: Eine Beschriftung zweimal gewählt.",
+    );
+    expect(part).toContain("- Link zu Nummer n: `../?assign-labels=n&von=tutor#assign-labels`");
+    expect(part).toContain(
+      "- Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt.\n\n```\nNr. | Wahl | Lösung | F1 | F2\n",
+    );
+    const table = descriptions.get(use.block)?.tables?.["de"];
+    expect(table?.rows.length).toBeGreaterThan(1);
+    table?.rows.forEach((row, index) =>
+      expect(part).toContain(`\n${[String(index + 1), ...row.inputs, row.solution, ...row.mistakes].join(" | ")}\n`),
+    );
+    // no task by number from describe
+    expect(part).not.toContain("  - Nr. 1: ");
+    expect(part).not.toContain("Aufgaben nach Nummer, mit Lösung");
+    const { files, anchors } = tree(site, "de");
+    expect(linkProblems(tutorPageOf(page), text, files, anchors)).toEqual([]);
+  });
+
+  test("an exercise component without its table of tasks: what it says about itself, and each number's task and solution from its describe", () => {
+    const { site, descriptions } = history(undeclared);
     const page = contentPages(site).find((candidate) => candidate.id === "staende");
     const use = site.components[0];
     if (page === undefined || use === undefined) throw new Error("no page staende");
@@ -178,8 +216,8 @@ describe("the tutor page of a content page", () => {
     expect(linkProblems(tutorPageOf(page), text, files, anchors)).toEqual([]);
   });
 
-  test("an exercise component beyond the budget: as many numbers as fit, and the page says so", () => {
-    const { site, descriptions } = history();
+  test("an exercise component without its table beyond the budget: as many numbers as fit, and the page says so", () => {
+    const { site, descriptions } = history(undeclared);
     const page = contentPages(site).find((candidate) => candidate.id === "staende");
     if (page === undefined) throw new Error("no page staende");
     const whole = tutorPage(site, page, "de", descriptions);
