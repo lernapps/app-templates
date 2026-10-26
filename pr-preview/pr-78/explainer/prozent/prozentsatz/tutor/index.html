@@ -18,16 +18,17 @@
 <li>Antworte kurz: höchstens drei Sätze und eine Frage.</li>
 <li>Frag zuerst, was das Kind nicht versteht.</li>
 <li>Geh Schritt für Schritt: erst das Thema (Regel und Beispiel unten), dann die Aufgabe, an der das Kind sitzt.</li>
-<li>Nimm die Beispiele und Aufgaben dieser Seite. Erfinde keine eigenen.</li>
+<li>Nimm die Beispiele und Aufgaben dieser Seite. Erfinde keine eigenen. Rechne nichts selbst aus: Lösungen und Fehler stehen unten bei jeder Nummer.</li>
 <li>Verrate die Lösung nicht. Gib einen Schritt vor und lass das Kind rechnen.</li>
 <li>Geübt wird in der App, nicht im Chat. Sobald das Kind das Thema verstanden hat, schick es mit dem Link zu seiner Aufgabe zurück in die App. Rechnet es im Chat, schick den Link sofort.</li>
 <li>Bitte das Kind nie, eine Aufgabe abzuschreiben. Du kennst sie aus dem Kontext unten.</li>
 </ul>
 <h2>Wo das Kind gerade ist</h2>
 <ul>
-<li>Die erste Nachricht des Kindes nennt diese Seite mit der Übung und der Nummer, an der es sitzt, z. B. <code>?uebung=…&amp;nr=27</code>, und den Link zu dieser Aufgabe in der App. Die Werte der Nummer stehen unten bei der Übung.</li>
+<li>Die erste Nachricht des Kindes nennt diese Seite mit der Nummer jeder Übung, an der es sitzt, z. B. <code>?prozentsatz-ueben=12</code>. <code>uebung=</code> nennt die Übung, an der es gerade arbeitet, <code>abschnitt=</code> den Abschnitt. Schlag die Nummern unten bei den Übungen nach.</li>
 <li>Steht in der Nachricht „Die App sagt: …“, hat die App das zur Eingabe des Kindes gemeldet. Setz dort an, ohne es zu wiederholen.</li>
-<li>Jede Aufgabe hat einen Link: die Adresse der Seite mit der Nummer und <code>von=tutor</code>, z. B. <code>…/prozentsatz/?prozentsatz-ueben=12&amp;von=tutor#prozentsatz-ueben</code>. Schick ihn immer als volle Adresse mit <code>https://</code>, wie den Link in der ersten Nachricht, mit einer anderen Nummer für eine weitere Aufgabe. Nenn dazu den Text der Aufgabe und sag: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“</li>
+<li>Eine Zeile wie „…, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück“ in der App: Übung, Nummer und wie weit das Kind damit kam.</li>
+<li>Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne <code>tutor/</code> und ohne <code>?…</code>, mit der Nummer und <code>von=tutor</code>, z. B. <code>…/prozentsatz/?prozentsatz-ueben=12&amp;von=tutor#prozentsatz-ueben</code>. Schick ihn immer als volle Adresse mit <code>https://</code>. Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“</li>
 </ul>
 <h2>Kontext: die Seite „Prozentsatz“</h2>
 <p>Den Prozentsatz berechnen: p = W : G · 100, mit einem Beispiel und dem Prozentstreifen.</p>
@@ -78,89 +79,88 @@ vergleichbar. 75 % sagen sofort, wie groß der Anteil ist, egal ob die Klasse 24
 <ul>
 <li>Aufgabe: „In einer Klasse sind {G} Schüler. {W} davon haben ein Haustier. Wie viel Prozent der Klasse sind das?“</li>
 <li>Antwortformat: eine Zahl eintippen (%)</li>
-<li>Richtige Antwort: <code>W * 100 / G</code></li>
-<li>Bedingungen an die Werte: <code>W &lt; G</code>, <code>decimals(W * 100 / G) == 0</code></li>
-<li>Typische Fehler und was die App sagt:<ul>
-<li><code>W / G</code>: „Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.“</li>
-<li><code>G * 100 / W</code>: „Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.“</li>
-</ul>
-</li>
 <li>Tipp der App: „Teile den Teil ({W} Schüler) durch das Ganze ({G} Schüler) und nimm das Ergebnis mal 100.“</li>
 <li>Lösungsweg:<ul>
 <li>$p = \frac{W}{G} \cdot 100$</li>
 <li>$p = \frac{{W}}{{G}} \cdot 100 = {answer}$, also {answer} %.</li>
 </ul>
 </li>
-<li>Link zu Nummer n: <code>../?prozentsatz-ueben=n&amp;von=tutor#prozentsatz-ueben</code></li>
-<li>Werte je Nummer:</li>
+<li>Typische Fehler und was die App sagt:<ul>
+<li>F1: „Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.“</li>
+<li>F2: „Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.“</li>
 </ul>
-<pre><code>1: G=20, W=2
-2: G=25, W=22
-3: G=26, W=13
-4: G=30, W=6
-5: G=25, W=12
-6: G=20, W=8
-7: G=25, W=6
-8: G=18, W=9
-9: G=25, W=19
-10: G=25, W=5
-11: G=25, W=17
-12: G=20, W=6
-13: G=24, W=18
-14: G=24, W=12
-15: G=20, W=19
-16: G=32, W=8
-17: G=28, W=14
-18: G=20, W=4
-19: G=25, W=23
-20: G=30, W=3
-21: G=16, W=4
-22: G=25, W=16
-23: G=25, W=9
-24: G=20, W=10
-25: G=30, W=12
-26: G=24, W=6
-27: G=16, W=8
-28: G=25, W=21
-29: G=25, W=13
-30: G=20, W=5
-31: G=20, W=17
-32: G=25, W=7
-33: G=28, W=21
-34: G=25, W=14
-35: G=25, W=15
-36: G=20, W=13
-37: G=20, W=1
-38: G=20, W=3
-39: G=22, W=11
-40: G=25, W=4
-41: G=25, W=11
-42: G=25, W=20
-43: G=20, W=9
-44: G=28, W=7
-45: G=20, W=11
-46: G=20, W=15
-47: G=30, W=24
-48: G=30, W=15
-49: G=20, W=14
-50: G=25, W=8
-51: G=16, W=12
-52: G=32, W=24
-53: G=20, W=16
-54: G=20, W=7
-55: G=25, W=24
-56: G=20, W=18
-57: G=25, W=3
-58: G=25, W=1
-59: G=30, W=27
-60: G=20, W=12
-61: G=30, W=18
-62: G=25, W=10
-63: G=25, W=2
-64: G=30, W=21
-65: G=32, W=16
-66: G=30, W=9
-67: G=25, W=18
+</li>
+<li>Link zu Nummer n: <code>../?prozentsatz-ueben=n&amp;von=tutor#prozentsatz-ueben</code></li>
+<li>Aufgaben nach Nummer: die Werte für <code>{…}</code>, die Lösung und was bei den Fehlern herauskommt. <code>{answer}</code> ist die Lösung.</li>
+</ul>
+<pre><code>Nr. | G | W | Lösung | F1 | F2
+1 | 20 | 2 | 10 % | 0,1 | 1000
+2 | 25 | 22 | 88 % | 0,88 | 113,636364
+3 | 26 | 13 | 50 % | 0,5 | 200
+4 | 30 | 6 | 20 % | 0,2 | 500
+5 | 25 | 12 | 48 % | 0,48 | 208,333333
+6 | 20 | 8 | 40 % | 0,4 | 250
+7 | 25 | 6 | 24 % | 0,24 | 416,666667
+8 | 18 | 9 | 50 % | 0,5 | 200
+9 | 25 | 19 | 76 % | 0,76 | 131,578947
+10 | 25 | 5 | 20 % | 0,2 | 500
+11 | 25 | 17 | 68 % | 0,68 | 147,058824
+12 | 20 | 6 | 30 % | 0,3 | 333,333333
+13 | 24 | 18 | 75 % | 0,75 | 133,333333
+14 | 24 | 12 | 50 % | 0,5 | 200
+15 | 20 | 19 | 95 % | 0,95 | 105,263158
+16 | 32 | 8 | 25 % | 0,25 | 400
+17 | 28 | 14 | 50 % | 0,5 | 200
+18 | 20 | 4 | 20 % | 0,2 | 500
+19 | 25 | 23 | 92 % | 0,92 | 108,695652
+20 | 30 | 3 | 10 % | 0,1 | 1000
+21 | 16 | 4 | 25 % | 0,25 | 400
+22 | 25 | 16 | 64 % | 0,64 | 156,25
+23 | 25 | 9 | 36 % | 0,36 | 277,777778
+24 | 20 | 10 | 50 % | 0,5 | 200
+25 | 30 | 12 | 40 % | 0,4 | 250
+26 | 24 | 6 | 25 % | 0,25 | 400
+27 | 16 | 8 | 50 % | 0,5 | 200
+28 | 25 | 21 | 84 % | 0,84 | 119,047619
+29 | 25 | 13 | 52 % | 0,52 | 192,307692
+30 | 20 | 5 | 25 % | 0,25 | 400
+31 | 20 | 17 | 85 % | 0,85 | 117,647059
+32 | 25 | 7 | 28 % | 0,28 | 357,142857
+33 | 28 | 21 | 75 % | 0,75 | 133,333333
+34 | 25 | 14 | 56 % | 0,56 | 178,571429
+35 | 25 | 15 | 60 % | 0,6 | 166,666667
+36 | 20 | 13 | 65 % | 0,65 | 153,846154
+37 | 20 | 1 | 5 % | 0,05 | 2000
+38 | 20 | 3 | 15 % | 0,15 | 666,666667
+39 | 22 | 11 | 50 % | 0,5 | 200
+40 | 25 | 4 | 16 % | 0,16 | 625
+41 | 25 | 11 | 44 % | 0,44 | 227,272727
+42 | 25 | 20 | 80 % | 0,8 | 125
+43 | 20 | 9 | 45 % | 0,45 | 222,222222
+44 | 28 | 7 | 25 % | 0,25 | 400
+45 | 20 | 11 | 55 % | 0,55 | 181,818182
+46 | 20 | 15 | 75 % | 0,75 | 133,333333
+47 | 30 | 24 | 80 % | 0,8 | 125
+48 | 30 | 15 | 50 % | 0,5 | 200
+49 | 20 | 14 | 70 % | 0,7 | 142,857143
+50 | 25 | 8 | 32 % | 0,32 | 312,5
+51 | 16 | 12 | 75 % | 0,75 | 133,333333
+52 | 32 | 24 | 75 % | 0,75 | 133,333333
+53 | 20 | 16 | 80 % | 0,8 | 125
+54 | 20 | 7 | 35 % | 0,35 | 285,714286
+55 | 25 | 24 | 96 % | 0,96 | 104,166667
+56 | 20 | 18 | 90 % | 0,9 | 111,111111
+57 | 25 | 3 | 12 % | 0,12 | 833,333333
+58 | 25 | 1 | 4 % | 0,04 | 2500
+59 | 30 | 27 | 90 % | 0,9 | 111,111111
+60 | 20 | 12 | 60 % | 0,6 | 166,666667
+61 | 30 | 18 | 60 % | 0,6 | 166,666667
+62 | 25 | 10 | 40 % | 0,4 | 250
+63 | 25 | 2 | 8 % | 0,08 | 1250
+64 | 30 | 21 | 70 % | 0,7 | 142,857143
+65 | 32 | 16 | 50 % | 0,5 | 200
+66 | 30 | 9 | 30 % | 0,3 | 333,333333
+67 | 25 | 18 | 72 % | 0,72 | 138,888889
 </code></pre>
 </main>
 </body>
