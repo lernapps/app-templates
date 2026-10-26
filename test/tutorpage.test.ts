@@ -15,6 +15,7 @@ import { loadSite } from "../runtime/explainer/load.ts";
 import { contentPages, routes } from "../runtime/explainer/routes.ts";
 import {
   bytesOf,
+  tableHint,
   tutorPage,
   TUTOR_PAGE_BUDGET,
   tutorPageDocument,
@@ -30,13 +31,19 @@ const fixture = (name: string): Site => {
   return loadSite(root, 0);
 };
 
-/** The history fixture with what its component describes, as the build reads it. */
-function history(): { site: Site; descriptions: Map<Block, ComponentDescription> } {
+/** The logic of AssignLabels without its table of tasks: a component that declares no inputs and outputs. */
+const { template: _template, params: _params, mistakes: _mistakes, show: _show, ...undeclared } = assignLabels;
+
+/** The history fixture with what its component describes, as the build reads it (`logic`: its logic module). */
+function history(logic: Parameters<typeof describedProblems>[0] = assignLabels): {
+  site: Site;
+  descriptions: Map<Block, ComponentDescription>;
+} {
   const site = fixture("explainer-history");
   const use = site.components[0];
   if (use === undefined) throw new Error("no component");
   const { description } = describedProblems(
-    assignLabels,
+    logic,
     (lang) => propsIn(use.block.props, use.component, lang),
     site.app.languages,
   );
@@ -76,6 +83,10 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain("geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht");
     expect(text).toContain("ein „Ja“ reicht nicht");
     expect(text).toContain("Setz direkt bei dieser Aufgabe an.");
+    // help after a wrong input with the app's message: first that input and the task
+    expect(text).toContain(
+      "Nennt die Nachricht eine Eingabe und „Die App sagt: …“, geh zuerst kurz auf genau diese Eingabe und die Aufgabe ein: Schlag die Nummer unten nach, such die Eingabe bei den Fehlern (F1, F2 …) und sag in einem Satz, was an ihr nicht zur Aufgabe passt. Wiederhol die Meldung nicht.",
+    );
     expect(text).toContain("Erfinde keine eigenen.");
     expect(text).toContain("Verrate keine Lösung.");
     expect(text).toContain("Bitte das Kind nie, eine Aufgabe abzuschreiben.");
@@ -156,8 +167,40 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain("- Link: [../?von=tutor#prozent-von-200](../?von=tutor#prozent-von-200)");
   });
 
-  test("an exercise component: what it says about itself, and each number's task and solution from its describe", () => {
+  test("an exercise component with its table of tasks: its task once, its mistakes as F1, F2 …, every number's inputs and outputs", () => {
     const { site, descriptions } = history();
+    const page = contentPages(site).find((candidate) => candidate.id === "staende");
+    const use = site.components[0];
+    if (page === undefined || use === undefined) throw new Error("no page staende");
+    // all numbers, however small the budget
+    const { markdown: text, cut } = tutorPage(site, page, "de", descriptions, 1000);
+    expect(cut).toEqual([]);
+    const part = text.slice(text.indexOf("### Übung assign-labels"));
+    expect(part).toContain("- Was zu tun ist: Jede Stufe einer Pyramide");
+    expect(part).toContain(
+      "- Aufgabe: „Welcher Stand gehört auf welche Stufe der Pyramide? Die Stufen, von oben nach unten: Stufe 1, Stufe 2, Stufe 3. Zur Wahl stehen, in dieser Reihenfolge: {Wahl}.“",
+    );
+    expect(part).toContain(
+      "- Typische Fehler und was die App sagt:\n  - F1: Die Reihenfolge umgedreht: unten, was oben hingehört.\n  - F2: Eine Beschriftung zweimal gewählt.",
+    );
+    expect(part).toContain("- Link zu Nummer n: `../?assign-labels=n&von=tutor#assign-labels`");
+    expect(part).toContain(
+      "- Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt.\n\n```\nNr. | Wahl | Lösung | F1 | F2\n",
+    );
+    const exercise = descriptions.get(use.block)?.exercise?.["de"];
+    expect(exercise?.tasks.length).toBeGreaterThan(1);
+    exercise?.tasks.forEach((row, index) =>
+      expect(part).toContain(`\n${[String(index + 1), ...row.inputs, row.solution, ...row.mistakes].join(" | ")}\n`),
+    );
+    // no task by number from describe
+    expect(part).not.toContain("  - Nr. 1: ");
+    expect(part).not.toContain("Aufgaben nach Nummer, mit Lösung");
+    const { files, anchors } = tree(site, "de");
+    expect(linkProblems(tutorPageOf(page), text, files, anchors)).toEqual([]);
+  });
+
+  test("an exercise component without its table of tasks: what it says about itself, and each number's task and solution from its describe", () => {
+    const { site, descriptions } = history(undeclared);
     const page = contentPages(site).find((candidate) => candidate.id === "staende");
     const use = site.components[0];
     if (page === undefined || use === undefined) throw new Error("no page staende");
@@ -178,8 +221,8 @@ describe("the tutor page of a content page", () => {
     expect(linkProblems(tutorPageOf(page), text, files, anchors)).toEqual([]);
   });
 
-  test("an exercise component beyond the budget: as many numbers as fit, and the page says so", () => {
-    const { site, descriptions } = history();
+  test("an exercise component without its table beyond the budget: as many numbers as fit, and the page says so", () => {
+    const { site, descriptions } = history(undeclared);
     const page = contentPages(site).find((candidate) => candidate.id === "staende");
     if (page === undefined) throw new Error("no page staende");
     const whole = tutorPage(site, page, "de", descriptions);
@@ -196,6 +239,14 @@ describe("the tutor page of a content page", () => {
       `- Hier stehen die Nummern 1 bis ${only?.shown ?? 0} von ${only?.count ?? 0}. Sitzt das Kind an einer anderen Nummer, schick ihm den Link zu einer Nummer von hier.`,
     );
     expect(bytesOf(tutorPageDocument(markdown, site, page, "de"))).toBeLessThanOrEqual(budget);
+  });
+
+  test("a hint for each exercise component without its table of tasks, none for one with it", () => {
+    expect(tableHint(history().site, history().descriptions)).toBeUndefined();
+    const { site, descriptions } = history(undeclared);
+    expect(tableHint(site, descriptions)).toBe(
+      "lernapps explainer: 1 exercise component declares no table of tasks, so its tutor page has its tasks only as text, as many as fit; export template(props, lang), params(task, props, lang), mistakes(task, props) and show(answer, task, props, lang) from its logic module: src/revolution/staende.yaml:50: blocks[0].blocks[3]: AssignLabels (vue-component-tutor-table)",
+    );
   });
 
   test("lean HTML: its language and title, no script, no menu, a formula as written; small", () => {

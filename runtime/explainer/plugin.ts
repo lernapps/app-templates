@@ -39,7 +39,15 @@ import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/p
 import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";
 import { anchorsOf, linkProblems, tutorPageOf } from "./tutor.ts";
-import { bytesOf, type Cut, TUTOR_MARKDOWN, TUTOR_PAGE_BUDGET, tutorPage, tutorPageDocument } from "./tutorpage.ts";
+import {
+  bytesOf,
+  type Cut,
+  tableHint,
+  TUTOR_MARKDOWN,
+  TUTOR_PAGE_BUDGET,
+  tutorPage,
+  tutorPageDocument,
+} from "./tutorpage.ts";
 import { imageType } from "../shared/blocks/image.ts";
 
 const MARKER = "<!-- explainer -->";
@@ -303,13 +311,16 @@ export function explainer(): Plugin[] {
         );
       }
       // an exercise component whose numbers do not all fit on its tutor page: a warning, until it declares its
-      // inputs and outputs (#80)
+      // table of tasks (template, params, mistakes and show of its logic module)
       const cut = [...tutor].flatMap(([file, page]) => page.cut.map((one) => ({ file, ...one })));
       if (cut.length > 0) {
         this.warn(
-          `lernapps explainer: ${cut.length} exercise${cut.length === 1 ? " shows" : "s show"} only some of ${cut.length === 1 ? "its" : "their"} task numbers on the tutor page, to stay within ${TUTOR_PAGE_BUDGET / 1000} kB (see https://github.com/lernapps/app-templates/issues/80): ${cut.map((one) => `${one.file} ${one.id} (${one.shown} of ${one.count})`).join(", ")}`,
+          `lernapps explainer: ${cut.length} exercise${cut.length === 1 ? " shows" : "s show"} only some of ${cut.length === 1 ? "its" : "their"} task numbers on the tutor page, to stay within ${TUTOR_PAGE_BUDGET / 1000} kB; export template, params, mistakes and show from its logic module for a table of all its numbers: ${cut.map((one) => `${one.file} ${one.id} (${one.shown} of ${one.count})`).join(", ")}`,
         );
       }
+      // an exercise component without its table of tasks: a hint for now
+      const hint = tableHint(content, descriptions);
+      if (hint !== undefined) this.info(hint);
       // the exercises with fewer distinct tasks than the numbers allow: noted, no problem
       const few = [
         ...contentPages(content).flatMap((page) =>

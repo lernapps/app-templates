@@ -1,6 +1,6 @@
 // The start prompt of a content page and the assistants that take it, way A to the tutor ("Mit <name> lernen"; way B,
-// "Hilfe" at one task, is stuck.ts). The learner switches an assistant on once (Claude, ChatGPT and Le Chat unless the
-// app names its own in tutor.providers), or copying the text; then every content page has a bar beside its title. Its
+// "Hilfe" at one task, is stuck.ts). The learner switches an assistant on once (Claude, ChatGPT or Le Chat, the same
+// for every app), or copying the text; then every content page has a bar beside its title. Its
 // button opens the assistant with the start prompt in its address: one sentence in the learner's voice that names
 // the page's tutor page (tutorpage.ts) with where the learner is in its query (position.ts). A chat assistant
 // fetches only addresses its user wrote into the conversation, so the prompt names the one address the tutor needs,
@@ -8,7 +8,6 @@
 // the client module adds the tutor page's Markdown after the prompt, nothing going over the network but the app's
 // own static file. Without JavaScript the provider links are plain links to the assistant, and the tutor page is a
 // page to read and copy from. Nothing loads before a click.
-import { type Site } from "./content.ts";
 import { type Route } from "./routes.ts";
 import { tutorPageOf } from "./tutor.ts";
 
@@ -24,15 +23,12 @@ export interface Provider {
   url: string;
 }
 
-/** The providers when the app names none: Claude, ChatGPT and Le Chat, each taking the prompt in its address. */
-export const DEFAULT_PROVIDERS: readonly Provider[] = [
+/** The assistants a learner can switch on, the same for every app: each takes the prompt in its address. */
+export const PROVIDERS: readonly Provider[] = [
   { name: "Claude", url: "https://claude.ai/new?q={prompt}" },
   { name: "ChatGPT", url: "https://chatgpt.com/?q={prompt}" },
   { name: "Le Chat", url: "https://chat.mistral.ai/chat?q={prompt}" },
 ];
-
-/** The providers of an app. */
-export const providersOf = (site: Site): readonly Provider[] => site.app.tutor?.providers ?? DEFAULT_PROVIDERS;
 
 const MARK = "lernapps-prompt";
 /** A provider's address without the prompt, for the link without JavaScript: its parameter with {prompt} left out. */

@@ -275,8 +275,9 @@ line on the clipboard. A chat assistant fetches only addresses its user wrote in
 address the tutor needs comes in the prompt or in a line the learner pastes. The tutor page is the one source of what
 the tutor gets: a short visible guide, then the page's content and its exercises with every task number, a
 `generated` one once as its template with a table of each number's inputs and outputs (the values, the solution, what
-each typical mistake gives), an exercise component with each number's task and solution from its `describe` as far as
-they fit into 64 kB (`risk-tutor-component-numbers`); its Markdown lies beside it for copying. No prompt and no line
+each typical mistake gives), an exercise component with its `about` and the same table from its exercise logic
+(`dec-component-table`), or without one each number's task and solution from its `describe` as far as they fit into
+64 kB; its Markdown lies beside it for copying. No prompt and no line
 carries a rule for the tutor, and the app writes no `llms.txt`.
 
 ```arc42
@@ -498,16 +499,17 @@ protocol: YAML records
 
 ## Vue components
 
-Optional, not in the template: `src/components/<Name>.vue` with its test, for what no block can express, under the
-component rules and within a fixed size each (`dec-explainer-component-size`); an exercise component adds its logic
-module.
+Optional: `src/components/<Name>.vue` with its test, for what no block can express, under the component rules and
+within a fixed size each (`dec-explainer-component-size`); an exercise component adds its logic module. The template
+has one as an example, `ProzentFeld` on the page `prozent/prozentwert`: a field of G squares of which the learner
+colours p %, with the exercise declared for the tutor (`dec-component-table`), so that a hand test shows how a tutor
+deals with its typical mistakes.
 
 ```arc42
-:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
-:::
 :::building-block
 id: bb-explainer-components
 title: Vue components
+path: explainer/src/components
 technology: Vue single-file components, TypeScript
 implements: concept-component-rules
 :::
@@ -521,12 +523,11 @@ A `vue-component` block names the component with its typed props and a `nojs` te
 `reason` without it) and takes the prop `seed`.
 
 ```arc42
-:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
-:::
 :::interface
 id: if-vue-component
 title: Component contract (props, nojs, answered)
 provider: bb-explainer-components
+path: explainer/src/components/ProzentFeld.vue
 protocol: Vue props and events, YAML block
 :::
 ```
@@ -535,15 +536,16 @@ protocol: Vue props and events, YAML block
 
 An exercise component's `<Name>.ts` exports `generate`, `check`, `solution`, `wrong`, `describe` and `about`: the
 exercise contract, which the build tests over fixed seeds and the tutor pages read (the task and its solution as text
-in each language, and what the exercise is for a tutor).
+in each language, and what the exercise is for a tutor). For its table of tasks it adds `template`, `params`,
+`mistakes` and `show`, all four or none (`dec-component-table`); the build checks them against `check` for every task
+number and gives a hint for a component without them.
 
 ```arc42
-:::ignore H014 optional and not in the template; an app that adds it sets its path in its own architecture
-:::
 :::interface
 id: if-exercise-logic
 title: Exercise logic module (exercise contract)
 provider: bb-explainer-components
+path: explainer/src/components/ProzentFeld.ts
 protocol: TypeScript module exports
 :::
 ```

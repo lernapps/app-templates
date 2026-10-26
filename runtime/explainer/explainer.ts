@@ -388,7 +388,8 @@ function iconOf(root: Document, way: Way | undefined): HTMLElement {
 
 /**
  * The tutor's help button in every exercise of the page, way B, there only while a way to the tutor is switched on or
- * on a page a tutor opened (von=tutor). It sits in the row of "Prüfen" and "Lösung" (or below an exercise component),
+ * on a page a tutor opened (von=tutor). It sits in the row of "Prüfen" and "Lösung" (or below an exercise component,
+ * outside its island),
  * with the assistant's symbol, and says what helps now: "Hilfe" before an answer and after the right one; "Warum?",
  * standing out, after a wrong one, with a sentence that says what the click gives the assistant; on a page a tutor
  * opened, "Zurück" once the task is right or its solution shown. "Hilfe" and "Warum?" give the lines of the task as the
@@ -419,7 +420,11 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
     const { status, field } = statusAndField(root, message(lang, "stuckLabel"));
     note.append(text, " ", status, field);
     const place = () => {
-      const row = element.querySelector<HTMLElement>(".question-actions");
+      // the row of the shared questions; never one in a component's island, whose DOM Vue owns: a button there makes
+      // the hydration mismatch, and each new render drops it (#83)
+      const row = element.classList.contains("explainer-component")
+        ? null
+        : element.querySelector<HTMLElement>(".question-actions");
       if (row) {
         row.append(" ", button);
         own.remove();

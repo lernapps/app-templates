@@ -255,6 +255,23 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       await expect(details).not.toHaveAttribute("open");
     } else await expect(nojs, "the component replaces its nojs text").toBeHidden();
     if (!component.exercise) continue;
+    // its own buttons in its row .question-actions ("Prüfen") look like those of the questions: filled with the
+    // accent and at least 44 px high
+    const own = element.locator(":scope > .explainer-island .question-actions button:not(.explainer-help)");
+    for (const button of await own.all()) {
+      const look = await button.evaluate((node) => {
+        const style = getComputedStyle(node);
+        const accent = getComputedStyle(document.documentElement).getPropertyValue("--page-accent").trim();
+        const probe = document.createElement("span");
+        probe.style.color = accent;
+        document.body.append(probe);
+        const filled = getComputedStyle(probe).color;
+        probe.remove();
+        return { height: node.getBoundingClientRect().height, background: style.backgroundColor, filled };
+      });
+      expect(look.height, `${component.name}: its button is at least 44 px high`).toBeGreaterThanOrEqual(44);
+      expect(look.background, `${component.name}: its button is filled with the accent`).toBe(look.filled);
+    }
     // the component's own answered, as it emits it, with each result: one feedback, in view with the focus
     const feedback = element.locator(":scope > .question-feedback");
     for (const correct of [true, false]) {
@@ -986,6 +1003,46 @@ export function explainerTests(root = "."): void {
         await expect(tutor.locator(".explainer-tutor-bar")).toBeHidden();
         await expect(page.locator("button.explainer-help").first(), "no help without a tutor").toBeHidden();
       });
+    }
+
+    for (const item of app.pages["de"] ?? []) {
+      const component = item.components.find((candidate) => candidate.exercise && candidate.id !== undefined);
+      if (component?.id === undefined) continue;
+      const id = component.id;
+      // the client module places the help button of way B; the islands module hydrates the component: held back in
+      // turn, so that each loads first once
+      for (const [first, held] of [
+        ["the component", "**/assets/index-*.js"],
+        ["the client module", "**/assets/islands-*.js"],
+      ] as const) {
+        test(`${item.url}: on a page a tutor opened, ${component.name} has its help button once, ${first} loaded first`, async ({
+          page,
+        }) => {
+          const errors: string[] = [];
+          page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text());
+          });
+          page.on("pageerror", (error) => errors.push(error.message));
+          await page.route(held, async (route) => {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            await route.continue();
+          });
+          await page.goto(`./${item.url}?von=tutor#${id}`);
+          const element = page.locator(`[id="${id}"]`);
+          await expect(element).toHaveAttribute("data-hydrated", "");
+          // outside the component's island, which Vue owns: neither a mismatch nor lost with a new render
+          const help = element.locator("button.explainer-help");
+          await expect(help, "once").toHaveCount(1);
+          await expect(help).toBeVisible();
+          await expect(element.locator(".explainer-island button.explainer-help"), "not in the island").toHaveCount(0);
+          await element.locator(".explainer-new-task").click();
+          await expect(help, "once after a new task").toHaveCount(1);
+          await expect(help).toBeVisible();
+          await element.evaluate(emitAnswered, { correct: false });
+          await expect(help, "after a wrong answer").toContainText(messageOf("de", "helpWhy"));
+          expect(errors, "no console error").toEqual([]);
+        });
+      }
     }
 
     for (const item of app.pages["de"] ?? []) {

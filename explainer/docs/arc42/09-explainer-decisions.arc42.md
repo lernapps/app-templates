@@ -83,8 +83,8 @@ context and its exercises with every task number. A `generated` exercise is ther
 steps and its typical mistakes as F1, F2 … with the app's messages, and below one line per task number with its
 inputs and outputs, all worked out: the values of the placeholders, the solution, what each mistake gives. So the
 tutor fills in and calculates nothing, can give any further task with its link, and never asks the learner to copy
-one. An exercise component has its `about` and each number's task and solution from its `describe`, as many as fit
-into 64 kB (`risk-tutor-component-numbers`). The guide stands on the tutor page alone: the prompt of way A, the lines
+one. An exercise component has its `about` and the same table from its exercise logic (`dec-component-table`), or
+without one each number's task and solution from its `describe`, as many as fit into 64 kB. The guide stands on the tutor page alone: the prompt of way A, the lines
 of way B and the result line speak in the learner's voice and carry no rule, and the app writes no `llms.txt`, so that
 no two texts can tell the tutor different things. Learners come with one of two needs, and each gets its own way. A, "Mit
 <name> lernen", a bar beside the title of every content page, where the learner is at work, once an assistant is on
@@ -93,7 +93,8 @@ task numbers alone; the tutor asks what the child knows, leads through the page 
 a question on its content, and only then sends the child to its task. With the exercise in the query of way A, the
 tutor went straight for the task (hand test on claude.ai, 2026-10-26). B, "Hilfe" in
 every exercise, before the first input too, "Warum?" after a wrong one: one sentence that names the task, then the
-input with its tries and the app's message word for word, so the tutor starts from what the learner was told;
+input with its tries and the app's message word for word, so the tutor starts from what the learner was told: the
+tutor page tells it to go first, briefly, into exactly that input and the task, which mistake of the table it is;
 without a chat they open a new one, and on a page a tutor opened (`von=tutor`) they are copied for the running chat,
 which a new chat would lose. "Zurück zum Tutor" copies a result line with the tutor page and the task. Copying
 instead of an assistant adds the tutor page's Markdown, which lies beside it. Input and message leave the page only
@@ -115,7 +116,37 @@ id: dec-tutor-page
 title: One short tutor page per page, the one source of what the tutor gets, two ways to it
 status: accepted
 date: 2026-10-26
-addresses: qg-privacy, qg-understandable, con-no-request-before-click, risk-tutor-component-numbers
+addresses: qg-privacy, qg-understandable, con-no-request-before-click
+:::
+```
+
+## An Exercise Component Computes Its Table of Tasks
+
+An exercise component's values and results are in its code (`generate`, `check`, `solution`), not in a declaration
+the build could read, and its `describe` gives each number's task as text of about 1 kB on Mathe-Karte, so two pages
+showed only 49 to 54 of 67 numbers within 64 kB. So the component gives the tutor what a `generated` exercise gives:
+its logic module exports `template(props, lang)`, the task once with `{name}` for each input; `params(task, props,
+lang)`, the inputs of each task; `mistakes(task, props)`, the answer of each typical mistake of `about.mistakes`; and
+`show(answer, task, props, lang)`, an answer as text. The build computes the outputs itself, the solution as
+`show(solution(task))` and each mistake as `show` of its answer, and checks them for every task number: `check`
+accepts the solution and rejects each mistake's answer, the inputs have the same names for every task, and each
+placeholder is one of them. So the table cannot drift from the code. The four exports are optional, all or none; a
+component without them keeps the lines from `describe` within the budget, and the build gives a hint
+(`vue-component-tutor-table`), to become a warning once the apps have them. Measured on Mathe-Karte (`feat/explainer`,
+2026-10-26) with example declarations of `ProzentGrundbegriffe`, `ZufallPfade` and `ZufallTerm`: `grundbegriffe`
+23 kB instead of 64 kB, `pfadregel-2` 35 kB instead of 63 kB, every number on the page. Rejected: the outputs as
+expressions in the language of `generated` (`about.formula`, the first proposal of #80; terms, trees, sets and
+choices have no such expression); shorter texts from `describe` (still one text per number, and the tutor would
+read the values out of prose); a task file per number (fetched only from a line the learner pastes,
+`dec-tutor-page`).
+
+```arc42
+:::decision
+id: dec-component-table
+title: An exercise component computes its table of tasks for the tutor, checked against check
+status: accepted
+date: 2026-10-26
+addresses: qg-checkable, qg-understandable
 :::
 ```
 
@@ -123,8 +154,8 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click, risk-tuto
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:
 on the start page ("Dein KI-Assistent", "Keiner" first) or beside the title of a content page, where "Mit einem
-KI-Tutor lernen" stays folded while none is on. The choice is one of the app's assistants (Claude, ChatGPT and Le
-Chat when the app names none in `tutor.providers`) or copying the text, and it is kept on the device, per app, as the
+KI-Tutor lernen" stays folded while none is on. The choice is one of the KI assistants the runtime offers, the same for every app,
+or copying the text, and it is kept on the device, per app, as the
 only thing the app keeps; nothing is sent. Once an assistant is on, each content page shows a small bar beside its
 title with one button, "Mit <name> lernen" (way A; changed or switched off on the start page, as it is seldom changed) and one help button in the row of "Prüfen" and "Lösung" of every exercise (way B), with the assistant's
 first letter as its symbol, so that the learner sees where a click leads: "Hilfe", "Warum?" after a wrong answer,
@@ -132,8 +163,9 @@ and "Zurück" on a page a tutor opened once the task is done; one button that ch
 is on, an exercise has no help button. Both places say that the learner uses an account of their own and that the
 assistant is no offer of lernapps.net, which only provides the content and the exercises. Rejected: the way chosen
 anew on every page (a box above every page's content); a help button for learners without a tutor (it leads
-nowhere); the providers' logos (their marks; a letter says enough); one choice for all apps of lernapps.net (apps
-offer different assistants).
+nowhere); the providers' logos (their marks; a letter says enough); assistants named per app (`tutor.providers`; no
+app named others, and a learner meets the same choice in every app); one choice for all apps of lernapps.net (each
+app keeps what it stores apart).
 
 ```arc42
 :::decision

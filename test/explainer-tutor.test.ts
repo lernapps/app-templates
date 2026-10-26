@@ -1,18 +1,18 @@
 // What an explainer gives a KI tutor beside the tutor page of each page (tutorpage.test.ts): the check of its links,
 // and the assistants a learner may switch on.
-import { cpSync, mkdtempSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
-import { loadSite } from "../runtime/explainer/load.ts";
-import { DEFAULT_PROVIDERS, plainAddress, providersOf } from "../runtime/explainer/prompt.ts";
+import { check } from "../runtime/explainer/load.ts";
+import { plainAddress, PROVIDERS } from "../runtime/explainer/prompt.ts";
 import { linkProblems } from "../runtime/explainer/tutor.ts";
 
-/** The site of a fixture, which is an app's src/. */
+/** A copy of a fixture as an app's src/, its root. */
 const fixture = (name: string) => {
   const root = mkdtempSync(join(tmpdir(), "explainer-tutor-"));
   cpSync(join(import.meta.dirname, "fixtures", name), join(root, "src"), { recursive: true });
-  return loadSite(root, 0);
+  return root;
 };
 
 describe("the links for a tutor", () => {
@@ -34,11 +34,22 @@ describe("the links for a tutor", () => {
 });
 
 describe("the tutor prompt", () => {
-  test("the providers: Claude, ChatGPT and Le Chat by default, a link without the prompt for readers without JavaScript", () => {
-    const site = fixture("explainer-all-blocks");
-    expect(providersOf(site)).toEqual(DEFAULT_PROVIDERS);
-    expect(DEFAULT_PROVIDERS.map((provider) => provider.name)).toEqual(["Claude", "ChatGPT", "Le Chat"]);
-    for (const provider of DEFAULT_PROVIDERS) expect(provider.url).toContain("{prompt}");
+  test("an app names no assistants of its own: tutor.providers is a problem", () => {
+    const root = fixture("explainer-all-blocks");
+    const file = join(root, "src", "app.yaml");
+    writeFileSync(
+      file,
+      readFileSync(file, "utf8").replace(
+        /^tutor:\n/m,
+        'tutor:\n  providers: [{ name: Other, url: "https://chat.example/?q={prompt}" }]\n',
+      ),
+    );
+    expect(check(root, 0).problems.join("\n")).toMatch(/app\.yaml.*providers/);
+  });
+
+  test("the assistants: Claude, ChatGPT and Le Chat for every app, a link without the prompt for readers without JavaScript", () => {
+    expect(PROVIDERS.map((provider) => provider.name)).toEqual(["Claude", "ChatGPT", "Le Chat"]);
+    for (const provider of PROVIDERS) expect(provider.url).toContain("{prompt}");
     expect(plainAddress("https://chatgpt.com/?q={prompt}")).toBe("https://chatgpt.com/");
     expect(plainAddress("https://claude.ai/new?q={prompt}")).toBe("https://claude.ai/new");
     expect(plainAddress("https://example.org/chat?model=a&text={prompt}")).toBe("https://example.org/chat?model=a");

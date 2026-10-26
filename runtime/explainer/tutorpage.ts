@@ -14,15 +14,25 @@
 // child is and how a task's link looks; the app's own rules. Then the page's content as context (tutor.ts,
 // contentLines), and its exercises: a generated one once as its template, with hint, steps and its typical mistakes
 // as F1, F2 …, and below a table of each task number's inputs and outputs, the values of its placeholders, the
-// solution and what each mistake gives, all worked out; an exercise component by its about in prose and each number's
-// task and solution from its describe, as many numbers as fit into TUTOR_PAGE_BUDGET (#80 is to give it the table of
-// a generated one); a question without numbers in full. The build writes the page's Markdown beside it (index.md) for
+// solution and what each mistake gives, all worked out; an exercise component by its about in prose, and with its
+// table of tasks (template, params, mistakes and show of its logic) its task once as a template and the same table as
+// a generated one, else each number's task and solution from its describe, as many numbers as fit into
+// TUTOR_PAGE_BUDGET; a question without numbers in full. The build writes the page's Markdown beside it (index.md) for
 // an assistant that fetches nothing, checks each of its links (tutor.ts, linkProblems) and notes a page beyond the
 // budget or an exercise with numbers left out.
 import { Marked } from "marked";
+import { TABLE_CONTRACT } from "./components/exercise.ts";
 import { escape } from "../shared/html.ts";
 import { answerText } from "../shared/questions/render.ts";
-import { inLanguage, type Block, type Descriptions, type Page, type Site, type Text } from "./content.ts";
+import {
+  inLanguage,
+  type Block,
+  type ComponentExercise,
+  type Descriptions,
+  type Page,
+  type Site,
+  type Text,
+} from "./content.ts";
 import { dataOf, taskSeeds, templatesOf } from "./exercises.ts";
 import { questionFor } from "./generated/question.ts";
 import { label, placeholderValue, placeholdersIn, plainText } from "./generated/texts.ts";
@@ -87,7 +97,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     startTitle: "So beginnst du",
     start: [
       "„Hilf mir, diese Seite zu verstehen“: Frag zuerst, was das Kind über das Thema schon weiß. Dann geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht: erst warum das Thema wichtig ist, dann die Regel, dann das Beispiel. Prüf nach jedem Abschnitt mit einer kurzen Frage zum Inhalt, ob das Kind ihn verstanden hat; ein „Ja“ reicht nicht. Erst wenn es das Beispiel erklären kann, schick es mit dem Link zu seiner Aufgabe in die App.",
-      "„Hilf mir bei Übung …, Nr. …“ (das Kind kommt mit „Hilfe“ aus der App): Setz direkt bei dieser Aufgabe an. Frag, wo es hängt, gib einen Hinweis oder den nächsten Schritt in Worten, und schick es zum Weiterrechnen in die App.",
+      "„Hilf mir bei Übung …, Nr. …“ (das Kind kommt mit „Hilfe“ aus der App): Setz direkt bei dieser Aufgabe an. Nennt die Nachricht eine Eingabe und „Die App sagt: …“, geh zuerst kurz auf genau diese Eingabe und die Aufgabe ein: Schlag die Nummer unten nach, such die Eingabe bei den Fehlern (F1, F2 …) und sag in einem Satz, was an ihr nicht zur Aufgabe passt. Wiederhol die Meldung nicht. Sonst frag, wo es hängt. Gib dann einen Hinweis oder den nächsten Schritt in Worten, und schick es zum Weiterrechnen in die App.",
     ],
     appRules: "Regeln dieser App",
     whereTitle: "Wo das Kind gerade ist",
@@ -130,7 +140,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     startTitle: "How you start",
     start: [
       "“Help me understand this page”: first ask what the child already knows about the topic. Then go through the page in order, one section per message: first why the topic matters, then the rule, then the example. After each section check with a short question on its content that the child understood it; a “yes” is not enough. Only once it can explain the example, send it to the app with the link to its task.",
-      "“Help me with exercise …, no. …” (the child comes from “Help” in the app): start right at this task. Ask where it is stuck, give a hint or the next step in words, and send it back to the app to go on.",
+      "“Help me with exercise …, no. …” (the child comes from “Help” in the app): start right at this task. If the message names an input and “The app says: …”, first go briefly into exactly this input and the task: look the number up below, find the input among the mistakes (F1, F2 …) and say in one sentence what about it does not fit the task. Do not repeat the message. Otherwise ask where it is stuck. Then give a hint or the next step in words, and send it back to the app to go on.",
     ],
     appRules: "Rules of this app",
     whereTitle: "Where the child is",
@@ -309,6 +319,40 @@ function generatedLines(spec: Generated, site: Site, lang: string, format: strin
   return lines;
 }
 
+/**
+ * The table of tasks of an exercise component, as a generated exercise has it: each task number's inputs, its
+ * solution and what each typical mistake gives, all as the learner reads them ("–" for a mistake without one answer).
+ */
+function componentTable(exercise: ComponentExercise, lang: string): string[] {
+  const words = wordsIn(lang);
+  const count = exercise.tasks[0]?.mistakes.length ?? 0;
+  const header = [
+    words.number,
+    ...exercise.inputs,
+    tutorWords(lang).solution,
+    ...Array.from({ length: count }, (_mistake, index) => `F${index + 1}`),
+  ].join(" | ");
+  const rows = exercise.tasks.map((row, index) =>
+    [String(index + 1), ...row.inputs, row.solution, ...row.mistakes].map(cell).join(" | "),
+  );
+  return [`- ${words.table}`, "", "```", header, ...rows, "```"];
+}
+
+/**
+ * The hint of the build for the exercise components that declare no table of tasks (TABLE_CONTRACT), each by its
+ * place, or none: their tutor pages have their tasks only as text from describe, as many as fit. A hint for now;
+ * rule vue-component-tutor-table.
+ */
+export function tableHint(site: Site, descriptions: Descriptions): string | undefined {
+  const without = site.components.filter((use) => {
+    const description = descriptions.get(use.block);
+    return description !== undefined && description.exercise === undefined;
+  });
+  if (without.length === 0) return undefined;
+  const one = without.length === 1;
+  return `lernapps explainer: ${without.length} exercise component${one ? " declares" : "s declare"} no table of tasks, so ${one ? "its tutor page has its" : "their tutor pages have their"} tasks only as text, as many as fit; export ${TABLE_CONTRACT} from ${one ? "its" : "their"} logic module: ${without.map((use) => `${use.place}: ${use.component.name}`).join(", ")} (vue-component-tutor-table)`;
+}
+
 /** An exercise with numbers left out of a tutor page for its size: how many of its numbers it shows. */
 export interface Cut {
   id: string;
@@ -319,9 +363,9 @@ export interface Cut {
 /**
  * The tutor page of `page` in `lang`, as Markdown, its links relative to the page's folder <chapter>/<page>/tutor/,
  * which the build checks: who the tutor helps, how to guide, where the child is, the app's own rules; then the page's
- * content as context, and its exercises. An exercise component shows each number's task and solution; when the page
- * would grow beyond `budget`, the components share what is left, number by number in turn, and `cut` names those
- * with numbers left out.
+ * content as context, and its exercises. An exercise component shows its table of tasks with every number, or without
+ * one each number's task and solution; when the page would grow beyond `budget`, the components without a table share
+ * what is left, number by number in turn, and `cut` names those with numbers left out.
  */
 export function tutorPage(
   site: Site,
@@ -336,6 +380,8 @@ export function tutorPage(
   const rows = new Map<string, string[]>();
   for (const exercise of exercises) {
     if (exercise.block.type !== "vue-component" || exercise.count === 0) continue;
+    // a component with its table of tasks has all its numbers there
+    if (descriptions.get(exercise.block)?.exercise?.[lang] !== undefined) continue;
     const tasks = descriptions.get(exercise.block)?.tasks[lang] ?? [];
     rows.set(
       exercise.id,
@@ -463,11 +509,13 @@ function pageMarkdown(
           return `${indent}${line(rest)}`;
         }),
       );
+      const declared = descriptions.get(exercise.block)?.exercise?.[lang];
       if (exercise.count > 0) {
         lines.push(`- ${words.linkNumber}: \`../?${exercise.id}=n&von=tutor#${exercise.id}\``);
         const all = rows.get(exercise.id) ?? [];
         const n = shown.get(exercise.id) ?? all.length;
-        if (n > 0) lines.push(`- ${words.tasks}:`, ...all.slice(0, n));
+        if (declared !== undefined) lines.push(...componentTable(declared, lang));
+        else if (n > 0) lines.push(`- ${words.tasks}:`, ...all.slice(0, n));
         if (n === 0 && all.length > 0) lines.push(`- ${words.none}`);
         else if (n < all.length) {
           lines.push(`- ${words.shown.replace("{shown}", String(n)).replace("{count}", String(all.length))}`);

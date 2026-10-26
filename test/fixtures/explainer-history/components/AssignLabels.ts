@@ -2,7 +2,8 @@
 // fixed seeds (the exercise contract). A task is the order in which the labels are offered; an answer gives each part,
 // from the top, the index of the label chosen for it (-1 for none); the right answer gives each part its own label.
 // describe states a task and its solution as a learner reads them, about what the exercise is: both for readers
-// without JavaScript and for a tutor.
+// without JavaScript and for a tutor; template, params, mistakes and show give a tutor the task once and a table of
+// each number's inputs and outputs.
 
 /** The props the logic needs: the labels of the parts, from the top, the right answer; the question and a level's name. */
 export interface Props {
@@ -59,24 +60,58 @@ export function wrong(task: Task): Answer {
   return task.order.length > 1 ? solution(task).reverse() : [-1];
 }
 
-const GERMAN = { choices: "Zur Wahl stehen, in dieser Reihenfolge", levels: "Die Stufen, von oben nach unten" };
-const WORDS: Readonly<Record<string, { choices: string; levels: string }>> = {
-  de: GERMAN,
-  en: { choices: "The choices, in this order", levels: "The levels, from the top down" },
+const GERMAN = {
+  choices: "Zur Wahl stehen, in dieser Reihenfolge",
+  levels: "Die Stufen, von oben nach unten",
+  input: "Wahl",
 };
+const WORDS: Readonly<Record<string, { choices: string; levels: string; input: string }>> = {
+  de: GERMAN,
+  en: { choices: "The choices, in this order", levels: "The levels, from the top down", input: "choices" },
+};
+
+/** The name of the level of `part`, from 0 at the top: "Stufe 1". */
+const level = (props: Props, part: number) => `${props.level ?? ""} ${part + 1}`.trim();
+
+/** The task with `choices` for its choices, in `lang` (the props come in that language). */
+function taskText(props: Props, lang: string, choices: string): string {
+  const words = WORDS[lang] ?? GERMAN;
+  const levels = props.parts.map((_part, index) => level(props, index)).join(", ");
+  return `${props.question ?? ""} ${words.levels}: ${levels}. ${words.choices}: ${choices}.`.trim();
+}
+
+/** The choices of a task in their order. */
+const choicesOf = (task: Task, props: Props) => task.order.map((label) => props.parts[label] ?? "").join("; ");
 
 /** The task as a learner sees it, and its solution, in `lang` (the props come in that language). */
 export function describe(task: Task, props: Props, lang: string): { task: string; solution: string } {
-  const words = WORDS[lang] ?? GERMAN;
-  const level = (part: number) => `${props.level ?? ""} ${part + 1}`.trim();
-  const levels = props.parts.map((_part, index) => level(index)).join(", ");
-  const choices = task.order.map((label) => props.parts[label] ?? "").join("; ");
-  return {
-    task: `${props.question ?? ""} ${words.levels}: ${levels}. ${words.choices}: ${choices}.`.trim(),
-    solution: solution(task)
-      .map((label, part) => `${level(part)}: ${props.parts[label] ?? ""}`)
-      .join("; "),
-  };
+  return { task: taskText(props, lang, choicesOf(task, props)), solution: show(solution(task), task, props, lang) };
+}
+
+// For a tutor, what sets a task and what each answer gives: the build writes the task once, with a placeholder for
+// the choices, and a table of each number's choices, solution and typical mistakes, and checks each mistake against
+// check.
+
+/** The task as a learner reads it, with the placeholder {Wahl} for the choices, in `lang`. */
+export function template(props: Props, lang: string): string {
+  return taskText(props, lang, `{${(WORDS[lang] ?? GERMAN).input}}`);
+}
+
+/** What sets a task: its choices in their order, by the name of template's placeholder. */
+export function params(task: Task, props: Props, lang: string): Record<string, string> {
+  return { [(WORDS[lang] ?? GERMAN).input]: choicesOf(task, props) };
+}
+
+/** The answer of each typical mistake of about.mistakes: the order upside down, the first label twice. */
+export function mistakes(task: Task): (Answer | undefined)[] {
+  const right = solution(task);
+  if (right.length < 2) return [undefined, undefined];
+  return [[...right].reverse(), right.map((label, part) => (part === 1 ? (right[0] ?? label) : label))];
+}
+
+/** An answer as text: each level with the label chosen for it. */
+export function show(answer: Answer, _task: Task, props: Props, _lang: string): string {
+  return answer.map((label, part) => `${level(props, part)}: ${props.parts[label] ?? "–"}`).join("; ");
 }
 
 /** What the exercise is, for a tutor. */

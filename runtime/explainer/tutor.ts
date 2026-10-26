@@ -169,17 +169,23 @@ function generatedPart(spec: Generated, lang: string, words: Words): string[] {
   return [`- ${words.answerFormat}: ${words.formats[kind.kind === "number" ? "number" : kind.kind]}${unit}`];
 }
 
-/** An exercise component: what it says about itself (its about); its tasks by number are the tutor page's. */
+/**
+ * An exercise component: what it says about itself (its about); when it declares its exercise also its task once as
+ * its template, and its typical mistakes as F1, F2 …, the columns of its table of tasks. Its tasks by number are the
+ * tutor page's.
+ */
 function componentPart(description: ComponentDescription, lang: string, words: Words): string[] {
   const { about } = description;
+  const exercise = description.exercise?.[lang];
   const t = (text: Text) => line(inLanguage(text, lang));
-  const lines = [
-    `- ${words.does}: ${t(about.task)}`,
-    `- ${words.answerFormat}: ${t(about.answer)}`,
-    `- ${words.correct}: ${t(about.correct)}`,
-  ];
+  const lines = [`- ${words.does}: ${t(about.task)}`];
+  if (exercise !== undefined) lines.push(`- ${words.task}: „${line(exercise.template)}“`);
+  lines.push(`- ${words.answerFormat}: ${t(about.answer)}`, `- ${words.correct}: ${t(about.correct)}`);
   if (about.mistakes.length > 0) {
-    lines.push(`- ${words.mistakes}:`, ...about.mistakes.map((mistake) => `  - ${t(mistake)}`));
+    lines.push(
+      `- ${words.mistakes}:`,
+      ...about.mistakes.map((mistake, index) => `  - ${exercise === undefined ? "" : `F${index + 1}: `}${t(mistake)}`),
+    );
   }
   return lines;
 }

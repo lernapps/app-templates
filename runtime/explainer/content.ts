@@ -30,8 +30,6 @@ export interface App {
   /** What the app adds for a KI tutor: its own rules (restricted Markdown), after the guide of each tutor page. */
   tutor?: {
     rules?: Text;
-    /** The assistants the start page offers, {prompt} in the address where the prompt goes; Claude when none. */
-    providers?: readonly { name: string; url: string }[];
   };
 }
 
@@ -181,6 +179,20 @@ export interface DescribedTask {
   solution: string;
 }
 
+/**
+ * An exercise component as a tutor reads it, in one language, from the exports template, params, mistakes and show
+ * of its logic: the task once with a placeholder for each input, and each task number's inputs and outputs, as a
+ * generated exercise has them (its typical mistakes are those of about).
+ */
+export interface ComponentExercise {
+  /** The task as a learner reads it, with {name} for each input, on one line: template(props, lang). */
+  template: string;
+  /** The names of the inputs in order, the columns before the solution: the keys of params(task, props, lang). */
+  inputs: readonly string[];
+  /** Each task number's task, from 1: the values of its inputs, its solution and what each typical mistake gives ("" for none), as text. */
+  tasks: readonly { inputs: readonly string[]; solution: string; mistakes: readonly string[] }[];
+}
+
 /** What the build learnt from an exercise component's logic for one block: its about, and its tasks by language. */
 export interface ComponentDescription {
   about: ComponentAbout;
@@ -188,6 +200,8 @@ export interface ComponentDescription {
   seeds: readonly number[];
   /** The task of each number, in each language. */
   tasks: Readonly<Record<string, readonly DescribedTask[]>>;
+  /** The exercise in each language, when its logic declares its inputs and outputs; else none. */
+  exercise?: Readonly<Record<string, ComponentExercise>>;
 }
 
 /** Whether a block is an exercise. */

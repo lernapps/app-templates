@@ -55,7 +55,13 @@ feature: assistants read it before they choose an archetype.
   solution as a learner reads them (`{ task, solution }`, restricted Markdown), and `about`, what the exercise is for a
   tutor (`{ task, answer, correct, mistakes }`). The build checks `describe` for every task number in every
   language and writes the no-JS text of an exercise component from it: the task of number 1 with its solution folded,
-  so it needs no `nojs` ([`components.ts`](runtime/explainer/components.ts)).
+  so it needs no `nojs` ([`components.ts`](runtime/explainer/components.ts)). For its table of tasks on the tutor
+  page it also exports, all four or none, `template(props, lang)`, the task once with `{name}` for each input,
+  `params(task, props, lang)`, the inputs of a task by name (`{ G: 1260, p: 15 }`, the same names for every task),
+  `mistakes(task, props)`, the answer each typical mistake of `about.mistakes` gives (`undefined` for one without a
+  single answer), and `show(answer, task, props, lang)`, an answer as text. The build checks them for every task
+  number: `check` accepts the solution and rejects each mistake's answer, and each placeholder is an input. Without
+  them the build gives a hint (`vue-component-tutor-table`).
 - Every seeded exercise (generated, exercise component) numbers its distinct tasks: the build walks the seeds 1, 2,
   3, … through its generator, keeps each seed whose task differs from all before, up to 67, and the page shows
   "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:
@@ -73,21 +79,23 @@ feature: assistants read it before they choose an archetype.
   to guide (short answers without headings or lists, the page's own examples and tasks, nothing worked out by
   itself, explaining in the chat and solving in the app, no solution, never asking to copy a task); how to start: to
   learn the page, ask what the child knows, then lead through the page section by section, check each with a question
-  on its content, and only then send the child to its task; with "Hilfe", start at the task; where the child is (the
+  on its content, and only then send the child to its task; with "Hilfe", start at the task, and after a wrong input
+  with the app's message first go briefly into exactly that input and the task (which mistake it is); where the child is (the
   task numbers in its address, with "Hilfe" also `uebung` and `abschnitt`, the app's message) and how to give a
   further task; the app's own rules from `tutor.rules` in `app.yaml`. Then the page's content as context (texts,
   formulas as `$…$`, examples, definitions, notes, figures by alt text and caption) and its exercises with every task
   number. A `generated` one is there once as its template (`{G}`), with answer format, hint, steps, its typical
   mistakes as F1, F2 … with the app's messages and the link pattern `../?<id>=n&von=tutor#<id>`, and below a table of
   each task number's inputs and outputs, all worked out: `Nr. | p | G | Lösung | F1`, `27 | 15 | 1260 | 189 | 18900`.
-  An exercise component has its `about` and each task number's task and solution from its `describe`; where these
-  would make the page larger than 64 kB, the components show as many numbers as fit, the page says so, and the build
-  warns (lernapps/app-templates#80 is to give a component the table of a generated exercise). A question is there in
+  An exercise component has its `about`, and with its table of tasks its task once as its template, its typical
+  mistakes as F1, F2 … and the same table as a generated one, `Lösung` and `F1` as `show` gives them, with every
+  task number. Without the table it has each task number's task and solution from its `describe`; where these would
+  make the page larger than 64 kB, the components show as many numbers as fit, the page says so, and the build warns. A question is there in
   full. There is no `llms.txt`: the tutor page and the pages themselves are what an assistant reads. The build checks
   every link and anchor of the tutor pages. Two ways lead to the tutor. The learner switches an assistant on once: on the
   start page ("Dein KI-Assistent", "Keiner" first) or beside the title of a content page ("Mit einem KI-Tutor
-  lernen", folded while none is on: a select and "Einschalten"). The choice is the assistants of `tutor.providers` in
-  `app.yaml` (Claude, ChatGPT and Le Chat when the app names none) and "Ein anderer: Text kopieren"; it is kept on the
+  lernen", folded while none is on: a select and "Einschalten"). The choice is one of the KI assistants the runtime
+  offers, the same for every app, or "Ein anderer: Text kopieren"; it is kept on the
   device, per app (`@lernapps/tooling/storage`), and both places say that the learner uses an account of their own
   and that the assistant is no offer of lernapps.net, which only provides the content and the exercises. A chapter
   page starts no tutor. Way A: once an assistant is on, a bar beside the title of every content page with one button,
