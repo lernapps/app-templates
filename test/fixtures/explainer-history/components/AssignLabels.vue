@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // A figure whose parts the learner labels: a pyramid of numbered levels, a choice of the labels for each level, and
-// "Prüfen", for the task of the number seed. Its logic is in AssignLabels.ts; it reports the answer with answered, and
+// "Prüfen" in a row of its own (.question-actions, as the shared questions have it), for the task of the number seed. Its logic is in AssignLabels.ts; it reports the answer with answered, and
 // the explainer gives the feedback, the task number and "Neue Aufgabe".
 import { computed, ref } from "vue";
 import { check, generate, type Answer } from "./AssignLabels.ts";
@@ -64,7 +64,9 @@ function submit(): void {
           </select>
         </label>
       </p>
-      <button type="button" :disabled="done" @click="submit">{{ button }}</button>
+      <p class="question-actions">
+        <button type="button" :disabled="done" @click="submit">{{ button }}</button>
+      </p>
     </fieldset>
   </div>
 </template>
