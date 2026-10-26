@@ -71,7 +71,7 @@ The inputs and outputs of each task number of a `generated` exercise on the tuto
 :::glossary-term
 id: term-table-of-tasks
 title: Table of tasks
-definition: For each task number of a generated exercise, under its template on the tutor page: the values of its placeholders, the solution and what each typical mistake gives, worked out, so that the tutor fills in and calculates nothing.
+definition: For each task number of a generated exercise, or of an exercise component that declares it, under its template on the tutor page: the values of its placeholders, the solution and what each typical mistake gives, worked out, so that the tutor fills in and calculates nothing.
 :::
 ```
 

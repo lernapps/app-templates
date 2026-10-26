@@ -40,7 +40,7 @@ export interface ExerciseLogic {
 const TABLE = ["template", "params", "mistakes", "show"] as const;
 
 /** The exports of TABLE, for a message. */
-const TABLE_CONTRACT =
+export const TABLE_CONTRACT =
   "template(props, lang), params(task, props, lang), mistakes(task, props) and show(answer, task, props, lang)";
 
 const ABOUT: readonly (keyof ComponentAbout)[] = ["task", "answer", "correct", "mistakes"];

@@ -20,15 +20,15 @@ mitigation: Correct the sentence in the skill (the tutor choice is kept on the d
 
 ## An Exercise Component's Numbers on Its Tutor Page
 
-An exercise component declares no inputs and outputs, only `describe` with the text of each task: its numbers can
-make the tutor page larger than 64 kB (Mathe-Karte: two pages at about 80 kB). The page then shows as many numbers as
-fit, and the tutor knows a number beyond them only from the learner's lines.
+An exercise component without its table of tasks (`dec-component-table`) has only `describe` with the text of each
+task: its numbers can make the tutor page larger than 64 kB (Mathe-Karte: two pages at about 80 kB). The page then
+shows as many numbers as fit, and the tutor knows a number beyond them only from the learner's lines.
 
 ```arc42
 :::risk
 id: risk-tutor-component-numbers
 title: An exercise component's numbers do not all fit on its tutor page
 severity: medium
-mitigation: The build warns and the page says which numbers it shows; lernapps/app-templates#80 gives a component a table of inputs and outputs, as a generated exercise has.
+mitigation: A component exports template, params, mistakes and show for a table of all its numbers (dec-component-table); the build gives a hint for a component without them, warns for one with numbers left out, and the page says which numbers it shows.
 :::
 ```
