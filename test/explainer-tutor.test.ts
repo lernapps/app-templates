@@ -47,8 +47,8 @@ describe("the tutor prompt", () => {
     expect(check(root, 0).problems.join("\n")).toMatch(/app\.yaml.*providers/);
   });
 
-  test("Le Chat needs pasting: its address carries a short placeholder, with no address to fetch, in both languages", () => {
-    expect(PROVIDERS.filter((provider) => provider.paste).map((provider) => provider.name)).toEqual(["Le Chat"]);
+  test("Mistral Vibe needs pasting: its address carries a short placeholder, with no address to fetch, in both languages", () => {
+    expect(PROVIDERS.filter((provider) => provider.paste).map((provider) => provider.name)).toEqual(["Mistral Vibe"]);
     expect(placeholderPrompt("de")).toBe(
       "Ich brauche Hilfe bei einer Lern-Einheit. Ich schreibe Dir gleich, worum es geht.",
     );
@@ -56,8 +56,8 @@ describe("the tutor prompt", () => {
     expect(placeholderPrompt("fr")).toBe(placeholderPrompt("de"));
   });
 
-  test("the assistants: Claude, ChatGPT and Le Chat for every app, a link without the prompt for readers without JavaScript", () => {
-    expect(PROVIDERS.map((provider) => provider.name)).toEqual(["Claude", "ChatGPT", "Le Chat"]);
+  test("the assistants: Claude, ChatGPT and Mistral Vibe for every app, a link without the prompt for readers without JavaScript", () => {
+    expect(PROVIDERS.map((provider) => provider.name)).toEqual(["Claude", "ChatGPT", "Mistral Vibe"]);
     for (const provider of PROVIDERS) expect(provider.url).toContain("{prompt}");
     expect(plainAddress("https://chatgpt.com/?q={prompt}")).toBe("https://chatgpt.com/");
     expect(plainAddress("https://claude.ai/new?q={prompt}")).toBe("https://claude.ai/new");

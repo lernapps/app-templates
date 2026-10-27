@@ -9,12 +9,14 @@
 :root {
   --explainer-example: #ecfdf3;
   --explainer-note: #fff7e0;
+  --explainer-done: #15803d;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --explainer-example: #12261b;
     --explainer-note: #2b2512;
+    --explainer-done: #4ade80;
     --explainer-hl-keyword: #e0a3ff;
     --explainer-hl-string: #8fe0ac;
     --explainer-hl-number: #ffb77a;
@@ -402,11 +404,50 @@
   align-items: stretch;
 }
 
-/* the status line under the button: right-aligned like it, in a line of a readable length */
-.explainer-title-row > .explainer-tutor-page > .explainer-tutor-status {
-  max-width: 24rem;
+/* the status line under the button, a box of its own: green after a copy, the note colour when copying failed */
+.explainer-tutor-page > .explainer-tutor-status {
+  align-self: stretch;
   margin: 0.5rem 0 0;
-  text-align: right;
+  padding: 0.75rem 1rem;
+  background: var(--explainer-note);
+  border-left: 4px solid var(--page-accent);
+}
+
+.explainer-tutor-page > .explainer-tutor-status[data-state="ok"] {
+  background: var(--explainer-example);
+  border-left-color: var(--explainer-done);
+}
+
+/* a failed copy is shown full width, also beside the title */
+.explainer-title-row > .explainer-tutor-page:has(> .explainer-tutor-status[data-state="failed"]) {
+  flex-basis: 100%;
+}
+
+/* the button says "kopiert" itself after a copy; the line goes to screen readers only, until the screen is narrow */
+.explainer-tutor-go-done {
+  display: none;
+}
+
+.explainer-tutor-bar[data-done] .explainer-tutor-go-done {
+  display: inline;
+}
+
+.explainer-tutor-bar[data-done] .explainer-tutor-go-text {
+  display: none;
+}
+
+@media (min-width: 40.0625rem) {
+  .explainer-tutor-page > .explainer-tutor-status[data-state="ok"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 @media (max-width: 40rem) {
@@ -416,9 +457,12 @@
     margin: 0;
   }
 
-  .explainer-title-row > .explainer-tutor-page > .explainer-tutor-status {
-    max-width: none;
-    text-align: left;
+  .explainer-tutor-bar[data-done] .explainer-tutor-go-done {
+    display: none;
+  }
+
+  .explainer-tutor-bar[data-done] .explainer-tutor-go-text {
+    display: inline;
   }
 
   .explainer-tutor-bar .explainer-tutor-go {

@@ -196,13 +196,13 @@ nowhere); the providers' logos (their marks; a letter says enough); assistants n
 app named others, and a learner meets the same choice in every app); one choice for all apps of lernapps.net (each
 app keeps what it stores apart).
 
-Le Chat loads no address from a message that arrives through its own address (`?q=`): it counts as not written by the
+Mistral Vibe loads no address from a message that arrives through its own address (`?q=`): it counts as not written by the
 learner. So an assistant can carry `paste`: the click copies the start prompt, the one sentence with the address of the
 tutor page, at once, and opens the chat with a short placeholder message ("Ich brauche Hilfe bei einer Lern-Einheit.
 Ich schreibe Dir gleich, worum es geht."), which holds no address. The learner pastes the sentence; it is now their own
 message, and the tutor loads the tutor page from it. The copy starts in the click, as a browser refuses it once the new
 window has the focus (Edge did, after a fetch of the tutor page's Markdown). Choosing such an assistant shows a short
-note on how it works. Rejected: the prompt alone in the address (Le Chat fetches nothing from it); a plain link to Le
+note on how it works. Rejected: the prompt alone in the address (Mistral Vibe fetches nothing from it); a plain link to Le
 Chat (the learner would write the prompt by hand); copying the Markdown as well (a fetch first, and the copy came too
 late).
 

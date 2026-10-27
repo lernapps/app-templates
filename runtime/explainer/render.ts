@@ -477,6 +477,7 @@ function tutorSection(context: Context): string {
     })),
     placeholder: placeholderPrompt(lang),
     go: context.t("tutorGo"),
+    done: context.t("tutorDone"),
     copy: context.t("tutorCopy"),
     copied: context.t("tutorCopied"),
     failed: context.t("tutorCopyFailed"),

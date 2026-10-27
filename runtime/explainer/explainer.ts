@@ -127,6 +127,9 @@ export const ANSWERED_EVENT = "explainer-answered";
 /** How long the page waits after window.close() before it tells the learner to close the tab. */
 const CLOSE_WAIT_MS = 300;
 
+/** How long the button says "kopiert" after a copy. */
+const DONE_MS = 8000;
+
 /** The pause between copying and closing: closed at once, headless Chromium lost 6 of 20 lines (Mathe-Karte). */
 const COPY_PAUSE_MS = 100;
 
@@ -149,6 +152,8 @@ interface TutorData {
   /** The short message a way that needs pasting gets in its address. */
   placeholder: string;
   go: string;
+  /** The button after a copy: "kopiert", with `{name}`. */
+  done: string;
   copy: string;
   copied: string;
   failed: string;
@@ -577,8 +582,16 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
   const go = section.querySelector<HTMLButtonElement>(".explainer-tutor-go");
   const status = section.querySelector<HTMLElement>(".explainer-tutor-status");
   if (!off || !bar || !way || !select || !on || !go) return;
-  const say = (text: string) => {
-    if (status) status.textContent = text;
+  let reset: ReturnType<typeof setTimeout> | undefined;
+  const say = (text: string, state?: "ok" | "failed") => {
+    clearTimeout(reset);
+    bar.toggleAttribute("data-done", state === "ok");
+    if (!status) return;
+    status.textContent = text;
+    if (state === undefined) delete status.dataset["state"];
+    else status.dataset["state"] = state;
+    // the button says "kopiert" for a while: then it is the plain one again
+    if (state === "ok") reset = setTimeout(() => say(""), DONE_MS);
   };
   way.hidden = false;
   const hint = section.querySelector<HTMLElement>(".explainer-tutor-hint");
@@ -592,8 +605,12 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
     bar.hidden = chosen === undefined;
     if (chosen === undefined) return;
     const text = root.createElement("span");
+    text.className = "explainer-tutor-go-text";
     text.textContent = chosen.url === undefined ? data.copy : data.go.replace("{name}", chosen.name);
-    go.replaceChildren(iconOf(root, chosen), text);
+    const done = root.createElement("span");
+    done.className = "explainer-tutor-go-done";
+    done.textContent = data.done.replace("{name}", nameOf(chosen, root.documentElement.lang));
+    go.replaceChildren(iconOf(root, chosen), text, done);
   };
   show();
   choice.listen(show);
@@ -616,7 +633,10 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
   go.addEventListener("click", () => {
     const chosen = choice.get();
     openAssistant(root, chosen, { start, copy: whole, placeholder: data.placeholder }, (copied) => {
-      say(copied === undefined ? "" : copied ? data.copied : data.failed);
+      say(
+        copied === undefined ? "" : copied ? data.copied : data.failed,
+        copied === undefined ? undefined : copied ? "ok" : "failed",
+      );
     });
   });
 }

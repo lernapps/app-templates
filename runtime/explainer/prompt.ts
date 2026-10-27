@@ -1,10 +1,10 @@
 // The start prompt of a content page and the assistants that take it, way A to the tutor ("Mit <name> lernen"; way B,
-// "Hilfe" at one task, is stuck.ts). The learner switches an assistant on once (Claude, ChatGPT or Le Chat, the same
+// "Hilfe" at one task, is stuck.ts). The learner switches an assistant on once (Claude, ChatGPT or Mistral Vibe, the same
 // for every app), or copying the text; then every content page has a bar beside its title. Its
 // button opens the assistant with the start prompt in its address: one sentence in the learner's voice that names
 // the page's tutor page (tutorpage.ts) with where the learner is in its query (position.ts). A chat assistant
 // fetches only addresses its user wrote into the conversation, so the prompt names the one address the tutor needs,
-// and the tutor page holds all the rest, its guide among it: the prompt itself gives the tutor no rules. Le Chat
+// and the tutor page holds all the rest, its guide among it: the prompt itself gives the tutor no rules. Mistral Vibe
 // treats a message from its address as not written by the user and loads nothing from it (`paste`): there the click
 // copies the start prompt and opens the chat with a short placeholder message; the learner pastes, and the prompt,
 // now the learner's own message, lets the tutor load its tutor page. For copying,
@@ -22,7 +22,7 @@ export const QUERY = "⟦query⟧";
 
 /**
  * An assistant the start page offers: its name, and its address with {prompt} where the prompt goes. An assistant that
- * fetches no address from a message it got through its own address (Le Chat) has `paste`: the address carries only a
+ * fetches no address from a message it got through its own address (Mistral Vibe) has `paste`: the address carries only a
  * short placeholder message, and the learner pastes the copied start prompt, which then counts as written by them.
  */
 export interface Provider {
@@ -35,7 +35,7 @@ export interface Provider {
 export const PROVIDERS: readonly Provider[] = [
   { name: "Claude", url: "https://claude.ai/new?q={prompt}" },
   { name: "ChatGPT", url: "https://chatgpt.com/?q={prompt}" },
-  { name: "Le Chat", url: "https://chat.mistral.ai/chat?q={prompt}", paste: true },
+  { name: "Mistral Vibe", url: "https://chat.mistral.ai/chat?q={prompt}", paste: true },
 ];
 
 const MARK = "lernapps-prompt";

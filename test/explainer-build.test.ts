@@ -194,10 +194,10 @@ describe("one build writes every page", () => {
             // that the learner uses an account of their own, and the assistant is no offer of lernapps.net
             expect(html).toContain(lang === "de" ? "kein Angebot von lernapps.net" : "not offered by lernapps.net");
             expect(html.indexOf("explainer-tutor-page"), "not after main").toBeLessThan(html.indexOf("</main>"));
-            // the way to the tutor: a select of the assistants, Claude, ChatGPT and Le Chat, copying last, "Einschalten"
+            // the way to the tutor: a select of the assistants, Claude, ChatGPT and Mistral Vibe, copying last, "Einschalten"
             expect(html).toContain('<select class="explainer-tutor-select"');
             expect(html).toMatch(
-              /<option value="Claude">Claude<\/option><option value="ChatGPT">ChatGPT<\/option><option value="Le Chat" data-hint="[^"]*">Le Chat<\/option><option value="copy">/,
+              /<option value="Claude">Claude<\/option><option value="ChatGPT">ChatGPT<\/option><option value="Mistral Vibe" data-hint="[^"]*">Mistral Vibe<\/option><option value="copy">/,
             );
             expect(html).toContain('<button type="button" class="explainer-tutor-on">');
             expect(html).not.toContain("explainer-tutor-text");
