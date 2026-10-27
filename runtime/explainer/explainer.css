@@ -424,14 +424,6 @@
 }
 
 /* the button says "kopiert" itself after a copy; the line goes to screen readers only, until the screen is narrow */
-.explainer-tutor-go-done {
-  display: none;
-}
-
-.explainer-tutor-bar[data-done] .explainer-tutor-go-done {
-  display: inline;
-}
-
 .explainer-tutor-bar[data-done] .explainer-tutor-go-text {
   display: none;
 }

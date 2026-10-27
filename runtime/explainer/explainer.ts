@@ -583,9 +583,14 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
   const status = section.querySelector<HTMLElement>(".explainer-tutor-status");
   if (!off || !bar || !way || !select || !on || !go) return;
   let reset: ReturnType<typeof setTimeout> | undefined;
+  // the button's second text, in the button only while it says "kopiert"
+  const done = root.createElement("span");
+  done.className = "explainer-tutor-go-done";
   const say = (text: string, state?: "ok" | "failed") => {
     clearTimeout(reset);
     bar.toggleAttribute("data-done", state === "ok");
+    if (state === "ok") go.append(done);
+    else done.remove();
     if (!status) return;
     status.textContent = text;
     if (state === undefined) delete status.dataset["state"];
@@ -607,10 +612,8 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
     const text = root.createElement("span");
     text.className = "explainer-tutor-go-text";
     text.textContent = chosen.url === undefined ? data.copy : data.go.replace("{name}", chosen.name);
-    const done = root.createElement("span");
-    done.className = "explainer-tutor-go-done";
     done.textContent = data.done.replace("{name}", nameOf(chosen, root.documentElement.lang));
-    go.replaceChildren(iconOf(root, chosen), text, done);
+    go.replaceChildren(iconOf(root, chosen), text);
   };
   show();
   choice.listen(show);
