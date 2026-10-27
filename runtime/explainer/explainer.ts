@@ -312,7 +312,7 @@ interface Prompts {
 /**
  * Opens the assistant `provider` with the start prompt, when its address takes one; else copies the prompt to copy and
  * opens the assistant (none for copying the text), and `say` tells whether copying worked. A way that needs pasting
- * copies the same, and its address gets only the placeholder message. The window opens at the click, which a browser
+ * copies only the start prompt, at once, and its address gets only the placeholder message. The window opens at the click, which a browser
  * allows; the address follows once the prompt is copied.
  */
 function openAssistant(
@@ -328,10 +328,13 @@ function openAssistant(
     root.defaultView?.open(template.split("{prompt}").join(encodeURIComponent(prompts.start())), "_blank", "noopener");
     return;
   }
+  // a way that needs pasting copies the start prompt, which is there at once: the copy starts in the click, while the
+  // page has the focus, before the new window takes it (Edge refused a copy that came after the fetch of the Markdown)
+  const copied = paste ? copyText(prompts.start()) : undefined;
   const opened = template === undefined ? null : root.defaultView?.open("", "_blank");
   if (opened) opened.opener = null;
-  void Promise.resolve(prompts.copy()).then(async (full) => {
-    say(await copyText(full));
+  void Promise.resolve(copied ?? prompts.copy()).then(async (full) => {
+    say(typeof full === "boolean" ? full : await copyText(full));
     if (template === undefined) return;
     const address = paste ? template.split("{prompt}").join(encodeURIComponent(prompts.placeholder)) : template;
     if (opened) opened.location.href = address;

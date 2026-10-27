@@ -6,8 +6,8 @@
 // fetches only addresses its user wrote into the conversation, so the prompt names the one address the tutor needs,
 // and the tutor page holds all the rest, its guide among it: the prompt itself gives the tutor no rules. Le Chat
 // treats a message from its address as not written by the user and loads nothing from it (`paste`): there the click
-// copies the prompt with the tutor page's Markdown and opens the chat with a short placeholder message; the learner
-// pastes, and the text, now the learner's own, holds all the tutor needs. For copying,
+// copies the start prompt and opens the chat with a short placeholder message; the learner pastes, and the prompt,
+// now the learner's own message, lets the tutor load its tutor page. For copying,
 // the client module adds the tutor page's Markdown after the prompt, nothing going over the network but the app's
 // own static file. Without JavaScript the provider links are plain links to the assistant, and the tutor page is a
 // page to read and copy from. Nothing loads before a click.
@@ -23,7 +23,7 @@ export const QUERY = "⟦query⟧";
 /**
  * An assistant the start page offers: its name, and its address with {prompt} where the prompt goes. An assistant that
  * fetches no address from a message it got through its own address (Le Chat) has `paste`: the address carries only a
- * short placeholder message, and the learner pastes the copied prompt (the start prompt and the tutor page's Markdown).
+ * short placeholder message, and the learner pastes the copied start prompt, which then counts as written by them.
  */
 export interface Provider {
   name: string;

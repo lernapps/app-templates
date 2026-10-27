@@ -80,7 +80,7 @@
   "tutorWay": "Assistant",
   "tutorPageIntro": "An AI tutor explains this page to you and helps you with the exercises. Choose your assistant:",
   "tutorPageLink": "See what your tutor gets for this page",
-  "tutorPasteHint": "{name} does not load web pages when the link comes from a button. So we copy the text for you. A click on “Learn with {name}” opens {name} with a short message. Then paste the copied text (Ctrl+V, ⌘+V on a Mac) and send it.",
+  "tutorPasteHint": "{name} does not load web pages when the link comes from a button. So we copy the sentence with the link for you. A click on “Learn with {name}” opens {name} with a short message. Then paste the copied sentence (Ctrl+V, ⌘+V on a Mac) and send it.",
   "tutorCopied": "The prompt is copied. Paste it into the chat of your AI assistant.",
   "tutorCopyFailed": "Copying did not work. Try again.",
   "exerciseLabel": "Exercise",
