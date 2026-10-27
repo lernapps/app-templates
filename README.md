@@ -105,7 +105,7 @@ feature: assistants read it before they choose an archetype.
   page starts no tutor. Way A: once an assistant is on, a bar beside the title of every content page with one button,
   "Mit <name> lernen", with the assistant's first letter as its symbol; the start page changes the assistant or
   switches it off. An assistant opens with the start prompt, one sentence in the learner's voice: "Lade <tutor
-  page>?<id>=<n>&… und hilf mir, diese Seite zu verstehen.", with the page's task numbers alone, so that the tutor
+  page>?<id>=<n>&… und sei mein Tutor.", with the page's task numbers alone, so that the tutor
   leads through the page before it comes to a task. ([`prompt.ts`](runtime/explainer/prompt.ts),
   [`position.ts`](runtime/explainer/position.ts)). Copying the text instead adds the tutor page's Markdown, for an
   assistant that fetches nothing. Without JavaScript the section has a plain link per assistant. Way B: while an

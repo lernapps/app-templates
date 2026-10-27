@@ -48,8 +48,8 @@ export function plainAddress(url: string): string {
 }
 
 const LOAD: Readonly<Record<string, string>> = {
-  de: "Lade {url} und hilf mir, diese Seite zu verstehen.",
-  en: "Load {url} and help me understand this page.",
+  de: "Lade {url} und sei mein Tutor.",
+  en: "Load {url} and be my tutor.",
 };
 
 const PLACEHOLDER: Readonly<Record<string, string>> = {
@@ -62,7 +62,7 @@ export const placeholderPrompt = (lang: string): string => PLACEHOLDER[lang] ?? 
 
 /**
  * The start prompt a provider link carries from a content page, the one kind of page that starts a tutor, in its
- * language: "Lade <chapter>/<page>/tutor/<QUERY> und hilf mir, diese Seite zu verstehen.", the page's tutor page with
+ * language: "Lade <chapter>/<page>/tutor/<QUERY> und sei mein Tutor.", the page's tutor page with
  * where the learner is in its query, which the client module fills in (position.ts, pageQuery). Its address starts
  * with BASE.
  */

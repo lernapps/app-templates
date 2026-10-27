@@ -391,17 +391,34 @@
 }
 
 .explainer-title-row > .explainer-tutor-page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   margin: 0 0 0 auto;
 }
 
 .explainer-title-row > .explainer-tutor-page:has(> details[open]:not([hidden])) {
   flex-basis: 100%;
+  align-items: stretch;
+}
+
+/* the status line under the button: right-aligned like it, in a line of a readable length */
+.explainer-title-row > .explainer-tutor-page > .explainer-tutor-status {
+  max-width: 24rem;
+  margin: 0.5rem 0 0;
+  text-align: right;
 }
 
 @media (max-width: 40rem) {
   .explainer-title-row > .explainer-tutor-page {
     flex-basis: 100%;
+    align-items: stretch;
     margin: 0;
+  }
+
+  .explainer-title-row > .explainer-tutor-page > .explainer-tutor-status {
+    max-width: none;
+    text-align: left;
   }
 
   .explainer-tutor-bar .explainer-tutor-go {
