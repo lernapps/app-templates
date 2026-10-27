@@ -518,4 +518,10 @@ describe("a list prop given as { data: <name> }", () => {
     withDates(root, "title: string", "{ data: ereignisse }");
     expect(await problems(root)).toEqual([]);
   }, 30_000);
+
+  test("reads a record of texts as a record, not as a text by language: its fields are no languages", async () => {
+    const root = app();
+    writeFileSync(join(root, "src/data/orte.yaml"), "- { name: Paris, land: Frankreich }\n");
+    expect(await problems(root)).toEqual([]);
+  }, 30_000);
 });
