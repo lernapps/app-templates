@@ -127,6 +127,9 @@ export const ANSWERED_EVENT = "explainer-answered";
 /** How long the page waits after window.close() before it tells the learner to close the tab. */
 const CLOSE_WAIT_MS = 300;
 
+/** How long the button says "kopiert" after a copy. */
+const DONE_MS = 8000;
+
 /** The pause between copying and closing: closed at once, headless Chromium lost 6 of 20 lines (Mathe-Karte). */
 const COPY_PAUSE_MS = 100;
 
@@ -145,8 +148,12 @@ interface TutorData {
   tutor?: string;
   /** The Markdown of the page's tutor page, from the root of the language tree, for copying. */
   markdown?: string;
-  ways: { name: string; url: string }[];
+  ways: { name: string; url: string; paste?: boolean }[];
+  /** The short message a way that needs pasting gets in its address. */
+  placeholder: string;
   go: string;
+  /** The button after a copy: "kopiert", with `{name}`. */
+  done: string;
   copy: string;
   copied: string;
   failed: string;
@@ -303,32 +310,40 @@ function startBackToTutor(root: Document, main: HTMLElement, data: TutorData | u
 interface Prompts {
   start: () => string;
   copy: () => string | Promise<string>;
+  /** What a way that needs pasting gets in its address. */
+  placeholder: string;
 }
 
 /**
  * Opens the assistant `provider` with the start prompt, when its address takes one; else copies the prompt to copy and
- * opens the assistant (none for copying the text), and `say` tells whether copying worked. The window opens at the
- * click, which a browser allows; the address follows once the prompt is copied.
+ * opens the assistant (none for copying the text), and `say` tells whether copying worked. A way that needs pasting
+ * copies only the start prompt, at once, and its address gets only the placeholder message. The window opens at the click, which a browser
+ * allows; the address follows once the prompt is copied.
  */
 function openAssistant(
   root: Document,
-  provider: { url?: string } | undefined,
+  provider: { url?: string; paste?: boolean } | undefined,
   prompts: Prompts,
   say: (copied: boolean | undefined) => void,
 ): void {
   const template = provider?.url;
-  if (template !== undefined && template.includes("{prompt}")) {
+  const paste = provider?.paste === true;
+  if (template !== undefined && template.includes("{prompt}") && !paste) {
     say(undefined);
     root.defaultView?.open(template.split("{prompt}").join(encodeURIComponent(prompts.start())), "_blank", "noopener");
     return;
   }
+  // a way that needs pasting copies the start prompt, which is there at once: the copy starts in the click, while the
+  // page has the focus, before the new window takes it (Edge refused a copy that came after the fetch of the Markdown)
+  const copied = paste ? copyText(prompts.start()) : undefined;
   const opened = template === undefined ? null : root.defaultView?.open("", "_blank");
   if (opened) opened.opener = null;
-  void Promise.resolve(prompts.copy()).then(async (full) => {
-    say(await copyText(full));
+  void Promise.resolve(copied ?? prompts.copy()).then(async (full) => {
+    say(typeof full === "boolean" ? full : await copyText(full));
     if (template === undefined) return;
-    if (opened) opened.location.href = template;
-    else root.defaultView?.open(template, "_blank", "noopener");
+    const address = paste ? template.split("{prompt}").join(encodeURIComponent(prompts.placeholder)) : template;
+    if (opened) opened.location.href = address;
+    else root.defaultView?.open(address, "_blank", "noopener");
   });
 }
 
@@ -341,6 +356,8 @@ const isText = (value: unknown): value is string => typeof value === "string";
 interface Way {
   name: string;
   url?: string;
+  /** The address takes only a placeholder message: the prompt is copied, and the learner pastes it. */
+  paste?: boolean;
 }
 
 /**
@@ -350,9 +367,9 @@ interface Way {
  */
 class WayChoice {
   readonly #storage: ReturnType<typeof createStorage>;
-  readonly #ways: readonly { name: string; url: string }[];
+  readonly #ways: readonly Way[];
   readonly #listeners: (() => void)[] = [];
-  constructor(storage: string, ways: readonly { name: string; url: string }[]) {
+  constructor(storage: string, ways: readonly Way[]) {
     this.#storage = createStorage(storage);
     this.#ways = ways;
   }
@@ -489,7 +506,7 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
       const way = choice.get();
       const prompt = () => stuckPrompt(stuck(), lang);
       const copy = () => withMarkdown(prompt(), data, root.location.href);
-      openAssistant(root, way, { start: prompt, copy }, (copied) => {
+      openAssistant(root, way, { start: prompt, copy, placeholder: data.placeholder }, (copied) => {
         status.textContent = copied === undefined ? "" : copied ? data.copied : data.failed;
       });
     });
@@ -508,6 +525,14 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
   });
 }
 
+/** Shows in `hint` how the chosen option works when it says so (data-hint, a way that needs pasting); else hides it. */
+function showHint(select: HTMLSelectElement, hint: HTMLElement | null): void {
+  if (!hint) return;
+  const text = select.selectedOptions[0]?.dataset["hint"] ?? "";
+  hint.textContent = text;
+  hint.hidden = text === "";
+}
+
 /**
  * The choice of the learner's assistant on the start page: "Keiner", the app's assistants and copying the text, shown
  * once the client module runs; a choice is kept on the device at once (WayChoice), "Keiner" switches the tutor off.
@@ -520,10 +545,14 @@ function startChoice(root: Document): void {
   const stored = storage.load(WAY_KEY, isText);
   const names = [...select.options].map((option) => option.value);
   select.value = stored !== undefined && names.includes(stored) ? stored : "";
+  const hint = box.nextElementSibling instanceof HTMLElement ? box.nextElementSibling : null;
+  const explain = () => showHint(select, hint);
   select.addEventListener("change", () => {
     if (select.value === "") storage.remove(WAY_KEY);
     else storage.save(WAY_KEY, select.value);
+    explain();
   });
+  explain();
   box.hidden = false;
 }
 
@@ -553,10 +582,26 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
   const go = section.querySelector<HTMLButtonElement>(".explainer-tutor-go");
   const status = section.querySelector<HTMLElement>(".explainer-tutor-status");
   if (!off || !bar || !way || !select || !on || !go) return;
-  const say = (text: string) => {
-    if (status) status.textContent = text;
+  let reset: ReturnType<typeof setTimeout> | undefined;
+  // the button's second text, in the button only while it says "kopiert"
+  const done = root.createElement("span");
+  done.className = "explainer-tutor-go-done";
+  const say = (text: string, state?: "ok" | "failed") => {
+    clearTimeout(reset);
+    bar.toggleAttribute("data-done", state === "ok");
+    if (state === "ok") go.append(done);
+    else done.remove();
+    if (!status) return;
+    status.textContent = text;
+    if (state === undefined) delete status.dataset["state"];
+    else status.dataset["state"] = state;
+    // the button says "kopiert" for a while: then it is the plain one again
+    if (state === "ok") reset = setTimeout(() => say(""), DONE_MS);
   };
   way.hidden = false;
+  const hint = section.querySelector<HTMLElement>(".explainer-tutor-hint");
+  select.addEventListener("change", () => showHint(select, hint));
+  showHint(select, hint);
   const plain = section.querySelector<HTMLElement>(".explainer-tutor-plain");
   if (plain) plain.hidden = true;
   const show = () => {
@@ -565,7 +610,9 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
     bar.hidden = chosen === undefined;
     if (chosen === undefined) return;
     const text = root.createElement("span");
+    text.className = "explainer-tutor-go-text";
     text.textContent = chosen.url === undefined ? data.copy : data.go.replace("{name}", chosen.name);
+    done.textContent = data.done.replace("{name}", nameOf(chosen, root.documentElement.lang));
     go.replaceChildren(iconOf(root, chosen), text);
   };
   show();
@@ -588,8 +635,11 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
   const whole = () => withMarkdown(start(), data, root.location.href);
   go.addEventListener("click", () => {
     const chosen = choice.get();
-    openAssistant(root, chosen, { start, copy: whole }, (copied) => {
-      say(copied === undefined ? "" : copied ? data.copied : data.failed);
+    openAssistant(root, chosen, { start, copy: whole, placeholder: data.placeholder }, (copied) => {
+      say(
+        copied === undefined ? "" : copied ? data.copied : data.failed,
+        copied === undefined ? undefined : copied ? "ok" : "failed",
+      );
     });
   });
 }

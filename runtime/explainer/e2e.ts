@@ -833,7 +833,7 @@ export function explainerTests(root = "."): void {
         const [address = ""] = found;
         expectTutorAddress(address, page.url(), undefined, undefined);
         expect(new URL(address).searchParams.get(exercise.id), "the task number").toBe(String(n));
-        expect(prompt, "in the learner's voice: help with this page").toContain("verstehen");
+        expect(prompt, "in the learner's voice: be my tutor").toContain("Tutor");
         const response = await request.get(address);
         expect(response.status(), "the tutor page answers").toBe(200);
         expect(await response.text()).toContain('<main id="anleitung">');

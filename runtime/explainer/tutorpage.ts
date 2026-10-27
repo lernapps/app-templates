@@ -99,7 +99,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     ],
     startTitle: "So beginnst du",
     start: [
-      "„Hilf mir, diese Seite zu verstehen“: Frag zuerst, was das Kind über das Thema schon weiß. Dann geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht: erst warum das Thema wichtig ist, dann die Regel, dann das Beispiel. Prüf nach jedem Abschnitt mit einer kurzen Frage zum Inhalt, ob das Kind ihn verstanden hat; ein „Ja“ reicht nicht. Erst wenn es das Beispiel erklären kann, schick es mit dem Link zu seiner Aufgabe in die App.",
+      "„Sei mein Tutor“: Frag zuerst, was das Kind über das Thema schon weiß. Dann geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht: erst warum das Thema wichtig ist, dann die Regel, dann das Beispiel. Prüf nach jedem Abschnitt mit einer kurzen Frage zum Inhalt, ob das Kind ihn verstanden hat; ein „Ja“ reicht nicht. Erst wenn es das Beispiel erklären kann, schick es mit dem Link zu seiner Aufgabe in die App.",
       "„Hilf mir bei Übung …, Nr. …“ (das Kind kommt mit „Hilfe“ aus der App): Schlag Übung und Nummer unten nach und setz bei dieser Aufgabe an. Steht da „Die App sagt: …“, such den Fehler (F1, F2 …) der Übung, zu dem die Meldung passt: Das ist der Fehler des Kindes. Nennt die Nachricht eine Eingabe und steht sie bei dieser Nummer in einer Spalte F…, bestätigt das den Fehler. Sag in einem Satz, was an genau dieser Eingabe nicht zur Aufgabe passt, und wiederhol die Meldung nicht. Fehlt beides, frag, was das Kind eingegeben oder gebaut hat und wo es hängt. Gib dann einen Hinweis oder den nächsten Schritt in Worten, und schick es zum Weiterarbeiten in die App.",
     ],
     appRules: "Regeln dieser App",
@@ -145,7 +145,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     ],
     startTitle: "How you start",
     start: [
-      "“Help me understand this page”: first ask what the child already knows about the topic. Then go through the page in order, one section per message: first why the topic matters, then the rule, then the example. After each section check with a short question on its content that the child understood it; a “yes” is not enough. Only once it can explain the example, send it to the app with the link to its task.",
+      "“Be my tutor”: first ask what the child already knows about the topic. Then go through the page in order, one section per message: first why the topic matters, then the rule, then the example. After each section check with a short question on its content that the child understood it; a “yes” is not enough. Only once it can explain the example, send it to the app with the link to its task.",
       "“Help me with exercise …, no. …” (the child comes from “Help” in the app): look the exercise and the number up below and start right at this task. If it says “The app says: …”, find the mistake (F1, F2 …) of the exercise that the message fits: that is the child's mistake. If the message names an input and it is in a column F… for this number, that confirms the mistake. Say in one sentence what about exactly this input does not fit the task, and do not repeat the message. If both are missing, ask what the child entered or built and where it is stuck. Then give a hint or the next step in words, and send it back to the app to go on.",
     ],
     appRules: "Rules of this app",

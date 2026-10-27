@@ -45,9 +45,9 @@ test("from a content page: exactly one address, the page's tutor page with the p
   if (page === undefined) throw new Error("no page");
   // the learner's voice only: the tutor page has the guide
   expect(withBase(startPrompt(page), "https://lernapps.net/alle/").replace(QUERY, "?prozent-rechnen=3")).toBe(
-    "Lade https://lernapps.net/alle/zahlen/zahlen-01/tutor/?prozent-rechnen=3 und hilf mir, diese Seite zu verstehen.",
+    "Lade https://lernapps.net/alle/zahlen/zahlen-01/tutor/?prozent-rechnen=3 und sei mein Tutor.",
   );
   const english = routes(site).find((route) => route.kind === "page" && route.lang === "en");
   if (english === undefined) throw new Error("no English page");
-  expect(startPrompt(english)).toBe(`Load ${BASE}zahlen/zahlen-01/tutor/${QUERY} and help me understand this page.`);
+  expect(startPrompt(english)).toBe(`Load ${BASE}zahlen/zahlen-01/tutor/${QUERY} and be my tutor.`);
 });
