@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { check } from "../runtime/explainer/load.ts";
-import { plainAddress, PROVIDERS } from "../runtime/explainer/prompt.ts";
+import { placeholderPrompt, plainAddress, PROVIDERS } from "../runtime/explainer/prompt.ts";
 import { linkProblems } from "../runtime/explainer/tutor.ts";
 
 /** A copy of a fixture as an app's src/, its root. */
@@ -45,6 +45,15 @@ describe("the tutor prompt", () => {
       ),
     );
     expect(check(root, 0).problems.join("\n")).toMatch(/app\.yaml.*providers/);
+  });
+
+  test("Le Chat needs pasting: its address carries a short placeholder, with no address to fetch, in both languages", () => {
+    expect(PROVIDERS.filter((provider) => provider.paste).map((provider) => provider.name)).toEqual(["Le Chat"]);
+    expect(placeholderPrompt("de")).toBe(
+      "Ich brauche Hilfe bei einer Lern-Einheit. Ich schreibe Dir gleich, worum es geht.",
+    );
+    expect(placeholderPrompt("en")).not.toMatch(/https?:/);
+    expect(placeholderPrompt("fr")).toBe(placeholderPrompt("de"));
   });
 
   test("the assistants: Claude, ChatGPT and Le Chat for every app, a link without the prompt for readers without JavaScript", () => {

@@ -31,7 +31,7 @@ import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { tutorPageOf } from "./tutor.ts";
-import { BASE, plainAddress, PROVIDERS, QUERY, startPrompt } from "./prompt.ts";
+import { BASE, placeholderPrompt, plainAddress, PROVIDERS, QUERY, startPrompt } from "./prompt.ts";
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
 import { renderVideo } from "./video.ts";
@@ -408,16 +408,24 @@ function tutorAbout(context: Context): string {
     `<p>${plain(context.t("tutorAbout"))}</p>`,
     `<p>${plain(context.t("tutorAboutStart"))}</p>`,
     `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label></p>`,
+    `<p class="explainer-tutor-hint" role="status" aria-live="polite" hidden></p>`,
     `<p>${plain(context.t("tutorAccount"))}</p>`,
     `<p>${plain(context.t("tutorAboutPrivacy"))}</p>`,
     `</section>`,
   ].join("\n");
 }
 
-/** The assistants of the app as options of a select, each by its name, and copying the prompt last (COPY). */
+/**
+ * The assistants of the app as options of a select, each by its name, and copying the prompt last (COPY). An assistant
+ * that needs pasting (`paste`) carries its explanation in data-hint, which the client module shows once it is chosen.
+ */
 function wayOptions(context: Context): string {
   return [
-    ...PROVIDERS.map((provider) => `<option value="${plain(provider.name)}">${plain(provider.name)}</option>`),
+    ...PROVIDERS.map((provider) => {
+      const hint =
+        provider.paste === true ? ` data-hint="${plain(context.t("tutorPasteHint", { name: provider.name }))}"` : "";
+      return `<option value="${plain(provider.name)}"${hint}>${plain(provider.name)}</option>`;
+    }),
     `<option value="copy">${plain(context.t("tutorOther"))}</option>`,
   ].join("");
 }
@@ -462,7 +470,12 @@ function tutorSection(context: Context): string {
           },
         }),
     ...(page === undefined ? {} : { tutor: tutorPageOf(page), markdown: `${tutorPageOf(page)}${TUTOR_MARKDOWN}` }),
-    ways: PROVIDERS.map((provider) => ({ name: provider.name, url: provider.url })),
+    ways: PROVIDERS.map((provider) => ({
+      name: provider.name,
+      url: provider.url,
+      ...(provider.paste === true ? { paste: true } : {}),
+    })),
+    placeholder: placeholderPrompt(lang),
     go: context.t("tutorGo"),
     copy: context.t("tutorCopy"),
     copied: context.t("tutorCopied"),
@@ -478,6 +491,7 @@ function tutorSection(context: Context): string {
     `<summary>${plain(context.t("tutorTitle"))}</summary>`,
     `<p>${plain(context.t("tutorPageIntro"))}</p>`,
     `<p class="explainer-tutor-actions"><span class="explainer-tutor-way" hidden><select class="explainer-tutor-select" aria-label="${plain(context.t("tutorWay"))}">${wayOptions(context)}</select> <button type="button" class="explainer-tutor-on">${plain(context.t("tutorOn"))}</button></span> <span class="explainer-tutor-plain">${plainLinks}</span></p>`,
+    `<p class="explainer-tutor-hint" role="status" aria-live="polite" hidden></p>`,
     `<p class="explainer-tutor-note">${plain(context.t("tutorAccount"))} ${plain(context.t("tutorScope"))}</p>`,
     tutorPage,
     `</details>`,

@@ -196,6 +196,14 @@ nowhere); the providers' logos (their marks; a letter says enough); assistants n
 app named others, and a learner meets the same choice in every app); one choice for all apps of lernapps.net (each
 app keeps what it stores apart).
 
+Le Chat loads no address from a message that arrives through its own address (`?q=`): it counts as not written by the
+learner. So an assistant can carry `paste`: the click copies the start prompt with the tutor page's Markdown, which
+involves nothing but the app's own static file, and opens the chat with a short placeholder message ("Ich brauche Hilfe
+bei einer Lern-Einheit. Ich schreibe Dir gleich, worum es geht."), which holds no address. The learner pastes the text;
+it is now their own message and holds all the tutor needs. Choosing such an assistant shows a short note on how it
+works. Rejected: the prompt alone in the address (Le Chat fetches nothing from it); a plain link to Le Chat (the learner
+would write the prompt by hand).
+
 ```arc42
 :::decision
 id: dec-tutor-assistant

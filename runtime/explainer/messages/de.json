@@ -80,6 +80,7 @@
   "tutorWay": "Assistent",
   "tutorPageIntro": "Ein KI-Tutor erklärt dir diese Seite und hilft dir bei den Übungen. Wähl deinen Assistenten:",
   "tutorPageLink": "Ansehen, was dein Tutor zu dieser Seite bekommt",
+  "tutorPasteHint": "{name} lädt keine Webseiten, wenn der Link aus einem Knopf kommt. Darum kopieren wir den Text für dich. Ein Klick auf „Mit {name} lernen“ öffnet {name} mit einer kurzen Nachricht. Füg danach den kopierten Text ein (Strg+V, am Mac ⌘+V) und schick ihn ab.",
   "tutorCopied": "Der Prompt ist kopiert. Füg ihn in den Chat deines KI-Assistenten ein.",
   "tutorCopyFailed": "Kopieren ging nicht. Versuch es noch einmal.",
   "exerciseLabel": "Übung",
