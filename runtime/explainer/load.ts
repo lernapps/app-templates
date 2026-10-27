@@ -29,7 +29,7 @@ import { allBlocks } from "./routes.ts";
 import { SCHEMA_FILE, validate } from "./schema.ts";
 import { appName } from "../shared/appname.ts";
 import { isObject, Problems, readYaml, Texts, type Path, type YamlFile } from "../shared/content.ts";
-import { LANGUAGES, languageListProblems } from "../shared/languages.ts";
+import { isLanguage, LANGUAGES, languageListProblems } from "../shared/languages.ts";
 
 export { SCHEMA_ID } from "./schema.ts";
 export const RULE_URL = "https://lernapps.net/tooling/rules/#explainer-content-valid";
@@ -163,13 +163,15 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   texts.check(appYaml, ["intro"], "markdown");
   texts.check(appYaml, ["tutor", "rules"], "markdown");
   app.sources?.forEach((_source, index) => texts.check(appYaml, ["sources", index, "title"], "plain"));
-  // a text by language anywhere in a record, also in the lists and records of a record
+  // a text by language anywhere in a record, also in the lists and records of a record: a map of strings with a
+  // language among its keys; a record whose fields are all texts ({ name: Geige, familie: Streicher }) is no text
   const checkDataTexts = (yaml: YamlFile, path: (string | number)[], value: unknown): void => {
     if (Array.isArray(value)) value.forEach((item, index) => checkDataTexts(yaml, [...path, index], item));
     else if (isObject(value)) {
       const fields = Object.entries(value);
-      if (fields.every(([, field]) => typeof field === "string")) texts.check(yaml, path, "plain");
-      else for (const [field, item] of fields) checkDataTexts(yaml, [...path, field], item);
+      if (fields.every(([, field]) => typeof field === "string") && fields.some(([key]) => isLanguage(key))) {
+        texts.check(yaml, path, "plain");
+      } else for (const [field, item] of fields) checkDataTexts(yaml, [...path, field], item);
     }
   };
   for (const yaml of dataFiles.values()) {

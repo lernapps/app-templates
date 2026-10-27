@@ -57,7 +57,11 @@ blocks:
             de: Welcher Stand gehört auf welche Stufe der Pyramide?
             en: Which estate belongs on which level of the pyramid?
           level: { de: Stufe, en: Level }
-          button: { de: Prüfen, en: Check }
+          reasons:
+            - de: Die Reihenfolge ist umgedreht.
+              en: The order is upside down.
+            - de: Eine Beschriftung steht zweimal.
+              en: One label is there twice.
           parts:
             - de: Erster Stand, die Geistlichen
               en: First Estate, the clergy

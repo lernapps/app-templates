@@ -1,7 +1,8 @@
 // The logic of ProzentFeld.vue, a field of G squares, together 100 %, of which the learner colours p %: pure
 // functions, which the build tests over fixed seeds (the exercise contract). A task is G and p; an answer is the
-// number of squares coloured, whichever they are. describe states a task and its solution, about what the exercise
-// is; template, params, mistakes and show give a tutor the task once and each number's inputs and outputs.
+// number of squares coloured, whichever they are. The explainer checks an answer with check and gives the message of
+// reason. describe states a task and its solution, about what the exercise is; template, params, mistakes and show give
+// a tutor the task once and each number's inputs and outputs.
 
 /** The props the logic needs: the task with {G} and {p}, and the app's message for each typical mistake. */
 export interface Props {
@@ -79,7 +80,7 @@ export const fill = (text: string, task: Task, n = 0) =>
   text.replace(/\{G\}/g, String(task.G)).replace(/\{p\}/g, String(task.p)).replace(/\{n\}/g, String(n));
 
 /** The app's message for a wrong answer, from the props: that of its typical mistake, or none. */
-export function reason(task: Task, answer: Answer, props: Props): string | undefined {
+export function reason(task: Task, answer: Answer, props: Props, _lang?: string): string | undefined {
   const index = mistakes(task).findIndex((mistaken) => mistaken === answer);
   const message = index < 0 ? undefined : props.mistakes?.[index];
   return message === undefined ? undefined : fill(message, task, answer);
@@ -104,13 +105,13 @@ export function params(task: Task, _props: Props, _lang: string): Record<string,
 }
 
 /** An answer as text. */
-export function show(answer: Answer): string {
+export function show(answer: Answer, _task?: Task, _props?: Props, _lang?: string): string {
   return `${answer} Kästchen`;
 }
 
 /** What the exercise is, for a tutor. */
 export const about = {
-  task: "Ein Feld aus G Kästchen ist das Ganze, also 100 %. Das Kind färbt durch Antippen p % davon und drückt „Prüfen“. Wie das Hunderterfeld, nur hat das Feld nicht 100 Kästchen.",
+  task: "Ein Feld aus G Kästchen ist das Ganze, also 100 %. Das Kind färbt durch Antippen p % davon und drückt „Prüfen“ unter dem Feld. Wie das Hunderterfeld, nur hat das Feld nicht 100 Kästchen.",
   answer: "Die Zahl der gefärbten Kästchen; welche es sind, ist egal.",
   correct: "Richtig, wenn genau G · p : 100 Kästchen gefärbt sind.",
   mistakes: [

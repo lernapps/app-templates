@@ -120,8 +120,10 @@ export interface ComponentInfo {
   path: string;
   /** The props a block gives: every declared prop but seed, which the explainer gives an exercise component. */
   props: Readonly<Record<string, Field>>;
-  /** Whether it emits answered: an exercise, which gets the seed of its task number as the prop seed. */
+  /** Whether it emits answer: an exercise, which gets the seed of its task number as the prop seed. */
   exercise: boolean;
+  /** Whether it declares the prop checked, which the explainer sets once it checked the answer the component has. */
+  checked: boolean;
   /** Whether it keeps its nojs text, folded as a text description, once it runs, rather than replacing it. */
   caption: boolean;
   /** The absolute path of its logic module <Name>.ts, for an exercise. */

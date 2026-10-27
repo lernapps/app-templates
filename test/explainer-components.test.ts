@@ -105,7 +105,17 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "an exercise component without the prop seed",
     (root) => edit(root, VUE, "  /** The task number, which the explainer gives. */\n  seed: number;\n", ""),
-    'src/components/AssignLabels.vue: it emits answered, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component the seed of its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)',
+    'src/components/AssignLabels.vue: it emits answer, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component the seed of its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)',
+  ],
+  [
+    "an exercise component that still emits answered",
+    (root) => edit(root, VUE, "defineEmits<{ answer:", "defineEmits<{ answered: [{ correct: boolean }]; answer:"),
+    `src/components/AssignLabels.vue: it emits answered, which the explainer no longer takes: an exercise component is the input of its task; emit answer with the learner's answer each time it changes, drop its own "Prüfen" and the call of check, and export reason(task, answer, props, lang) from its logic module, which gives the app's message for a wrong answer; the explainer draws "Prüfen", checks and gives the feedback (vue-component-exercise-contract)`,
+  ],
+  [
+    "an exercise component whose prop checked is no boolean",
+    (root) => edit(root, VUE, "  checked: boolean;\n", "  checked: string;\n"),
+    "src/components/AssignLabels.vue: its prop checked is no boolean; the explainer gives an exercise component checked: true once it checked the answer the component has now, and false when the answer changes, so declare checked: boolean (vue-component-exercise-contract)",
   ],
   [
     "a block that gives an exercise component its seed",
@@ -116,12 +126,12 @@ const cases: [string, (root: string) => void, string][] = [
         "          level: { de: Stufe, en: Level }\n",
         "          level: { de: Stufe, en: Level }\n          seed: 3\n",
       ),
-    "src/revolution/staende.yaml:60: blocks[0].blocks[3].props.seed: AssignLabels has no prop seed; its props are alt, question, level, button, parts (vue-component-props-valid)",
+    "src/revolution/staende.yaml:60: blocks[0].blocks[3].props.seed: AssignLabels has no prop seed; its props are alt, question, level, parts, reasons (vue-component-props-valid)",
   ],
   [
     "a logic module without describe",
     (root) => edit(root, LOGIC, "export function describe(", "function describe("),
-    "src/components/AssignLabels.ts: exports no describe; the logic module of an exercise component exports generate(seed, props), check(task, answer), solution(task), wrong(task), describe(task, props, lang) and about (vue-component-exercise-contract)",
+    "src/components/AssignLabels.ts: exports no describe; the logic module of an exercise component exports generate(seed, props), check(task, answer), solution(task), wrong(task), reason(task, answer, props, lang), describe(task, props, lang) and about (vue-component-exercise-contract)",
   ],
   [
     "an about without a translation",
@@ -148,20 +158,20 @@ const cases: [string, (root: string) => void, string][] = [
     (root) => {
       writeFileSync(
         join(root, "src/components/Tap.vue"),
-        `<script setup lang="ts">\ndefineProps<{ seed: number }>();\nconst emit = defineEmits<{ answered: [{ correct: boolean }] }>();\n</script>\n\n<template>\n  <button type="button" @click="emit('answered', { correct: true })">Tippen</button>\n</template>\n`,
+        `<script setup lang="ts">\ndefineProps<{ seed: number }>();\nconst emit = defineEmits<{ answer: [number] }>();\n</script>\n\n<template>\n  <button type="button" @click="emit('answer', 1)">Tippen</button>\n</template>\n`,
       );
       writeFileSync(
         join(root, "src/components/Tap.test.ts"),
         `import { test } from "vite-plus/test";\ntest("taps", () => {});\n`,
       );
     },
-    "src/components/Tap.vue: it emits answered, so it is an exercise, and its logic module src/components/Tap.ts is missing: export generate(seed, props), check(task, answer), solution(task), wrong(task), describe(task, props, lang) and about from it (vue-component-exercise-contract)",
+    "src/components/Tap.vue: it emits answer, so it is an exercise, and its logic module src/components/Tap.ts is missing: export generate(seed, props), check(task, answer), solution(task), wrong(task), reason(task, answer, props, lang), describe(task, props, lang) and about from it (vue-component-exercise-contract)",
   ],
   [
     "an exercise component that keeps its nojs text, with the solution, once it runs",
     (root) =>
       edit(root, VUE, "const emit = defineEmits", 'defineOptions({ nojs: "caption" });\nconst emit = defineEmits'),
-    'src/components/AssignLabels.vue: it emits answered, so it is an exercise, and keeps its nojs text, which gives the task with its solution: an exercise replaces its nojs text, so the solution shows only after the answer; remove nojs: "caption" from defineOptions (vue-component-nojs)',
+    'src/components/AssignLabels.vue: it emits answer, so it is an exercise, and keeps its nojs text, which gives the task with its solution: an exercise replaces its nojs text, so the solution shows only after the answer; remove nojs: "caption" from defineOptions (vue-component-nojs)',
   ],
   [
     "an exercise component's block without examples",
@@ -177,13 +187,18 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "an accepted example that the component's check rejects",
     (root) => edit(root, "revolution/staende.yaml", "- answer: [0, 1, 2]", "- answer: [1, 0, 2]"),
-    "src/revolution/staende.yaml:70: blocks[0].blocks[3].examples.accepted[0]: AssignLabels.ts: for seed 1 check(task, answer) rejects [1,0,2], but it is listed as accepted; if the task's text allows it, fix check so that it accepts it, else move it to rejected (vue-component-exercise-contract)",
+    "src/revolution/staende.yaml:74: blocks[0].blocks[3].examples.accepted[0]: AssignLabels.ts: for seed 1 check(task, answer) rejects [1,0,2], but it is listed as accepted; if the task's text allows it, fix check so that it accepts it, else move it to rejected (vue-component-exercise-contract)",
   ],
   [
     "a component that fetches",
     (root) =>
-      edit(root, VUE, "  done.value = true;\n", '  done.value = true;\n  void fetch("https://example.org/log");\n'),
-    "src/components/AssignLabels.vue:44:8: fetch: a component makes no network request; give it what it needs through its props (vue-component-no-network)",
+      edit(
+        root,
+        VUE,
+        "// an answer once a level has a label\n",
+        '// an answer once a level has a label\nvoid fetch("https://example.org/log");\n',
+      ),
+    "src/components/AssignLabels.vue:31:6: fetch: a component makes no network request; give it what it needs through its props (vue-component-no-network)",
   ],
   [
     "a component that imports another package",
@@ -196,10 +211,10 @@ const cases: [string, (root: string) => void, string][] = [
       edit(
         root,
         VUE,
-        "const done = ref(false);\n",
-        "const done = ref(false);\nconst wide = window.innerWidth > 600;\n",
+        "// an answer once a level has a label\n",
+        "// an answer once a level has a label\nconst wide = window.innerWidth > 600;\n",
       ),
-    "src/components/AssignLabels.vue:29:14: window outside onMounted; the build renders the component where there is no window, so use it only inside onMounted (vue-component-browser-globals)",
+    "src/components/AssignLabels.vue:31:14: window outside onMounted; the build renders the component where there is no window, so use it only inside onMounted (vue-component-browser-globals)",
   ],
   [
     "a list prop that names a data file that does not exist",
@@ -270,6 +285,28 @@ describe("the property test of an exercise component's logic", () => {
         50,
       ),
     ).toEqual(["for seed 1 generate(seed, props) throws: no task"]);
+  });
+
+  test("a reason that gives no text for a wrong answer, or throws, is one problem", () => {
+    const sound = { generate: () => ({ n: 1 }), check: (_task: unknown, answer: unknown) => answer === 0 };
+    const answers = { solution: () => 0, wrong: () => 1 };
+    expect(propertyProblems({ ...sound, ...answers, reason: () => 3 }, props, 50)).toEqual([
+      `for seed 1 reason(task, wrong(task), props, "de") is 3; reason gives the app's message for a wrong answer as a text, or undefined for none`,
+    ]);
+    expect(
+      propertyProblems(
+        {
+          ...sound,
+          ...answers,
+          reason: () => {
+            throw new Error("no message");
+          },
+        },
+        props,
+        50,
+      ),
+    ).toEqual([`for seed 1 reason(task, wrong(task), props, "de") throws: no message`]);
+    expect(propertyProblems({ ...sound, ...answers, reason: () => undefined }, props, 50)).toEqual([]);
   });
 });
 
@@ -479,6 +516,12 @@ describe("a list prop given as { data: <name> }", () => {
   test("builds, for a data file whose records have the declared fields", async () => {
     const root = app();
     withDates(root, "title: string", "{ data: ereignisse }");
+    expect(await problems(root)).toEqual([]);
+  }, 30_000);
+
+  test("reads a record of texts as a record, not as a text by language: its fields are no languages", async () => {
+    const root = app();
+    writeFileSync(join(root, "src/data/orte.yaml"), "- { name: Paris, land: Frankreich }\n");
     expect(await problems(root)).toEqual([]);
   }, 30_000);
 });

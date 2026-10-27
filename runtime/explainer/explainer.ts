@@ -420,10 +420,11 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
     const { status, field } = statusAndField(root, message(lang, "stuckLabel"));
     note.append(text, " ", status, field);
     const place = () => {
-      // the row of the shared questions; never one in a component's island, whose DOM Vue owns: a button there makes
-      // the hydration mismatch, and each new render drops it (#83)
+      // the row of the shared questions, or the one with "Prüfen" under an exercise component; never one in a
+      // component's island, whose DOM Vue owns: a button there makes the hydration mismatch, and each new render drops
+      // it (#83)
       const row = element.classList.contains("explainer-component")
-        ? null
+        ? element.querySelector<HTMLElement>(":scope > form.explainer-component-form > .question-actions")
         : element.querySelector<HTMLElement>(".question-actions");
       if (row) {
         row.append(" ", button);

@@ -88,7 +88,7 @@ const contents: [string, string, number, ComponentPages | undefined][] = [
       pages: ["revolution/staende/", "en/revolution/staende/"],
       island: /<div class="explainer-island" hidden><div class="assign-labels"[^>]*><svg /,
       component:
-        '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise data-seeds="[1,2,5,7,10]">',
+        '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise data-seeds="[1,2,5,7,10]" data-checked>',
       task: { de: "Zur Wahl stehen, in dieser Reihenfolge:", en: "The choices, in this order:" },
       solution: /<details class="explainer-solution"><summary>[^<]+<\/summary><p>(Stufe|Level) 1: /,
     },
@@ -128,6 +128,13 @@ describe("one build writes every page", () => {
         expect(vue, `${route.path}: ships Vue`).toBe(withComponents.includes(route.path));
         if (component !== undefined && withComponents.includes(route.path)) {
           expect(html).toMatch(component.island);
+          // in a form with the explainer's "Prüfen", hidden and disabled until it hydrates and there is an answer
+          expect(html).toContain(
+            '<form class="explainer-component-form" novalidate><div class="explainer-island" hidden>',
+          );
+          expect(html).toMatch(
+            /<\/div><p class="question-actions" hidden><button type="submit" class="question-check" disabled>(Prüfen|Check)<\/button><\/p><\/form>/,
+          );
           // an exercise component: its anchor, its task number with "Neue Aufgabe" for JavaScript, and without it
           // the task of number 1 as its describe states it, with the solution folded
           expect(html).toContain(component.component);

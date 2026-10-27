@@ -45,13 +45,15 @@ feature: assistants read it before they choose an archetype.
   `vue`, this runtime, `@lernapps/tooling/storage`, `i18n` and `a11y` and the folder itself, browser globals only in
   `onMounted`, and 20 kB gzip of the component's own code. Once it runs, it replaces its `nojs` text, or keeps it
   folded as a text description under it with `defineOptions({ nojs: "caption" })`. A component that emits
-  `answered { correct, reason?, answer?, message? }` is an exercise (`reason`: what went wrong in a wrong answer,
-  shown with the feedback; `answer`: what the learner gave, as text, for the result line of "Zurück zum Tutor";
-  `message`: the text the component showed for the answer, word for word, for the lines of "Hilfe",
-  which take `reason` without it and leave the line out without both): it declares the prop `seed: number`, the seed of its task number, which the explainer gives it with "Aufgabe Nr."
+  `answer` is an exercise, and only the input of its task: it emits the learner's answer each time it changes
+  (`undefined` while there is none) and draws no "Prüfen" of its own; the explainer renders its island in a form with
+  "Prüfen" under it (Enter in a field checks too), calls `check`, `reason` and `show` of its logic module and gives the
+  feedback, and sets the prop `checked: boolean`, when the component declares it, until the answer changes. It
+  declares the prop `seed: number`, the seed of its task number, which the explainer gives it with "Aufgabe Nr."
   and "Neue Aufgabe" and keeps in the address (`?<id>=<n>`, the id of its block or its name in kebab case), and
   its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
-  `wrong(task)`, which the build tests over 50 fixed seeds per block, `describe(task, props, lang)`, the task and its
+  `wrong(task)`, which the build tests over 50 fixed seeds per block, `reason(task, answer, props, lang)`, the app's
+  message for a wrong answer (`undefined` for none), `describe(task, props, lang)`, the task and its
   solution as a learner reads them (`{ task, solution }`, restricted Markdown), and `about`, what the exercise is for a
   tutor (`{ task, answer, correct, mistakes }`). The build checks `describe` for every task number in every
   language and writes the no-JS text of an exercise component from it: the task of number 1 with its solution folded,
@@ -60,8 +62,10 @@ feature: assistants read it before they choose an archetype.
   `params(task, props, lang)`, the inputs of a task by name (`{ G: 1260, p: 15 }`, the same names for every task),
   `mistakes(task, props)`, the answer each typical mistake of `about.mistakes` gives (`undefined` for one without a
   single answer), and `show(answer, task, props, lang)`, an answer as text. The build checks them for every task
-  number: `check` accepts the solution and rejects each mistake's answer, and each placeholder is an input. Without
-  them the build gives a hint (`vue-component-tutor-table`).
+  number: `check` accepts the solution and rejects each mistake's answer, and each placeholder is an input. The
+  table leaves out the column of a mistake without an answer for any number, and calls an input that is no
+  placeholder of the template "(verdeckt)", a value the child does not see. Without them the build gives a hint
+  (`vue-component-tutor-table`).
 - Every seeded exercise (generated, exercise component) numbers its distinct tasks: the build walks the seeds 1, 2,
   3, … through its generator, keeps each seed whose task differs from all before, up to 67, and the page shows
   "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:

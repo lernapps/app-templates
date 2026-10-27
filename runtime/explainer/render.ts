@@ -196,8 +196,10 @@ const json = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
 /**
  * A vue-component block: its island, hidden until it hydrates, its nojs text, its props and its feedback. An exercise
- * component has its anchor, its task number with "Neue Aufgabe" (hidden until it hydrates), and as its no-JS text the
- * task of number 1 as its describe states it, with the solution folded, under the block's own nojs text if it has one.
+ * component has its anchor, its task number with "Neue Aufgabe" (hidden until it hydrates), its island in a form with
+ * the explainer's "Prüfen" (the row of the shared questions, hidden until it hydrates; Enter in a field of the
+ * component checks too), and as its no-JS text the task of number 1 as its describe states it, with the solution
+ * folded, under the block's own nojs text if it has one.
  */
 function renderComponent(context: Context, block: BlockOf<"vue-component">): string {
   const use = context.site.components.find((candidate) => candidate.block === block);
@@ -232,12 +234,16 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
     ...(component.exercise
       ? [`data-exercise data-seeds="${JSON.stringify(context.descriptions.get(block)?.seeds ?? [1])}"`]
       : []),
+    // it declares the prop checked, which the islands set once "Prüfen" judged its answer
+    ...(component.checked ? ["data-checked"] : []),
     ...(component.caption ? [`data-nojs="caption" data-caption="${plain(context.t("textDescription"))}"`] : []),
   ];
   return [
     `<div class="explainer-component" ${attributes.join(" ")}>`,
     controls,
-    `<div class="explainer-island" hidden>${markup}</div>`,
+    component.exercise
+      ? `<form class="explainer-component-form" novalidate><div class="explainer-island" hidden>${markup}</div><p class="question-actions" hidden><button type="submit" class="question-check" disabled>${plain(messages.check)}</button></p></form>`
+      : `<div class="explainer-island" hidden>${markup}</div>`,
     `<div class="explainer-nojs">${nojs}</div>`,
     feedback,
     `<script type="application/json" class="explainer-component-props">${json(propsIn(block.props, component, context.lang))}</script>`,

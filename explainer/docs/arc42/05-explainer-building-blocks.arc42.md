@@ -227,7 +227,8 @@ path: runtime/explainer/explainer.ts
 ### Component islands
 
 Built. Only on a page with a component: loads Vue, hydrates each component's island with the props of the page's
-language, gives an exercise component the seed of its task number, and shows its feedback.
+language, gives an exercise component the seed of its task number, takes the answer it emits, checks it on "Prüfen"
+with its logic module, and shows the feedback (`dec-explainer-checks`).
 
 ```arc42
 :::building-block
@@ -517,15 +518,14 @@ implements: concept-component-rules
 
 ### Component contract
 
-A `vue-component` block names the component with its typed props and a `nojs` text; an exercise component emits
-`answered { correct, reason?, answer?, message? }` (`answer`: the learner's input as text, for the result line of
-"Zurück zum Tutor"; `message`: the text it showed for the answer, word for word, for the lines of "Hilfe", which take
-`reason` without it) and takes the prop `seed`.
+A `vue-component` block names the component with its typed props and a `nojs` text; an exercise component is the
+input of its task: it takes the prop `seed`, emits `answer` with the learner's answer each time it changes, may take
+the prop `checked`, and draws no "Prüfen" of its own, which the explainer draws under it (`dec-explainer-checks`).
 
 ```arc42
 :::interface
 id: if-vue-component
-title: Component contract (props, nojs, answered)
+title: Component contract (props, nojs, answer)
 provider: bb-explainer-components
 path: explainer/src/components/ProzentFeld.vue
 protocol: Vue props and events, YAML block
@@ -534,8 +534,9 @@ protocol: Vue props and events, YAML block
 
 ### Exercise logic module
 
-An exercise component's `<Name>.ts` exports `generate`, `check`, `solution`, `wrong`, `describe` and `about`: the
-exercise contract, which the build tests over fixed seeds and the tutor pages read (the task and its solution as text
+An exercise component's `<Name>.ts` exports `generate`, `check`, `solution`, `wrong`, `reason`, `describe` and
+`about`: the exercise contract, which the build tests over fixed seeds, the islands call on "Prüfen" and the tutor
+pages read (the task and its solution as text
 in each language, and what the exercise is for a tutor). For its table of tasks it adds `template`, `params`,
 `mistakes` and `show`, all four or none (`dec-component-table`); the build checks them against `check` for every task
 number and gives a hint for a component without them.

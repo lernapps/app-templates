@@ -30,6 +30,8 @@ interface Words {
   explanation: string;
   hint: string;
   mistakes: string;
+  /** The typical mistakes of an exercise component: descriptions for the tutor, not the app's messages. */
+  componentMistakes: string;
   options: string;
   right: string;
   wrong: string;
@@ -55,6 +57,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     explanation: "Erklärung",
     hint: "Tipp der App",
     mistakes: "Typische Fehler und was die App sagt",
+    componentMistakes: "Typische Fehler (die Meldung der App passt zu einem davon)",
     options: "Antworten zur Wahl (✓ richtig, ✗ falsch, mit der Meldung der App)",
     right: "✓",
     wrong: "✗",
@@ -89,6 +92,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     explanation: "Explanation",
     hint: "The app's hint",
     mistakes: "Typical mistakes and what the app says",
+    componentMistakes: "Typical mistakes (the app's message fits one of them)",
     options: "Choices (✓ right, ✗ wrong, with the app's message)",
     right: "✓",
     wrong: "✗",
@@ -170,9 +174,9 @@ function generatedPart(spec: Generated, lang: string, words: Words): string[] {
 }
 
 /**
- * An exercise component: what it says about itself (its about); when it declares its exercise also its task once as
- * its template, and its typical mistakes as F1, F2 …, the columns of its table of tasks. Its tasks by number are the
- * tutor page's.
+ * An exercise component: what it says about itself (its about), its typical mistakes as F1, F2 …, which the app's
+ * message of a wrong answer names one of, and when it declares its exercise also its task once as its template; F1, F2 …
+ * are then the columns of its table of tasks. Its tasks by number are the tutor page's.
  */
 function componentPart(description: ComponentDescription, lang: string, words: Words): string[] {
   const { about } = description;
@@ -183,8 +187,8 @@ function componentPart(description: ComponentDescription, lang: string, words: W
   lines.push(`- ${words.answerFormat}: ${t(about.answer)}`, `- ${words.correct}: ${t(about.correct)}`);
   if (about.mistakes.length > 0) {
     lines.push(
-      `- ${words.mistakes}:`,
-      ...about.mistakes.map((mistake, index) => `  - ${exercise === undefined ? "" : `F${index + 1}: `}${t(mistake)}`),
+      `- ${words.componentMistakes}:`,
+      ...about.mistakes.map((mistake, index) => `  - F${index + 1}: ${t(mistake)}`),
     );
   }
   return lines;

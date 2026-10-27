@@ -5,9 +5,13 @@
 // without JavaScript and for a tutor; template, params, mistakes and show give a tutor the task once and a table of
 // each number's inputs and outputs.
 
-/** The props the logic needs: the labels of the parts, from the top, the right answer; the question and a level's name. */
+/**
+ * The props the logic needs: the labels of the parts, from the top, the right answer; the question and a level's name;
+ * the app's message for each typical mistake.
+ */
 export interface Props {
   parts: readonly string[];
+  reasons?: readonly string[];
   question?: string;
   level?: string;
 }
@@ -107,6 +111,12 @@ export function mistakes(task: Task): (Answer | undefined)[] {
   const right = solution(task);
   if (right.length < 2) return [undefined, undefined];
   return [[...right].reverse(), right.map((label, part) => (part === 1 ? (right[0] ?? label) : label))];
+}
+
+/** The app's message for a wrong answer: that of its typical mistake, or none. */
+export function reason(task: Task, answer: Answer, props: Props, _lang: string): string | undefined {
+  const index = mistakes(task).findIndex((mistaken) => JSON.stringify(mistaken) === JSON.stringify(answer));
+  return index < 0 ? undefined : props.reasons?.[index];
 }
 
 /** An answer as text: each level with the label chosen for it. */

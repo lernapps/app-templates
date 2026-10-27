@@ -4,7 +4,7 @@
 // message word for word and the hint or solution opened, all in the learner's voice: the tutor page has the guide.
 import { describe, expect, test } from "vite-plus/test";
 import { Progress } from "../runtime/explainer/result.ts";
-import { answeredMessage, stuckLines, stuckPrompt } from "../runtime/explainer/stuck.ts";
+import { stuckLines, stuckPrompt } from "../runtime/explainer/stuck.ts";
 
 const TASK = "Übung prozentwert-ueben, Nr. 27:";
 const CHAPTER =
@@ -105,19 +105,5 @@ describe("the lines of „Hilfe“", () => {
         "The app says: “That is the new price.”",
       ].join("\n"),
     );
-  });
-});
-
-describe("the app's message of an exercise component", () => {
-  test("its message word for word, else its reason, else none", () => {
-    expect(answeredMessage({ message: " Das ist der neue Preis. ", reason: "Falsch." })).toBe(
-      "Das ist der neue Preis.",
-    );
-    expect(answeredMessage({ reason: "Eine Beschriftung zweimal gewählt." })).toBe(
-      "Eine Beschriftung zweimal gewählt.",
-    );
-    expect(answeredMessage({ message: "  ", reason: "Grund" })).toBe("Grund");
-    expect(answeredMessage({ reason: 3 })).toBeUndefined();
-    expect(answeredMessage({})).toBeUndefined();
   });
 });

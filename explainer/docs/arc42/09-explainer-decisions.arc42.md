@@ -150,6 +150,35 @@ addresses: qg-checkable, qg-understandable
 :::
 ```
 
+## The Explainer Checks an Exercise Component's Answer
+
+An exercise component drew its own "Prüfen", called `check` and reported the result with `answered`: every app built
+the same button and its style anew (the questions style only buttons inside `.question`, so it was small and plain),
+the answer reached the tutor as text only when the component sent it, and a component could report a result other
+than its logic's. So a component is the input of its task and nothing more: it emits `answer` with the learner's
+answer each time it changes, and may declare `checked: boolean`, true once its answer is checked. The explainer
+renders its island in a form with "Prüfen" in the row of the questions (Enter in a field checks), enabled while there
+is an answer not checked yet; it calls `check(task, answer)`, `reason(task, answer, props, lang)` for the app's message
+of a wrong answer and, when there, `show` for the answer as text, gives the feedback and passes all three on to "Hilfe"
+and "Zurück". Its logic module gets one export more, `reason`, which the property test calls on the wrong answer.
+`answered` is gone, without a transition: the build names it as an error, with what to do instead. Kept out, until an
+app needs them: texts of the task and the messages in the block (the props hold them, so the component and `reason`
+fill them in), the explainer's own "Lösung" and "Zurücksetzen" for a component, and finding the mistake by comparing
+answers (most components' mistakes are kinds of answers, "Amperemeter parallel", not single values, so `reason` stays
+code). Tried on all exercise components of elektrizitaet, anorganische-chemie, mechanik-explainer and Mathe-Karte
+(2026-10-26). Rejected: the component's own button with shared CSS (#85, a stopgap); "Prüfen" inside the island,
+whose DOM Vue owns (#83); `v-model`, as nothing flows back into the component while there is no "Lösung".
+
+```arc42
+:::decision
+id: dec-explainer-checks
+title: The explainer draws "Prüfen" and checks an exercise component's answer with its logic module
+status: accepted
+date: 2026-10-26
+addresses: qg-checkable, qg-accessibility
+:::
+```
+
 ## The Learner Switches an Assistant On Once
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:

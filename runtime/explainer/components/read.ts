@@ -6,13 +6,15 @@
 // import from a URL), no code or HTML from strings (eval, new Function, innerHTML, v-html), imports only from vue, the
 // runtime @lernapps/app-templates, @lernapps/tooling/storage, i18n and a11y and the component's own folder, and browser
 // globals (window, document, localStorage, …) only inside onMounted and the hooks that run after it, because the build
-// renders the component without a browser. A component that emits answered is an exercise (answered { correct,
-// reason?, answer?, message? }, reason the text of what went wrong in a wrong answer, shown under the feedback; answer
-// the learner's input as text; message the text the component showed for it, word for word, else reason counts): it declares the prop
-// seed: number, the task number the explainer gives it (tasks.ts), and shows the task generate(seed, props); its logic
-// module <Name>.ts exports generate(seed, props), check(task, answer), solution(task), wrong(task), which the build
-// tests over fixed seeds (propertyProblems), describe(task, props, lang), the task and its solution as a learner reads
-// them, and about, what the exercise is, for a tutor (describedProblems). A component keeps its nojs text, folded as a
+// renders the component without a browser. A component that emits answer is an exercise: it is the input of its
+// task and nothing more. It declares the prop seed: number, the task number the explainer gives it (tasks.ts), shows
+// the task generate(seed, props), and emits answer with the learner's answer each time it changes (undefined while there
+// is none); it may declare the prop checked: boolean, true once the explainer checked the answer it has now. The
+// explainer draws "Prüfen" under it, calls check, reason and show of its logic module, and gives the feedback. Its
+// logic module <Name>.ts exports generate(seed, props), check(task, answer), solution(task), wrong(task), which the
+// build tests over fixed seeds (propertyProblems), reason(task, answer, props, lang), the app's message for a wrong
+// answer, describe(task, props, lang), the task and its solution as a learner reads them, and about, what the
+// exercise is, for a tutor (describedProblems). A component keeps its nojs text, folded as a
 // text description under it, when it declares defineOptions({ nojs: "caption" }); by default it replaces it.
 //
 // The interactive archetype runs the same code checks on its components (codeProblems, with sourceScope): they may
@@ -50,7 +52,7 @@ type TypeResolveContext = Parameters<Sfc["resolveTypeElements"]>[0];
 export const SIZE_BUDGET = 20_000;
 
 const NAME = /^[A-Z][A-Za-z0-9]*$/;
-const EXERCISE = ["generate", "check", "solution", "wrong", "describe", "about"];
+const EXERCISE = ["generate", "check", "solution", "wrong", "reason", "describe", "about"];
 
 /** The scope of an explainer's components: the files of src/components/ itself. */
 const componentsScope = (root: string): CodeScope => ({
@@ -300,23 +302,20 @@ export function readComponents(root: string): {
     if (compiled === undefined) continue;
     const { program, consumer } = compiled;
     // what the compiled component declares: its emits and its options
-    let exercise = false;
+    const emitted = new Set<string>();
     let caption = false;
     for (const [node] of nodes(program)) {
       if (node.type !== "ObjectProperty" || node.computed || node.key.type !== "Identifier") continue;
       if (node.key.name === "emits") {
         const value = node.value;
         if (value.type === "ArrayExpression") {
-          exercise ||= value.elements.some(
-            (element) => element?.type === "StringLiteral" && element.value === "answered",
-          );
+          for (const element of value.elements) if (element?.type === "StringLiteral") emitted.add(element.value);
         } else if (value.type === "ObjectExpression") {
-          exercise ||= value.properties.some(
-            (property) =>
-              property.type === "ObjectProperty" &&
-              ((property.key.type === "Identifier" && property.key.name === "answered") ||
-                (property.key.type === "StringLiteral" && property.key.value === "answered")),
-          );
+          for (const property of value.properties) {
+            if (property.type !== "ObjectProperty") continue;
+            if (property.key.type === "Identifier") emitted.add(property.key.name);
+            else if (property.key.type === "StringLiteral") emitted.add(property.key.value);
+          }
         }
       } else if (node.key.name === "nojs") {
         if (node.value.type === "StringLiteral" && (node.value.value === "caption" || node.value.value === "replace")) {
@@ -336,12 +335,22 @@ export function readComponents(root: string): {
         }
       }
     }
+    const exercise = emitted.has("answer");
+    if (emitted.has("answered")) {
+      problems.push(
+        line(
+          file,
+          undefined,
+          `it emits answered, which the explainer no longer takes: an exercise component is the input of its task; emit answer with the learner's answer each time it changes, drop its own "Prüfen" and the call of check, and export reason(task, answer, props, lang) from its logic module, which gives the app's message for a wrong answer; the explainer draws "Prüfen", checks and gives the feedback (vue-component-exercise-contract)`,
+        ),
+      );
+    }
     if (exercise && caption) {
       problems.push(
         line(
           file,
           undefined,
-          `it emits answered, so it is an exercise, and keeps its nojs text, which gives the task with its solution: an exercise replaces its nojs text, so the solution shows only after the answer; remove nojs: "caption" from defineOptions (vue-component-nojs)`,
+          `it emits answer, so it is an exercise, and keeps its nojs text, which gives the task with its solution: an exercise replaces its nojs text, so the solution shows only after the answer; remove nojs: "caption" from defineOptions (vue-component-nojs)`,
         ),
       );
     }
@@ -349,7 +358,20 @@ export function readComponents(root: string): {
     problems.push(...props.problems);
     let logic: string | undefined;
     const blockProps: Record<string, Field> = { ...props.props };
+    // whether the explainer tells it that the answer it has is checked
+    const checked = exercise && blockProps["checked"] !== undefined;
     if (exercise) {
+      const flag = blockProps["checked"];
+      delete blockProps["checked"];
+      if (flag !== undefined && flag.type.kind !== "boolean") {
+        problems.push(
+          line(
+            file,
+            undefined,
+            `its prop checked is no boolean; the explainer gives an exercise component checked: true once it checked the answer the component has now, and false when the answer changes, so declare checked: boolean (vue-component-exercise-contract)`,
+          ),
+        );
+      }
       // the task number comes from the explainer, not from a block
       const seed = blockProps["seed"];
       delete blockProps["seed"];
@@ -358,7 +380,7 @@ export function readComponents(root: string): {
           line(
             file,
             undefined,
-            `it emits answered, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component the seed of its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)`,
+            `it emits answer, so it is an exercise, and declares no prop seed: number; the explainer gives an exercise component the seed of its task number as the prop seed, shows it as "Aufgabe Nr." with "Neue Aufgabe" and keeps it in the address, so declare seed: number and show the task generate(seed, props) (vue-component-exercise-contract)`,
           ),
         );
       }
@@ -369,7 +391,7 @@ export function readComponents(root: string): {
           line(
             file,
             undefined,
-            `it emits answered, so it is an exercise, and its logic module src/components/${component}.ts is missing: export ${contract} from it (vue-component-exercise-contract)`,
+            `it emits answer, so it is an exercise, and its logic module src/components/${component}.ts is missing: export ${contract} from it (vue-component-exercise-contract)`,
           ),
         );
       } else {
@@ -395,6 +417,7 @@ export function readComponents(root: string): {
       path,
       props: blockProps,
       exercise,
+      checked,
       caption,
       ...(logic === undefined ? {} : { logic }),
     });

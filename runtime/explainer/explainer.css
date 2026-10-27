@@ -257,9 +257,13 @@
   margin: 0.25rem 0 0;
 }
 
-/* An exercise component's own buttons in its row .question-actions ("Prüfen"): those of the questions, which style
-   only buttons inside .question */
-.explainer-island .question-actions button:not(.explainer-help) {
+/* "Prüfen" of an exercise component, which the explainer draws under it in the row .question-actions: the button of the
+   questions, which style only buttons inside .question */
+.explainer-component-form > .question-actions {
+  margin: 0.75rem 0 0;
+}
+
+.explainer-component-form > .question-actions .question-check {
   font: inherit;
   padding: 0.5rem 1rem;
   border: 2px solid var(--page-accent);
@@ -269,12 +273,12 @@
   cursor: pointer;
 }
 
-.explainer-island .question-actions button:not(.explainer-help):disabled {
+.explainer-component-form > .question-actions .question-check:disabled {
   cursor: default;
   opacity: 0.6;
 }
 
-.explainer-island .question-actions button:not(.explainer-help):focus-visible {
+.explainer-component-form > .question-actions .question-check:focus-visible {
   outline: 3px solid var(--page-text);
   outline-offset: 2px;
 }
