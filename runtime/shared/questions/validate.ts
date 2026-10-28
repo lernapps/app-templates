@@ -22,6 +22,7 @@ import {
   questionAddresses,
   questionIn,
   questionTexts,
+  rightEntries,
   type Answer,
   type Examples,
   type Matching,
@@ -286,11 +287,7 @@ function questionProblems(question: Question): QuestionProblem[] {
         "pairs",
         question.pairs.map((pair) => pair.left),
       );
-      twice(
-        "right entry",
-        "pairs",
-        question.pairs.map((pair) => pair.right),
-      );
+      twice("right entry", "pairs", rightEntries(question));
       break;
     case "number":
       question.mistakes?.forEach((mistake, index) => {
@@ -396,7 +393,7 @@ function exampleAnswer(question: Question, example: unknown): ExampleAnswer {
       if (typeof lefts === "string") return { problem: lefts };
       const rights = indicesOf(
         pairs.map((pair) => (pair as unknown[])[1]),
-        question.pairs.map((pair) => pair.right),
+        rightEntries(question),
         "a right entry",
       );
       if (typeof rights === "string") return { problem: rights };

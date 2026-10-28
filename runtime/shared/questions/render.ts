@@ -13,7 +13,7 @@ import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
 import { escape } from "../html.ts";
 import { localeOf, textsIn, type Language } from "../languages.ts";
-import { mixed, questionId, type Link, type Question } from "./question.ts";
+import { mixed, questionId, rightEntries, type Link, type Question } from "./question.ts";
 
 export type QuestionMessages = typeof de;
 /** The texts of a question for learners in each language it has them: an app may declare only these languages. */
@@ -86,8 +86,9 @@ function controls(question: Question, { t }: Words, format: Format): string {
       ].join("\n");
     }
     case "matching": {
-      const rights = mixed(question.pairs.length, question.id)
-        .map((index) => `<option value="${index}">${escape(question.pairs[index]?.right ?? "")}</option>`)
+      const entries = rightEntries(question);
+      const rights = mixed(entries.length, question.id)
+        .map((index) => `<option value="${index}">${escape(entries[index] ?? "")}</option>`)
         .join("");
       return [
         `<p class="question-hint">${t("matchHint")}</p>`,

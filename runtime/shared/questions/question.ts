@@ -91,7 +91,15 @@ export interface Matching<T extends Text = string> extends Base<T> {
   type: "matching";
   pairs: { left: T; right: T }[];
   pairsFrom?: "material";
+  /** Right entries that belong to no left entry: wrong answers the learner can choose, shown mixed with the right ones. */
+  distractors?: T[];
 }
+
+/** The right entries a learner can choose from: those of the pairs, then the distractors. A chosen index counts into this list. */
+export const rightEntries = <T extends Text>(question: Pick<Matching<T>, "pairs" | "distractors">): T[] => [
+  ...question.pairs.map((pair) => pair.right),
+  ...(question.distractors ?? []),
+];
 
 /**
  * The pairs that `pairsFrom: "material"` takes from the first labelled figure of the material: left the marker of a
@@ -160,6 +168,7 @@ export function questionTexts(question: Question<Text>): { path: (string | numbe
         texts.push({ path: ["pairs", index, "left"], text: pair.left });
         texts.push({ path: ["pairs", index, "right"], text: pair.right });
       });
+      question.distractors?.forEach((text, index) => texts.push({ path: ["distractors", index], text }));
       break;
     case "true-false":
       break;
@@ -228,6 +237,7 @@ export function questionIn(question: Question<Text>, lang: string): Question {
           left: t(pair.left),
           right: t(pair.right),
         })),
+        ...(question.distractors === undefined ? {} : { distractors: question.distractors.map(t) }),
       };
   }
 }
@@ -242,7 +252,7 @@ export const questionId = (question: Pick<Question, "id">): string => `frage-${q
  * - true/false: the choice;
  * - number: the text the learner typed;
  * - ordering: for each item (index in the right order), the place the learner gave it, from 0;
- * - matching: for each pair's left entry, the index of the pair whose right entry the learner chose.
+ * - matching: for each pair's left entry, the index of the right entry the learner chose (a distractor's index follows those of the pairs).
  */
 export type Answer = number | readonly number[] | boolean | string;
 

@@ -81,10 +81,11 @@ blocks:
               - { marker: A, x: 50, y: 94, text: Grundwert }
               - { marker: B, x: 21, y: 5, text: Prozentwert }
         pairsFrom: material
+        distractors: [Prozentsatz]
         explanation: Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.
         examples:
           accepted: [[[A, Grundwert], [B, Prozentwert]]]
-          rejected: [[[0, 1], [1, 0]]]
+          rejected: [[[0, 1], [1, 0]], [[A, Prozentsatz], [B, Prozentwert]]]
         links:
           - title: Prozentrechnung (Wikipedia)
             url: https://de.wikipedia.org/wiki/Prozentrechnung
