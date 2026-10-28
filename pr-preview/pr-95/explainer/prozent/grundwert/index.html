@@ -28,7 +28,7 @@
 </details>
 <p class="explainer-tutor-bar" hidden><button type="button" class="explainer-tutor-go"></button></p>
 <p class="explainer-tutor-status" role="status" aria-live="polite"></p>
-<script type="application/json" class="explainer-tutor-prompt">{"start":"Lade ⟦base⟧prozent/grundwert/tutor/⟦query⟧ und sei mein Tutor.","base":"⟦base⟧","query":"⟦query⟧","root":"../../","storage":"explainer","page":{"id":"grundwert","title":"Grundwert","exercises":[{"id":"grundwert-ueben","section":"uebung","numbered":true}],"sections":["warum","regel","beispiel","uebung"]},"tutor":"prozent/grundwert/tutor/","markdown":"prozent/grundwert/tutor/index.md","ways":[{"name":"Claude","url":"https://claude.ai/new?q={prompt}"},{"name":"ChatGPT","url":"https://chatgpt.com/?q={prompt}"},{"name":"Mistral Vibe","url":"https://chat.mistral.ai/chat?q={prompt}","paste":true}],"placeholder":"Ich brauche Hilfe bei einer Lern-Einheit. Ich schreibe Dir gleich, worum es geht.","go":"Mit {name} lernen","done":"✓ Kopiert – jetzt in {name} einfügen","copy":"Text kopieren","copied":"Der Prompt ist kopiert. Füg ihn in den Chat deines KI-Assistenten ein.","failed":"Kopieren ging nicht. Versuch es noch einmal."}</script>
+<script type="application/json" class="explainer-tutor-prompt">{"start":"Lade ⟦base⟧prozent/grundwert/tutor/⟦query⟧ und sei mein Tutor.","base":"⟦base⟧","query":"⟦query⟧","root":"../../","storage":"explainer","page":{"id":"grundwert","title":"Grundwert","exercises":[{"id":"klammern","section":"regel","numbered":false},{"id":"grundwert-ueben","section":"uebung","numbered":true}],"sections":["warum","regel","beispiel","uebung"]},"tutor":"prozent/grundwert/tutor/","markdown":"prozent/grundwert/tutor/index.md","ways":[{"name":"Claude","url":"https://claude.ai/new?q={prompt}"},{"name":"ChatGPT","url":"https://chatgpt.com/?q={prompt}"},{"name":"Mistral Vibe","url":"https://chat.mistral.ai/chat?q={prompt}","paste":true}],"placeholder":"Ich brauche Hilfe bei einer Lern-Einheit. Ich schreibe Dir gleich, worum es geht.","go":"Mit {name} lernen","done":"✓ Kopiert – jetzt in {name} einfügen","copy":"Text kopieren","copied":"Der Prompt ist kopiert. Füg ihn in den Chat deines KI-Assistenten ein.","failed":"Kopieren ging nicht. Versuch es noch einmal."}</script>
 </div>
 </div>
 <nav class="explainer-toc" aria-label="Auf dieser Seite"><p class="explainer-toc-title">Auf dieser Seite</p><ol><li><a href="#warum">Warum</a></li><li><a href="#regel">Regel</a></li><li><a href="#beispiel">Beispiel</a></li><li><a href="#uebung">Übung</a></li></ol></nav>
@@ -44,6 +44,41 @@ denen nur der Teil bekannt ist.</p></div>
 <dl class="explainer-definition"><dt><dfn id="begriff-grundwert"><a href="../../glossar/#grundwert">Grundwert</a></dfn></dt><dd><p>Der Grundwert <math><mi>G</mi></math> ist das Ganze, also 100 %.</p></dd></dl>
 <div class="block-text"><p>Du kennst den <strong>Prozentwert</strong> <math><mi>W</mi></math> (den Teil) und den <strong>Prozentsatz</strong> <math><mrow><mi>p</mi><mspace width="0.1667em"></mspace><mi>%</mi></mrow></math>. Über 1 % kommst du zum
 Ganzen: <math><mi>W</mi></math> geteilt durch <math><mi>p</mi></math> ist 1 %, mal 100 ist das Ganze.</p></div>
+<figure class="block-figure block-labelled"><div class="block-labelled-image"><img src="../../images/hunderterfeld-klammern.svg" alt="Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten." loading="lazy" decoding="async"><span class="block-marker" style="left: 50%; top: 94%" aria-hidden="true">A</span><span class="block-marker" style="left: 21%; top: 5%" aria-hidden="true">B</span></div><figcaption><p>Beschrifte A und B.</p> <span class="block-credit">Quelle: eigene Zeichnung. Lizenz: CC0-1.0.</span></figcaption></figure>
+<div class="explainer-exercise explainer-question" id="klammern">
+<p class="explainer-exercise-label">Übung</p>
+<div class="question" id="frage-klammern" data-id="klammern" data-type="matching">
+<form class="question-form" novalidate>
+<fieldset>
+<legend class="question-text">Welcher Begriff gehört zu welcher Klammer?</legend>
+<p class="question-hint">Wähle zu jedem Eintrag das Passende.</p>
+<ul class="question-pairs">
+<li><label><span>A</span> <select name="frage-klammern-0" data-left="0"><option value="">bitte wählen</option><option value="1">Prozentwert</option><option value="0">Grundwert</option></select></label></li>
+<li><label><span>B</span> <select name="frage-klammern-1" data-left="1"><option value="">bitte wählen</option><option value="1">Prozentwert</option><option value="0">Grundwert</option></select></label></li>
+</ul>
+</fieldset>
+<div class="question-feedback" role="status"></div>
+<div class="question-reveal" hidden>
+<p><strong>Richtige Antwort:</strong> A – Grundwert; B – Prozentwert</p>
+<p class="question-explanation">Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.</p>
+<p class="question-more">Mehr dazu:</p>
+<ul class="question-links">
+<li><a href="https://de.wikipedia.org/wiki/Prozentrechnung" rel="noopener">Prozentrechnung (Wikipedia)</a></li>
+</ul>
+</div>
+<p class="question-actions" hidden><button type="submit" class="question-check">Prüfen</button></p>
+</form>
+</div>
+<details class="explainer-solution"><summary>Lösung</summary>
+<p><strong>Richtige Antwort:</strong> A – Grundwert; B – Prozentwert</p>
+<p class="question-explanation">Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.</p>
+<p class="question-more">Mehr dazu:</p>
+<ul class="question-links">
+<li><a href="https://de.wikipedia.org/wiki/Prozentrechnung" rel="noopener">Prozentrechnung (Wikipedia)</a></li>
+</ul>
+</details>
+<script type="application/json" class="explainer-exercise-data">{"kind":"question","lang":"de","question":{"id":"klammern","text":"Welcher Begriff gehört zu welcher Klammer?","explanation":"Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.","links":[{"title":"Prozentrechnung (Wikipedia)","url":"https://de.wikipedia.org/wiki/Prozentrechnung"}],"type":"matching","pairs":[{"left":"A","right":"Grundwert"},{"left":"B","right":"Prozentwert"}]},"rendered":{}}</script>
+</div>
 <div class="explainer-box explainer-note">
 <h3 class="explainer-box-title">Achtung</h3>
 <div class="block-text"><p>Der Grundwert ist bei <math><mi>p</mi></math> unter 100 % immer größer als der Prozentwert. Kommt etwas Kleineres heraus,

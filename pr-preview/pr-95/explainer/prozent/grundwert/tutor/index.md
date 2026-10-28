@@ -44,6 +44,10 @@ $G = \frac{W \cdot 100}{p}$
 Du kennst den **Prozentwert** $W$ (den Teil) und den **Prozentsatz** $p\,\%$. Über 1 % kommst du zum
 Ganzen: $W$ geteilt durch $p$ ist 1 %, mal 100 ist das Ganze.
 
+Bild: Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten. Bildunterschrift: Beschrifte A und B. Beschriftungen: A Grundwert, B Prozentwert
+
+- Übung `klammern` (unten)
+
 **Merke: Achtung**
 
 Der Grundwert ist bei $p$ unter 100 % immer größer als der Prozentwert. Kommt etwas Kleineres heraus,
@@ -68,6 +72,14 @@ Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschr
 ### Übung
 
 - Übung `grundwert-ueben` (unten)
+
+### Übung klammern
+
+- Aufgabe: Welcher Begriff gehört zu welcher Klammer?
+- Antwortformat: jedem Eintrag links den passenden rechts zuordnen
+- Lösung: A – Grundwert; B – Prozentwert
+- Erklärung: Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.
+- Link: [../?von=tutor#klammern](../?von=tutor#klammern)
 
 ### Übung grundwert-ueben
 
