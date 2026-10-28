@@ -141,6 +141,6 @@
   "assessmentLinkChapterNone": "Chapter “{chapter}” (no self-assessment):",
   "assessmentLinkPage": "“{page}”: {url}",
   "assessmentLinkWhole": "Self-assessment of the whole app: {url}",
-  "backToTutorDone": "✓ Copied – back to {name}, paste it there",
+  "backToTutorDone": "✓ Copied",
   "tutorSomeoneTo": "your AI tutor"
 }

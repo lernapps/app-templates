@@ -227,8 +227,8 @@ interface CopyTexts {
 
 /**
  * Copies `text` for the running chat with the tutor ("Zurück zum Tutor", "Hilfe" and "Zurück" on a page a tutor
- * opened, via=tutor): the tab stays open, as closing it let the browser show some other tab; `button` says for a while
- * "✓ Kopiert – zurück zu <name>, dort einfügen", as the tutor bar does after copying, and `status` says it too. When
+ * opened, via=tutor): the tab stays open, as closing it let the browser show some other tab; `button` says "✓ Kopiert"
+ * for a while, as the tutor bar does after copying, and `status`, on a line below it, where to paste it. When
  * copying fails, the text is selected in `field` to copy by hand. The text goes to the clipboard only, never over the
  * network.
  */
@@ -238,7 +238,6 @@ function copyForChat(
   button: HTMLButtonElement,
   status: HTMLElement,
   field: HTMLTextAreaElement,
-  name: string,
   texts: CopyTexts,
 ): void {
   const lang = root.documentElement.lang;
@@ -256,7 +255,7 @@ function copyForChat(
     status.textContent = texts.copied;
     const before = [...button.childNodes];
     button.dataset["done"] = "";
-    button.textContent = message(lang, "backToTutorDone", { name });
+    button.textContent = message(lang, "backToTutorDone");
     setTimeout(() => {
       if (button.dataset["done"] === undefined) return;
       delete button.dataset["done"];
@@ -309,7 +308,7 @@ function startBackToTutor(root: Document, main: HTMLElement, data: TutorData | u
         status.textContent = message(lang, "backToTutorOpen", { name });
         return;
       }
-      copyForChat(root, lines, button, status, field, name, {
+      copyForChat(root, lines, button, status, field, {
         copied: message(lang, "backToTutorCopied", { name }),
         failed: message(lang, "backToTutorFailed", { name }),
       });
@@ -516,7 +515,7 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
         const line = resultOf(root.location.href, lang, data, progress, exercise.id);
         if (line === undefined) status.textContent = message(lang, "backToTutorOpen", { name });
         else {
-          copyForChat(root, line, button, status, field, name, {
+          copyForChat(root, line, button, status, field, {
             copied: message(lang, "backToTutorCopied", { name }),
             failed: message(lang, "backToTutorFailed", { name }),
           });
@@ -525,7 +524,7 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
       }
       if (running) {
         const name = chatName(data, lang);
-        copyForChat(root, stuckLines(stuck(), lang), button, status, field, name, {
+        copyForChat(root, stuckLines(stuck(), lang), button, status, field, {
           copied: message(lang, "stuckCopied", { name }),
           failed: message(lang, "stuckFailed", { name }),
         });
@@ -716,7 +715,7 @@ export function startExplainer(root: Document = document): void {
       line.append(status, field);
       place.append(line);
       const name = chatName({ storage, ways }, lang);
-      copyForChat(root, text, button, status, field, name, {
+      copyForChat(root, text, button, status, field, {
         copied: message(lang, "backToTutorCopied", { name }),
         failed: message(lang, "backToTutorFailed", { name }),
       });

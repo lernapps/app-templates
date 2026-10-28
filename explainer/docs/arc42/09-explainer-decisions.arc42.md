@@ -314,8 +314,8 @@ page does not know where the app is served, and an assistant resolving relative 
 (ChatGPT, 2026-10-28). The message the learner sends, written by the browser, ends with the full address of every
 page and every self-assessment of the app with `via=tutor`, and the guide takes links only from there. The
 parameter is `via=tutor`, without the old `von=tutor`. A copy for the running chat keeps the tab open: closing it let the browser show
-some other tab, and the learner did not see that something was copied. The button says "✓ Kopiert – zurück zu
-<assistant>, dort einfügen" for a while, as the tutor bar does after copying. Rejected: the tutor explaining
+some other tab, and the learner did not see that something was copied. The button says "✓ Kopiert" for a while, as the tutor
+bar does after copying, and a line below it where to paste. Rejected: the tutor explaining
 the tasks of the self-assessment itself (a second place to teach, and solutions in view); a new chat per round (the
 tutor would lose the course of the learner).
 

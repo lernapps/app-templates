@@ -124,7 +124,7 @@ feature: assistants read it before they choose an archetype.
   `via=tutor` shows "Zurück zum Tutor" at its top and end: it copies the page's tutor page with its task numbers and a
   line per task of the session (the exercise, its task number, "richtig im 2. Versuch", "Lösung angesehen" or "noch
   nicht gelöst (1 Versuch, Eingabe …)" with the app's message), then the count of the session. The tab stays open, and
-  the button says "✓ Kopiert – zurück zu <assistant>, dort einfügen"; when copying fails, the lines are selected in a
+  the button says "✓ Kopiert" and a line below it where to paste; when copying fails, the lines are selected in a
   field. The line goes to the clipboard only
   ([`result.ts`](runtime/explainer/result.ts)).
 - An explainer's `video` block (`youtube`, `title`, `channel`) is a YouTube video behind two clicks: the page, with or

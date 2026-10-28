@@ -141,6 +141,6 @@
   "assessmentLinkChapterNone": "Kapitel „{chapter}“ (keine Selbsteinschätzung):",
   "assessmentLinkPage": "„{page}“: {url}",
   "assessmentLinkWhole": "Selbsteinschätzung der ganzen App: {url}",
-  "backToTutorDone": "✓ Kopiert – zurück zu {name}, dort einfügen",
+  "backToTutorDone": "✓ Kopiert",
   "tutorSomeoneTo": "deinem KI-Tutor"
 }
