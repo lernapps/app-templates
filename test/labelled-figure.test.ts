@@ -76,6 +76,13 @@ describe("the markers and the legend of a labelled figure", () => {
     );
   });
 
+  test("the markers of the material and the legend: each line of the legend leads with its marker", () => {
+    const html = render(figure({}, ["A", "B", "C", "D", "E"]));
+    expect(html).toContain(
+      '<ol class="block-legend block-legend-named"><li><b>A</b> Toraschrein</li><li><b>B</b> Menora</li>',
+    );
+  });
+
   test("a marker is text: markup in it is escaped", () => {
     expect(render(figure({}, ["<b>", "B", "C", "D", "E"]))).toContain("&lt;b&gt;</span>");
   });

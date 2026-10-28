@@ -72,10 +72,16 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
             `<span class="block-marker" style="left: ${label.x}%; top: ${label.y}%" aria-hidden="true">${escape(markerOf(label, index))}</span>`,
         )
         .join("");
+      // a legend names the markers the image shows: numbered by the list as long as no label names its own marker
+      const named = block.labels.some((label) => label.marker !== undefined);
+      const item = (label: (typeof block.labels)[number], index: number) =>
+        named
+          ? `<li><b>${escape(markerOf(label, index))}</b> ${plain(label.text)}</li>`
+          : `<li>${plain(label.text)}</li>`;
       const legend =
         block.legend === false
           ? ""
-          : `<ol class="block-legend">${block.labels.map((label) => `<li>${plain(label.text)}</li>`).join("")}</ol>`;
+          : `<ol class="block-legend${named ? " block-legend-named" : ""}">${block.labels.map(item).join("")}</ol>`;
       const caption = block.caption === undefined ? "" : markdown(block.caption);
       const fill = context.sizeless?.(block.image) === true ? " block-labelled-fill" : "";
       return [
