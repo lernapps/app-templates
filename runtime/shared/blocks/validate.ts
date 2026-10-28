@@ -2,9 +2,9 @@
 // and not neither; a bundled image exists; every text is complete in the declared languages and holds what its kind
 // allows (plain text without raw HTML, restricted Markdown, a formula, a name, the source of a credit). The place of a
 // problem is a path below the blocks: [2, "caption", "en"] for the English caption of the third block.
-import type { Text } from "../languages.ts";
+import { inLanguage, type Text } from "../languages.ts";
 import { checkText, type TextFinding, type TextKind } from "../text/check.ts";
-import type { MaterialBlock } from "./block.ts";
+import { markerOf, type MaterialBlock } from "./block.ts";
 
 /** The definition of each type of block in the schema of the blocks (blocks.v1.schema.json). */
 export const MATERIAL_DEFINITIONS: Readonly<Record<MaterialBlock["type"], string>> = {
@@ -16,6 +16,10 @@ export const MATERIAL_DEFINITIONS: Readonly<Record<MaterialBlock["type"], string
   quote: "quote",
   code: "code",
 };
+
+/** Whether `text` names `marker`: as a word of its own, so that the marker A is not found in "Grundriss". */
+const names = (text: string, marker: string): boolean =>
+  new RegExp(`(?<![\\p{L}\\p{N}])${marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "u").test(text);
 
 /** A problem in blocks: where in them (a path), in which language, in Markdown on which line below the first, and what. */
 export interface BlockProblem {
@@ -98,7 +102,34 @@ export function checkMaterial(blocks: readonly MaterialBlock<Text>[], checks: Bl
         text([...at, "alt"], block.alt, "plain");
         text([...at, "caption"], block.caption, "markdown");
         if (block.type === "labelled-figure") {
-          block.labels.forEach((label, number) => text([...at, "labels", number, "text"], label.text, "plain"));
+          const seen = new Set<string>();
+          block.labels.forEach((label, number) => {
+            text([...at, "labels", number, "text"], label.text, "plain");
+            const marker = markerOf(label, number);
+            if (seen.has(marker)) {
+              problems.push({
+                path: [...at, "labels", number, "marker"],
+                message: `${marker} is used twice; give each label its own marker`,
+              });
+            }
+            seen.add(marker);
+          });
+          // without a legend, alt is the only text that tells which part a marker stands for
+          if (block.legend === false) {
+            for (const lang of checks.languages) {
+              const alt = inLanguage(block.alt, lang);
+              block.labels.forEach((label, number) => {
+                const marker = markerOf(label, number);
+                if (!names(alt, marker)) {
+                  problems.push({
+                    path: [...at, "alt"],
+                    lang,
+                    message: `alt does not name the marker ${marker}; with legend: false, alt names every marker with its part`,
+                  });
+                }
+              });
+            }
+          }
         }
         text([...at, "source"], block.source, "credit");
         break;

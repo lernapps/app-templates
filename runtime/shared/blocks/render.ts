@@ -1,5 +1,5 @@
 // Renders blocks that show content at build time into HTML: prose, a formula (MathML), a figure (an inline SVG drawn
-// from data, or a bundled image), a labelled figure (a bundled image with numbered markers and a legend), a table, a
+// from data, or a bundled image), a labelled figure (a bundled image with markers and, unless it is left out, a legend), a table, a
 // quotation and highlighted code, each with its caption and, for an image or a quotation, its credit. The page that
 // shows them says where a bundled image is from the page and how a link to one of its pages resolves; the look is
 // blocks.css.
@@ -8,7 +8,7 @@ import { inLanguage, localeOf, textsIn, type Language, type Text } from "../lang
 import { renderFormula } from "../text/formula.ts";
 import { renderInline, renderMarkdown } from "../text/markdown.ts";
 import { isUrl } from "../text/check.ts";
-import type { Credit, MaterialBlock } from "./block.ts";
+import { markerOf, type Credit, type MaterialBlock } from "./block.ts";
 import { highlight } from "./code.ts";
 import { bar, hundredGrid } from "./figures.ts";
 import de from "./messages/de.json" with { type: "json" };
@@ -69,16 +69,19 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
       const markers = block.labels
         .map(
           (label, index) =>
-            `<span class="block-marker" style="left: ${label.x}%; top: ${label.y}%" aria-hidden="true">${index + 1}</span>`,
+            `<span class="block-marker" style="left: ${label.x}%; top: ${label.y}%" aria-hidden="true">${escape(markerOf(label, index))}</span>`,
         )
         .join("");
-      const legend = block.labels.map((label) => `<li>${plain(label.text)}</li>`).join("");
+      const legend =
+        block.legend === false
+          ? ""
+          : `<ol class="block-legend">${block.labels.map((label) => `<li>${plain(label.text)}</li>`).join("")}</ol>`;
       const caption = block.caption === undefined ? "" : markdown(block.caption);
       const fill = context.sizeless?.(block.image) === true ? " block-labelled-fill" : "";
       return [
         `<figure class="block-figure block-labelled">`,
         `<div class="block-labelled-image${fill}"><img src="${escape(context.href(block.image))}" alt="${plain(block.alt)}" loading="lazy" decoding="async">${markers}</div>`,
-        `<ol class="block-legend">${legend}</ol>`,
+        legend,
         `<figcaption>${caption}${renderCredit(block, lang)}</figcaption>`,
         `</figure>`,
       ].join("");
