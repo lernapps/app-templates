@@ -89,8 +89,8 @@ function checkOrder(
 
 /**
  * The problems of the self-assessment `assessment` of `yaml`: of the app (no `chapter`), or of the chapter `chapter`,
- * whose exercises are all its own. Each reference names a page and an exercise of it of a question type or generated,
- * and each exercise is listed once.
+ * whose exercises are all its own. Each reference names a page and an exercise of it of a question type or generated;
+ * a question is listed once, a generated exercise may be listed again (each listing draws a task of its own).
  */
 function checkAssessment(
   yaml: YamlFile,
@@ -105,10 +105,7 @@ function checkAssessment(
       const path = ["selfAssessment", "pages", index, "exercises", at];
       const parts = parseRef(ref);
       if (parts === undefined) return;
-      if (seen.has(ref)) {
-        problems.at(yaml, path, `${ref} is listed twice; list each exercise once in the self-assessment`);
-        return;
-      }
+      const twice = seen.has(ref);
       seen.add(ref);
       if (chapter !== undefined && parts.chapter !== chapter) {
         problems.at(
@@ -125,7 +122,17 @@ function checkAssessment(
         problems.at(yaml, path, `${ref} names no page of the app; write /<chapter>/<page>/#<exercise>`);
         return;
       }
-      if (exerciseOf(page, parts.exercise) !== undefined) return;
+      const exercise = exerciseOf(page, parts.exercise);
+      // a generated exercise may be listed again: each listing draws a task of its own
+      if (twice && exercise !== undefined && exercise.type !== "generated") {
+        problems.at(
+          yaml,
+          path,
+          `${ref} is listed twice, and a question shows the same task each time; list it once (a generated exercise may be listed again: each listing draws a task of its own)`,
+        );
+        return;
+      }
+      if (exercise !== undefined) return;
       const component = [...allBlocks(page.blocks)].some(
         (block) =>
           block.type === "vue-component" &&

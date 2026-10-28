@@ -3,7 +3,7 @@
 // which holds the task.
 import { describe, expect, test } from "vite-plus/test";
 import type { Question } from "../runtime/shared/questions/question.ts";
-import { answerShown, Progress, resultLine } from "../runtime/explainer/result.ts";
+import { answerShown, Progress, resultLine, sessionLines } from "../runtime/explainer/result.ts";
 
 const CHAPTER = "https://lernapps.net/mathe-karte/zufall/laplace/tutor/?laplace-zaehlen=6&uebung=laplace-zaehlen";
 
@@ -153,5 +153,30 @@ describe("the last answer as text", () => {
       ],
     } as unknown as Question;
     expect(answerShown(matching, [1, -1], "de")).toBe("a → y; b → ?");
+  });
+});
+
+describe("what Zurück zum Tutor copies", () => {
+  const TUTOR = "https://lernapps.net/mathe-karte/zufall/laplace/tutor/?laplace-zaehlen=6&wuerfel=2";
+
+  test("the tutor page with the page's task numbers, a line per task of the session, the count last", () => {
+    const progress = new Progress();
+    progress.answered("laplace-zaehlen", 6, false, "3/20", "Zähl die günstigen Fälle noch einmal.");
+    progress.answered("wuerfel", 2, false, "1/3");
+    progress.answered("wuerfel", 2, true);
+    progress.hinted("andere", undefined);
+    expect(sessionLines(TUTOR, progress.tasks(), progress.session(), "de").split("\n")).toEqual([
+      `Ich habe auf ${TUTOR} geübt:`,
+      "- laplace-zaehlen, Nr. 6: noch nicht gelöst (1 Versuch, Eingabe 3/20). Die App sagt: „Zähl die günstigen Fälle noch einmal.“",
+      "- wuerfel, Nr. 2: richtig im 2. Versuch.",
+      "Sitzung: 1 von 2 richtig.",
+    ]);
+  });
+
+  test("nothing done yet: one line with the tutor page", () => {
+    const progress = new Progress();
+    expect(sessionLines(TUTOR, progress.tasks(), progress.session(), "de")).toBe(
+      `Ich habe auf ${TUTOR} noch keine Aufgabe gelöst.`,
+    );
   });
 });

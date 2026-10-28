@@ -12,7 +12,7 @@ import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { readAnswer } from "../shared/questions/engine.ts";
 import { renderQuestion } from "../shared/questions/render.ts";
-import { isComplete, isCorrect, type Question } from "../shared/questions/question.ts";
+import { isComplete, isCorrect, shuffled, type Question } from "../shared/questions/question.ts";
 import {
   assessmentPrompt,
   BAND_MESSAGES,
@@ -74,6 +74,39 @@ function startOffers(root: Document): void {
   }
 }
 
+/**
+ * The options of a choice in an order of its own, new for each run, so that a second run asks the question, not the
+ * place of its answer.
+ */
+function mix(place: HTMLElement, question: Question): void {
+  if (question.type !== "single-choice" && question.type !== "multiple-choice") return;
+  const options = [...place.querySelectorAll<HTMLElement>(".question-option")];
+  const parent = options[0]?.parentElement;
+  if (!parent) return;
+  for (const index of shuffled(options.length, Math.floor(Math.random() * 2 ** 31))) {
+    const option = options[index];
+    if (option) parent.append(option);
+  }
+}
+
+/** A task number of 1 to `count`, at random, avoiding the numbers in `avoid` while others are left. */
+function drawNumber(count: number, avoid: readonly ReadonlySet<number>[]): number {
+  const left = Array.from({ length: count }, (_n, index) => index + 1).filter((n) => avoid.every((set) => !set.has(n)));
+  return left.length === 0 ? randomTaskNumber(count) : (left[Math.floor(Math.random() * left.length)] ?? 1);
+}
+
+/** The task numbers of the round before, by exercise (its ref), from the address's vorher=a1.28,a4.2. */
+function previousNumbers(href: string, items: readonly { key: string; ref: string }[]): Map<string, Set<number>> {
+  const numbers = new Map<string, Set<number>>();
+  for (const pair of (new URL(href).searchParams.get("vorher") ?? "").split(",")) {
+    const [key, n] = pair.split(".");
+    const ref = items.find((item) => item.key === key)?.ref;
+    if (ref === undefined || !Number.isInteger(Number(n))) continue;
+    numbers.set(ref, (numbers.get(ref) ?? new Set<number>()).add(Number(n)));
+  }
+  return numbers;
+}
+
 /** One exercise of a run: how to read and check its answer. */
 interface Live {
   question: Question;
@@ -122,20 +155,29 @@ export function startAssessment(root: Document, ways: TutorWays): void {
   const live = new Map<string, Live>();
   const element = (key: string) => box.querySelector<HTMLElement>(`.explainer-assessment-item[data-key="${key}"]`);
 
-  /** A new run: a new task of each generated exercise, every answer empty, the first page. */
+  // the task numbers of the round before, which a tutor's link names (vorher=a1.28,a4.2): a new round avoids them
+  const before = previousNumbers(root.location.href, data.items);
+
+  /** A new run: a new task of each generated exercise, every answer empty, the options mixed, the first page. */
   const begin = () => {
     live.clear();
+    // the task numbers drawn of each exercise: listed again, it draws another
+    const drawn = new Map<string, Set<number>>();
     for (const item of data.items) {
       const place = element(item.key);
       if (!place) continue;
       const exercise = item.data;
       if (exercise.kind === "question") {
         place.querySelector("form")?.reset();
+        mix(place, exercise.question);
         live.set(item.key, { question: exercise.question });
         continue;
       }
       const { spec, templates, seeds } = exercise;
-      const number = randomTaskNumber(Math.max(seeds.length, 1));
+      const used = drawn.get(item.ref) ?? new Set<number>();
+      drawn.set(item.ref, used);
+      const number = drawNumber(Math.max(seeds.length, 1), [used, before.get(item.ref) ?? new Set<number>()]);
+      used.add(number);
       // the task number drawn, for the tests and a look at the page
       place.dataset["number"] = String(number);
       const task = generate(spec, seeds[number - 1] ?? number, exercise.data);
@@ -143,6 +185,7 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       const target = place.querySelector<HTMLElement>(".explainer-assessment-live");
       if (target)
         target.innerHTML = renderQuestion(question, { lang, textHtml: taskText(spec, task, lang, templates) });
+      mix(place, question);
       live.set(item.key, {
         question,
         number,
@@ -255,7 +298,15 @@ export function startAssessment(root: Document, ways: TutorWays): void {
     back.addEventListener("click", () => {
       const base = new URL(data.root, root.location.href);
       const tutor = new URL(`${data.tutor}${resultQuery(shown)}`, base).href;
-      ways.back(assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "back"), tutorBox);
+      // the link of the next round: the same self-assessment, with the task numbers of this one to avoid
+      const next = new URL(root.location.href);
+      next.search = "";
+      next.hash = "";
+      next.searchParams.set("von", "tutor");
+      const numbers = shown.flatMap((one) => (one.number === undefined ? [] : [`${one.key}.${one.number}`]));
+      if (numbers.length > 0) next.searchParams.set("vorher", numbers.join(","));
+      const lines = assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "back");
+      ways.back(`${lines}\n${t("assessmentNextRound", { url: next.href.replace(/%2C/g, ",") })}`, tutorBox);
     });
     result.querySelector(".explainer-assessment-delete")?.remove();
     const privacy = root.querySelector<HTMLElement>(".explainer-assessment-privacy");

@@ -131,5 +131,9 @@
   "assessmentTasks": "Meine Aufgaben:",
   "assessmentBackIntro": "Drück „Zurück zum Tutor“. Das kopiert dein Ergebnis. Füg es im Chat mit deinem Tutor ein.",
   "assessmentBackLine": "Ich habe die Selbsteinschätzung gemacht. Mein Ergebnis je Seite:",
-  "assessmentTutorRun": "Diese Runde ist für deinen Tutor: Die App speichert nichts davon."
+  "assessmentTutorRun": "Diese Runde ist für deinen Tutor: Die App speichert nichts davon.",
+  "sessionIntro": "Ich habe auf {url} geübt:",
+  "sessionNone": "Ich habe auf {url} noch keine Aufgabe gelöst.",
+  "sessionTask": "{exercise}{number}: {status}.",
+  "assessmentNextRound": "Link für eine neue Runde: {url}"
 }

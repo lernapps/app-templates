@@ -681,6 +681,31 @@ function expectTutorAddress(address: string, here: string, id: string | undefine
 }
 
 /**
+ * What "Zurück zum Tutor" copies on the page `here` (its address before the click): the page's tutor page with the
+ * page's task numbers, which answers and has the exercise `id`; a line with `line` for the task the learner did; the
+ * count of the session last.
+ */
+async function expectSessionLines(
+  request: APIRequestContext,
+  copied: string[],
+  here: string,
+  line: string,
+  id: string,
+): Promise<void> {
+  await expect.poll(() => copied.length, "the lines are copied").toBe(1);
+  const lines = (copied[0] ?? "").split("\n");
+  const [intro, before = "", after = ""] = [lines[0] ?? "", ...messageOf("de", "sessionIntro").split("{url}")];
+  expect(intro.startsWith(before) && intro.endsWith(after), "the first line: the page's tutor page").toBe(true);
+  const address = intro.slice(before.length, intro.length - after.length);
+  expectTutorAddress(address, here, undefined, undefined);
+  expect(lines.slice(1, -1), "a line per task").toContainEqual(expect.stringContaining(line));
+  expect(lines.at(-1), "the count of the session").toMatch(/^Sitzung: \d+ von \d+ richtig\.$/);
+  const response = await request.get(address);
+  expect(response.status(), `${address} answers`).toBe(200);
+  expect(await response.text(), "the tutor page has the exercise").toContain(id);
+}
+
+/**
  * The result line "Zurück zum Tutor" copies on the page `here` (its address before the click): its first line has
  * `first`, then the page's tutor page with the task `n` of the exercise `id`, which answers and has the exercise.
  */
@@ -1071,7 +1096,7 @@ export function explainerTests(root = "."): void {
         );
       });
 
-      test(`${generatedPage.url}: "Zurück zum Tutor" copies the result line of a generated exercise`, async ({
+      test(`${generatedPage.url}: "Zurück zum Tutor" copies the tutor page and the tasks of a generated exercise`, async ({
         page,
         request,
       }) => {
@@ -1088,9 +1113,14 @@ export function explainerTests(root = "."): void {
         await answerQuestion(page, question, wrong);
         await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
         const here = page.url();
-        await page.getByRole("button", { name: messageOf("de", "backToTutor") }).click();
+        // at the top and at the end of the page
+        await expect(page.getByRole("button", { name: messageOf("de", "backToTutor") })).toHaveCount(2);
+        await page
+          .getByRole("button", { name: messageOf("de", "backToTutor") })
+          .last()
+          .click();
         const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}, ${messageOf("de", "resultInput", { input: answerShown(question, wrong, "de") })})`;
-        await expectResultLine(request, copied, here, `, ${exercise.id}, Nr. ${n}: ${status}.`, exercise.id, n);
+        await expectSessionLines(request, copied, here, `- ${exercise.id}, Nr. ${n}: ${status}.`, exercise.id);
       });
     }
 
@@ -1163,7 +1193,7 @@ export function explainerTests(root = "."): void {
       const component = item.components.find((candidate) => candidate.exercise && candidate.id !== undefined);
       if (component?.id === undefined) continue;
       const id = component.id;
-      test(`${item.url}: "Zurück zum Tutor" copies the result line of the exercise component ${component.name}`, async ({
+      test(`${item.url}: "Zurück zum Tutor" copies the tutor page and the tasks of the exercise component ${component.name}`, async ({
         page,
         request,
       }) => {
@@ -1173,10 +1203,13 @@ export function explainerTests(root = "."): void {
         await expect(element).toHaveAttribute("data-hydrated", "");
         const n = await answerRejected(page, component);
         const here = page.url();
-        await page.getByRole("button", { name: messageOf("de", "backToTutor") }).click();
+        await page
+          .getByRole("button", { name: messageOf("de", "backToTutor") })
+          .first()
+          .click();
         // and the input, when the logic module has show, as it gives it, which the test does not know
         const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}`;
-        await expectResultLine(request, copied, here, `, ${id}, Nr. ${n}: ${status}`, id, n);
+        await expectSessionLines(request, copied, here, `- ${id}, Nr. ${n}: ${status}`, id);
       });
     }
 
@@ -1215,7 +1248,13 @@ export function explainerTests(root = "."): void {
           await expect.poll(() => copied.length).toBe(1);
           const lines = (copied[0] ?? "").split("\n");
           expect(lines[0]).toBe(messageOf("de", "assessmentBackLine"));
-          const tutor = lines.at(-1)?.replace(`${messageOf("de", "resultTutor")} `, "") ?? "";
+          const prefix = `${messageOf("de", "resultTutor")} `;
+          const tutor = lines.find((line) => line.startsWith(prefix))?.slice(prefix.length) ?? "";
+          // the link of the next round last: the same self-assessment, opened by the tutor
+          const [nextBefore = ""] = messageOf("de", "assessmentNextRound").split("{url}");
+          const next = new URL(lines.at(-1)?.slice(nextBefore.length) ?? "");
+          expect(next.pathname.endsWith(`/${assessment.url}`), "the next round's link").toBe(true);
+          expect(next.searchParams.get("von")).toBe("tutor");
           const url = new URL(tutor);
           expect(url.pathname.endsWith(`/${assessment.url}tutor/`), "the self-assessment's tutor page").toBe(true);
           for (const item of assessment.items) expect(url.searchParams.get(item.key) ?? "").toMatch(/(^|-)offen$/);

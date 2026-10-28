@@ -23,7 +23,8 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   start page or beside the title of a page (one of the KI assistants the runtime offers), with
   an account of their own. Then two ways lead there: a bar beside the title of each page, for a tutor who helps with
   the page, and "Hilfe" ("Warum?" after a wrong answer) in every exercise, with the task, the input and the app's
-  message. "Zurück zum Tutor" copies a result line the learner pastes into the chat.
+  message. "Zurück zum Tutor" copies the page's tutor page and how each task of the session went, for the learner to
+  paste into the chat.
 - Optional: a self-assessment per chapter (`selfAssessment` in its `chapter.yaml`, at `<chapter>/einschaetzung/`);
   the app's, at `einschaetzung/`, is every chapter's together. It shows exercises of the pages, best two to five on
   each of its pages, without "Prüfen", and checks them all together: the result says per page whether the learner

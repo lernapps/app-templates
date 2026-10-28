@@ -113,7 +113,8 @@ definition: In the learner's voice: the page's tutor page with the page's task n
 
 ## Result Line
 
-What "Zurück zum Tutor" copies for the learner to paste into the chat.
+What "Zurück" at one task copies for the learner to paste into the chat; "Zurück zum Tutor" copies the tutor page and a
+line like it for each task of the session.
 
 ```arc42
 :::glossary-term

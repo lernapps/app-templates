@@ -113,14 +113,16 @@ export const assessmentOf = (site: Site, chapter?: string): Assessment | undefin
 export const STEP_SIZE = { min: 2, max: 5 } as const;
 
 /**
- * The note of the build on the pages of the self-assessments with fewer or more exercises than STEP_SIZE, or none: a
- * hint, no problem.
+ * The note of the build on the pages of the chapters' self-assessments with fewer or more exercises than STEP_SIZE,
+ * each by its file and place, or none: a hint, no problem.
  */
 export function stepHint(site: Site): string | undefined {
-  const off = assessments(site).flatMap((assessment) =>
-    Array.from({ length: assessment.steps }, (_step, index) => index).flatMap((index) => {
-      const count = assessment.items.filter((item) => item.step === index).length;
-      return count < STEP_SIZE.min || count > STEP_SIZE.max ? [`${assessment.local} page ${index + 1} (${count})`] : [];
+  const off = site.chapters.flatMap((chapter) =>
+    (chapter.selfAssessment?.pages ?? []).flatMap((step, index) => {
+      const count = step.exercises.length;
+      return count < STEP_SIZE.min || count > STEP_SIZE.max
+        ? [`src/${chapter.id}/chapter.yaml: selfAssessment.pages[${index}] (${count})`]
+        : [];
     }),
   );
   if (off.length === 0) return undefined;
@@ -191,10 +193,13 @@ export const BAND_MESSAGES = {
   unasked: "assessmentUnasked",
 } as const;
 
-/** The band of `right` of `total`: all right, at least half, less; not asked for none. */
+/**
+ * The band of `right` of `total`: all right of two or more, at least half, less; not asked for none. One task alone is
+ * too little to say a page is known: right, it is "partly".
+ */
 export function bandOf(right: number, total: number): Band {
   if (total === 0) return "unasked";
-  if (right === total) return "known";
+  if (right === total && total >= 2) return "known";
   return right * 2 >= total ? "partly" : "read";
 }
 

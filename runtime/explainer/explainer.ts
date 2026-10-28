@@ -34,7 +34,7 @@ import { diagnose, questionFor } from "./generated/question.ts";
 import { hintOf, stepsOf, taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { message } from "./messages.ts";
-import { answerShown, Progress, resultLine } from "./result.ts";
+import { answerShown, Progress, resultLine, sessionLines } from "./result.ts";
 import { stuckLines, stuckPrompt } from "./stuck.ts";
 import { currentExercise, pageQuery, taskQuery, type PagePosition } from "./position.ts";
 import {
@@ -286,27 +286,40 @@ function statusAndField(root: Document, label: string): { status: HTMLElement; f
 }
 
 /**
- * "Zurück zum Tutor" at the top of a page a tutor opened (von=tutor): it copies the result line and closes the tab
- * (copyAndClose).
+ * What "Zurück zum Tutor" copies on the page at `href`: the page's tutor page with the page's task numbers, and each
+ * task the learner did in this session with how it went (result.ts, sessionLines).
+ */
+function sessionOf(href: string, lang: string, data: TutorData, progress: Progress): string | undefined {
+  const { page, tutor } = data;
+  if (page === undefined || tutor === undefined) return undefined;
+  return sessionLines(tutorAddress(href, data, pageQuery(href, page)), progress.tasks(), progress.session(), lang);
+}
+
+/**
+ * "Zurück zum Tutor" at the top and at the end of a page a tutor opened (von=tutor): it copies the page's tutor page
+ * and how each task of the session went, and closes the tab (copyAndClose).
  */
 function startBackToTutor(root: Document, main: HTMLElement, data: TutorData | undefined, progress: Progress): void {
   const lang = root.documentElement.lang;
-  const box = root.createElement("p");
-  box.className = "explainer-back";
-  const button = root.createElement("button");
-  button.type = "button";
-  button.textContent = message(lang, "backToTutor");
-  const { status, field } = statusAndField(root, message(lang, "resultLabel"));
-  button.addEventListener("click", () => {
-    const line = data === undefined ? undefined : resultOf(root.location.href, lang, data, progress);
-    copyAndClose(root, line, status, field, {
-      copied: message(lang, "backToTutorCopied"),
-      failed: message(lang, "backToTutorFailed"),
-      open: message(lang, "backToTutorOpen"),
+  for (const at of ["top", "end"] as const) {
+    const box = root.createElement("p");
+    box.className = `explainer-back explainer-back-${at}`;
+    const button = root.createElement("button");
+    button.type = "button";
+    button.textContent = message(lang, "backToTutor");
+    const { status, field } = statusAndField(root, message(lang, "resultLabel"));
+    button.addEventListener("click", () => {
+      const lines = data === undefined ? undefined : sessionOf(root.location.href, lang, data, progress);
+      copyAndClose(root, lines, status, field, {
+        copied: message(lang, "backToTutorCopied"),
+        failed: message(lang, "backToTutorFailed"),
+        open: message(lang, "backToTutorOpen"),
+      });
     });
-  });
-  box.append(button, " ", status, field);
-  main.prepend(box);
+    box.append(button, " ", status, field);
+    if (at === "top") main.prepend(box);
+    else main.append(box);
+  }
 }
 
 /** The prompts of a way to the tutor: the one a provider link carries, and the one to copy. */

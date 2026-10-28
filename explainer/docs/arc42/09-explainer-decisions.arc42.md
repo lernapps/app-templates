@@ -97,7 +97,10 @@ every exercise, before the first input too, "Warum?" after a wrong one: one sent
 input with its tries and the app's message word for word, so the tutor starts from what the learner was told: the
 tutor page tells it to go first, briefly, into exactly that input and the task, which mistake of the table it is;
 without a chat they open a new one, and on a page a tutor opened (`von=tutor`) they are copied for the running chat,
-which a new chat would lose. "Zurück zum Tutor" copies a result line with the tutor page and the task. Copying
+which a new chat would lose. "Zurück zum Tutor", at the top and the end of the page, copies the page's tutor page with
+the page's task numbers and a line for each task of the session (how far the learner got, a wrong one with its input
+and the app's message), so that the tutor loads the tutor page and coaches on exactly these tasks; "Zurück" at one
+task copies that task's result line. Copying
 instead of an assistant adds the tutor page's Markdown, which lies beside it. Input and message leave the page only
 with the learner's click. Measured on lernapps/elektrizitaet and Mathe-Karte (2026-10-26): with every number, a
 page with two `generated` exercises and a component has 39 kB, the most with `generated` ones alone 54 kB; two
@@ -249,8 +252,10 @@ covers all and a tutor can go on chapter by chapter with the same exercises. It 
 them, a few on each of its pages (best two to five), and checks no single one: only "Auswerten" checks them all
 together, and the result is per content page, the level at which the learner goes on: probably known (all right),
 look at it again (at least half), read it (less); a page none of whose exercises is asked is "not asked", as some
-content, an open activity for one, cannot be checked. A generated exercise is preferred, as each run draws a new
-task. It is optional for the learner and for the app: the content declares it, and an agent adds it when the content
+content, an open activity for one, cannot be checked. One task alone is too little to call a page known: right, it is
+"look at it again". A generated exercise is preferred, as each run draws a new task, and it may be listed twice for
+two tasks of its own; the options of a choice are mixed anew for each run, so that a second run asks the question,
+not the place of its answer. It is optional for the learner and for the app: the content declares it, and an agent adds it when the content
 and its forms of teaching are known, at the end (tooling skill `lernapps-explainer-self-assessment`). It needs
 JavaScript; without it the offer stays hidden and its page says so in one line. Rejected: feedback after each
 exercise (it would teach, not assess); a result per chapter (too coarse to say where to start); a self-assessment of
@@ -297,7 +302,10 @@ After a self-assessment the tutor is a guide, not a teacher: explaining and prac
 "Hilfe" and their own tutor pages. The self-assessment's tutor page tells the tutor to go chapter by chapter: the pages
 that do not stick, each opened with `von=tutor` and ending in "Zurück zum Tutor", then a new round of the chapter's
 self-assessment, also with `von=tutor`, which draws new tasks; after each round the tutor decides on the next chapter
-or another round, and sends a page that does not stick after two rounds to "Mit einem KI-Tutor lernen" on the page. On
+or another round, and sends a page that does not stick after two rounds to "Mit einem KI-Tutor lernen" on the page.
+When the learner comes back from a page with a wrong task, the guide loads the page's tutor page and coaches on exactly
+those tasks, then guides on. Each round's "Zurück zum Tutor" ends with the link of the next round, which names the task
+numbers of this one (`vorher=a1.28`): the next round draws others where it can. On
 a page a tutor opened, the clipboard is always the way back: the self-assessment's "Zurück zum Tutor" copies the result
 per page, a line per exercise and the tutor page with the result in its address, and closes the tab, as the result
 line of a content page does. The tutor page holds every chapter with its pages and the link to its self-assessment, and

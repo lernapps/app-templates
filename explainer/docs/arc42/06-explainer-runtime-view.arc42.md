@@ -45,8 +45,9 @@ device. Way A: the bar beside the title of a page opens the learner's own assist
 page's tutor page with the page's task numbers, or copies that sentence with the tutor page's Markdown. The assistant
 fetches the tutor page, looks the numbers up in its tables, asks what the child does not understand, explains with
 the page's own example and sends links to tasks of the page with `von=tutor`. On such a page the learner solves the
-task and presses "Zurück zum Tutor": the page copies a result line with the try, the input and the tutor page with
-the task, closes the tab, and the learner pastes the line into the chat; the assistant knows the task's solution and
+task and presses "Zurück zum Tutor": the page copies the tutor page with the page's task numbers and how each task of
+the session went (the try, the input, the app's message), closes the tab, and the learner pastes the lines into the
+chat; the assistant knows the task's solution and
 mistakes from the tutor page and talks about the mistake. Way B: stuck at a task, the learner clicks "Hilfe"
 ("Warum?" after a wrong answer) in the exercise. Without a chat the assistant opens with one sentence that names the
 tutor page and the task, then the input and the app's message word for word; on a page a tutor opened the page copies

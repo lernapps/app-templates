@@ -59,10 +59,10 @@ describe("the build checks a self-assessment", () => {
       "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-01/#prozent-raten names no exercise of src/zahlen/zahlen-01.yaml; use the id of one of its exercises: generated, or a question type",
     ],
     [
-      "an exercise listed twice",
-      "/zahlen/zahlen-01/#prozent-von-200",
+      "a question listed twice",
       "/zahlen/zahlen-01/#prozent-rechnen",
-      "src/zahlen/chapter.yaml:12: selfAssessment.pages[0].exercises[1]: /zahlen/zahlen-01/#prozent-rechnen is listed twice; list each exercise once in the self-assessment",
+      "/zahlen/zahlen-01/#prozent-von-200",
+      "src/zahlen/chapter.yaml:12: selfAssessment.pages[0].exercises[1]: /zahlen/zahlen-01/#prozent-von-200 is listed twice, and a question shows the same task each time; list it once (a generated exercise may be listed again: each listing draws a task of its own)",
     ],
     [
       "an exercise of another chapter",
@@ -112,6 +112,12 @@ describe("the build checks a self-assessment", () => {
     expect(assessments(site).map((assessment) => assessment.local)).toEqual(["einschaetzung/"]);
   });
 
+  test("a generated exercise may be listed again: each listing draws a task of its own", () => {
+    const root = app();
+    edit(root, "zahlen/chapter.yaml", "/zahlen/zahlen-01/#prozent-von-200", "/zahlen/zahlen-01/#prozent-rechnen");
+    expect(problems(root)).toEqual([]);
+  });
+
   test("a page or chapter may not take the self-assessment's address", () => {
     const root = app();
     cpSync(join(root, "src/zahlen/zahlen-02.yaml"), join(root, "src/zahlen/einschaetzung.yaml"));
@@ -131,7 +137,7 @@ describe("the build checks a self-assessment", () => {
       "        - /zahlen/zahlen-02/#hauptgruppe",
     );
     expect(stepHint(loadSite(root, 0))).toBe(
-      "lernapps explainer: 2 pages of a self-assessment show fewer than 2 or more than 5 exercises: einschaetzung/ page 2 (1), zahlen/einschaetzung/ page 2 (1)",
+      "lernapps explainer: 1 page of a self-assessment shows fewer than 2 or more than 5 exercises: src/zahlen/chapter.yaml: selfAssessment.pages[1] (1)",
     );
   });
 });
@@ -239,7 +245,7 @@ describe("a run in the browser", () => {
     { key: "a3", ref: "/z/b/#z", number: 3, state: "offen" },
   ];
 
-  test("a page is known with all right, partly with at least half, to read with less, not asked without one", () => {
+  test("a page is known with all of two or more right, partly with at least half, to read with less, not asked without one", () => {
     expect([bandOf(2, 2), bandOf(1, 2), bandOf(1, 3), bandOf(0, 1), bandOf(0, 0)]).toEqual([
       "known",
       "partly",
@@ -247,6 +253,8 @@ describe("a run in the browser", () => {
       "read",
       "unasked",
     ]);
+    // one task alone is too little to say a page is known
+    expect(bandOf(1, 1)).toBe("partly");
     expect(pageResults(["z/a/", "z/b/", "z/c/"], { a1: "z/a/", a2: "z/a/", a3: "z/b/" }, results)).toEqual([
       { page: "z/a/", right: 1, total: 2, band: "partly" },
       { page: "z/b/", right: 0, total: 1, band: "read" },
