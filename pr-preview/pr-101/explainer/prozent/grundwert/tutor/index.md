@@ -24,7 +24,7 @@ Eltern und Lehrkräfte sehen hier, was der Tutor bekommt. [Zur Seite](../)
 - Steht in der Nachricht „Die App sagt: …“, hat die App das zur Eingabe des Kindes gemeldet. Setz dort an, ohne es zu wiederholen.
 - Eine Zeile wie „…, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück“ in der App: Übung, Nummer und wie weit das Kind damit kam.
 - „Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“: diese Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App. Setz bei den falschen an, eine nach der anderen.
-- Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `von=tutor`, z. B. `…/grundwert/?grundwert-ueben=12&von=tutor#grundwert-ueben`. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. `https://`). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“
+- Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `via=tutor`, z. B. `…/prozent/grundwert/?grundwert-ueben=12&via=tutor#grundwert-ueben`. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. `https://`). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“
 
 ## Kontext: die Seite „Grundwert“
 
@@ -80,7 +80,7 @@ Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschr
 - Antwortformat: jedem Eintrag links den passenden rechts zuordnen
 - Lösung: A – Grundwert; B – Prozentwert
 - Erklärung: Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.
-- Link: [../?von=tutor#klammern](../?von=tutor#klammern)
+- Link: [../?via=tutor#klammern](../?via=tutor#klammern)
 
 ### Übung grundwert-ueben
 
@@ -93,7 +93,7 @@ Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschr
 - Typische Fehler und was die App sagt:
   - F1: „Du hast {p} % von {W} € berechnet. Gesucht ist aber das Ganze, von dem die {W} € ein Teil sind.“
   - F2: „Das ist erst 1 %. Nimm es noch mal 100, dann hast du das Ganze.“
-- Link zu Nummer n: `../?grundwert-ueben=n&von=tutor#grundwert-ueben`
+- Link zu Nummer n: `../?grundwert-ueben=n&via=tutor#grundwert-ueben`
 - Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt. `{answer}` ist die Lösung.
 
 ```

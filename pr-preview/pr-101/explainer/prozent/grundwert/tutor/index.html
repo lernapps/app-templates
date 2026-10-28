@@ -33,7 +33,7 @@
 <li>Steht in der Nachricht „Die App sagt: …“, hat die App das zur Eingabe des Kindes gemeldet. Setz dort an, ohne es zu wiederholen.</li>
 <li>Eine Zeile wie „…, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück“ in der App: Übung, Nummer und wie weit das Kind damit kam.</li>
 <li>„Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“: diese Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App. Setz bei den falschen an, eine nach der anderen.</li>
-<li>Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne <code>tutor/</code> und ohne <code>?…</code>, mit der Nummer und <code>von=tutor</code>, z. B. <code>…/grundwert/?grundwert-ueben=12&amp;von=tutor#grundwert-ueben</code>. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. <code>https://</code>). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“</li>
+<li>Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne <code>tutor/</code> und ohne <code>?…</code>, mit der Nummer und <code>via=tutor</code>, z. B. <code>…/prozent/grundwert/?grundwert-ueben=12&amp;via=tutor#grundwert-ueben</code>. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. <code>https://</code>). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“</li>
 </ul>
 <h2>Kontext: die Seite „Grundwert“</h2>
 <p>Den Grundwert berechnen: G = W · 100 : p, mit einem Beispiel und dem Hunderterfeld.</p>
@@ -77,7 +77,7 @@ hast du die Formel für den Prozentwert benutzt.</p>
 <li>Antwortformat: jedem Eintrag links den passenden rechts zuordnen</li>
 <li>Lösung: A – Grundwert; B – Prozentwert</li>
 <li>Erklärung: Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.</li>
-<li>Link: <a href="../?von=tutor#klammern">../?von=tutor#klammern</a></li>
+<li>Link: <a href="../?via=tutor#klammern">../?via=tutor#klammern</a></li>
 </ul>
 <h3>Übung grundwert-ueben</h3>
 <ul>
@@ -94,7 +94,7 @@ hast du die Formel für den Prozentwert benutzt.</p>
 <li>F2: „Das ist erst 1 %. Nimm es noch mal 100, dann hast du das Ganze.“</li>
 </ul>
 </li>
-<li>Link zu Nummer n: <code>../?grundwert-ueben=n&amp;von=tutor#grundwert-ueben</code></li>
+<li>Link zu Nummer n: <code>../?grundwert-ueben=n&amp;via=tutor#grundwert-ueben</code></li>
 <li>Aufgaben nach Nummer: die Werte für <code>{…}</code>, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt. <code>{answer}</code> ist die Lösung.</li>
 </ul>
 <pre><code>Nr. | W | p | Lösung | F1 | F2

@@ -33,7 +33,7 @@
 <li>Steht in der Nachricht „Die App sagt: …“, hat die App das zur Eingabe des Kindes gemeldet. Setz dort an, ohne es zu wiederholen.</li>
 <li>Eine Zeile wie „…, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück“ in der App: Übung, Nummer und wie weit das Kind damit kam.</li>
 <li>„Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“: diese Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App. Setz bei den falschen an, eine nach der anderen.</li>
-<li>Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne <code>tutor/</code> und ohne <code>?…</code>, mit der Nummer und <code>von=tutor</code>, z. B. <code>…/prozentwert/?prozentwert-ueben=12&amp;von=tutor#prozentwert-ueben</code>. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. <code>https://</code>). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“</li>
+<li>Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne <code>tutor/</code> und ohne <code>?…</code>, mit der Nummer und <code>via=tutor</code>, z. B. <code>…/prozent/prozentwert/?prozentwert-ueben=12&amp;via=tutor#prozentwert-ueben</code>. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. <code>https://</code>). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“</li>
 </ul>
 <h2>Kontext: die Seite „Prozentwert“</h2>
 <p>Den Prozentwert berechnen: W = G · p : 100, mit einem Beispiel und dem Hunderterfeld.</p>
@@ -84,7 +84,7 @@ ist. mAh (Milliamperestunden) gibt an, wie viel Ladung ein Akku speichert.</p>
 <li>F2: „Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.“</li>
 </ul>
 </li>
-<li>Link zu Nummer n: <code>../?prozentwert-ueben=n&amp;von=tutor#prozentwert-ueben</code></li>
+<li>Link zu Nummer n: <code>../?prozentwert-ueben=n&amp;via=tutor#prozentwert-ueben</code></li>
 <li>Aufgaben nach Nummer: die Werte für <code>{…}</code>, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt. <code>{answer}</code> ist die Lösung.</li>
 </ul>
 <pre><code>Nr. | G | p | Lösung | F1 | F2
@@ -167,7 +167,7 @@ ist. mAh (Milliamperestunden) gibt an, wie viel Ladung ein Akku speichert.</p>
 <li>F2: Den Rest gefärbt: die Kästchen, die nicht zu den p % gehören.</li>
 </ul>
 </li>
-<li>Link zu Nummer n: <code>../?prozentfeld=n&amp;von=tutor#prozentfeld</code></li>
+<li>Link zu Nummer n: <code>../?prozentfeld=n&amp;via=tutor#prozentfeld</code></li>
 <li>Aufgaben nach Nummer: die Werte für <code>{…}</code>, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt.</li>
 </ul>
 <pre><code>Nr. | G | p | Lösung | F1 | F2
