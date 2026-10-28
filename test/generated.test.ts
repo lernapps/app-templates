@@ -5,7 +5,7 @@ import { describe, expect, test } from "vite-plus/test";
 import { answerFor, diagnose, questionFor } from "../runtime/explainer/generated/question.ts";
 import { generate, record } from "../runtime/explainer/generated/values.ts";
 import { soundness } from "../runtime/explainer/generated/soundness.ts";
-import { taskText, tokenize } from "../runtime/explainer/generated/texts.ts";
+import { placeholderProblems, taskText, templateProblems, tokenize } from "../runtime/explainer/generated/texts.ts";
 import { type Generated, type Templates } from "../runtime/explainer/generated/types.ts";
 import { isCorrect, rightAnswer, wrongAnswer } from "../runtime/shared/questions/question.ts";
 import type { DataRecord } from "../runtime/explainer/content.ts";
@@ -241,5 +241,62 @@ describe("a record of a data file with a list or a record in a field", () => {
     const compounds = read["compounds"] as Record<string, unknown>[];
     expect(compounds.map((compound) => compound["formula"])).toEqual(["H2O"]);
     expect(compounds.map((compound) => (compound["text"] as Localized).in("de"))).toEqual(["Wasser"]);
+  });
+});
+
+describe("the placeholders of a template", () => {
+  const known = new Set(["opts", "e", "answer"]);
+  const none = (text: string) => placeholderProblems(text, known);
+  const noPlaceholder = (text: string) =>
+    expect.stringMatching(
+      new RegExp(
+        `^${text.replace(/[[\]{}.]/g, "\\$&")} is no placeholder: a placeholder is a name or a name's field \\(\\{\\{e\\.brauch\\}\\}\\); to show one record, pick it on its own`,
+      ),
+    );
+
+  test("an index is no placeholder", () => {
+    expect(none("Welches Fest passt? „{{opts[0].brauch}}“")).toEqual([noPlaceholder("{{opts[0].brauch}}")]);
+  });
+
+  test("a name's field is a placeholder", () => {
+    expect(none("Welches Fest passt? „{{e.brauch}}“ {{answer}}")).toEqual([]);
+  });
+
+  test("spaces and one brace are reported as before", () => {
+    expect(none("{{ opts }}")).toEqual([
+      "{{ opts }} has spaces inside; a placeholder is written {{opts}}, without spaces",
+    ]);
+    expect(none("Das {opts} hier")).toEqual([
+      "{opts} has one pair of braces; a placeholder is written with two: {{opts}}",
+    ]);
+  });
+
+  test.each(["{{opts.0}}", "{{opts[]}}", "{{1x}}", "{{}}", "{{ }}", "{{a b}}", "{{e.}}"])(
+    "%s is no placeholder",
+    (text) => {
+      expect(none(`Text ${text} Text`)).toEqual([noPlaceholder(text)]);
+    },
+  );
+
+  test("in a formula too; a literal {{ is written with a space", () => {
+    expect(none("$x = {{opts[0].a}}$")).toEqual([noPlaceholder("{{opts[0].a}}")]);
+    expect(none("$x^{ {2} }$")).toEqual([]);
+  });
+
+  test("in the task, the steps, the hint and the messages of an exercise", () => {
+    const bad = "{{opts[0].brauch}}";
+    const spec = {
+      ...prozentwert,
+      task: { text: { de: `Ein Rad ${bad} {{G}} {{p}}`, en: "A bike {{G}} {{p}}" } },
+      steps: [`Schritt ${bad}`],
+      hint: `Tipp ${bad}`,
+      mistakes: [{ value: "G * p", message: `Fehler ${bad}` }],
+    } as Generated;
+    expect(templateProblems(spec).map(({ path, lang }) => [path, lang])).toEqual([
+      [["task", "text", "de"], "de"],
+      [["steps", 0], undefined],
+      [["hint"], undefined],
+      [["mistakes", 0, "message"], undefined],
+    ]);
   });
 });
