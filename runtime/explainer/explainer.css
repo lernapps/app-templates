@@ -853,3 +853,154 @@ button.explainer-help:focus-visible {
   height: 100%;
   border: 0;
 }
+
+/* The self-assessment (assessment-client.ts): the offer on the start page or a chapter's page, its pages of exercises
+   without "Prüfen", and its result, a line per content page coloured by how it went */
+.explainer-assessment-offer {
+  margin: 1.5rem 0;
+  padding: 0 1rem 0.5rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.75rem;
+}
+
+.explainer-assessment-offer[hidden],
+.explainer-assessment[hidden],
+.explainer-assessment-intro[hidden],
+.explainer-assessment-step[hidden],
+.explainer-assessment-result[hidden],
+.explainer-assessment-nojs[hidden] {
+  display: none;
+}
+
+.explainer-assessment-link,
+.explainer-assessment button,
+.explainer-assessment-way {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.375rem 0.875rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-accent);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.explainer-assessment-link,
+.explainer-assessment-begin,
+.explainer-assessment button.explainer-assessment-next,
+.explainer-assessment button.explainer-assessment-finish,
+.explainer-assessment button.explainer-assessment-go {
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-assessment-way {
+  border-color: var(--page-border);
+  color: var(--page-text);
+}
+
+.explainer-assessment-link:focus-visible,
+.explainer-assessment button:focus-visible,
+.explainer-assessment-way:focus-visible {
+  outline: 3px solid var(--page-accent);
+  outline-offset: 2px;
+}
+
+.explainer-assessment-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-assessment-item {
+  margin: 0 0 1.25rem;
+  padding: 0 1rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.75rem;
+}
+
+.explainer-assessment-label {
+  margin: 0 -1rem 1rem;
+  padding: 0.4rem 1rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+/* a long task text wraps inside its frame instead of over its border */
+.explainer-assessment-item legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.explainer-assessment-item legend + * {
+  clear: both;
+}
+
+.explainer-assessment-nav,
+.explainer-assessment-again,
+.explainer-assessment-tutor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.explainer-assessment-pages {
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-assessment-page {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 0.375rem solid var(--page-border);
+  border-radius: 0.25rem;
+  background: var(--page-surface);
+}
+
+.explainer-assessment-page strong {
+  display: block;
+}
+
+.explainer-assessment-page[data-band="known"] {
+  border-left-color: var(--page-right);
+  background: var(--page-right-background);
+}
+
+.explainer-assessment-page[data-band="partly"] {
+  border-left-color: var(--page-muted);
+  background: var(--explainer-note);
+}
+
+.explainer-assessment-page[data-band="read"] {
+  border-left-color: var(--page-wrong);
+  background: var(--page-wrong-background);
+}
+
+.explainer-assessment-page[data-band="unasked"] {
+  color: var(--page-muted);
+}
+
+.explainer-assessment-count {
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-assessment-tutor {
+  margin: 1.5rem 0;
+  padding: 0 1rem 0.5rem;
+  border: 2px solid var(--page-border);
+  border-radius: 0.75rem;
+}
+
+.explainer-assessment-tutor-status:empty,
+.explainer-assessment-status:empty {
+  display: none;
+}

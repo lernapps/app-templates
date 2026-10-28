@@ -4,3 +4,8 @@ summary: { de: "Zwei Seiten über Formen.", en: "Two pages about shapes." }
 pages:
   - formen-01
   - formen-02
+# A self-assessment of this chapter alone.
+selfAssessment:
+  pages:
+    - exercises: [/formen/formen-01/#ecken, /formen/formen-02/#symbole]
+    - exercises: [/formen/formen-01/#formen-ordnen, /formen/formen-02/#formen-ecken]

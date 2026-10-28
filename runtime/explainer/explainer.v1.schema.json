@@ -136,6 +136,10 @@
               "$ref": "#/$defs/markdown"
             }
           }
+        },
+        "selfAssessment": {
+          "description": "Optional: a self-assessment over the exercises of the whole app, at einschaetzung/, offered on the start page.",
+          "$ref": "#/$defs/selfAssessment"
         }
       }
     },
@@ -160,6 +164,10 @@
           "items": {
             "$ref": "#/$defs/id"
           }
+        },
+        "selfAssessment": {
+          "description": "Optional: a self-assessment over the exercises of this chapter, at <chapter>/einschaetzung/, offered on the chapter's page. An app with one chapter has its self-assessment in app.yaml.",
+          "$ref": "#/$defs/selfAssessment"
         }
       }
     },
@@ -1002,6 +1010,35 @@
           "description": "Optional: the seed of the task to check it against, when the right answer depends on the task; without it, the answer is checked against the task of every seed.",
           "type": "integer",
           "minimum": 1
+        }
+      }
+    },
+    "selfAssessment": {
+      "description": "Optional: a self-assessment, which a learner may do before learning, with JavaScript only. It puts exercises of the content pages, without the page around them, on pages of its own, a few on each, and checks them only all together at the end: no single exercise is checked. The result says for each content page whether the learner probably knows it already, should look at it again or should read it; a page with no exercise in it is not asked. The last result stays on the device, one per self-assessment, and a new start replaces it. The learner may take the result to a KI tutor: the self-assessment's tutor page (einschaetzung/tutor/) holds each exercise with its solution and the links to the pages, and its address the result. In app.yaml it asks the exercises of the whole app, at einschaetzung/; in a chapter.yaml those of the chapter, at <chapter>/einschaetzung/. Without it there is none.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pages"],
+      "properties": {
+        "pages": {
+          "description": "Its pages in order, each with the exercises it shows, best 2 to 5.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["exercises"],
+            "properties": {
+              "exercises": {
+                "description": "The exercises of the page in order, each by its page and id: /<chapter>/<page>/#<exercise>. A generated exercise draws a new task for each run; an exercise of a question type shows as it is. Each exercise once in the self-assessment; an exercise component cannot be in it.",
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "^/[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*/#[a-z0-9]+(-[a-z0-9]+)*$"
+                }
+              }
+            }
+          }
         }
       }
     }

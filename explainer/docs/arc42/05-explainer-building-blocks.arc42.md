@@ -59,6 +59,7 @@ flowchart TB
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
         bb-video["Video block"]
+        bb-self-assessment["Self-assessment"]
         bb-e2e["End-to-end tests"]
         bb-runtime-texts["Runtime texts"]
     end
@@ -88,6 +89,13 @@ flowchart TB
     bb-tutor-handoff -->|"if-task-numbers"| bb-task-numbers
     bb-video -->|"if-runtime-texts"| bb-runtime-texts
     bb-video -->|"if-device-storage"| bb-tooling
+    bb-build -->|"if-self-assessment"| bb-self-assessment
+    bb-shell -->|"if-self-assessment"| bb-self-assessment
+    bb-self-assessment -->|"if-archetype-content"| bb-explainer-content
+    bb-self-assessment -->|"if-tutor-files"| bb-tutor-handoff
+    bb-self-assessment -->|"if-task-numbers"| bb-task-numbers
+    bb-self-assessment -->|"if-runtime-texts"| bb-runtime-texts
+    bb-self-assessment -->|"if-device-storage"| bb-tooling
     bb-e2e -->|"if-archetype-content"| bb-explainer-content
     bb-e2e -->|"if-runtime-texts"| bb-runtime-texts
 ```
@@ -121,7 +129,7 @@ title: Build step
 parent: bb-archetype-runtime
 path: runtime/explainer/plugin.ts
 technology: Vite plugin
-requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-files
+requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-files, if-self-assessment
 :::
 ```
 
@@ -196,7 +204,8 @@ path: runtime/explainer/routes.ts
 
 Built. Makes a page's exercises live: answered before the solution shows, the reason of a wrong answer, "Neue
 Aufgabe", the task numbers in the address; the tutor button; and starts the videos (`bb-video`). It keeps only the
-learner's chosen way to the tutor and their choice to load videos directly on the device.
+learner's chosen way to the tutor and their choice to load videos directly on the device; the last result of a
+self-assessment is kept by `bb-self-assessment`, which it starts.
 
 ```arc42
 :::building-block
@@ -205,7 +214,7 @@ title: Client module
 parent: bb-archetype-runtime
 path: runtime/explainer/explainer.ts
 technology: TypeScript, DOM
-requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y
+requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y, if-self-assessment
 implements: concept-accessibility, concept-determinism
 :::
 ```
@@ -376,6 +385,52 @@ title: Video player request to youtube-nocookie.com
 provider: bb-video
 protocol: HTML iframe over HTTPS, after a click
 path: runtime/explainer/video.ts
+:::
+```
+
+### Self-assessment
+
+Built. An optional self-assessment (`dec-self-assessment`), declared in the content: `selfAssessment` in `app.yaml`
+for the whole app, in a `chapter.yaml` for one chapter, each its pages with the exercises it asks, each by
+`/<chapter>/<page>/#<exercise>` (a generated one or a question type; no exercise component yet). The validation checks
+each reference, that a chapter's asks only its own pages and that an exercise is listed once; the build notes a page of
+it with fewer than two or more than five exercises. The page rendering writes its page (`einschaetzung/`,
+`<chapter>/einschaetzung/`), whose every part is hidden without JavaScript but for one line, the offer on the start page
+or the chapter's page, hidden until the client module runs, and its tutor page `<assessment>/tutor/`: the guide of a
+tutor after a run, how to read the result in its address, the content pages with their links and the exercises asked of
+each, and each exercise as the tutor page of its page has it. In the browser a run draws a new task of each generated
+exercise, shows the pages one by one without "Prüfen", checks all exercises together at "Auswerten" and shows for each
+content page in its scope whether the learner probably knows it, should look at it again or should read it; a page with
+no exercise in it is not asked. The last result stays on the device, one per self-assessment
+(`dec-self-assessment-result`).
+
+```arc42
+:::building-block
+id: bb-self-assessment
+title: Self-assessment
+parent: bb-archetype-runtime
+path: runtime/explainer/assessment.ts
+technology: TypeScript, DOM, static HTML and Markdown
+requires: if-archetype-content, if-tutor-files, if-task-numbers, if-questions, if-runtime-texts, if-device-storage
+implements: concept-tutor
+:::
+```
+
+#### Self-assessment interface
+
+The build step writes the page, the offer and the tutor page of each self-assessment (`assessment-page.ts`); the client
+module starts it (`assessment-client.ts`). Its addresses, the query of its tutor page (`?a1=17-falsch-F1&a2=richtig`:
+each exercise by its key in order, its task number, `richtig`, `falsch` or `offen`, the typical mistake), the lines of
+its prompt and the result kept under `self-assessment` or `self-assessment:<chapter>` are a contract with every tutor
+and with the result kept on a device.
+
+```arc42
+:::interface
+id: if-self-assessment
+title: Self-assessment page, its tutor page and the result kept on the device
+provider: bb-self-assessment
+protocol: Static HTML and Markdown over HTTPS, prompt text (provider link or clipboard), JSON in localStorage
+path: runtime/explainer/assessment.ts
 :::
 ```
 

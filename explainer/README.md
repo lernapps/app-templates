@@ -24,6 +24,11 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   an account of their own. Then two ways lead there: a bar beside the title of each page, for a tutor who helps with
   the page, and "Hilfe" ("Warum?" after a wrong answer) in every exercise, with the task, the input and the app's
   message. "Zurück zum Tutor" copies a result line the learner pastes into the chat.
+- Optional: a self-assessment for the whole app (`selfAssessment` in `src/app.yaml`, at `einschaetzung/`) or for a
+  chapter (in its `chapter.yaml`, at `<chapter>/einschaetzung/`). It shows exercises of the pages, best two to five on
+  each of its pages, without "Prüfen", and checks them all together: the result says per page whether the learner
+  probably knows it, should look at it again or should read it. The last result stays on the device; with a click the
+  learner takes it to the tutor, whose tutor page `<assessment>/tutor/` holds each exercise with its solutions.
 - German, plus English: a page tree per language.
 
 ## What it cannot do
@@ -33,7 +38,9 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - At most two section levels in a page.
 - An exercise component does not count as a page's required exercise: each page also needs a question or a generated
   exercise.
-- Stores nothing but the learner's choice of AI tutor and, if they make it, the choice to load videos directly.
+- Stores nothing but the learner's choice of AI tutor, if they make it, the choice to load videos directly, and the
+  last result of each self-assessment they do.
+- A self-assessment needs JavaScript (without it, it is not offered) and cannot show an exercise component yet.
 - No video from another platform than YouTube, no thumbnail, no own video files.
 
 ## What the app supplies

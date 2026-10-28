@@ -127,6 +127,23 @@ function sameAnswer(question: Question, a: Answer, b: Answer, slack: number): bo
   return a === b;
 }
 
+/** The index of the first typical mistake the learner's wrong answer makes; undefined when it makes none. */
+export function mistakeOf(spec: Generated, task: Task, question: Question, answer: Answer): number | undefined {
+  if (isCorrect(question, answer)) return undefined;
+  const kind = kindOf(spec.answer.compare);
+  // a mistake typed rounded to the answer's decimals still counts as that mistake
+  const slack =
+    kind.kind === "number" ? Math.max(kind.tolerance.toNumber(), 0.5 * 10 ** -Math.max(kind.decimals, 2)) : 0;
+  for (const [index] of task.mistakes.entries()) {
+    try {
+      if (sameAnswer(question, answer, answerFor(spec, task, question, index), slack)) return index;
+    } catch {
+      // a mistake the controls cannot give
+    }
+  }
+  return undefined;
+}
+
 /** The message of the first mistake the learner's wrong answer makes, in `lang`; undefined when it makes none. */
 export function diagnose(
   spec: Generated,
@@ -136,22 +153,9 @@ export function diagnose(
   lang: string,
   templates: Templates,
 ): string | undefined {
-  if (isCorrect(question, answer)) return undefined;
-  const kind = kindOf(spec.answer.compare);
-  // a mistake typed rounded to the answer's decimals still counts as that mistake
-  const slack =
-    kind.kind === "number" ? Math.max(kind.tolerance.toNumber(), 0.5 * 10 ** -Math.max(kind.decimals, 2)) : 0;
-  const messages = templatesIn(templates, lang).messages;
-  for (const [index] of task.mistakes.entries()) {
-    try {
-      if (sameAnswer(question, answer, answerFor(spec, task, question, index), slack)) {
-        return fill(messages[index] ?? "", spec, task, lang, "text");
-      }
-    } catch {
-      // a mistake the controls cannot give
-    }
-  }
-  return undefined;
+  const index = mistakeOf(spec, task, question, answer);
+  if (index === undefined) return undefined;
+  return fill(templatesIn(templates, lang).messages[index] ?? "", spec, task, lang, "text");
 }
 
 /** What a learner sees of a task: its text and its question's options, items or pairs; "Neue Aufgabe" changes it. */

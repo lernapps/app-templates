@@ -22,10 +22,11 @@ import {
   type ComponentUse,
   type DataRecord,
   type Page,
+  type SelfAssessment,
   type Site,
-  type Text,
 } from "./content.ts";
 import { allBlocks } from "./routes.ts";
+import { ASSESSMENT, exerciseOf, parseRef } from "./assessment.ts";
 import { SCHEMA_FILE, validate } from "./schema.ts";
 import { appName } from "../shared/appname.ts";
 import { isObject, Problems, readYaml, Texts, type Path, type YamlFile } from "../shared/content.ts";
@@ -37,7 +38,7 @@ export const RULE_URL = "https://lernapps.net/tooling/rules/#explainer-content-v
 /** What src/ may hold besides the chapter folders. */
 const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, components/ and main.ts";
 /** Chapter ids that would collide with other addresses: data files, images, the glossary, language trees. */
-const RESERVED = new Set(["data", "images", "glossar", "components", "assets"]);
+const RESERVED = new Set(["data", "images", "glossar", "components", "assets", ASSESSMENT]);
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const IMAGE = /^[a-z0-9]+(-[a-z0-9]+)*\.(svg|png|jpg|webp)$/;
 
@@ -84,6 +85,61 @@ function checkOrder(
     ok = false;
   }
   return ok;
+}
+
+/**
+ * The problems of the self-assessment `assessment` of `yaml`: of the app (no `chapter`), or of the chapter `chapter`,
+ * whose exercises are all its own. Each reference names a page and an exercise of it of a question type or generated,
+ * and each exercise is listed once.
+ */
+function checkAssessment(
+  yaml: YamlFile,
+  assessment: SelfAssessment,
+  chapters: readonly Chapter[],
+  chapter: string | undefined,
+  problems: Problems,
+): void {
+  const seen = new Set<string>();
+  assessment.pages.forEach((step, index) => {
+    step.exercises.forEach((ref, at) => {
+      const path = ["selfAssessment", "pages", index, "exercises", at];
+      const parts = parseRef(ref);
+      if (parts === undefined) return;
+      if (seen.has(ref)) {
+        problems.at(yaml, path, `${ref} is listed twice; list each exercise once in the self-assessment`);
+        return;
+      }
+      seen.add(ref);
+      if (chapter !== undefined && parts.chapter !== chapter) {
+        problems.at(
+          yaml,
+          path,
+          `${ref} is not an exercise of the chapter ${chapter}; a chapter's self-assessment asks only its own pages, the app's (src/app.yaml) all of them`,
+        );
+        return;
+      }
+      const page = chapters
+        .find((candidate) => candidate.id === parts.chapter)
+        ?.pages.find((candidate) => candidate.id === parts.page);
+      if (page === undefined) {
+        problems.at(yaml, path, `${ref} names no page of the app; write /<chapter>/<page>/#<exercise>`);
+        return;
+      }
+      if (exerciseOf(page, parts.exercise) !== undefined) return;
+      const component = [...allBlocks(page.blocks)].some(
+        (block) =>
+          block.type === "vue-component" &&
+          (block.id ?? block.component.replace(/(?<=[a-z0-9])(?=[A-Z])/g, "-").toLowerCase()) === parts.exercise,
+      );
+      problems.at(
+        yaml,
+        path,
+        component
+          ? `${ref} is an exercise component, which a self-assessment cannot show yet; choose a generated exercise or a question`
+          : `${ref} names no exercise of ${page.file}; use the id of one of its exercises: generated, or a question type`,
+      );
+    });
+  });
 }
 
 /** How many seeds the property test of each generated exercise draws at build time. */
@@ -140,7 +196,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
     } else if (RESERVED.has(name) || /^[a-z]{2}$/.test(name)) {
       problems.file(
         `src/${name}/`,
-        `${name} is reserved for the app's addresses (data, images, glossar, components, assets and two-letter language codes); rename the chapter`,
+        `${name} is reserved for the app's addresses (data, images, glossar, components, assets, ${ASSESSMENT} and two-letter language codes); rename the chapter`,
       );
     } else chapterIds.push(name);
   }
@@ -195,6 +251,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   // false once a chapter or page could not be read: what it names is unknown, so no data file counts as unused
   let complete = true;
   const chapters: Chapter[] = [];
+  const chapterFiles = new Map<string, YamlFile>();
   for (const chapterId of chaptersOk ? app.chapters : chapterIds) {
     const folder = join(src, chapterId);
     const pageIds: string[] = [];
@@ -213,6 +270,8 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         );
       } else if (!ID.test(name.slice(0, -".yaml".length))) {
         problems.file(file, `the file's name is the page's id: use lower-case letters, digits and hyphens`);
+      } else if (name === `${ASSESSMENT}.yaml`) {
+        problems.file(file, `${ASSESSMENT} is reserved for the chapter's self-assessment; rename the page`);
       } else {
         const pageId = name.slice(0, -".yaml".length);
         pageIds.push(pageId);
@@ -231,7 +290,8 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       complete = false;
       continue;
     }
-    const chapter = chapterYaml.value as { title: Text; summary?: Text; pages: string[] };
+    const chapter = chapterYaml.value as Omit<Chapter, "id" | "pages"> & { pages: string[] };
+    chapterFiles.set(chapterId, chapterYaml);
     texts.check(chapterYaml, ["title"], "plain");
     texts.check(chapterYaml, ["summary"], "markdown");
     const pagesOk = checkOrder(
@@ -299,8 +359,27 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       id: chapterId,
       title: chapter.title,
       ...(chapter.summary === undefined ? {} : { summary: chapter.summary }),
+      ...(chapter.selfAssessment === undefined ? {} : { selfAssessment: chapter.selfAssessment }),
       pages,
     });
+  }
+
+  // the self-assessments: each exercise found, checkable, in its scope and listed once
+  if (complete) {
+    if (app.selfAssessment !== undefined) {
+      checkAssessment(appYaml, app.selfAssessment, chapters, undefined, problems);
+    }
+    for (const chapter of chapters) {
+      const yaml = chapterFiles.get(chapter.id);
+      if (chapter.selfAssessment === undefined || yaml === undefined) continue;
+      if (app.chapters.length === 1) {
+        problems.at(
+          yaml,
+          ["selfAssessment"],
+          "an app with one chapter has no page for the chapter; put the self-assessment into src/app.yaml",
+        );
+      } else checkAssessment(yaml, chapter.selfAssessment, chapters, chapter.id, problems);
+    }
   }
 
   // a data file that nothing names is dead: the author believes its content is in the app

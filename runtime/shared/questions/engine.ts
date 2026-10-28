@@ -23,7 +23,7 @@ import {
 } from "./question.ts";
 
 /** The learner's answer as the form holds it; undefined when nothing is given yet. */
-function readAnswer(question: Question, form: HTMLFormElement): Answer | undefined {
+export function readAnswer(question: Question, form: HTMLFormElement): Answer | undefined {
   const checked = [...form.querySelectorAll<HTMLInputElement>("input:checked")].map((input) => input.value);
   switch (question.type) {
     case "single-choice":

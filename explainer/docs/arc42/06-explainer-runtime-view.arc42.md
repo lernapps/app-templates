@@ -79,3 +79,23 @@ trigger: The learner clicks "Video abspielen", or opens a page after choosing to
 involves: bb-render, bb-shell, bb-video, bb-runtime-texts, bb-tooling
 :::
 ```
+
+## Doing a self-assessment
+
+The start page, or a chapter's page, offers the self-assessment once the client module runs; it names the last result
+when the device keeps one. The learner starts a run: each generated exercise gets a new task, and the pages follow one
+by one with "Weiter" and "Zurück", the exercises without "Prüfen" and without feedback. "Auswerten" checks all of them
+together, keeps the result on the device (replacing the one before) and shows the score and, for each content page in
+order, whether the learner probably knows it, should look at it again or should read it, each with its link. "Mit
+<name> besprechen" opens the learner's assistant with one sentence that names the self-assessment's tutor page with the
+result in its address, and a line per exercise; the tutor looks up the tasks, solutions and mistakes there and sends
+the learner to the pages to learn. "Neu starten" starts a new run, "Ergebnis löschen" removes the result.
+
+```arc42
+:::runtime-scenario
+id: scenario-explainer-self-assessment
+title: Doing a self-assessment
+trigger: The learner starts the self-assessment offered on the start page or a chapter's page
+involves: bb-render, bb-shell, bb-self-assessment, bb-generated-exercises, bb-questions, bb-task-numbers, bb-tutor-handoff, bb-runtime-texts, bb-tooling
+:::
+```

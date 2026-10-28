@@ -35,6 +35,8 @@ import { BASE, placeholderPrompt, plainAddress, PROVIDERS, QUERY, startPrompt } 
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
 import { renderVideo } from "./video.ts";
+import { assessmentOf } from "./assessment.ts";
+import { assessmentMain, assessmentOffer, type AssessmentContext } from "./assessment-page.ts";
 
 function sizeless(site: Site, image: string): boolean {
   const file = site.images.get(image);
@@ -284,7 +286,7 @@ function breadcrumbs(context: Context): string {
   const { route, site } = context;
   if (route.kind === "start") return "";
   const items = [`<li><a href="${context.to("")}">${plain(context.t("start"))}</a></li>`];
-  if (route.kind === "page" && route.chapter !== undefined && !hiddenChapter(site)) {
+  if ((route.kind === "page" || route.kind === "assessment") && route.chapter !== undefined && !hiddenChapter(site)) {
     items.push(`<li><a href="${context.to(`${route.chapter.id}/`)}">${context.text(route.chapter.title)}</a></li>`);
   }
   items.push(`<li aria-current="page">${plain(route.title)}</li>`);
@@ -343,26 +345,36 @@ function main(context: Context): string {
                 return `<li>${source.url === undefined ? plain(text) : external(source.url, text)}</li>`;
               })
               .join("")}</ul></section>`;
+      const assessment = assessmentOf(site);
       return [
         title,
         `<div class="explainer-intro">${context.markdown(site.app.intro)}</div>`,
+        assessment === undefined ? "" : assessmentOffer(assessmentContext(context), assessment),
         `<nav class="explainer-contents" aria-labelledby="inhalt"><h2 id="inhalt">${plain(context.t("contents"))}</h2>${contents}</nav>`,
         glossary,
         tutorAbout(context),
         sources,
-      ].join("\n");
+      ]
+        .filter((part) => part !== "")
+        .join("\n");
     }
     case "chapter": {
       const chapter = route.chapter;
       if (chapter === undefined) return title;
       const summary =
         chapter.summary === undefined ? "" : `<div class="explainer-intro">${context.markdown(chapter.summary)}</div>`;
+      const assessment = assessmentOf(site, chapter.id);
       return [
         title,
         summary,
+        assessment === undefined ? "" : assessmentOffer(assessmentContext(context), assessment),
         `<nav class="explainer-contents" aria-label="${plain(context.t("pages"))}">${pageList(context, chapter.pages)}</nav>`,
-      ].join("\n");
+      ]
+        .filter((part) => part !== "")
+        .join("\n");
     }
+    case "assessment":
+      return route.assessment === undefined ? title : assessmentMain(assessmentContext(context), route.assessment);
     case "glossary": {
       const collator = new Intl.Collator(context.locale);
       const entries = terms(site)
@@ -393,6 +405,16 @@ function main(context: Context): string {
     }
   }
 }
+
+/** What a part of a self-assessment needs of the page it is on (assessment-page.ts). */
+const assessmentContext = (context: Context): AssessmentContext => ({
+  site: context.site,
+  lang: context.lang,
+  to: (local) => context.to(local),
+  resolve: context.resolve,
+  material: context.material,
+  ways: wayOptions(context),
+});
 
 /**
  * What a KI tutor is, on the start page: a section of its own that says what the tutor does and where it shows, the

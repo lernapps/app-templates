@@ -21,7 +21,9 @@
 // without a chat (B1) it opens the way switched on with them; on a page a tutor opened (B2) it copies the lines and
 // closes the tab, and once the task is done it is "Zurück", which copies the result line. Copying instead of an
 // assistant adds the tutor page's Markdown. Input and message leave the page only with the click. A video gets its
-// button, which loads its player, and the choice "Videos immer direkt laden" (video.ts), kept on the device too.
+// button, which loads its player, and the choice "Videos immer direkt laden" (video.ts), kept on the device too. A
+// self-assessment runs on its own page, offered on the start page or its chapter's page (assessment-client.ts); its
+// way to the tutor is the one switched on, or one chosen there.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { startQuestion } from "../shared/questions/engine.ts";
@@ -46,6 +48,7 @@ import {
 } from "./tasks.ts";
 import { escape } from "../shared/html.ts";
 import { startVideos } from "./video.ts";
+import { startAssessment } from "./assessment-client.ts";
 
 /** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(
@@ -672,6 +675,11 @@ export function startExplainer(root: Document = document): void {
     );
   });
   startVideos(root);
+  startAssessment(root, {
+    chosen: (storage, ways) => new WayChoice(storage, ways).get(),
+    open: (way, prompts, say) => openAssistant(root, way, prompts, say),
+    hint: showHint,
+  });
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;
     if (!element) continue;

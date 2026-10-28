@@ -80,6 +80,10 @@ const describe: DescribeError = (error, path, value) => {
       return { message, ...(lang === undefined ? {} : { lang }) };
     }
     case "pattern":
+      // an exercise of a self-assessment: by its page and id
+      if (path.at(-2) === "exercises" && path[0] === "selfAssessment") {
+        return { message: `${String(value)} is no exercise's address; write /<chapter>/<page>/#<exercise>` };
+      }
       // a video's id: an address pasted whole is the likely mistake
       if (path.at(-1) !== "youtube") return undefined;
       return {

@@ -1,12 +1,13 @@
 // The pages an explainer's build writes, per language, and how they link: the start page, a page per chapter (none
-// when the app has one chapter, which the navigation then hides), the content pages in the order of the lists, and
-// the glossary when the content defines terms. German is at the root, every other language below /<language>/;
+// when the app has one chapter, which the navigation then hides), the content pages in the order of the lists, the
+// glossary when the content defines terms, and the page of each self-assessment (assessment.ts), linked only from
+// the start page or its chapter's page. German is at the root, every other language below /<language>/;
 // within a language tree the addresses are the same: <chapter>/<page>/, glossar/.
 import {
+  allBlocks,
   inLanguage,
   termId,
   type BlockOf,
-  type Block,
   type Chapter,
   type Page,
   type Site,
@@ -14,9 +15,10 @@ import {
 } from "./content.ts";
 import { languageRoot } from "../shared/pages.ts";
 import { message } from "./messages.ts";
+import { assessments, type Assessment } from "./assessment.ts";
 
 export interface Route {
-  kind: "start" | "chapter" | "page" | "glossary";
+  kind: "start" | "chapter" | "page" | "glossary" | "assessment";
   lang: string;
   /** Where the page is, from the app's root: "", "prozent/", "en/prozent/prozentwert/", "glossar/". */
   path: string;
@@ -26,6 +28,8 @@ export interface Route {
   title: string;
   chapter?: Chapter;
   page?: Page;
+  /** The self-assessment of the page of kind assessment. */
+  assessment?: Assessment;
 }
 
 /** Whether the app's one chapter is hidden in the navigation. */
@@ -42,13 +46,7 @@ export interface Term {
   page: Page;
 }
 
-/** Every block of `blocks`, depth first, with the blocks inside sections and boxes. */
-export function* allBlocks(blocks: readonly Block[]): Generator<Block> {
-  for (const block of blocks) {
-    yield block;
-    if (block.type === "section" || block.type === "example" || block.type === "note") yield* allBlocks(block.blocks);
-  }
-}
+export { allBlocks };
 
 /** The terms the content defines, in the order of the pages. */
 export function terms(site: Site): Term[] {
@@ -63,9 +61,22 @@ export function terms(site: Site): Term[] {
 export function routes(site: Site): Route[] {
   const hidden = hiddenChapter(site);
   const glossary = terms(site).length > 0;
+  const all = assessments(site);
   return site.app.languages.flatMap((lang) => {
     const root = languageRoot(lang);
     const list: Route[] = [{ kind: "start", lang, path: root, local: "", title: inLanguage(site.app.title, lang) }];
+    const assessmentRoute = (assessment: Assessment): Route => ({
+      kind: "assessment",
+      lang,
+      path: root + assessment.local,
+      local: assessment.local,
+      title: message(lang, "assessmentTitle"),
+      ...(assessment.chapter === undefined ? {} : { chapter: assessment.chapter }),
+      assessment,
+    });
+    for (const assessment of all.filter((candidate) => candidate.chapter === undefined)) {
+      list.push(assessmentRoute(assessment));
+    }
     for (const chapter of site.chapters) {
       if (!hidden) {
         const local = `${chapter.id}/`;
@@ -77,6 +88,9 @@ export function routes(site: Site): Route[] {
           title: inLanguage(chapter.title, lang),
           chapter,
         });
+        for (const assessment of all.filter((candidate) => candidate.chapter === chapter)) {
+          list.push(assessmentRoute(assessment));
+        }
       }
       for (const page of chapter.pages) {
         const local = `${chapter.id}/${page.id}/`;

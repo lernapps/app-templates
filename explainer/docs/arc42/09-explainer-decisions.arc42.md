@@ -25,7 +25,8 @@ addresses: qg-checkable, qg-understandable, con-runtime-unchanged, con-component
 Every fact is in a block, rendered at build; an exercise shows its solution folded, a component its `nojs` text (an
 exercise component's written from its `describe`), so the page is complete without JavaScript and the client module
 only adds. `lernapps check` opens every explainer page a second time with JavaScript off. Rejected: meaning only
-inside a component or a live exercise.
+inside a component or a live exercise. The one exception is the optional self-assessment (`dec-self-assessment`),
+which needs a run in the browser and is no content of its own.
 
 ```arc42
 :::decision
@@ -237,5 +238,54 @@ title: A video is a link until the learner's click loads its player from youtube
 status: accepted
 date: 2026-10-26
 addresses: qg-privacy, qg-explainer-readable-without-js, con-no-request-before-click, con-state-on-device, risk-explainer-video-after-click
+:::
+```
+
+## A Self-Assessment Checked Only as a Whole
+
+A learner may want to know before learning which pages they can skim. So an explainer may offer a self-assessment: the
+app's for the whole app, a chapter's for that chapter. It shows exercises of the content pages without the page around
+them, a few on each of its pages (best two to five), and checks no single one: only "Auswerten" checks them all
+together, and the result is per content page, the level at which the learner goes on: probably known (all right),
+look at it again (at least half), read it (less); a page none of whose exercises is asked is "not asked", as some
+content, an open activity for one, cannot be checked. A generated exercise is preferred, as each run draws a new
+task. It is optional for the learner and for the app: the content declares it, and an agent adds it when the content
+and its forms of teaching are known, at the end (tooling skill `lernapps-explainer-self-assessment`). It needs
+JavaScript; without it the offer stays hidden and its page says so in one line. Rejected: feedback after each
+exercise (it would teach, not assess); a result per chapter (too coarse to say where to start); exercises of its own
+(they would duplicate the pages' and miss the tutor's tables); exercise components (their answers come from islands
+that a page of several exercises does not load yet).
+
+```arc42
+:::decision
+id: dec-self-assessment
+title: An optional self-assessment checks its exercises only as a whole and says per content page where to start
+status: accepted
+date: 2026-10-28
+addresses: qg-understandable, qg-explainer-readable-without-js
+:::
+```
+
+## The Last Result of a Self-Assessment Stays on the Device
+
+The learner should find their result again, and a tutor should be able to accompany them from it. So the result of
+the last run stays on the device, under the app's prefix (`con-state-on-device`), one per self-assessment, so the app's
+and a chapter's do not mix; a new run replaces it, and "Ergebnis löschen" removes it. It holds per exercise its
+reference, its task number, right, wrong or not answered, and the input and typical mistake of a wrong one: nothing
+about the learner, and nothing is sent. The learner takes it to a tutor with a click: the tutor page of the
+self-assessment, its address holding the result (`?a1=17-falsch-F1`), in one sentence with a line per exercise, in the
+address of the assistant chosen or copied with the tutor page's Markdown, as on the content pages
+(`dec-tutor-assistant`). The tutor page holds each exercise with its table of task numbers, solutions and mistakes,
+and the links to the content pages and their tutor pages, so the tutor can look up and send the learner to the pages
+to learn. Rejected: keeping every run (a history about the learner); a result only in memory (lost on the way to the
+tutor); the result sent anywhere (`qg-privacy`).
+
+```arc42
+:::decision
+id: dec-self-assessment-result
+title: The last result of a self-assessment stays on the device and goes to a tutor only with a click
+status: accepted
+date: 2026-10-28
+addresses: qg-privacy, con-state-on-device, con-no-request-before-click
 :::
 ```

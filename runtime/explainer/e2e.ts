@@ -38,8 +38,12 @@
 // Each video shows its title as a link to YouTube, its channel
 // and the note on privacy without JavaScript; with JavaScript it requests nothing of another host before a click (every
 // such request is blocked), loads the player of youtube-nocookie.com on "Video abspielen", and "Videos immer direkt
-// laden" is kept, loads every player directly, and goes when unticked. No page stores anything on the device before
-// a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
+// laden" is kept, loads every player directly, and goes when unticked. A self-assessment is offered on the start page
+// or its chapter's page with JavaScript only; a run shows its pages one by one, its exercises without "Prüfen" or
+// feedback; one with every answer right says each content page asked is known, the others not asked; one without an
+// answer says each page asked is to be read, stays on the device across a reload (the offer then names the last
+// result), takes the result to the tutor in the address of its tutor page, which answers, and goes on "Ergebnis
+// löschen". No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
 import {
@@ -51,7 +55,7 @@ import {
   type Answer,
   type Question,
 } from "../shared/questions/question.ts";
-import { answerQuestion, expectFeedbackInView, expectMaterial } from "../shared/questions/e2e.ts";
+import { answerQuestion, expectFeedbackInView, expectMaterial, giveAnswer } from "../shared/questions/e2e.ts";
 import { questionMessagesIn } from "../shared/questions/render.ts";
 import { answerShown } from "./result.ts";
 import { answerFor, diagnose, questionFor, taskKey } from "./generated/question.ts";
@@ -60,8 +64,78 @@ import { generate } from "./generated/values.ts";
 import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
 import { nextTaskNumber, taskNumber } from "./tasks.ts";
-import { outline, type ComponentOutline, type ExerciseOutline, type PageOutline } from "./outline.ts";
+import {
+  outline,
+  type AssessmentOutline,
+  type ComponentOutline,
+  type ExerciseOutline,
+  type Outline,
+  type PageOutline,
+} from "./outline.ts";
 import { embedAddress, watchAddress } from "./video.ts";
+
+/** The key a self-assessment's last result is kept under in localStorage: its key with the app's prefix. */
+const storedKeys = (page: Page) =>
+  page.evaluate(() => Object.keys(localStorage).filter((key) => /:self-assessment(:|$)/.test(key)));
+
+/**
+ * One run of the self-assessment `assessment`, from the page that offers it: each of its pages in turn, with the right
+ * answer to each exercise when `right`, else none, and its exercises without "Prüfen"; then "Auswerten".
+ */
+async function runAssessment(page: Page, app: Outline, assessment: AssessmentOutline, right: boolean): Promise<void> {
+  await page.goto(`./${assessment.offer}`);
+  const offer = page.locator(".explainer-assessment-offer");
+  await expect(offer, "offered with JavaScript").toBeVisible();
+  await offer.locator(".explainer-assessment-link").click();
+  await expect(page.locator(".explainer-assessment-intro")).toBeVisible();
+  expect(await storedKeys(page), "nothing kept before a run").toEqual([]);
+  await page.locator(".explainer-assessment-begin").click();
+  for (let step = 0; step < assessment.steps; step++) {
+    const view = page.locator(`.explainer-assessment-step[data-step="${step}"]`);
+    await expect(view).toBeVisible();
+    await expect(view.locator("h2")).toBeFocused();
+    await expect(view.locator(".question-check:visible"), "no exercise is checked alone").toHaveCount(0);
+    for (const item of assessment.items.filter((candidate) => candidate.step === step)) {
+      if (!right) continue;
+      const exercise = app.pages["de"]
+        ?.find((candidate) => candidate.url === item.page)
+        ?.exercises.find((candidate) => candidate.id === item.id);
+      if (exercise === undefined) throw new Error(`${item.page}#${item.id} is not in the outline`);
+      let question: Question;
+      if (exercise.kind === "question") question = { ...exercise.question, id: item.key };
+      else {
+        const { spec, data, templates } = exercise;
+        const n = Number(await view.locator(`[data-key="${item.key}"]`).getAttribute("data-number"));
+        const seeds = taskSeeds(spec, data);
+        const task = generate(spec, seeds[taskNumber(n, seeds.length) - 1] ?? n, data);
+        question = { ...questionFor(spec, task, "de", templates), id: item.key };
+      }
+      await giveAnswer(page, question, rightAnswer(question));
+    }
+    const last = step === assessment.steps - 1;
+    await view
+      .getByRole("button", { name: messageOf("de", last ? "assessmentFinish" : "assessmentNext"), exact: true })
+      .click();
+  }
+  await expect(page.locator(".explainer-assessment-result h2")).toBeFocused();
+}
+
+/** The result of a run: each content page with its band, the pages asked as `band`, the others not asked. */
+async function expectResult(page: Page, assessment: AssessmentOutline, band: keyof typeof BAND_WORDS): Promise<void> {
+  const lines = page.locator(".explainer-assessment-page");
+  await expect(lines).toHaveCount(assessment.pages.length);
+  for (const [index, item] of assessment.pages.entries()) {
+    const line = lines.nth(index);
+    await expect(line.locator("a")).toHaveText(item.title);
+    await expect(line.locator("strong")).toHaveText(messageOf("de", BAND_WORDS[item.asked === 0 ? "unasked" : band]));
+  }
+}
+
+const BAND_WORDS = {
+  known: "assessmentKnown",
+  read: "assessmentRead",
+  unasked: "assessmentUnasked",
+} as const;
 
 /** The task number of the deep link the tests open a generated exercise with. */
 const SEED = 7;
@@ -1104,6 +1178,53 @@ export function explainerTests(root = "."): void {
         await expectResultLine(request, copied, here, `, ${id}, Nr. ${n}: ${status}`, id, n);
       });
     }
+
+    test.describe("a self-assessment", () => {
+      test.skip(({ viewport }) => (viewport?.width ?? 0) > 400, "the self-assessments run at 360 px");
+      for (const assessment of app.assessments) {
+        test(`${assessment.url}: a run with every answer right says each page asked is known`, async ({ page }) => {
+          await runAssessment(page, app, assessment, true);
+          await expectResult(page, assessment, "known");
+          const total = String(assessment.items.length);
+          await expect(page.locator(".explainer-assessment-score")).toHaveText(
+            messageOf("de", "assessmentScore", { right: total, total }),
+          );
+        });
+
+        test(`${assessment.url}: a run without an answer stays on the device, goes to the tutor and is deleted`, async ({
+          page,
+          request,
+        }) => {
+          const opened = await recordOpen(page);
+          await runAssessment(page, app, assessment, false);
+          await expectResult(page, assessment, "read");
+          expect(await storedKeys(page)).toHaveLength(1);
+          // kept: the page shows it again, and the offer names it
+          await page.reload();
+          await expect(page.locator(".explainer-assessment-result")).toBeVisible();
+          await expectResult(page, assessment, "read");
+          await page.goto(`./${assessment.offer}`);
+          await expect(page.locator(".explainer-assessment-link")).toHaveText(messageOf("de", "assessmentOfferLast"));
+          await page.locator(".explainer-assessment-link").click();
+          // to the tutor: the tutor page with each exercise's result in its address, which answers
+          const select = page.locator(".explainer-assessment-way");
+          const first = (await select.locator("option").first().textContent()) ?? "";
+          await select.selectOption({ index: 0 });
+          await page.locator(".explainer-assessment-go").click();
+          const [address = ""] = await opened();
+          expect(address, `opens ${first}`).not.toBe("");
+          const tutor = /https?:\/\/\S+\/tutor\/\?\S+/.exec(decodeURIComponent(address))?.[0] ?? "";
+          const url = new URL(tutor);
+          expect(url.pathname.endsWith(`/${assessment.url}tutor/`), "the self-assessment's tutor page").toBe(true);
+          for (const item of assessment.items) expect(url.searchParams.get(item.key) ?? "").toMatch(/(^|-)offen$/);
+          expect((await request.get(tutor)).status(), "the tutor page answers").toBe(200);
+          // deleted
+          await page.getByRole("button", { name: messageOf("de", "assessmentDelete"), exact: true }).click();
+          await expect(page.locator(".explainer-assessment-intro")).toBeVisible();
+          expect(await storedKeys(page)).toEqual([]);
+        });
+      }
+    });
 
     test("nothing is stored on the device", async ({ page, context }) => {
       const urls = app.languages.flatMap((lang) => [...(app.others[lang] ?? []), ...(app.pages[lang] ?? [])]);

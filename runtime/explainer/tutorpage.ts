@@ -271,9 +271,9 @@ const cell = (text: string) => text.replace(/\s+/g, " ").replace(/\|/g, "/").tri
  * and steps, its typical mistakes as F1, F2 … with the app's message, and the link to a number; then a table of each
  * task number's inputs and outputs: the values of the placeholders, the choices of a choice, the solution and what
  * each mistake gives, all as the learner reads them, so that the tutor fills in and works nothing out. The examples
- * stay out: they are test cases.
+ * stay out: they are test cases. The link leads to the exercise's page at `page`, from where the tutor page is.
  */
-function generatedLines(spec: Generated, site: Site, lang: string, format: string[]): string[] {
+export function generatedLines(spec: Generated, site: Site, lang: string, format: string[], page = "../"): string[] {
   const words = wordsIn(lang);
   const shared = tutorWords(lang);
   const lines = [`- ${shared.task}: „${template(spec.task.text, lang)}“`, ...format];
@@ -288,7 +288,7 @@ function generatedLines(spec: Generated, site: Site, lang: string, format: strin
       ...mistakes.map((mistake, index) => `  - F${index + 1}: „${template(mistake.message, lang)}“`),
     );
   }
-  lines.push(`- ${words.linkNumber}: \`../?${spec.id}=n&von=tutor#${spec.id}\``);
+  lines.push(`- ${words.linkNumber}: \`${page}?${spec.id}=n&von=tutor#${spec.id}\``);
   const { paths, answer } = placeholdersOf(spec, lang);
   const data = dataOf(spec, site.data);
   const templates = templatesOf(spec, [lang]);
@@ -543,6 +543,27 @@ function pageMarkdown(
   return `${lines.join("\n").trimEnd()}\n`;
 }
 
+/**
+ * A generated exercise or a question of the question types for a tutor page other than its page's (the
+ * self-assessment's, assessment-page.ts): its lines as the tutor page of its page has them, its links to the page at
+ * `page`, from where that tutor page is.
+ */
+export function exerciseLines(site: Site, block: Block, lang: string, page: string): string[] {
+  const part = exercisePart(site, block, lang, new Map());
+  if (part === undefined) return [];
+  if (block.type === "generated") {
+    const format = part.lines.filter((text) => text.startsWith(`- ${tutorWords(lang).answerFormat}:`)).map(line);
+    return generatedLines(block, site, lang, format, page);
+  }
+  return [
+    ...part.lines.map((text) => {
+      const [, indent = "", rest = ""] = /^(\s*- )?(.*)$/.exec(text) ?? [];
+      return `${indent}${line(rest)}`;
+    }),
+    `- ${wordsIn(lang).link}: [${page}?von=tutor#${part.id}](${page}?von=tutor#${part.id})`,
+  ];
+}
+
 /** A formula $…$ of the page's Markdown, kept as written: neither emphasis nor escapes inside it. */
 const FORMULA = {
   name: "formula",
@@ -569,7 +590,16 @@ export function tutorPageHtml(site: Site, page: Page, lang: string, descriptions
 export function tutorPageDocument(text: string, site: Site, page: Page, lang: string): string {
   const words = wordsIn(lang);
   const own = (value: Text) => inLanguage(value, lang).replace(/\s+/g, " ").trim();
-  const title = `${own(page.title)} – ${words.tutorPage} – ${own(site.app.title)}`;
+  return tutorDocument(
+    text,
+    `${own(page.title)} – ${words.tutorPage} – ${own(site.app.title)}`,
+    words.forTutor.replace("{page}", own(page.title)),
+    lang,
+  );
+}
+
+/** The HTML document of a tutor page's Markdown `text`, with its `title` and `description`: lean, without script. */
+export function tutorDocument(text: string, title: string, description: string, lang: string): string {
   const body = markdown.parse(text, { async: false }).trim();
   return [
     "<!doctype html>",
@@ -578,7 +608,7 @@ export function tutorPageDocument(text: string, site: Site, page: Page, lang: st
     '<meta charset="utf-8" />',
     '<meta name="viewport" content="width=device-width, initial-scale=1" />',
     `<title>${escape(title)}</title>`,
-    `<meta name="description" content="${escape(words.forTutor.replace("{page}", own(page.title)))}" />`,
+    `<meta name="description" content="${escape(description)}" />`,
     "<style>body{margin:0 auto;max-width:48rem;padding:1rem;font:1rem/1.5 system-ui,sans-serif;color:#1a1a1a;background:#fff;overflow-wrap:anywhere}pre{white-space:pre-wrap}code,pre{font-size:.95em}</style>",
     "</head>",
     "<body>",

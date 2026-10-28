@@ -122,3 +122,15 @@ title: Result line
 definition: The exercise, its task number, how far the learner got and the last input, with the absolute address of the page's tutor page with where the learner is.
 :::
 ```
+
+## Self-Assessment
+
+German: Selbsteinschätzung. Optional, for the app or a chapter.
+
+```arc42
+:::glossary-term
+id: term-self-assessment
+title: Self-assessment
+definition: Exercises of an explainer's content pages, a few per page of its own, which the learner may answer before learning and which are checked only all together; the result says per content page whether it is probably known, to look at again or to read.
+:::
+```
