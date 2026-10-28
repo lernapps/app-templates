@@ -15,14 +15,3 @@ tutor:
   rules:
     de: "Gerechnet wird auf Papier, das Ergebnis kommt in die App. Frag nach dem Rechenweg, bevor du einen Fehler erklärst."
     en: "Working goes on paper, the result into the app. Ask for the working before you explain a mistake."
-# A self-assessment over the whole app: every exercise type but matching, the page formen-02 not asked.
-selfAssessment:
-  pages:
-    - exercises:
-        - /zahlen/zahlen-01/#prozent-rechnen
-        - /zahlen/zahlen-01/#prozent-von-200
-        - /zahlen/zahlen-02/#hundert-prozent
-    - exercises:
-        - /zahlen/zahlen-02/#hauptgruppe
-        - /formen/formen-01/#erfindungen-ordnen
-        - /formen/formen-01/#ecken

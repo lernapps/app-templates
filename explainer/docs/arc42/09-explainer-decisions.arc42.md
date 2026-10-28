@@ -243,8 +243,9 @@ addresses: qg-privacy, qg-explainer-readable-without-js, con-no-request-before-c
 
 ## A Self-Assessment Checked Only as a Whole
 
-A learner may want to know before learning which pages they can skim. So an explainer may offer a self-assessment: the
-app's for the whole app, a chapter's for that chapter. It shows exercises of the content pages without the page around
+A learner may want to know before learning which pages they can skim. So an explainer may offer a self-assessment. A
+chapter declares its own, the unit a learner works through; the app's is every chapter's together, so that one run
+covers all and a tutor can go on chapter by chapter with the same exercises. It shows exercises of the content pages without the page around
 them, a few on each of its pages (best two to five), and checks no single one: only "Auswerten" checks them all
 together, and the result is per content page, the level at which the learner goes on: probably known (all right),
 look at it again (at least half), read it (less); a page none of whose exercises is asked is "not asked", as some
@@ -252,7 +253,8 @@ content, an open activity for one, cannot be checked. A generated exercise is pr
 task. It is optional for the learner and for the app: the content declares it, and an agent adds it when the content
 and its forms of teaching are known, at the end (tooling skill `lernapps-explainer-self-assessment`). It needs
 JavaScript; without it the offer stays hidden and its page says so in one line. Rejected: feedback after each
-exercise (it would teach, not assess); a result per chapter (too coarse to say where to start); exercises of its own
+exercise (it would teach, not assess); a result per chapter (too coarse to say where to start); a self-assessment of
+the app declared apart from the chapters' (two lists of the same exercises to keep in step); exercises of its own
 (they would duplicate the pages' and miss the tutor's tables); exercise components (their answers come from islands
 that a page of several exercises does not load yet).
 
@@ -270,14 +272,13 @@ addresses: qg-understandable, qg-explainer-readable-without-js
 
 The learner should find their result again, and a tutor should be able to accompany them from it. So the result of
 the last run stays on the device, under the app's prefix (`con-state-on-device`), one per self-assessment, so the app's
-and a chapter's do not mix; a new run replaces it, and "Ergebnis löschen" removes it. It holds per exercise its
+and a chapter's do not mix; a new run replaces it, and "Ergebnis löschen" removes it. A run a tutor opened
+(`von=tutor`) is no self-assessment of the learner's: it keeps nothing. It holds per exercise its
 reference, its task number, right, wrong or not answered, and the input and typical mistake of a wrong one: nothing
 about the learner, and nothing is sent. The learner takes it to a tutor with a click: the tutor page of the
 self-assessment, its address holding the result (`?a1=17-falsch-F1`), in one sentence with a line per exercise, in the
 address of the assistant chosen or copied with the tutor page's Markdown, as on the content pages
-(`dec-tutor-assistant`). The tutor page holds each exercise with its table of task numbers, solutions and mistakes,
-and the links to the content pages and their tutor pages, so the tutor can look up and send the learner to the pages
-to learn. Rejected: keeping every run (a history about the learner); a result only in memory (lost on the way to the
+(`dec-tutor-assistant`). Rejected: keeping every run (a history about the learner); a result only in memory (lost on the way to the
 tutor); the result sent anywhere (`qg-privacy`).
 
 ```arc42
@@ -287,5 +288,29 @@ title: The last result of a self-assessment stays on the device and goes to a tu
 status: accepted
 date: 2026-10-28
 addresses: qg-privacy, con-state-on-device, con-no-request-before-click
+:::
+```
+
+## The Tutor Guides Through Chapters and Rounds
+
+After a self-assessment the tutor is a guide, not a teacher: explaining and practising happen on the pages, with their
+"Hilfe" and their own tutor pages. The self-assessment's tutor page tells the tutor to go chapter by chapter: the pages
+that do not stick, each opened with `von=tutor` and ending in "Zurück zum Tutor", then a new round of the chapter's
+self-assessment, also with `von=tutor`, which draws new tasks; after each round the tutor decides on the next chapter
+or another round, and sends a page that does not stick after two rounds to "Mit einem KI-Tutor lernen" on the page. On
+a page a tutor opened, the clipboard is always the way back: the self-assessment's "Zurück zum Tutor" copies the result
+per page, a line per exercise and the tutor page with the result in its address, and closes the tab, as the result
+line of a content page does. The tutor page holds every chapter with its pages and the link to its self-assessment, and
+the exercise behind each key; no tables of solutions, which the pages' tutor pages hold. Rejected: the tutor explaining
+the tasks of the self-assessment itself (a second place to teach, and solutions in view); a new chat per round (the
+tutor would lose the course of the learner).
+
+```arc42
+:::decision
+id: dec-self-assessment-tutor
+title: After a self-assessment the tutor guides chapter by chapter, with rounds whose result comes back through the clipboard
+status: accepted
+date: 2026-10-28
+addresses: qg-understandable, qg-privacy, con-no-request-before-click
 :::
 ```

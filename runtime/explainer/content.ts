@@ -31,8 +31,6 @@ export interface App {
   tutor?: {
     rules?: Text;
   };
-  /** A self-assessment over the exercises of the whole app (assessment.ts). */
-  selfAssessment?: SelfAssessment;
 }
 
 /**

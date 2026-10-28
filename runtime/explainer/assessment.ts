@@ -1,6 +1,7 @@
-// The self-assessment of an explainer (selfAssessment in app.yaml or a chapter.yaml): before learning, the learner may
-// answer exercises of the content pages, a few on each of its own pages, without the page around them and without a
-// check of any single one. Only at the end are they checked, all together, and the result says for each content page
+// The self-assessment of an explainer (selfAssessment in a chapter.yaml): before learning, the learner may answer
+// exercises of the content pages, a few on each of its own pages, without the page around them and without a check of
+// any single one. A chapter declares its own; the app's is every chapter's in the order of the chapters, offered on the
+// start page, and a chapter's is offered on its page (in an app with one chapter, the app's is the chapter's). Only at the end are they checked, all together, and the result says for each content page
 // in its scope (the whole app, or one chapter) whether the learner probably knows it already, should look at it again
 // or should read it; a page with no exercise in the self-assessment is not asked. It runs with JavaScript only
 // (assessment-client.ts); without it the offer stays hidden. The last result stays on the device, one per
@@ -90,10 +91,15 @@ export function assessments(site: Site): Assessment[] {
       steps: source.pages.length,
     };
   };
+  // the app's: the pages of every chapter's, in the order of the chapters
+  const steps = site.chapters.flatMap((chapter) => chapter.selfAssessment?.pages ?? []);
+  if (steps.length === 0) return [];
   const all = site.chapters.flatMap((chapter) => chapter.pages);
+  // a chapter's of its own only where the app shows its chapters: with one chapter, the app's is the chapter's
+  const own = site.chapters.length === 1 ? [] : site.chapters;
   return [
-    ...(site.app.selfAssessment === undefined ? [] : [of(site.app.selfAssessment, all)]),
-    ...site.chapters.flatMap((chapter) =>
+    of({ pages: steps }, all),
+    ...own.flatMap((chapter) =>
       chapter.selfAssessment === undefined ? [] : [of(chapter.selfAssessment, chapter.pages, chapter)],
     ),
   ];
@@ -238,7 +244,8 @@ const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
  * The prompt that takes a run to a tutor, in `lang`, in the learner's voice: the tutor page with the results in its
  * address first, then the result of each content page as the learner saw it (its title in `pages`), so that the tutor
  * works nothing out, then one line per exercise (its page, the exercise, its task number, how it went, the input of a
- * wrong one). The solution is never in it.
+ * wrong one). The solution is never in it. `back`: for a chat that runs already (von=tutor), the lines with the tutor
+ * page last, which "Zurück zum Tutor" copies.
  */
 export function assessmentPrompt(
   tutor: string,
@@ -246,6 +253,7 @@ export function assessmentPrompt(
   results: readonly ItemResult[],
   lang: string,
   pages: readonly (PageResult & { title: string })[] = [],
+  opening: "ask" | "back" = "ask",
 ): string {
   const bands = pages.map((page) =>
     page.band === "unasked"
@@ -275,6 +283,16 @@ export function assessmentPrompt(
       state,
     })}${input}`;
   });
+  // back to a running chat: the result first, the tutor page last, as the result line of a page has it
+  if (opening === "back") {
+    return [
+      message(lang, "assessmentBackLine"),
+      ...bands,
+      message(lang, "assessmentTasks"),
+      ...lines,
+      `${message(lang, "resultTutor")} ${tutor}`,
+    ].join("\n");
+  }
   return [
     message(lang, "assessmentAsk", { url: tutor }),
     ...bands,

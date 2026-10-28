@@ -136,10 +136,6 @@
               "$ref": "#/$defs/markdown"
             }
           }
-        },
-        "selfAssessment": {
-          "description": "Optional: a self-assessment over the exercises of the whole app, at einschaetzung/, offered on the start page.",
-          "$ref": "#/$defs/selfAssessment"
         }
       }
     },
@@ -166,7 +162,7 @@
           }
         },
         "selfAssessment": {
-          "description": "Optional: a self-assessment over the exercises of this chapter, at <chapter>/einschaetzung/, offered on the chapter's page. An app with one chapter has its self-assessment in app.yaml.",
+          "description": "Optional: the chapter's self-assessment, at <chapter>/einschaetzung/, offered on the chapter's page. The app's, at einschaetzung/ and offered on the start page, is every chapter's in the order of the chapters; in an app with one chapter it is the only one.",
           "$ref": "#/$defs/selfAssessment"
         }
       }
@@ -1014,7 +1010,7 @@
       }
     },
     "selfAssessment": {
-      "description": "Optional: a self-assessment, which a learner may do before learning, with JavaScript only. It puts exercises of the content pages, without the page around them, on pages of its own, a few on each, and checks them only all together at the end: no single exercise is checked. The result says for each content page whether the learner probably knows it already, should look at it again or should read it; a page with no exercise in it is not asked. The last result stays on the device, one per self-assessment, and a new start replaces it. The learner may take the result to a KI tutor: the self-assessment's tutor page (einschaetzung/tutor/) holds each exercise with its solution and the links to the pages, and its address the result. In app.yaml it asks the exercises of the whole app, at einschaetzung/; in a chapter.yaml those of the chapter, at <chapter>/einschaetzung/. Without it there is none.",
+      "description": "Optional: a self-assessment, which a learner may do before learning, with JavaScript only. It puts exercises of the content pages, without the page around them, on pages of its own, a few on each, and checks them only all together at the end: no single exercise is checked. The result says for each content page whether the learner probably knows it already, should look at it again or should read it; a page with no exercise in it is not asked. The last result stays on the device, one per self-assessment, and a new start replaces it. The learner may take the result to a KI tutor: the self-assessment's tutor page (<assessment>/tutor/), with the result in its address, makes the tutor a guide through the chapters, their pages and new rounds. A chapter declares it in its chapter.yaml, with exercises of its own pages; a chapter without it is not asked. The app's (einschaetzung/) is every chapter's together. Opened by a KI tutor (von=tutor), a run keeps nothing on the device and ends with \"Zurück zum Tutor\", which copies the result for the chat.",
       "type": "object",
       "additionalProperties": false,
       "required": ["pages"],

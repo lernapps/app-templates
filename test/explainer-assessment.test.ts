@@ -48,73 +48,68 @@ describe("the build checks a self-assessment", () => {
   test.each([
     [
       "a page that does not exist",
-      "app.yaml",
       "/zahlen/zahlen-01/#prozent-rechnen",
       "/zahlen/zahlen-09/#prozent-rechnen",
-      "src/app.yaml:22: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-09/#prozent-rechnen names no page of the app; write /<chapter>/<page>/#<exercise>",
+      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-09/#prozent-rechnen names no page of the app; write /<chapter>/<page>/#<exercise>",
     ],
     [
       "an exercise the page does not have",
-      "app.yaml",
       "/zahlen/zahlen-01/#prozent-rechnen",
       "/zahlen/zahlen-01/#prozent-raten",
-      "src/app.yaml:22: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-01/#prozent-raten names no exercise of src/zahlen/zahlen-01.yaml; use the id of one of its exercises: generated, or a question type",
+      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-01/#prozent-raten names no exercise of src/zahlen/zahlen-01.yaml; use the id of one of its exercises: generated, or a question type",
     ],
     [
       "an exercise listed twice",
-      "app.yaml",
       "/zahlen/zahlen-01/#prozent-von-200",
       "/zahlen/zahlen-01/#prozent-rechnen",
-      "src/app.yaml:23: selfAssessment.pages[0].exercises[1]: /zahlen/zahlen-01/#prozent-rechnen is listed twice; list each exercise once in the self-assessment",
+      "src/zahlen/chapter.yaml:12: selfAssessment.pages[0].exercises[1]: /zahlen/zahlen-01/#prozent-rechnen is listed twice; list each exercise once in the self-assessment",
     ],
     [
-      "an exercise of another chapter in a chapter's",
-      "formen/chapter.yaml",
-      "[/formen/formen-01/#ecken,",
-      "[/zahlen/zahlen-01/#prozent-rechnen,",
-      "src/formen/chapter.yaml:10: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-01/#prozent-rechnen is not an exercise of the chapter formen; a chapter's self-assessment asks only its own pages, the app's (src/app.yaml) all of them",
+      "an exercise of another chapter",
+      "/zahlen/zahlen-01/#prozent-rechnen",
+      "/formen/formen-01/#ecken",
+      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /formen/formen-01/#ecken is not an exercise of the chapter zahlen; a chapter's self-assessment asks only its own pages, the app's (src/app.yaml) all of them",
     ],
-  ])("%s", (_name, file, from, to, line) => {
+  ])("%s", (_name, from, to, line) => {
     const root = app();
-    edit(root, file, from, to);
-    expect(problems(root)).toEqual([line]);
+    edit(root, "zahlen/chapter.yaml", from, to);
+    const at = readFileSync(join(root, "src/zahlen/chapter.yaml"), "utf8")
+      .split("\n")
+      .findIndex((text) => text.includes(to));
+    expect(problems(root)).toEqual([line.replace("LINE", String(at + 1))]);
   });
 
   test("a reference of another shape is a problem of the schema", () => {
     const root = app();
-    edit(root, "app.yaml", "/zahlen/zahlen-01/#prozent-rechnen", "zahlen-01#prozent-rechnen");
+    edit(root, "zahlen/chapter.yaml", "/zahlen/zahlen-01/#prozent-rechnen", "zahlen-01#prozent-rechnen");
+    expect(problems(root)).toEqual([
+      "src/zahlen/chapter.yaml:11: selfAssessment.pages[0].exercises[0]: zahlen-01#prozent-rechnen is no exercise's address; write /<chapter>/<page>/#<exercise>",
+    ]);
+  });
+
+  test("app.yaml has none: the app's is every chapter's", () => {
+    const root = app();
+    edit(root, "app.yaml", "chapters: [zahlen, formen]", "chapters: [zahlen, formen]\nselfAssessment: { pages: [] }");
     expect(problems(root)).toHaveLength(1);
-    expect(problems(root)).toEqual([
-      "src/app.yaml:22: selfAssessment.pages[0].exercises[0]: zahlen-01#prozent-rechnen is no exercise's address; write /<chapter>/<page>/#<exercise>",
-    ]);
+    expect(problems(root)[0]).toMatch(/^src\/app\.yaml:\d+: /);
   });
 
-  test("an exercise component cannot be in it yet", () => {
-    const root = mkdtempSync(join(tmpdir(), "explainer-assessment-"));
-    cpSync(join(import.meta.dirname, "../explainer/src"), join(root, "src"), { recursive: true });
-    edit(
-      root,
-      "app.yaml",
-      "chapters: [prozent]",
-      "chapters: [prozent]\nselfAssessment:\n  pages:\n    - exercises: [/prozent/prozentwert/#prozentfeld]",
-    );
-    expect(problems(root)).toEqual([
-      "src/app.yaml:10: selfAssessment.pages[0].exercises[0]: /prozent/prozentwert/#prozentfeld is an exercise component, which a self-assessment cannot show yet; choose a generated exercise or a question",
-    ]);
-  });
-
-  test("an app with one chapter has its self-assessment in app.yaml", () => {
+  test("an exercise component cannot be in it yet; an app with one chapter has it in its chapter.yaml", () => {
     const root = mkdtempSync(join(tmpdir(), "explainer-assessment-"));
     cpSync(join(import.meta.dirname, "../explainer/src"), join(root, "src"), { recursive: true });
     edit(
       root,
       "prozent/chapter.yaml",
       "pages: [prozentwert, prozentsatz, grundwert]",
-      "pages: [prozentwert, prozentsatz, grundwert]\nselfAssessment:\n  pages:\n    - exercises: [/prozent/prozentwert/#prozentwert-ueben]",
+      "pages: [prozentwert, prozentsatz, grundwert]\nselfAssessment:\n  pages:\n    - exercises: [/prozent/prozentwert/#prozentfeld]",
     );
     expect(problems(root)).toEqual([
-      "src/prozent/chapter.yaml:6: selfAssessment: an app with one chapter has no page for the chapter; put the self-assessment into src/app.yaml",
+      "src/prozent/chapter.yaml:7: selfAssessment.pages[0].exercises[0]: /prozent/prozentwert/#prozentfeld is an exercise component, which a self-assessment cannot show yet; choose a generated exercise or a question",
     ]);
+    edit(root, "prozent/chapter.yaml", "#prozentfeld", "#prozentwert-ueben");
+    const site = loadSite(root, 0);
+    // the app's is the chapter's: no page of its own for the chapter, whose page the app hides
+    expect(assessments(site).map((assessment) => assessment.local)).toEqual(["einschaetzung/"]);
   });
 
   test("a page or chapter may not take the self-assessment's address", () => {
@@ -131,12 +126,12 @@ describe("the build checks a self-assessment", () => {
     const root = app();
     edit(
       root,
-      "formen/chapter.yaml",
-      "[/formen/formen-01/#formen-ordnen, /formen/formen-02/#formen-ecken]",
-      "[/formen/formen-01/#formen-ordnen]",
+      "zahlen/chapter.yaml",
+      "        - /zahlen/zahlen-02/#hauptgruppe\n        - /zahlen/zahlen-02/#gerade-prozente",
+      "        - /zahlen/zahlen-02/#hauptgruppe",
     );
     expect(stepHint(loadSite(root, 0))).toBe(
-      "lernapps explainer: 1 page of a self-assessment shows fewer than 2 or more than 5 exercises: formen/einschaetzung/ page 2 (1)",
+      "lernapps explainer: 2 pages of a self-assessment show fewer than 2 or more than 5 exercises: einschaetzung/ page 2 (1), zahlen/einschaetzung/ page 2 (1)",
     );
   });
 });
@@ -149,66 +144,91 @@ describe("the pages of a self-assessment", () => {
     return renderPage(site, route).body;
   };
 
-  test("each has its page in each language, the app's and the chapter's", () => {
+  test("the app's is every chapter's, in order; each chapter has its own; each in every language", () => {
     const pages = routes(site)
       .filter((route) => route.kind === "assessment")
       .map((route) => route.path);
-    expect(pages).toEqual(["einschaetzung/", "formen/einschaetzung/", "en/einschaetzung/", "en/formen/einschaetzung/"]);
+    expect(pages).toEqual([
+      "einschaetzung/",
+      "zahlen/einschaetzung/",
+      "formen/einschaetzung/",
+      "en/einschaetzung/",
+      "en/zahlen/einschaetzung/",
+      "en/formen/einschaetzung/",
+    ]);
+    const [whole, zahlen, formen] = assessments(site);
+    expect(whole?.items.map((item) => item.ref)).toEqual(
+      [...(zahlen?.items ?? []), ...(formen?.items ?? [])].map((item) => item.ref),
+    );
+    expect(whole?.steps).toBe(3);
+    expect(formen?.items.map((item) => item.key)).toEqual(["a1", "a2", "a3"]);
   });
 
-  test("the start page and the chapter's page offer it, hidden until the client module runs; no other page does", () => {
+  test("the start page and each chapter's page offer theirs, in a <template> until the client module runs", () => {
     expect(page("de", "")).toContain(
       '<section class="explainer-assessment-offer" aria-labelledby="selbsteinschaetzung" hidden data-key="self-assessment" data-storage="explainer">',
     );
     expect(page("de", "")).toContain('<a class="explainer-assessment-link" href="einschaetzung/"');
     expect(page("de", "formen/")).toContain('data-key="self-assessment:formen"');
     expect(page("de", "formen/")).toContain('href="../formen/einschaetzung/"');
-    expect(page("de", "zahlen/")).not.toContain("explainer-assessment-offer");
+    expect(page("de", "zahlen/")).toContain('data-key="self-assessment:zahlen"');
     expect(page("de", "zahlen/zahlen-01/")).not.toContain("explainer-assessment-offer");
-  });
-
-  test("its page is hidden without JavaScript but for one line, and has no check of a single exercise", () => {
-    const html = page("de", "einschaetzung/");
-    expect(html).toContain('<p class="explainer-assessment-nojs">Die Selbsteinschätzung braucht JavaScript.');
-    expect(html).toContain('<div class="explainer-assessment" hidden>');
     // every heading, button and exercise of it in a <template>: no page shows one without JavaScript
     // (explainer-readable-without-js)
     const outside = (body: string) =>
       body.replace(/<template class="explainer-assessment-template">[\s\S]*?<\/template>/g, "");
-    expect(outside(html)).not.toMatch(/explainer-assessment-(step|item|result|intro)|<h2/);
-    expect(outside(page("de", ""))).not.toContain("explainer-assessment-offer");
-    expect(outside(page("de", "formen/"))).not.toContain("explainer-assessment-offer");
-    expect(html.match(/class="explainer-assessment-step"/g)).toHaveLength(2);
-    expect(html.match(/class="explainer-assessment-item"/g)).toHaveLength(6);
+    for (const local of ["", "formen/", "einschaetzung/", "formen/einschaetzung/"]) {
+      expect(outside(page("de", local)), local).not.toMatch(
+        /explainer-assessment-(offer|step|item|result|intro)|id="(teil-\d+|ergebnis|selbsteinschaetzung)"/,
+      );
+    }
+  });
+
+  test("its page has one line without JavaScript and no check of a single exercise", () => {
+    const html = page("de", "einschaetzung/");
+    expect(html).toContain('<p class="explainer-assessment-nojs">Die Selbsteinschätzung braucht JavaScript.');
+    expect(html.match(/class="explainer-assessment-step"/g)).toHaveLength(3);
+    expect(html.match(/class="explainer-assessment-item"/g)).toHaveLength(8);
     // a question by its key: the same id may be on two pages
     expect(html).toContain('id="frage-a2"');
     expect(html).not.toContain('id="frage-prozent-von-200"');
-    // "Prüfen" stays hidden: the client module never shows it
     expect(html).not.toMatch(/<p class="question-actions">/);
-    // the breadcrumbs of a chapter's
     expect(page("de", "formen/einschaetzung/")).toContain(
       '<li><a href="../../formen/">Formen</a></li><li aria-current="page">Selbsteinschätzung</li>',
     );
   });
 
-  test("its tutor page names the pages in order, the exercises asked of each and each exercise with its table", () => {
-    const [app_, formen] = assessments(site);
-    if (app_ === undefined || formen === undefined) throw new Error("two self-assessments");
-    const markdown = assessmentTutorMarkdown(site, app_, "de");
-    expect(markdown).toContain("Selbsteinschätzung der ganzen App gemacht: 6 Aufgaben");
+  test("its tutor page makes the tutor a guide: chapter by chapter, each with its pages and its self-assessment", () => {
+    const [whole, zahlen, formen] = assessments(site);
+    if (whole === undefined || zahlen === undefined || formen === undefined) throw new Error("three self-assessments");
+    const markdown = assessmentTutorMarkdown(site, whole, "de");
+    expect(markdown).toContain("Du bist sein Wegweiser");
+    expect(markdown).toContain("Geh Kapitel für Kapitel vor");
+    expect(markdown).toContain("„Zurück zum Tutor“");
+    expect(markdown).toContain("### Kapitel „Zahlen“");
+    expect(markdown).toContain(
+      "- Selbsteinschätzung des Kapitels: [zahlen/einschaetzung/?von=tutor](../../zahlen/einschaetzung/?von=tutor)",
+    );
     expect(markdown).toContain(
       "- „Zahlen 1“: [Seite](../../zahlen/zahlen-01/?von=tutor) · [Tutor-Seite](../../zahlen/zahlen-01/tutor/) · Aufgaben A1, A2",
     );
-    expect(markdown).toContain("- „Formen 2“: [Seite](../../formen/formen-02/?von=tutor)");
-    expect(markdown).toMatch(/Formen 2.*· nicht abgefragt/);
-    expect(markdown).toContain("### A1: Übung prozent-rechnen der Seite „Zahlen 1“");
+    // a page none of whose exercises is asked
     expect(markdown).toContain(
-      "- Link zu Nummer n: `../../zahlen/zahlen-01/?prozent-rechnen=n&von=tutor#prozent-rechnen`",
+      "- „Formen 2“: [Seite](../../formen/formen-02/?von=tutor) · [Tutor-Seite](../../formen/formen-02/tutor/) · nicht abgefragt",
     );
-    expect(markdown).toContain("ohne `einschaetzung/tutor/` und ohne `?…`");
+    expect(markdown).toContain(
+      "- Selbsteinschätzung der ganzen App: [einschaetzung/?von=tutor](../../einschaetzung/?von=tutor)",
+    );
+    expect(markdown).toContain("- A1: Übung prozent-rechnen der Seite „Zahlen 1“");
+    // a guide: no tables of solutions
+    expect(markdown).not.toContain("```");
+    // a chapter's names the pages of the other chapters without keys
     const chapter = assessmentTutorMarkdown(site, formen, "en");
     expect(chapter).toContain("the self-assessment of the chapter “Shapes”");
     expect(chapter).toContain("[Page](../../../formen/formen-01/?von=tutor)");
+    expect(chapter).toMatch(
+      /“Numbers 1”: \[Page\]\(\.\.\/\.\.\/\.\.\/zahlen\/zahlen-01\/\?von=tutor\) · \[Tutor page\]\([^)]+\)\n/,
+    );
   });
 });
 
@@ -263,6 +283,25 @@ describe("a run in the browser", () => {
         "- A3 (Grundwert, Übung z, Nr. 3): nicht beantwortet.",
       ].join("\n"),
     );
+  });
+
+  test("back to a running chat, the lines start with the result and end with the tutor page", () => {
+    const items = [
+      { key: "a1", page: "Prozentwert", exercise: "x" },
+      { key: "a2", page: "Prozentwert", exercise: "y" },
+      { key: "a3", page: "Grundwert", exercise: "z" },
+    ];
+    const pages = [{ page: "z/a/", title: "Prozentwert", right: 1, total: 2, band: "partly" as const }];
+    const lines = assessmentPrompt("https://a.example/einschaetzung/tutor/?a1=x", items, results, "de", pages, "back");
+    expect(lines.split("\n")).toEqual([
+      "Ich habe die Selbsteinschätzung gemacht. Mein Ergebnis je Seite:",
+      "- „Prozentwert“: Schau sie dir noch einmal an (1 von 2 richtig).",
+      "Meine Aufgaben:",
+      "- A1 (Prozentwert, Übung x, Nr. 17): falsch. Eingabe: 120",
+      "- A2 (Prozentwert, Übung y): richtig.",
+      "- A3 (Grundwert, Übung z, Nr. 3): nicht beantwortet.",
+      "Tutor-Seite: https://a.example/einschaetzung/tutor/?a1=x",
+    ]);
   });
 
   test("the device keeps a result of this shape only", () => {

@@ -390,19 +390,19 @@ path: runtime/explainer/video.ts
 
 ### Self-assessment
 
-Built. An optional self-assessment (`dec-self-assessment`), declared in the content: `selfAssessment` in `app.yaml`
-for the whole app, in a `chapter.yaml` for one chapter, each its pages with the exercises it asks, each by
-`/<chapter>/<page>/#<exercise>` (a generated one or a question type; no exercise component yet). The validation checks
-each reference, that a chapter's asks only its own pages and that an exercise is listed once; the build notes a page of
-it with fewer than two or more than five exercises. The page rendering writes its page (`einschaetzung/`,
-`<chapter>/einschaetzung/`), whose every part is hidden without JavaScript but for one line, the offer on the start page
-or the chapter's page, hidden until the client module runs, and its tutor page `<assessment>/tutor/`: the guide of a
-tutor after a run, how to read the result in its address, the content pages with their links and the exercises asked of
-each, and each exercise as the tutor page of its page has it. In the browser a run draws a new task of each generated
-exercise, shows the pages one by one without "Prüfen", checks all exercises together at "Auswerten" and shows for each
-content page in its scope whether the learner probably knows it, should look at it again or should read it; a page with
-no exercise in it is not asked. The last result stays on the device, one per self-assessment
-(`dec-self-assessment-result`).
+Built. An optional self-assessment (`dec-self-assessment`), declared per chapter: `selfAssessment` in its
+`chapter.yaml`, its pages with the exercises it asks, each by `/<chapter>/<page>/#<exercise>` of the chapter (a
+generated one or a question type; no exercise component yet). The app's is every chapter's in the order of the
+chapters (`einschaetzung/`), a chapter's its own (`<chapter>/einschaetzung/`; in an app with one chapter, the app's is
+the chapter's). The validation checks each reference, that it is of the chapter and that an exercise is listed once;
+the build notes a page of it with fewer than two or more than five exercises. The page rendering writes its page and
+the offer on the start page or the chapter's page, every part of them in a `<template>` until the client module puts it
+into the page, and its tutor page `<assessment>/tutor/`, which makes the tutor a guide (`dec-self-assessment-tutor`).
+In the browser a run draws a new task of each generated exercise, shows the pages one by one without "Prüfen", checks
+all exercises together at "Auswerten" and shows for each content page in its scope whether the learner probably knows
+it, should look at it again or should read it; a page with no exercise in it is not asked. The last result stays on the
+device, one per self-assessment (`dec-self-assessment-result`); a run a tutor opened keeps nothing and ends in "Zurück
+zum Tutor".
 
 ```arc42
 :::building-block
@@ -421,8 +421,8 @@ implements: concept-tutor
 The build step writes the page, the offer and the tutor page of each self-assessment (`assessment-page.ts`); the client
 module starts it (`assessment-client.ts`). Its addresses, the query of its tutor page (`?a1=17-falsch-F1&a2=richtig`:
 each exercise by its key in order, its task number, `richtig`, `falsch` or `offen`, the typical mistake), the lines of
-its prompt and the result kept under `self-assessment` or `self-assessment:<chapter>` are a contract with every tutor
-and with the result kept on a device.
+its prompt and of "Zurück zum Tutor", and the result kept under `self-assessment` or `self-assessment:<chapter>` are a
+contract with every tutor and with the result kept on a device.
 
 ```arc42
 :::interface

@@ -366,19 +366,10 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
 
   // the self-assessments: each exercise found, checkable, in its scope and listed once
   if (complete) {
-    if (app.selfAssessment !== undefined) {
-      checkAssessment(appYaml, app.selfAssessment, chapters, undefined, problems);
-    }
     for (const chapter of chapters) {
       const yaml = chapterFiles.get(chapter.id);
       if (chapter.selfAssessment === undefined || yaml === undefined) continue;
-      if (app.chapters.length === 1) {
-        problems.at(
-          yaml,
-          ["selfAssessment"],
-          "an app with one chapter has no page for the chapter; put the self-assessment into src/app.yaml",
-        );
-      } else checkAssessment(yaml, chapter.selfAssessment, chapters, chapter.id, problems);
+      checkAssessment(yaml, chapter.selfAssessment, chapters, chapter.id, problems);
     }
   }
 

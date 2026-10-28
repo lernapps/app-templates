@@ -128,5 +128,8 @@
   "assessmentInput": "Eingabe: {input}",
   "assessmentPageLine": "„{page}“: {band} ({right} von {total} richtig).",
   "assessmentPageUnasked": "„{page}“: nicht abgefragt.",
-  "assessmentTasks": "Meine Aufgaben:"
+  "assessmentTasks": "Meine Aufgaben:",
+  "assessmentBackIntro": "Drück „Zurück zum Tutor“. Das kopiert dein Ergebnis. Füg es im Chat mit deinem Tutor ein.",
+  "assessmentBackLine": "Ich habe die Selbsteinschätzung gemacht. Mein Ergebnis je Seite:",
+  "assessmentTutorRun": "Diese Runde ist für deinen Tutor: Die App speichert nichts davon."
 }

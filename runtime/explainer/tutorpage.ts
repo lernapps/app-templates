@@ -543,27 +543,6 @@ function pageMarkdown(
   return `${lines.join("\n").trimEnd()}\n`;
 }
 
-/**
- * A generated exercise or a question of the question types for a tutor page other than its page's (the
- * self-assessment's, assessment-page.ts): its lines as the tutor page of its page has them, its links to the page at
- * `page`, from where that tutor page is.
- */
-export function exerciseLines(site: Site, block: Block, lang: string, page: string): string[] {
-  const part = exercisePart(site, block, lang, new Map());
-  if (part === undefined) return [];
-  if (block.type === "generated") {
-    const format = part.lines.filter((text) => text.startsWith(`- ${tutorWords(lang).answerFormat}:`)).map(line);
-    return generatedLines(block, site, lang, format, page);
-  }
-  return [
-    ...part.lines.map((text) => {
-      const [, indent = "", rest = ""] = /^(\s*- )?(.*)$/.exec(text) ?? [];
-      return `${indent}${line(rest)}`;
-    }),
-    `- ${wordsIn(lang).link}: [${page}?von=tutor#${part.id}](${page}?von=tutor#${part.id})`,
-  ];
-}
-
 /** A formula $…$ of the page's Markdown, kept as written: neither emphasis nor escapes inside it. */
 const FORMULA = {
   name: "formula",

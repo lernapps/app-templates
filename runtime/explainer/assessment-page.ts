@@ -4,20 +4,21 @@
 // one source of what a tutor gets about a run. The page holds the intro, each of its pages with its exercises (a
 // question of the question types rendered as the shared questions render it, without "Prüfen"; a generated one as the
 // place of its live task, which the client module draws), the place of the result with the way to the tutor, and the
-// data the client module needs (assessment-client.ts). The tutor page holds the guide of a tutor after a run, how to
-// read the result in its address (?a1=17-falsch-F1), the content pages with their links and the exercises asked of
-// each, and each exercise as the tutor page of its page has it: a generated one with its table of task numbers, its
-// solutions and typical mistakes F1, F2 …
+// data the client module needs (assessment-client.ts). The tutor page makes the tutor a guide: chapter by chapter to
+// the pages that do not stick (opened with von=tutor, each ends in "Zurück zum Tutor"), then into a new round of the
+// chapter's self-assessment, whose "Zurück zum Tutor" copies its result; after each round the tutor decides on the next
+// chapter or another round. It holds how to read a result (?a1=17-falsch-F1), every chapter with its pages and the
+// link to its self-assessment, and the exercise behind each key; explaining is left to the pages' own tutor pages.
 import { renderQuestion } from "../shared/questions/render.ts";
 import { type MaterialContext, renderMaterial } from "../shared/blocks/index.ts";
 import { plain, renderWithFormulas } from "../shared/text/markdown.ts";
-import { type Assessment, titleOf } from "./assessment.ts";
-import { inLanguage, type Site } from "./content.ts";
+import { assessments, type Assessment, titleOf } from "./assessment.ts";
+import { inLanguage, type Site, type Text } from "./content.ts";
 import { exerciseData, type ExerciseData } from "./exercises.ts";
 import { message } from "./messages.ts";
 import { PROVIDERS, placeholderPrompt } from "./prompt.ts";
 import { TUTOR_PAGE, tutorPageOf } from "./tutor.ts";
-import { exerciseLines, TUTOR_MARKDOWN, tutorDocument } from "./tutorpage.ts";
+import { TUTOR_MARKDOWN, tutorDocument } from "./tutorpage.ts";
 
 /** What rendering a part of a self-assessment needs of the page it is on (render.ts). */
 export interface AssessmentContext {
@@ -159,7 +160,7 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
     `<div class="explainer-assessment" hidden>`,
     `<div class="explainer-assessment-intro">`,
     `<p>${t("assessmentIntro", { count: String(assessment.items.length), steps: String(assessment.steps) })}</p>`,
-    `<p>${t("assessmentPrivacy")}</p>`,
+    `<p class="explainer-assessment-privacy">${t("assessmentPrivacy")}</p>`,
     `<p><button type="button" class="explainer-assessment-begin">${t("assessmentBegin")}</button></p>`,
     `</div>`,
     ...steps,
@@ -199,13 +200,19 @@ interface Words {
   guideTitle: string;
   guide: string[];
   appRules: string;
-  pagesTitle: string;
+  chaptersTitle: string;
+  chapter: string;
+  assessmentOf: string;
+  noAssessment: string;
+  whole: string;
   page: string;
   tutorPage: string;
   asked: string;
   unasked: string;
   itemsTitle: string;
   item: string;
+  /** A title in quotes. */
+  quoted: string;
 }
 
 const WORDS: Readonly<Record<string, Words>> = {
@@ -213,91 +220,111 @@ const WORDS: Readonly<Record<string, Words>> = {
     title: "Selbsteinschätzung – für deinen KI-Tutor",
     description: "Was ein KI-Tutor zur Selbsteinschätzung von „{app}“ bekommt.",
     intro:
-      "Du begleitest ein Kind beim Lernen mit der Lern-App „{app}“ von lernapps.net. Es hat gerade die Selbsteinschätzung {scope} gemacht: {count} Aufgaben aus den Seiten der App, ohne Rückmeldung zu einzelnen Aufgaben. Am Ende sah es nur, welche Seiten es wahrscheinlich schon kann, noch einmal ansehen oder genau lesen sollte. Jetzt lernt es die Seiten, die noch nicht sitzen. Du begleitest es dabei.",
+      "Du begleitest ein Kind beim Lernen mit der Lern-App „{app}“ von lernapps.net. Es hat die Selbsteinschätzung {scope} gemacht: Aufgaben aus den Seiten der App, ohne Rückmeldung zu einzelnen Aufgaben. Du bist sein Wegweiser: Du schickst es zu den Seiten, die noch nicht sitzen, und danach in eine neue Runde der Selbsteinschätzung ihres Kapitels. Erklärt und geübt wird auf den Seiten selbst; dort hat das Kind „Hilfe“, und jede Seite hat ihre eigene Tutor-Seite.",
     scopeApp: "der ganzen App",
     scopeChapter: "des Kapitels „{chapter}“",
     parents: "Eltern und Lehrkräfte sehen hier, was der Tutor bekommt.",
     toAssessment: "Zur Selbsteinschätzung",
-    readTitle: "So liest du das Ergebnis",
+    readTitle: "So liest du ein Ergebnis",
     read: [
-      "Die erste Nachricht des Kindes nennt diese Seite mit dem Ergebnis, z. B. `?a1=17-falsch-F1&a2=richtig&a3=offen`, dann das Ergebnis je Seite, wie das Kind es sah, und eine Zeile je Aufgabe mit der Eingabe einer falschen. Nimm das Ergebnis je Seite, wie es dasteht; rechne es nicht nach.",
-      "`a1` ist die Aufgabe A1 unten. Eine Zahl davor ist die Nummer der Aufgabe in ihrer Übung: Schlag sie in der Tabelle der Übung nach. Dann `richtig`, `falsch` oder `offen` (nicht beantwortet). `F1` ist der typische Fehler F1 der Übung, zu dem die Eingabe passt.",
+      "Nach einer Runde fügt das Kind ein: das Ergebnis je Seite, eine Zeile je Aufgabe und diese Seite mit dem Ergebnis in der Adresse, z. B. `?a1=17-falsch-F1&a2=richtig&a3=offen`. Nimm das Ergebnis je Seite, wie es dasteht; rechne es nicht nach.",
       "Eine Seite mit allen Aufgaben richtig kann das Kind wahrscheinlich schon. Mit mindestens der Hälfte richtig soll es sie noch einmal ansehen, mit weniger genau lesen. Eine offene Aufgabe zählt als nicht richtig. Eine Seite ohne Aufgabe wurde nicht abgefragt.",
+      "Eine Zeile wie „Zahlen 1, prozent-rechnen, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück zum Tutor“ auf einer Seite: Das Kind hat dort geübt.",
     ],
     guideTitle: "So leitest du an",
     guide: [
       "Antworte kurz: höchstens drei Sätze und eine Frage. Keine Überschriften, keine Listen.",
-      "Sag zuerst in zwei Sätzen, was schon gut lief und mit welcher Seite ihr anfangt: der ersten unten, die das Kind genau lesen soll, sonst der ersten zum noch einmal Ansehen.",
-      "Gelernt wird in der App: Schick das Kind mit dem Link zur Seite dorthin. Jeder Link ist eine volle Adresse mit `https://`: die Adresse dieser Seite ohne `{here}` und ohne `?…`, mit dem Pfad der Seite und `?von=tutor`.",
-      "Zu jeder Seite gibt es eine Tutor-Seite mit ihrem Inhalt und ihren Übungen. Kannst du Adressen laden, lade sie, bevor du die Seite erklärst; sonst bitte das Kind, auf der Seite „Mit einem KI-Tutor lernen“ zu nutzen.",
-      "Lädst du die Tutor-Seite einer Seite, nimm ihren Inhalt und ihre Aufgaben als Kontext. Es gelten weiter die Regeln hier.",
-      "Besprich eine falsche Aufgabe erst, wenn das Kind ihre Seite gelesen hat: Sag, was an seiner Eingabe nicht passt, ohne die Lösung zu verraten. Passt die Eingabe zu keinem Fehler F…, frag, wie das Kind gerechnet hat. Rechne nichts selbst aus: Lösungen und Fehler stehen unten bei jeder Aufgabe.",
-      "Fragt das Kind nach einer Aufgabe einer anderen Seite, antworte kurz und schick es zu ihrer Seite. Dann geht es in der Reihenfolge weiter.",
-      "Erfinde keine Aufgaben. Zum Üben schick das Kind zu einer Übung der Seite.",
+      "Geh Kapitel für Kapitel vor, in der Reihenfolge unten. Fang mit dem ersten Kapitel an, in dem eine Seite „Lies sie genau“ oder „Schau sie dir noch einmal an“ hat. Sag dem Kind zuerst in zwei Sätzen, was schon gut lief und womit ihr anfangt.",
+      "Schick das Kind zu einer Seite nach der anderen: erst zu denen zum genau Lesen, dann zu denen zum noch einmal Ansehen, in ihrer Reihenfolge. Sag dazu: „Lies die Seite und lös ihre Übungen. Am Ende der Seite ist der Knopf ‚Zurück zum Tutor‘. Drück ihn und füg die kopierte Zeile hier ein.“",
+      "Eine Seite „nicht abgefragt“ schickst du einmal zum Lesen, wenn ihr bei ihr vorbeikommt. Ein Kapitel ohne Selbsteinschätzung gehst du Seite für Seite durch, ohne Runde.",
+      "Sind die Seiten eines Kapitels durch, schick das Kind zur Selbsteinschätzung des Kapitels: „Mach eine neue Runde, mit neuen Aufgaben. Am Ende drückst du ‚Zurück zum Tutor‘ und fügst das Ergebnis hier ein.“",
+      "Nach jeder Runde entscheidest du: Kann das Kind alle abgefragten Seiten des Kapitels wahrscheinlich schon, geht ihr zum nächsten Kapitel. Sonst geht es noch einmal zu den Seiten, die nicht sitzen, und dann in eine neue Runde. Sitzt eine Seite nach zwei Runden noch nicht, sag dem Kind, es soll sie mit „Mit einem KI-Tutor lernen“ auf der Seite durchgehen, und geht danach weiter.",
+      "Sind alle Kapitel durch, sag es dem Kind und lade es zu einer Runde der ganzen App ein.",
+      "Du erklärst hier keine Aufgabe und verrätst keine Lösung. Fragt das Kind zu einer Aufgabe, schick es zu ihrer Seite und zu „Hilfe“ dort.",
+      "Jeder Link ist eine volle Adresse mit `https://`: die Adresse dieser Seite ohne `{here}` und ohne `?…`, mit dem Pfad aus der Liste unten und `?von=tutor`. Ohne `?von=tutor` fehlt der Knopf „Zurück zum Tutor“.",
     ],
     appRules: "Regeln dieser App",
-    pagesTitle: "Die Seiten, in ihrer Reihenfolge",
+    chaptersTitle: "Die Kapitel und ihre Seiten, in ihrer Reihenfolge",
+    chapter: "Kapitel",
+    assessmentOf: "Selbsteinschätzung des Kapitels",
+    noAssessment: "keine Selbsteinschätzung",
+    whole: "Selbsteinschätzung der ganzen App",
     page: "Seite",
     tutorPage: "Tutor-Seite",
     asked: "Aufgaben",
     unasked: "nicht abgefragt",
-    itemsTitle: "Die Aufgaben",
+    itemsTitle: "Die Aufgaben dieser Selbsteinschätzung",
     item: "{key}: Übung {exercise} der Seite „{page}“",
+    quoted: "„{title}“",
   },
   en: {
     title: "Self-assessment – for your AI tutor",
     description: "What an AI tutor gets for the self-assessment of “{app}”.",
     intro:
-      "You accompany a child learning with the learning app “{app}” of lernapps.net. It has just done the self-assessment {scope}: {count} tasks from the pages of the app, without feedback on any single task. At the end it saw only which pages it probably knows already, should look at again or should read closely. Now it learns the pages that do not stick yet. You accompany it.",
+      "You accompany a child learning with the learning app “{app}” of lernapps.net. It did the self-assessment {scope}: tasks from the pages of the app, without feedback on any single task. You are its guide: you send it to the pages that do not stick yet, and then into a new round of the self-assessment of their chapter. Explaining and practising happen on the pages themselves; there the child has “Help”, and every page has a tutor page of its own.",
     scopeApp: "of the whole app",
     scopeChapter: "of the chapter “{chapter}”",
     parents: "Parents and teachers see here what the tutor gets.",
     toAssessment: "To the self-assessment",
-    readTitle: "How you read the result",
+    readTitle: "How you read a result",
     read: [
-      "The child's first message names this page with the result, e.g. `?a1=17-falsch-F1&a2=richtig&a3=offen`, then the result per page as the child saw it, and a line per task with the input of a wrong one. Take the result per page as it stands; do not work it out again.",
-      "`a1` is the task A1 below. A number before is the number of the task in its exercise: look it up in the exercise's table. Then `richtig` (right), `falsch` (wrong) or `offen` (not answered). `F1` is the typical mistake F1 of the exercise that the input fits.",
+      "After a round the child pastes: the result per page, a line per task and this page with the result in its address, e.g. `?a1=17-falsch-F1&a2=richtig&a3=offen`. Take the result per page as it stands; do not work it out again.",
       "A page with all its tasks right the child probably knows already. With at least half of them right it should look at it again, with fewer read it closely. An open task counts as not right. A page without a task was not asked.",
+      "A line like “Numbers 1, prozent-rechnen, no. 16: right on try 2.” comes from “Back to the tutor” on a page: the child practised there.",
     ],
     guideTitle: "How you guide",
     guide: [
       "Answer briefly: three sentences and one question at most. No headings, no lists.",
-      "First say in two sentences what went well already and which page you start with: the first one below the child should read closely, else the first one to look at again.",
-      "Learning happens in the app: send the child there with the link to the page. Every link is a full address with `https://`: the address of this page without `{here}` and without `?…`, with the path of the page and `?von=tutor`.",
-      "Every page has a tutor page with its content and its exercises. If you can load addresses, load it before you explain the page; else ask the child to use “Learn with an AI tutor” on the page.",
-      "If you load the tutor page of a page, take its content and tasks as context. The rules here still apply.",
-      "Talk a wrong task over only once the child has read its page: say what about its input does not fit, without giving the solution away. If the input fits no mistake F…, ask how the child worked it out. Work nothing out yourself: solutions and mistakes are below with each task.",
-      "If the child asks about a task of another page, answer briefly and send it to that page. Then go on in the order.",
-      "Do not make up tasks. To practise, send the child to an exercise of the page.",
+      "Go chapter by chapter, in the order below. Start with the first chapter that has a page “Read it closely” or “Look at it again”. First tell the child in two sentences what went well already and where you start.",
+      "Send the child to one page after another: first those to read closely, then those to look at again, in their order. Add: “Read the page and do its exercises. At the end of the page there is the button ‘Back to the tutor’. Press it and paste the copied line here.”",
+      "A page “not asked” you send the child to once, to read, when you come by it. A chapter without a self-assessment you go through page by page, without a round.",
+      "Once the pages of a chapter are done, send the child to the chapter's self-assessment: “Do a new round, with new tasks. At the end press ‘Back to the tutor’ and paste the result here.”",
+      "After each round you decide: if the child probably knows every page of the chapter asked, you go on to the next chapter. Else it goes once more to the pages that do not stick, then into a new round. If a page still does not stick after two rounds, tell the child to go through it with “Learn with an AI tutor” on the page, and go on after that.",
+      "Once every chapter is done, tell the child and invite it to a round of the whole app.",
+      "Here you explain no task and give no solution away. If the child asks about a task, send it to its page and to “Help” there.",
+      "Every link is a full address with `https://`: the address of this page without `{here}` and without `?…`, with the path from the list below and `?von=tutor`. Without `?von=tutor` the button “Back to the tutor” is missing.",
     ],
     appRules: "Rules of this app",
-    pagesTitle: "The pages, in their order",
+    chaptersTitle: "The chapters and their pages, in their order",
+    chapter: "Chapter",
+    assessmentOf: "self-assessment of the chapter",
+    noAssessment: "no self-assessment",
+    whole: "Self-assessment of the whole app",
     page: "Page",
     tutorPage: "Tutor page",
     asked: "Tasks",
     unasked: "not asked",
-    itemsTitle: "The tasks",
+    itemsTitle: "The tasks of this self-assessment",
     item: "{key}: exercise {exercise} of the page “{page}”",
+    quoted: "“{title}”",
   },
 };
 
 const wordsIn = (lang: string): Words => WORDS[lang] ?? (WORDS["de"] as Words);
 
-/** The tutor page of a self-assessment in `lang`, as Markdown, its links relative to its folder <assessment>/tutor/. */
+/**
+ * The tutor page of a self-assessment in `lang`, as Markdown, its links relative to its folder <assessment>/tutor/: the
+ * guide of a tutor who leads the learner chapter by chapter to the pages that do not stick and into a new round of
+ * the chapter's self-assessment, how to read a result, every chapter of the app with its pages (the exercises of this
+ * self-assessment by key, or not asked) and the link to its self-assessment, and the exercise behind each key.
+ */
 export function assessmentTutorMarkdown(site: Site, assessment: Assessment, lang: string): string {
   const words = wordsIn(lang);
-  const app = inLanguage(site.app.title, lang).replace(/\s+/g, " ").trim();
+  const own = (text: Text) => inLanguage(text, lang).replace(/\s+/g, " ").trim();
+  const app = own(site.app.title);
   const scope =
     assessment.chapter === undefined
       ? words.scopeApp
-      : words.scopeChapter.replace("{chapter}", inLanguage(assessment.chapter.title, lang).replace(/\s+/g, " ").trim());
+      : words.scopeChapter.replace("{chapter}", own(assessment.chapter.title));
   const here = assessmentTutorOf(assessment);
   // from the tutor page to the root of the language tree
   const root = "../".repeat(here.split("/").filter((part) => part !== "").length);
+  const all = assessments(site);
+  const whole = all.find((candidate) => candidate.chapter === undefined);
   const lines = [
     `# ${words.title}`,
     "",
-    words.intro.replace("{app}", app).replace("{scope}", scope).replace("{count}", String(assessment.items.length)),
+    words.intro.replace("{app}", app).replace("{scope}", scope),
     "",
     `${words.parents} [${words.toAssessment}](../)`,
     "",
@@ -313,24 +340,37 @@ export function assessmentTutorMarkdown(site: Site, assessment: Assessment, lang
   if (site.app.tutor?.rules !== undefined) {
     lines.push(`## ${words.appRules}`, "", inLanguage(site.app.tutor.rules, lang).trim(), "");
   }
-  lines.push(`## ${words.pagesTitle}`, "");
-  for (const page of assessment.pages) {
-    const local = `${page.chapter}/${page.id}/`;
-    const keys = assessment.items.filter((item) => item.page === page).map((item) => item.key.toUpperCase());
+  lines.push(`## ${words.chaptersTitle}`, "");
+  for (const chapter of site.chapters) {
+    // a chapter's own self-assessment; in an app with one chapter, the app's is the chapter's
+    const its =
+      all.find((candidate) => candidate.chapter === chapter) ?? (site.chapters.length === 1 ? whole : undefined);
     lines.push(
-      `- „${titleOf(page, lang)}“: [${words.page}](${root}${local}?von=tutor) · [${words.tutorPage}](${root}${tutorPageOf(page)}) · ${keys.length === 0 ? words.unasked : `${words.asked} ${keys.join(", ")}`}`,
+      `### ${words.chapter} ${words.quoted.replace("{title}", own(chapter.title))}`,
+      "",
+      `- ${its === undefined ? words.noAssessment : `${words.assessmentOf}: [${its.local}?von=tutor](${root}${its.local}?von=tutor)`}`,
     );
+    for (const page of chapter.pages) {
+      const local = `${page.chapter}/${page.id}/`;
+      const keys = assessment.items.filter((item) => item.page === page).map((item) => item.key.toUpperCase());
+      const asked = assessment.pages.includes(page)
+        ? ` · ${keys.length === 0 ? words.unasked : `${words.asked} ${keys.join(", ")}`}`
+        : "";
+      lines.push(
+        `- ${words.quoted.replace("{title}", titleOf(page, lang))}: [${words.page}](${root}${local}?von=tutor) · [${words.tutorPage}](${root}${tutorPageOf(page)})${asked}`,
+      );
+    }
+    lines.push("");
   }
-  lines.push("", `## ${words.itemsTitle}`, "");
+  if (whole !== undefined)
+    lines.push(`- ${words.whole}: [${whole.local}?von=tutor](${root}${whole.local}?von=tutor)`, "");
+  lines.push(`## ${words.itemsTitle}`, "");
   for (const item of assessment.items) {
     lines.push(
-      `### ${words.item
+      `- ${words.item
         .replace("{key}", item.key.toUpperCase())
         .replace("{exercise}", item.block.id)
         .replace("{page}", titleOf(item.page, lang))}`,
-      "",
-      ...exerciseLines(site, item.block, lang, `${root}${item.page.chapter}/${item.page.id}/`),
-      "",
     );
   }
   return `${lines.join("\n").trimEnd()}\n`;

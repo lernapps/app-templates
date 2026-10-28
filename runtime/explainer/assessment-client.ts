@@ -49,6 +49,10 @@ export interface TutorWays {
   ) => void;
   /** Shows in `hint` how the chosen option works, when it says so. */
   hint: (select: HTMLSelectElement, hint: HTMLElement | null) => void;
+  /** Whether a tutor opened the page (von=tutor): its chat runs already. */
+  running: boolean;
+  /** Copies `text` for the running chat and closes the tab, saying in `place` what happened. */
+  back: (text: string, place: HTMLElement) => void;
 }
 
 /** The value of copying the text in the select of the ways. */
@@ -96,7 +100,8 @@ export function startAssessment(root: Document, ways: TutorWays): void {
   const data = JSON.parse(script.textContent ?? "{}") as AssessmentData;
   const lang = root.documentElement.lang;
   const t = (key: keyof Messages, params?: Readonly<Record<string, string>>) => message(lang, key, params);
-  const storage = createStorage(data.storage);
+  // a run a tutor opened is no self-assessment of the learner's: the device keeps nothing of it
+  const storage = ways.running ? undefined : createStorage(data.storage);
   const intro = box.querySelector<HTMLElement>(".explainer-assessment-intro");
   const steps = [...box.querySelectorAll<HTMLElement>(".explainer-assessment-step")];
   const result = box.querySelector<HTMLElement>(".explainer-assessment-result");
@@ -216,12 +221,46 @@ export function startAssessment(root: Document, ways: TutorWays): void {
     show(result, focus);
   };
 
+  // what the prompt says of the exercises and of each content page
+  const promptItems = () =>
+    data.items.map((item) => ({
+      key: item.key,
+      page: data.pages.find((page) => page.page === item.page)?.title ?? item.page,
+      exercise: item.exercise,
+    }));
+  const promptPages = () =>
+    pageResults(
+      data.pages.map((page) => page.page),
+      Object.fromEntries(data.items.map((item) => [item.key, item.page])),
+      shown,
+    ).map((page) => ({ ...page, title: data.pages.find((one) => one.page === page.page)?.title ?? page.page }));
+
   // the way to the tutor
   const select = result.querySelector<HTMLSelectElement>(".explainer-assessment-way");
   const go = result.querySelector<HTMLButtonElement>(".explainer-assessment-go");
   const said = result.querySelector<HTMLElement>(".explainer-assessment-tutor-status");
   const hint = result.querySelector<HTMLElement>(".explainer-tutor-hint");
-  if (select && go) {
+  const tutorBox = result.querySelector<HTMLElement>(".explainer-assessment-tutor");
+  if (ways.running && tutorBox) {
+    // the chat runs: "Zurück zum Tutor" copies the result for it, as every page a tutor opened does
+    const back = root.createElement("button");
+    back.type = "button";
+    back.className = "explainer-assessment-back-to-tutor";
+    back.textContent = t("backToTutor");
+    const intro = root.createElement("p");
+    intro.textContent = t("assessmentBackIntro");
+    const row = root.createElement("p");
+    row.append(back);
+    tutorBox.replaceChildren(intro, row);
+    back.addEventListener("click", () => {
+      const base = new URL(data.root, root.location.href);
+      const tutor = new URL(`${data.tutor}${resultQuery(shown)}`, base).href;
+      ways.back(assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "back"), tutorBox);
+    });
+    result.querySelector(".explainer-assessment-delete")?.remove();
+    const privacy = root.querySelector<HTMLElement>(".explainer-assessment-privacy");
+    if (privacy) privacy.textContent = t("assessmentTutorRun");
+  } else if (select && go) {
     const chosen = ways.chosen(data.storage, data.ways);
     if (chosen !== undefined) select.value = chosen.url === undefined ? COPY : chosen.name;
     const way = (): Way | undefined =>
@@ -237,17 +276,7 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       const href = root.location.href;
       const base = new URL(data.root, href);
       const tutor = new URL(`${data.tutor}${resultQuery(shown)}`, base).href;
-      const items = data.items.map((item) => ({
-        key: item.key,
-        page: data.pages.find((page) => page.page === item.page)?.title ?? item.page,
-        exercise: item.exercise,
-      }));
-      const pages = pageResults(
-        data.pages.map((page) => page.page),
-        Object.fromEntries(data.items.map((item) => [item.key, item.page])),
-        shown,
-      ).map((page) => ({ ...page, title: data.pages.find((one) => one.page === page.page)?.title ?? page.page }));
-      const prompt = () => assessmentPrompt(tutor, items, shown, lang, pages);
+      const prompt = () => assessmentPrompt(tutor, promptItems(), shown, lang, promptPages());
       const copy = async () => {
         try {
           const response = await fetch(new URL(data.markdown, base).href);
@@ -276,13 +305,13 @@ export function startAssessment(root: Document, ways: TutorWays): void {
     });
     step.querySelector(".explainer-assessment-finish")?.addEventListener("click", () => {
       const results = evaluate();
-      storage.save(data.key, { version: 1, items: results });
+      storage?.save(data.key, { version: 1, items: results });
       showResult(results, true);
     });
   });
   result.querySelector(".explainer-assessment-restart")?.addEventListener("click", begin);
   result.querySelector(".explainer-assessment-delete")?.addEventListener("click", () => {
-    storage.remove(data.key);
+    storage?.remove(data.key);
     show(intro, false);
     const button = intro.querySelector<HTMLElement>(".explainer-assessment-begin");
     if (button) button.focus();
@@ -295,7 +324,7 @@ export function startAssessment(root: Document, ways: TutorWays): void {
   });
 
   // the last result, when the device keeps one of exercises the content still has
-  const stored = storage.load(data.key, isStoredResult);
+  const stored = storage?.load(data.key, isStoredResult);
   const kept = stored?.items.filter((one) => data.items.some((item) => item.key === one.key && item.ref === one.ref));
   if (kept !== undefined && kept.length > 0) showResult(kept, false);
   else show(intro, false);

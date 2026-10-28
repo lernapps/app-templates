@@ -43,7 +43,8 @@
 // feedback; one with every answer right says each content page asked is known, the others not asked; one without an
 // answer says each page asked is to be read, stays on the device across a reload (the offer then names the last
 // result), takes the result to the tutor in the address of its tutor page, which answers, and goes on "Ergebnis
-// löschen". No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
+// löschen". Opened by a tutor (von=tutor), a run keeps nothing, and its own "Zurück zum Tutor" copies the result with
+// the tutor page last. No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
 import {
@@ -1189,6 +1190,36 @@ export function explainerTests(root = "."): void {
           await expect(page.locator(".explainer-assessment-score")).toHaveText(
             messageOf("de", "assessmentScore", { right: total, total }),
           );
+        });
+
+        test(`${assessment.url}: opened by a tutor, a run keeps nothing and copies its result for the chat`, async ({
+          page,
+          request,
+        }) => {
+          const copied = await recordClipboard(page);
+          await page.goto(`./${assessment.url}?von=tutor`);
+          // its own "Zurück zum Tutor", at the end: none at the top
+          await expect(page.locator(".explainer-back")).toHaveCount(0);
+          await page.locator(".explainer-assessment-begin").click();
+          for (let step = 0; step < assessment.steps; step++) {
+            const last = step === assessment.steps - 1;
+            await page
+              .locator(`.explainer-assessment-step[data-step="${step}"]`)
+              .getByRole("button", { name: messageOf("de", last ? "assessmentFinish" : "assessmentNext"), exact: true })
+              .click();
+          }
+          await expectResult(page, assessment, "read");
+          expect(await storedKeys(page), "a run for the tutor keeps nothing").toEqual([]);
+          await expect(page.locator(".explainer-assessment-delete")).toHaveCount(0);
+          await page.getByRole("button", { name: messageOf("de", "backToTutor"), exact: true }).click();
+          await expect.poll(() => copied.length).toBe(1);
+          const lines = (copied[0] ?? "").split("\n");
+          expect(lines[0]).toBe(messageOf("de", "assessmentBackLine"));
+          const tutor = lines.at(-1)?.replace(`${messageOf("de", "resultTutor")} `, "") ?? "";
+          const url = new URL(tutor);
+          expect(url.pathname.endsWith(`/${assessment.url}tutor/`), "the self-assessment's tutor page").toBe(true);
+          for (const item of assessment.items) expect(url.searchParams.get(item.key) ?? "").toMatch(/(^|-)offen$/);
+          expect((await request.get(tutor)).status(), "the tutor page answers").toBe(200);
         });
 
         test(`${assessment.url}: a run without an answer stays on the device, goes to the tutor and is deleted`, async ({

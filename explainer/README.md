@@ -24,11 +24,12 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   an account of their own. Then two ways lead there: a bar beside the title of each page, for a tutor who helps with
   the page, and "Hilfe" ("Warum?" after a wrong answer) in every exercise, with the task, the input and the app's
   message. "Zurück zum Tutor" copies a result line the learner pastes into the chat.
-- Optional: a self-assessment for the whole app (`selfAssessment` in `src/app.yaml`, at `einschaetzung/`) or for a
-  chapter (in its `chapter.yaml`, at `<chapter>/einschaetzung/`). It shows exercises of the pages, best two to five on
+- Optional: a self-assessment per chapter (`selfAssessment` in its `chapter.yaml`, at `<chapter>/einschaetzung/`);
+  the app's, at `einschaetzung/`, is every chapter's together. It shows exercises of the pages, best two to five on
   each of its pages, without "Prüfen", and checks them all together: the result says per page whether the learner
   probably knows it, should look at it again or should read it. The last result stays on the device; with a click the
-  learner takes it to the tutor, whose tutor page `<assessment>/tutor/` holds each exercise with its solutions.
+  learner takes it to the tutor, who then guides chapter by chapter: to the pages that do not stick, then into a new
+  round of the chapter's self-assessment, whose "Zurück zum Tutor" brings the result back into the chat.
 - German, plus English: a page tree per language.
 
 ## What it cannot do

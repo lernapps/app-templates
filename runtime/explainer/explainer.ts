@@ -653,7 +653,9 @@ export function startExplainer(root: Document = document): void {
   const main = root.querySelector<HTMLElement>("main");
   const tutor = tutorData(root);
   const progress = new Progress();
-  if (main && fromTutor(root.location.href)) startBackToTutor(root, main, tutor, progress);
+  // a self-assessment a tutor opened has its own "Zurück zum Tutor", with its result (assessment-client.ts)
+  const assessment = root.querySelector(".explainer-assessment-nojs") !== null;
+  if (main && fromTutor(root.location.href) && !assessment) startBackToTutor(root, main, tutor, progress);
   startChoice(root);
   if (tutor !== undefined) {
     const choice = new WayChoice(tutor.storage, tutor.ways);
@@ -679,6 +681,20 @@ export function startExplainer(root: Document = document): void {
     chosen: (storage, ways) => new WayChoice(storage, ways).get(),
     open: (way, prompts, say) => openAssistant(root, way, prompts, say),
     hint: showHint,
+    running: fromTutor(root.location.href),
+    back: (text, place) => {
+      const { status, field } = statusAndField(root, message(root.documentElement.lang, "resultLabel"));
+      place.querySelector(":scope > .explainer-assessment-back-status")?.remove();
+      const line = root.createElement("p");
+      line.className = "explainer-assessment-back-status";
+      line.append(status, field);
+      place.append(line);
+      copyAndClose(root, text, status, field, {
+        copied: message(root.documentElement.lang, "backToTutorCopied"),
+        failed: message(root.documentElement.lang, "backToTutorFailed"),
+        open: message(root.documentElement.lang, "backToTutorOpen"),
+      });
+    },
   });
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;

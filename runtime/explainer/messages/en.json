@@ -128,5 +128,8 @@
   "assessmentInput": "Input: {input}",
   "assessmentPageLine": "“{page}”: {band} ({right} of {total} right).",
   "assessmentPageUnasked": "“{page}”: not asked.",
-  "assessmentTasks": "My tasks:"
+  "assessmentTasks": "My tasks:",
+  "assessmentBackIntro": "Press “Back to the tutor”. It copies your result. Paste it into the chat with your tutor.",
+  "assessmentBackLine": "I did the self-assessment. My result per page:",
+  "assessmentTutorRun": "This round is for your tutor: the app keeps nothing of it."
 }

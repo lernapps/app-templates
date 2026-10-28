@@ -88,8 +88,11 @@ by one with "Weiter" and "Zurück", the exercises without "Prüfen" and without 
 together, keeps the result on the device (replacing the one before) and shows the score and, for each content page in
 order, whether the learner probably knows it, should look at it again or should read it, each with its link. "Mit
 <name> besprechen" opens the learner's assistant with one sentence that names the self-assessment's tutor page with the
-result in its address, and a line per exercise; the tutor looks up the tasks, solutions and mistakes there and sends
-the learner to the pages to learn. "Neu starten" starts a new run, "Ergebnis löschen" removes the result.
+result in its address, the result per page and a line per exercise. The tutor guides chapter by chapter: it sends the
+learner to the pages that do not stick, each with `von=tutor`, whose "Zurück zum Tutor" copies the result line for the
+chat, and then into a new round of the chapter's self-assessment with `von=tutor`: that run keeps nothing, and its
+"Zurück zum Tutor" copies the result and the tutor page, and closes the tab. After each round the tutor decides on the
+next chapter or another round. "Neu starten" starts a new run, "Ergebnis löschen" removes the result.
 
 ```arc42
 :::runtime-scenario
