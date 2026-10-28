@@ -120,10 +120,13 @@
   "assessmentTutorGo": "Mit {name} besprechen",
   "assessmentTutorPage": "Ansehen, was dein Tutor bekommt",
   "assessmentNojs": "Die Selbsteinschätzung braucht JavaScript.",
-  "assessmentAsk": "Lade {url} und sei mein Tutor. Ich habe die Selbsteinschätzung gemacht:",
+  "assessmentAsk": "Lade {url} und sei mein Tutor. Ich habe die Selbsteinschätzung gemacht. Mein Ergebnis je Seite:",
   "assessmentLine": "{key} ({page}, Übung {exercise}{number}): {state}.",
   "assessmentRight": "richtig",
   "assessmentWrong": "falsch",
   "assessmentOpen": "nicht beantwortet",
-  "assessmentInput": "Eingabe: {input}"
+  "assessmentInput": "Eingabe: {input}",
+  "assessmentPageLine": "„{page}“: {band} ({right} von {total} richtig).",
+  "assessmentPageUnasked": "„{page}“: nicht abgefragt.",
+  "assessmentTasks": "Meine Aufgaben:"
 }

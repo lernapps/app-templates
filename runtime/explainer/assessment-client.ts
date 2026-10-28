@@ -15,6 +15,7 @@ import { renderQuestion } from "../shared/questions/render.ts";
 import { isComplete, isCorrect, type Question } from "../shared/questions/question.ts";
 import {
   assessmentPrompt,
+  BAND_MESSAGES,
   isStoredResult,
   pageResults,
   resultQuery,
@@ -54,12 +55,7 @@ export interface TutorWays {
 const COPY = "copy";
 
 /** The words of a band in the result. */
-const BAND: Readonly<Record<Band, keyof Messages>> = {
-  known: "assessmentKnown",
-  partly: "assessmentPartly",
-  read: "assessmentRead",
-  unasked: "assessmentUnasked",
-};
+const BAND: Readonly<Record<Band, keyof Messages>> = BAND_MESSAGES;
 
 /** The offer on the start page or a chapter's page: shown, and naming the last result when the device keeps one. */
 function startOffers(root: Document): void {
@@ -246,7 +242,12 @@ export function startAssessment(root: Document, ways: TutorWays): void {
         page: data.pages.find((page) => page.page === item.page)?.title ?? item.page,
         exercise: item.exercise,
       }));
-      const prompt = () => assessmentPrompt(tutor, items, shown, lang);
+      const pages = pageResults(
+        data.pages.map((page) => page.page),
+        Object.fromEntries(data.items.map((item) => [item.key, item.page])),
+        shown,
+      ).map((page) => ({ ...page, title: data.pages.find((one) => one.page === page.page)?.title ?? page.page }));
+      const prompt = () => assessmentPrompt(tutor, items, shown, lang, pages);
       const copy = async () => {
         try {
           const response = await fetch(new URL(data.markdown, base).href);

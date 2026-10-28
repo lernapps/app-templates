@@ -177,6 +177,14 @@ export interface PageResult {
   band: Band;
 }
 
+/** The words of each band, as the result shows them. */
+export const BAND_MESSAGES = {
+  known: "assessmentKnown",
+  partly: "assessmentPartly",
+  read: "assessmentRead",
+  unasked: "assessmentUnasked",
+} as const;
+
 /** The band of `right` of `total`: all right, at least half, less; not asked for none. */
 export function bandOf(right: number, total: number): Band {
   if (total === 0) return "unasked";
@@ -228,7 +236,8 @@ const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
 
 /**
  * The prompt that takes a run to a tutor, in `lang`, in the learner's voice: the tutor page with the results in its
- * address first, then one line per exercise (its page, the exercise, its task number, how it went, the input of a
+ * address first, then the result of each content page as the learner saw it (its title in `pages`), so that the tutor
+ * works nothing out, then one line per exercise (its page, the exercise, its task number, how it went, the input of a
  * wrong one). The solution is never in it.
  */
 export function assessmentPrompt(
@@ -236,7 +245,18 @@ export function assessmentPrompt(
   items: readonly PromptItem[],
   results: readonly ItemResult[],
   lang: string,
+  pages: readonly (PageResult & { title: string })[] = [],
 ): string {
+  const bands = pages.map((page) =>
+    page.band === "unasked"
+      ? `- ${message(lang, "assessmentPageUnasked", { page: oneLine(page.title) })}`
+      : `- ${message(lang, "assessmentPageLine", {
+          page: oneLine(page.title),
+          band: message(lang, BAND_MESSAGES[page.band]),
+          right: String(page.right),
+          total: String(page.total),
+        })}`,
+  );
   const lines = results.map((result) => {
     const item = items.find((candidate) => candidate.key === result.key);
     const state = message(
@@ -255,7 +275,12 @@ export function assessmentPrompt(
       state,
     })}${input}`;
   });
-  return [message(lang, "assessmentAsk", { url: tutor }), ...lines].join("\n");
+  return [
+    message(lang, "assessmentAsk", { url: tutor }),
+    ...bands,
+    ...(bands.length === 0 ? [] : [message(lang, "assessmentTasks")]),
+    ...lines,
+  ].join("\n");
 }
 
 /** The title of a content page in `lang`, on one line. */

@@ -239,15 +239,25 @@ describe("a run in the browser", () => {
     expect(resultQuery([])).toBe("");
   });
 
-  test("the prompt names the tutor page first, then a line per exercise with the input of a wrong one", () => {
+  test("the prompt names the tutor page first, then each page's result as the learner saw it, then a line per exercise", () => {
     const items = [
       { key: "a1", page: "Prozentwert", exercise: "x" },
       { key: "a2", page: "Prozentwert", exercise: "y" },
       { key: "a3", page: "Grundwert", exercise: "z" },
     ];
-    expect(assessmentPrompt("https://a.example/einschaetzung/tutor/?a1=17-falsch-F1", items, results, "de")).toBe(
+    expect(
+      assessmentPrompt("https://a.example/einschaetzung/tutor/?a1=17-falsch-F1", items, results, "de", [
+        { page: "z/a/", title: "Prozentwert", right: 1, total: 2, band: "partly" },
+        { page: "z/b/", title: "Grundwert", right: 0, total: 1, band: "read" },
+        { page: "z/c/", title: "Zinsen", right: 0, total: 0, band: "unasked" },
+      ]),
+    ).toBe(
       [
-        "Lade https://a.example/einschaetzung/tutor/?a1=17-falsch-F1 und sei mein Tutor. Ich habe die Selbsteinschätzung gemacht:",
+        "Lade https://a.example/einschaetzung/tutor/?a1=17-falsch-F1 und sei mein Tutor. Ich habe die Selbsteinschätzung gemacht. Mein Ergebnis je Seite:",
+        "- „Prozentwert“: Schau sie dir noch einmal an (1 von 2 richtig).",
+        "- „Grundwert“: Lies sie genau (0 von 1 richtig).",
+        "- „Zinsen“: nicht abgefragt.",
+        "Meine Aufgaben:",
         "- A1 (Prozentwert, Übung x, Nr. 17): falsch. Eingabe: 120",
         "- A2 (Prozentwert, Übung y): richtig.",
         "- A3 (Grundwert, Übung z, Nr. 3): nicht beantwortet.",

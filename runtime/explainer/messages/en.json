@@ -120,10 +120,13 @@
   "assessmentTutorGo": "Talk it over with {name}",
   "assessmentTutorPage": "See what your tutor gets",
   "assessmentNojs": "The self-assessment needs JavaScript.",
-  "assessmentAsk": "Load {url} and be my tutor. I did the self-assessment:",
+  "assessmentAsk": "Load {url} and be my tutor. I did the self-assessment. My result per page:",
   "assessmentLine": "{key} ({page}, exercise {exercise}{number}): {state}.",
   "assessmentRight": "right",
   "assessmentWrong": "wrong",
   "assessmentOpen": "not answered",
-  "assessmentInput": "Input: {input}"
+  "assessmentInput": "Input: {input}",
+  "assessmentPageLine": "“{page}”: {band} ({right} of {total} right).",
+  "assessmentPageUnasked": "“{page}”: not asked.",
+  "assessmentTasks": "My tasks:"
 }
