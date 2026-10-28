@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Seite nicht gefunden</title>
+    <style>body { margin: 2rem auto; max-width: 40rem; padding: 0 1rem; font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; background: #ffffff; } a { color: #1d4ed8; }</style>
+  </head>
+  <body>
+    <main>
+      <h1>Seite nicht gefunden</h1>
+      <p>Diese Seite gibt es nicht (mehr).</p>
+      <p id="weiter" hidden>Du wirst zur Startseite der App weitergeleitet.</p>
+      <p><a id="start" href="/">Zur Startseite</a></p>
+    </main>
+    <script>(async () => {
+  const link = document.getElementById("start");
+  let folder = location.pathname.slice(0, location.pathname.lastIndexOf("/") + 1);
+  for (;;) {
+    try {
+      const found = await fetch(folder + "404.html", { method: "HEAD", cache: "no-store" });
+      if (found.ok) break;
+    } catch {
+      return;
+    }
+    if (folder === "/") return;
+    folder = folder.slice(0, folder.lastIndexOf("/", folder.length - 2) + 1);
+  }
+  link.href = folder;
+  link.textContent = "Zur Startseite der App";
+  if (folder === location.pathname) return;
+  document.getElementById("weiter").hidden = false;
+  location.replace(folder);
+})();</script>
+  </body>
+</html>
