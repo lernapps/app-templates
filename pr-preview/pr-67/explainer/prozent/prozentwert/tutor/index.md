@@ -23,7 +23,8 @@ Eltern und Lehrkräfte sehen hier, was der Tutor bekommt. [Zur Seite](../)
 - Die erste Nachricht des Kindes nennt diese Seite und je Übung die Nummer der Aufgabe, die das Kind gerade vor sich hat, z. B. `?prozentwert-ueben=12`. Schlag die Nummern unten bei den Übungen nach. Kommt das Kind mit „Hilfe“, nennt `uebung=` die Übung und `abschnitt=` ihren Abschnitt.
 - Steht in der Nachricht „Die App sagt: …“, hat die App das zur Eingabe des Kindes gemeldet. Setz dort an, ohne es zu wiederholen.
 - Eine Zeile wie „…, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück“ in der App: Übung, Nummer und wie weit das Kind damit kam.
-- Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `von=tutor`, z. B. `…/prozentwert/?prozentwert-ueben=12&von=tutor#prozentwert-ueben`. Schick ihn immer als volle Adresse mit `https://`. Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“
+- „Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“: diese Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App. Setz bei den falschen an, eine nach der anderen.
+- Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `via=tutor`, z. B. `…/prozent/prozentwert/?prozentwert-ueben=12&via=tutor#prozentwert-ueben`. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. `https://`). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“
 
 ## Kontext: die Seite „Prozentwert“
 
@@ -81,7 +82,7 @@ Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschr
 - Typische Fehler und was die App sagt:
   - F1: „Du hast vergessen, durch 100 zu teilen: {p} % sind {p} Hundertstel.“
   - F2: „Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.“
-- Link zu Nummer n: `../?prozentwert-ueben=n&von=tutor#prozentwert-ueben`
+- Link zu Nummer n: `../?prozentwert-ueben=n&via=tutor#prozentwert-ueben`
 - Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt. `{answer}` ist die Lösung.
 
 ```
@@ -164,7 +165,7 @@ Nr. | G | p | Lösung | F1 | F2
 - Typische Fehler (die Meldung der App passt zu einem davon):
   - F1: p Kästchen gefärbt, als hätte das Feld 100 Kästchen.
   - F2: Den Rest gefärbt: die Kästchen, die nicht zu den p % gehören.
-- Link zu Nummer n: `../?prozentfeld=n&von=tutor#prozentfeld`
+- Link zu Nummer n: `../?prozentfeld=n&via=tutor#prozentfeld`
 - Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt.
 
 ```

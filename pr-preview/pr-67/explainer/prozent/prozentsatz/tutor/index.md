@@ -23,7 +23,8 @@ Eltern und Lehrkräfte sehen hier, was der Tutor bekommt. [Zur Seite](../)
 - Die erste Nachricht des Kindes nennt diese Seite und je Übung die Nummer der Aufgabe, die das Kind gerade vor sich hat, z. B. `?prozentsatz-ueben=12`. Schlag die Nummern unten bei den Übungen nach. Kommt das Kind mit „Hilfe“, nennt `uebung=` die Übung und `abschnitt=` ihren Abschnitt.
 - Steht in der Nachricht „Die App sagt: …“, hat die App das zur Eingabe des Kindes gemeldet. Setz dort an, ohne es zu wiederholen.
 - Eine Zeile wie „…, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück“ in der App: Übung, Nummer und wie weit das Kind damit kam.
-- Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `von=tutor`, z. B. `…/prozentsatz/?prozentsatz-ueben=12&von=tutor#prozentsatz-ueben`. Schick ihn immer als volle Adresse mit `https://`. Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“
+- „Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“: diese Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App. Setz bei den falschen an, eine nach der anderen.
+- Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `via=tutor`, z. B. `…/prozent/prozentsatz/?prozentsatz-ueben=12&via=tutor#prozentsatz-ueben`. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. `https://`). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“
 
 ## Kontext: die Seite „Prozentsatz“
 
@@ -76,7 +77,7 @@ Probe: 75 % von 24 sind 24 · 0,75 = 18. Passt.
   - ✗ 10 · 25 : 100 – So rechnest du einen Prozentwert aus, nicht einen Prozentsatz. Es kommen 2,5 heraus.
 - Lösung: 10 : 25 · 100
 - Erklärung: Der Prozentsatz ist Teil durch Ganzes, mal 100. Der Teil sind die 10 Schüler mit Haustier, das Ganze die 25 Schüler der Klasse, also 10 : 25 · 100 = 40 %.
-- Link: [../?von=tutor#welche-rechnung](../?von=tutor#welche-rechnung)
+- Link: [../?via=tutor#welche-rechnung](../?via=tutor#welche-rechnung)
 
 ### Übung prozentsatz-ueben
 
@@ -89,7 +90,7 @@ Probe: 75 % von 24 sind 24 · 0,75 = 18. Passt.
 - Typische Fehler und was die App sagt:
   - F1: „Das ist der Anteil als Dezimalzahl. Nimm ihn noch mal 100, dann hast du den Prozentsatz.“
   - F2: „Du hast das Ganze durch den Teil geteilt. Richtig ist: Teil durch Ganzes, also W durch G.“
-- Link zu Nummer n: `../?prozentsatz-ueben=n&von=tutor#prozentsatz-ueben`
+- Link zu Nummer n: `../?prozentsatz-ueben=n&via=tutor#prozentsatz-ueben`
 - Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt. `{answer}` ist die Lösung.
 
 ```
