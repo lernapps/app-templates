@@ -6,7 +6,7 @@
 // which holds the task (tutorpage.ts): a chat assistant fetches only addresses its user wrote into the conversation,
 // so the learner brings it. The solution is never in the line, as the learner reads it while pasting. Pure and
 // without Node: the client module calls it.
-import type { Answer, Question } from "../shared/questions/question.ts";
+import { rightEntries, type Answer, type Question } from "../shared/questions/question.ts";
 import { message } from "./messages.ts";
 
 /**
@@ -164,7 +164,7 @@ export function answerShown(question: Question, answer: Answer, lang: string): s
         .join(" → ");
     case "matching":
       return question.pairs
-        .map((pair, index) => `${oneLine(pair.left)} → ${oneLine(question.pairs[indices[index] ?? -1]?.right ?? "?")}`)
+        .map((pair, index) => `${oneLine(pair.left)} → ${oneLine(rightEntries(question)[indices[index] ?? -1] ?? "?")}`)
         .join("; ");
   }
 }

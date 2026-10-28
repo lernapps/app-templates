@@ -273,6 +273,15 @@
           "description": "material: the pairs are the labels of the labelled figure in the material, each marker (A, B, 1) on the left with its text on the right, so that they are written once. The figure must have legend: false, as its legend would give the answers away; the solution lists them. Write either the pairs or pairsFrom.",
           "const": "material"
         },
+        "distractors": {
+          "description": "Optional: right entries that match none of the left entries, wrong answers the learner may choose, shown mixed with the right entries. Use them for plausible mistakes, or for entries that have nothing to do with the task; 1 to 4 of them.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
+          }
+        },
         "pairs": {
           "description": "The pairs, written out. Without pairsFrom they are required.",
           "type": "array",
