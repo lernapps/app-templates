@@ -69,6 +69,12 @@ figcaption p {
   width: 100%;
 }
 
+/* the legend of a figure whose labels name their markers: the marker leads each line, in place of the list's number */
+.block-legend-named {
+  list-style: none;
+  padding-left: 0;
+}
+
 .block-marker {
   position: absolute;
   transform: translate(-50%, -50%);

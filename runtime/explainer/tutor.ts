@@ -4,6 +4,7 @@
 // links against the pages and anchors the build writes (linkProblems). A chat assistant that fetches a URL runs no
 // JavaScript, and a static host serves the same file for any query string: so all of it is static text. The app
 // itself collects nothing and sends nothing: the tutor page only helps a tutor guide.
+import { markerOf } from "../shared/blocks/block.ts";
 import { questionIn, type Question } from "../shared/questions/question.ts";
 import { answerText } from "../shared/questions/render.ts";
 import {
@@ -249,7 +250,7 @@ export function contentLines(
           add(`${words.figure}: ${sentence(block.alt)} ${words.caption}: ${one(block.caption)}`);
           break;
         case "labelled-figure": {
-          const labels = block.labels.map((label, index) => `${index + 1} ${one(label.text)}`).join(", ");
+          const labels = block.labels.map((label, index) => `${markerOf(label, index)} ${one(label.text)}`).join(", ");
           const caption = block.caption === undefined ? "" : ` ${words.caption}: ${one(block.caption)}`;
           add(`${words.figure}: ${sentence(block.alt)}${caption} ${words.labels}: ${labels}`);
           break;

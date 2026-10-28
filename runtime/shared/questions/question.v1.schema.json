@@ -267,10 +267,14 @@
     },
     "matching": {
       "type": "object",
-      "description": "The learner matches each left entry with its right entry. Write the pairs as they belong together: the page shows the right entries mixed. The background goes into the explanation.",
-      "required": ["pairs"],
+      "description": "The learner matches each left entry with its right entry. Write the pairs as they belong together: the page shows the right entries mixed. The background goes into the explanation. Instead of the pairs, a question about a figure to label takes them from the figure (pairsFrom).",
       "properties": {
+        "pairsFrom": {
+          "description": "material: the pairs are the labels of the labelled figure in the material, each marker (A, B, 1) on the left with its text on the right, so that they are written once. The figure must have legend: false, as its legend would give the answers away; the solution lists them. Write either the pairs or pairsFrom.",
+          "const": "material"
+        },
         "pairs": {
+          "description": "The pairs, written out. Without pairsFrom they are required.",
           "type": "array",
           "minItems": 2,
           "maxItems": 8,

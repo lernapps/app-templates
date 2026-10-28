@@ -1,6 +1,6 @@
 // The blocks that show content, for every archetype that shows it with its questions or on its pages (the quiz, the
 // explainer): a text in restricted Markdown, a formula, a figure (drawn from data, or a bundled image), a labelled
-// figure (a bundled image with numbered labels), a table, a quotation and program code. Their types, the blocks in one
+// figure (a bundled image with labels), a table, a quotation and program code. Their types, the blocks in one
 // language, and the images they use. The checks are in validate.ts, the rendering in render.ts. A bundled image is a
 // file in src/images/ of the app, named by its path from src/: images/<name>.svg (or .png, .jpg, .webp).
 import { inLanguage, type Text } from "../languages.ts";
@@ -37,8 +37,13 @@ export type LabelledFigure<T extends Text = string> = {
   image: string;
   alt: T;
   caption?: T;
-  labels: readonly { x: number; y: number; text: T }[];
+  /** Whether the figure lists the texts of the labels next to the image; without it, alt names every marker. */
+  legend?: boolean;
+  labels: readonly { marker?: string; x: number; y: number; text: T }[];
 } & Credit<T>;
+
+/** The marker of the label at `index`: the one it names, else its number. */
+export const markerOf = (label: { marker?: string }, index: number): string => label.marker ?? String(index + 1);
 
 export interface TableBlock<T extends Text = string> {
   type: "table";
@@ -110,7 +115,13 @@ export function materialIn(blocks: readonly MaterialBlock<Text>[], lang: string)
           image: block.image,
           alt: t(block.alt),
           ...(block.caption === undefined ? {} : { caption: t(block.caption) }),
-          labels: block.labels.map((label) => ({ x: label.x, y: label.y, text: t(label.text) })),
+          ...(block.legend === undefined ? {} : { legend: block.legend }),
+          labels: block.labels.map((label) => ({
+            ...(label.marker === undefined ? {} : { marker: label.marker }),
+            x: label.x,
+            y: label.y,
+            text: t(label.text),
+          })),
           ...credit(block),
         };
       case "table":

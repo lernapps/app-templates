@@ -24,6 +24,15 @@ blocks:
         text: |
           Du kennst den **Prozentwert** $W$ (den Teil) und den **Prozentsatz** $p\,\%$. Über 1 % kommst du zum
           Ganzen: $W$ geteilt durch $p$ ist 1 %, mal 100 ist das Ganze.
+      - type: labelled-figure
+        image: images/hunderterfeld-klammern.svg
+        alt: Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten.
+        caption: Die Klammer um das ganze Feld und die Klammer um den gefärbten Teil.
+        source: eigene Zeichnung
+        licence: CC0-1.0
+        labels:
+          - { marker: A, x: 50, y: 94, text: "Grundwert: das Ganze, 100 %" }
+          - { marker: B, x: 21, y: 5, text: "Prozentwert: der gefärbte Teil" }
       - type: note
         title: Achtung
         blocks:
@@ -58,6 +67,27 @@ blocks:
     id: uebung
     title: Übung
     blocks:
+      - type: matching
+        id: klammern
+        text: Beschrifte A und B. Welcher Begriff gehört zu welcher Klammer?
+        material:
+          - type: labelled-figure
+            image: images/hunderterfeld-klammern.svg
+            alt: Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten.
+            source: eigene Zeichnung
+            licence: CC0-1.0
+            legend: false
+            labels:
+              - { marker: A, x: 50, y: 94, text: Grundwert }
+              - { marker: B, x: 21, y: 5, text: Prozentwert }
+        pairsFrom: material
+        explanation: Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.
+        examples:
+          accepted: [[[A, Grundwert], [B, Prozentwert]]]
+          rejected: [[[0, 1], [1, 0]]]
+        links:
+          - title: Prozentrechnung (Wikipedia)
+            url: https://de.wikipedia.org/wiki/Prozentrechnung
       - type: generated
         id: grundwert-ueben
         given:

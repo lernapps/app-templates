@@ -13,5 +13,7 @@ quiz/src/main.ts
 quiz/src/images
 explainer/src/main.ts
 explainer/src/prozent
+# The explainer's image files: the figures of the example chapter, content like its pages and not a part of their own.
+explainer/src/images
 interactive/src/main.ts
 interactive/src/env.d.ts

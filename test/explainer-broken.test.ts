@@ -44,6 +44,30 @@ async function problems(root: string): Promise<string[]> {
   }
 }
 
+/**
+ * A labelled figure for the page zwei, three labels with the markers `markers`; its alt text names the markers A, B
+ * and C, in German and English.
+ */
+const labelled = (options: string, markers: readonly string[]): string =>
+  [
+    "  - type: labelled-figure",
+    "    image: images/punkt.svg",
+    '    alt: { de: "Ein Punkt. A links, B in der Mitte, C rechts.", en: "A dot. A left, B middle, C right." }',
+    "    caption: { de: Beschrifte A bis C., en: Label A to C. }",
+    "    source: { de: eigene Zeichnung, en: own drawing }",
+    "    licence: CC0-1.0",
+    ...options
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => `    ${line}`),
+    "    labels:",
+    ...markers.map(
+      (marker, index) =>
+        `      - { marker: ${marker}, x: ${20 + 30 * index}, y: 50, text: { de: Teil ${index}, en: Part ${index} } }`,
+    ),
+    "",
+  ].join("\n");
+
 const cases: [string, (root: string) => void, string][] = [
   [
     "an exercise id that is a parameter of the address",
@@ -86,6 +110,30 @@ const cases: [string, (root: string) => void, string][] = [
         "",
       ),
     "src/kapitel/zwei.yaml:9: blocks[1]: origin is missing; a quote names who said or wrote it, where and when",
+  ],
+  [
+    "two labels with the same marker",
+    (root) => edit(root, "kapitel/zwei.yaml", "  - type: quote\n", `${labelled("", ["B", "B", "C"])}  - type: quote\n`),
+    "src/kapitel/zwei.yaml:17: blocks[1].labels[1].marker: B is used twice; give each label its own marker",
+  ],
+  [
+    "a marker of four characters",
+    (root) =>
+      edit(root, "kapitel/zwei.yaml", "  - type: quote\n", `${labelled("", ["AB12", "B", "C"])}  - type: quote\n`),
+    "src/kapitel/zwei.yaml:16: blocks[1].labels[0].marker: must NOT have more than 3 characters",
+  ],
+  [
+    "an alt text that does not name a marker, without a legend",
+    (root) => {
+      edit(
+        root,
+        "kapitel/zwei.yaml",
+        "  - type: quote\n",
+        `${labelled("legend: false\n", ["A", "B", "C"])}  - type: quote\n`,
+      );
+      edit(root, "kapitel/zwei.yaml", "B in der Mitte, ", "");
+    },
+    "src/kapitel/zwei.yaml:11: blocks[1].alt (de): alt does not name the marker B; with legend: false, alt names every marker with its part",
   ],
   [
     "a page missing from the order list",
