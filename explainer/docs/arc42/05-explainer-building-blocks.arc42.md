@@ -59,6 +59,7 @@ flowchart TB
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
         bb-video["Video block"]
+        bb-self-assessment["Self-assessment"]
         bb-e2e["End-to-end tests"]
         bb-runtime-texts["Runtime texts"]
     end
@@ -88,6 +89,13 @@ flowchart TB
     bb-tutor-handoff -->|"if-task-numbers"| bb-task-numbers
     bb-video -->|"if-runtime-texts"| bb-runtime-texts
     bb-video -->|"if-device-storage"| bb-tooling
+    bb-build -->|"if-self-assessment"| bb-self-assessment
+    bb-shell -->|"if-self-assessment"| bb-self-assessment
+    bb-self-assessment -->|"if-archetype-content"| bb-explainer-content
+    bb-self-assessment -->|"if-tutor-files"| bb-tutor-handoff
+    bb-self-assessment -->|"if-task-numbers"| bb-task-numbers
+    bb-self-assessment -->|"if-runtime-texts"| bb-runtime-texts
+    bb-self-assessment -->|"if-device-storage"| bb-tooling
     bb-e2e -->|"if-archetype-content"| bb-explainer-content
     bb-e2e -->|"if-runtime-texts"| bb-runtime-texts
 ```
@@ -121,7 +129,7 @@ title: Build step
 parent: bb-archetype-runtime
 path: runtime/explainer/plugin.ts
 technology: Vite plugin
-requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-files
+requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-files, if-self-assessment
 :::
 ```
 
@@ -196,7 +204,8 @@ path: runtime/explainer/routes.ts
 
 Built. Makes a page's exercises live: answered before the solution shows, the reason of a wrong answer, "Neue
 Aufgabe", the task numbers in the address; the tutor button; and starts the videos (`bb-video`). It keeps only the
-learner's chosen way to the tutor and their choice to load videos directly on the device.
+learner's chosen way to the tutor and their choice to load videos directly on the device; the last result of a
+self-assessment is kept by `bb-self-assessment`, which it starts.
 
 ```arc42
 :::building-block
@@ -205,7 +214,7 @@ title: Client module
 parent: bb-archetype-runtime
 path: runtime/explainer/explainer.ts
 technology: TypeScript, DOM
-requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y
+requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y, if-self-assessment
 implements: concept-accessibility, concept-determinism
 :::
 ```
@@ -271,8 +280,9 @@ own address has them (`?<id>=<n>`); way B adds the exercise (`uebung`) and its s
 beside the title of each content page, "Mit <name> lernen", opens the assistant with one sentence that asks for help
 with the page, and the tutor page tells the tutor to lead through the page first. Way B, "Hilfe" ("Warum?" after a wrong answer) in the row of "Prüfen" and "Lösung" of every exercise, adds the
 task, the input with its tries and the app's message word for word; without a chat it opens the assistant with them
-(B1), on a page a tutor opened it copies them and closes the tab (B2). "Zurück zum Tutor" leads back with a result
-line on the clipboard. A chat assistant fetches only addresses its user wrote into the conversation, so the one
+(B1), on a page a tutor opened it copies them for the running chat (B2). "Zurück zum Tutor", at the top and the end of a
+page a tutor opened, leads back with the page's tutor page and the result of each task of the session on the
+clipboard. A chat assistant fetches only addresses its user wrote into the conversation, so the one
 address the tutor needs comes in the prompt or in a line the learner pastes. The tutor page is the one source of what
 the tutor gets: a short visible guide, then the page's content and its exercises with every task number, a
 `generated` one once as its template with a table of each number's inputs and outputs (the values, the solution, what
@@ -376,6 +386,52 @@ title: Video player request to youtube-nocookie.com
 provider: bb-video
 protocol: HTML iframe over HTTPS, after a click
 path: runtime/explainer/video.ts
+:::
+```
+
+### Self-assessment
+
+Built. An optional self-assessment (`dec-self-assessment`), declared per chapter: `selfAssessment` in its
+`chapter.yaml`, its pages with the exercises it asks, each by `/<chapter>/<page>/#<exercise>` of the chapter (a
+generated one or a question type; no exercise component yet). The app's is every chapter's in the order of the
+chapters (`einschaetzung/`), a chapter's its own (`<chapter>/einschaetzung/`; in an app with one chapter, the app's is
+the chapter's). The validation checks each reference, that it is of the chapter and that an exercise is listed once;
+the build notes a page of it with fewer than two or more than five exercises. The page rendering writes its page and
+the offer on the start page or the chapter's page, every part of them in a `<template>` until the client module puts it
+into the page, and its tutor page `<assessment>/tutor/`, which makes the tutor a guide (`dec-self-assessment-tutor`).
+In the browser a run draws a new task of each generated exercise, shows the pages one by one without "Prüfen", checks
+all exercises together at "Auswerten" and shows for each content page in its scope whether the learner probably knows
+it, should look at it again or should read it; a page with no exercise in it is not asked. The last result stays on the
+device, one per self-assessment (`dec-self-assessment-result`); a run a tutor opened keeps nothing and ends in "Zurück
+zum Tutor".
+
+```arc42
+:::building-block
+id: bb-self-assessment
+title: Self-assessment
+parent: bb-archetype-runtime
+path: runtime/explainer/assessment.ts
+technology: TypeScript, DOM, static HTML and Markdown
+requires: if-archetype-content, if-tutor-files, if-task-numbers, if-questions, if-runtime-texts, if-device-storage
+implements: concept-tutor
+:::
+```
+
+#### Self-assessment interface
+
+The build step writes the page, the offer and the tutor page of each self-assessment (`assessment-page.ts`); the client
+module starts it (`assessment-client.ts`). Its addresses, the query of its tutor page (`?a1=17-falsch-F1&a2=richtig`:
+each exercise by its key in order, its task number, `richtig`, `falsch` or `offen`, the typical mistake), the lines of
+its prompt and of "Zurück zum Tutor", and the result kept under `self-assessment` or `self-assessment:<chapter>` are a
+contract with every tutor and with the result kept on a device.
+
+```arc42
+:::interface
+id: if-self-assessment
+title: Self-assessment page, its tutor page and the result kept on the device
+provider: bb-self-assessment
+protocol: Static HTML and Markdown over HTTPS, prompt text (provider link or clipboard), JSON in localStorage
+path: runtime/explainer/assessment.ts
 :::
 ```
 

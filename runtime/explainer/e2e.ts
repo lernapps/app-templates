@@ -38,8 +38,13 @@
 // Each video shows its title as a link to YouTube, its channel
 // and the note on privacy without JavaScript; with JavaScript it requests nothing of another host before a click (every
 // such request is blocked), loads the player of youtube-nocookie.com on "Video abspielen", and "Videos immer direkt
-// laden" is kept, loads every player directly, and goes when unticked. No page stores anything on the device before
-// a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
+// laden" is kept, loads every player directly, and goes when unticked. A self-assessment is offered on the start page
+// or its chapter's page with JavaScript only; a run shows its pages one by one, its exercises without "Prüfen" or
+// feedback; one with every answer right says each content page asked is known, the others not asked; one without an
+// answer says each page asked is to be read, stays on the device across a reload (the offer then names the last
+// result), takes the result to the tutor in the address of its tutor page, which answers, and goes on "Ergebnis
+// löschen". Opened by a tutor (via=tutor), a run keeps nothing, and its own "Zurück zum Tutor" copies the result with
+// the tutor page; a copy for a running chat keeps the tab open, its button says "✓ Kopiert", and a line below it where to paste. No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
 import {
@@ -51,7 +56,7 @@ import {
   type Answer,
   type Question,
 } from "../shared/questions/question.ts";
-import { answerQuestion, expectFeedbackInView, expectMaterial } from "../shared/questions/e2e.ts";
+import { answerQuestion, expectFeedbackInView, expectMaterial, giveAnswer } from "../shared/questions/e2e.ts";
 import { questionMessagesIn } from "../shared/questions/render.ts";
 import { answerShown } from "./result.ts";
 import { answerFor, diagnose, questionFor, taskKey } from "./generated/question.ts";
@@ -60,8 +65,78 @@ import { generate } from "./generated/values.ts";
 import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
 import { nextTaskNumber, taskNumber } from "./tasks.ts";
-import { outline, type ComponentOutline, type ExerciseOutline, type PageOutline } from "./outline.ts";
+import {
+  outline,
+  type AssessmentOutline,
+  type ComponentOutline,
+  type ExerciseOutline,
+  type Outline,
+  type PageOutline,
+} from "./outline.ts";
 import { embedAddress, watchAddress } from "./video.ts";
+
+/** The key a self-assessment's last result is kept under in localStorage: its key with the app's prefix. */
+const storedKeys = (page: Page) =>
+  page.evaluate(() => Object.keys(localStorage).filter((key) => /:self-assessment(:|$)/.test(key)));
+
+/**
+ * One run of the self-assessment `assessment`, from the page that offers it: each of its pages in turn, with the right
+ * answer to each exercise when `right`, else none, and its exercises without "Prüfen"; then "Auswerten".
+ */
+async function runAssessment(page: Page, app: Outline, assessment: AssessmentOutline, right: boolean): Promise<void> {
+  await page.goto(`./${assessment.offer}`);
+  const offer = page.locator(".explainer-assessment-offer");
+  await expect(offer, "offered with JavaScript").toBeVisible();
+  await offer.locator(".explainer-assessment-link").click();
+  await expect(page.locator(".explainer-assessment-intro")).toBeVisible();
+  expect(await storedKeys(page), "nothing kept before a run").toEqual([]);
+  await page.locator(".explainer-assessment-begin").click();
+  for (let step = 0; step < assessment.steps; step++) {
+    const view = page.locator(`.explainer-assessment-step[data-step="${step}"]`);
+    await expect(view).toBeVisible();
+    await expect(view.locator("h2")).toBeFocused();
+    await expect(view.locator(".question-check:visible"), "no exercise is checked alone").toHaveCount(0);
+    for (const item of assessment.items.filter((candidate) => candidate.step === step)) {
+      if (!right) continue;
+      const exercise = app.pages["de"]
+        ?.find((candidate) => candidate.url === item.page)
+        ?.exercises.find((candidate) => candidate.id === item.id);
+      if (exercise === undefined) throw new Error(`${item.page}#${item.id} is not in the outline`);
+      let question: Question;
+      if (exercise.kind === "question") question = { ...exercise.question, id: item.key };
+      else {
+        const { spec, data, templates } = exercise;
+        const n = Number(await view.locator(`[data-key="${item.key}"]`).getAttribute("data-number"));
+        const seeds = taskSeeds(spec, data);
+        const task = generate(spec, seeds[taskNumber(n, seeds.length) - 1] ?? n, data);
+        question = { ...questionFor(spec, task, "de", templates), id: item.key };
+      }
+      await giveAnswer(page, question, rightAnswer(question));
+    }
+    const last = step === assessment.steps - 1;
+    await view
+      .getByRole("button", { name: messageOf("de", last ? "assessmentFinish" : "assessmentNext"), exact: true })
+      .click();
+  }
+  await expect(page.locator(".explainer-assessment-result h2")).toBeFocused();
+}
+
+/** The result of a run: each content page with its band, the pages asked as `band`, the others not asked. */
+async function expectResult(page: Page, assessment: AssessmentOutline, band: keyof typeof BAND_WORDS): Promise<void> {
+  const lines = page.locator(".explainer-assessment-page");
+  await expect(lines).toHaveCount(assessment.pages.length);
+  for (const [index, item] of assessment.pages.entries()) {
+    const line = lines.nth(index);
+    await expect(line.locator("a")).toHaveText(item.title);
+    await expect(line.locator("strong")).toHaveText(messageOf("de", BAND_WORDS[item.asked === 0 ? "unasked" : band]));
+  }
+}
+
+const BAND_WORDS = {
+  known: "assessmentKnown",
+  read: "assessmentRead",
+  unasked: "assessmentUnasked",
+} as const;
 
 /** The task number of the deep link the tests open a generated exercise with. */
 const SEED = 7;
@@ -527,7 +602,7 @@ async function expectLanguages(page: Page, item: PageOutline, languages: readonl
 
 /**
  * The clipboard of the page, recorded in the test (nothing leaves the browser): each text the page writes, kept even
- * when the page closes its tab right after.
+ * when the page goes on right after.
  */
 async function recordClipboard(page: Page): Promise<string[]> {
   const copied: string[] = [];
@@ -593,9 +668,9 @@ function expectTutorAddress(address: string, here: string, id: string | undefine
   const url = new URL(address);
   expect(`${url.origin}${url.pathname}`, "the page's tutor page").toBe(new URL("tutor/", new URL(".", here)).href);
   for (const [key, value] of new URL(here).searchParams) {
-    if (key !== "von") expect(url.searchParams.get(key), `the task number of ${key}`).toBe(value);
+    if (key !== "via") expect(url.searchParams.get(key), `the task number of ${key}`).toBe(value);
   }
-  expect(url.searchParams.get("von"), "no von=tutor").toBeNull();
+  expect(url.searchParams.get("via"), "no via=tutor").toBeNull();
   if (id === undefined) {
     expect(url.searchParams.get("uebung"), "no exercise").toBeNull();
     expect(url.searchParams.get("abschnitt"), "no section").toBeNull();
@@ -603,6 +678,31 @@ function expectTutorAddress(address: string, here: string, id: string | undefine
   }
   expect(url.searchParams.get("uebung"), "the exercise").toBe(id);
   if (n !== undefined) expect(url.searchParams.get(id), "its task number").toBe(String(n));
+}
+
+/**
+ * What "Zurück zum Tutor" copies on the page `here` (its address before the click): the page's tutor page with the
+ * page's task numbers, which answers and has the exercise `id`; a line with `line` for the task the learner did; the
+ * count of the session last.
+ */
+async function expectSessionLines(
+  request: APIRequestContext,
+  copied: string[],
+  here: string,
+  line: string,
+  id: string,
+): Promise<void> {
+  await expect.poll(() => copied.length, "the lines are copied").toBe(1);
+  const lines = (copied[0] ?? "").split("\n");
+  const [intro, before = "", after = ""] = [lines[0] ?? "", ...messageOf("de", "sessionIntro").split("{url}")];
+  expect(intro.startsWith(before) && intro.endsWith(after), "the first line: the page's tutor page").toBe(true);
+  const address = intro.slice(before.length, intro.length - after.length);
+  expectTutorAddress(address, here, undefined, undefined);
+  expect(lines.slice(1, -1), "a line per task").toContainEqual(expect.stringContaining(line));
+  expect(lines.at(-1), "the count of the session").toMatch(/^Sitzung: \d+ von \d+ richtig\.$/);
+  const response = await request.get(address);
+  expect(response.status(), `${address} answers`).toBe(200);
+  expect(await response.text(), "the tutor page has the exercise").toContain(id);
 }
 
 /**
@@ -935,7 +1035,7 @@ export function explainerTests(root = "."): void {
         const n = taskNumber(SEED, seeds.length);
         const task = generate(spec, seeds[n - 1] ?? n, data);
         const question = questionFor(spec, task, "de", templates);
-        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&via=tutor#${exercise.id}`);
         await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
         const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
         await answerQuestion(page, question, wrong);
@@ -974,7 +1074,7 @@ export function explainerTests(root = "."): void {
         const n = taskNumber(SEED, seeds.length);
         const task = generate(spec, seeds[n - 1] ?? n, data);
         const question = questionFor(spec, task, "de", templates);
-        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&via=tutor#${exercise.id}`);
         await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
         const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
         await answerQuestion(page, question, wrong);
@@ -996,7 +1096,7 @@ export function explainerTests(root = "."): void {
         );
       });
 
-      test(`${generatedPage.url}: "Zurück zum Tutor" copies the result line of a generated exercise`, async ({
+      test(`${generatedPage.url}: "Zurück zum Tutor" copies the tutor page and the tasks of a generated exercise`, async ({
         page,
         request,
       }) => {
@@ -1007,15 +1107,23 @@ export function explainerTests(root = "."): void {
         const n = taskNumber(SEED, seeds.length);
         const task = generate(spec, seeds[n - 1] ?? n, data);
         const question = questionFor(spec, task, "de", templates);
-        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&via=tutor#${exercise.id}`);
         await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
         const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
         await answerQuestion(page, question, wrong);
         await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
         const here = page.url();
-        await page.getByRole("button", { name: messageOf("de", "backToTutor") }).click();
+        // at the top and at the end of the page
+        await expect(page.getByRole("button", { name: messageOf("de", "backToTutor") })).toHaveCount(2);
+        const back = page.locator(".explainer-back-end button");
+        await back.click();
+        // the tab stays open, and the button says it is copied and where to paste it
+        await expect(back).toHaveText(messageOf("de", "backToTutorDone"));
+        await expect(page.locator(".explainer-back-end [role=status]")).toHaveText(
+          messageOf("de", "backToTutorCopied", { name: messageOf("de", "tutorSomeoneTo") }),
+        );
         const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}, ${messageOf("de", "resultInput", { input: answerShown(question, wrong, "de") })})`;
-        await expectResultLine(request, copied, here, `, ${exercise.id}, Nr. ${n}: ${status}.`, exercise.id, n);
+        await expectSessionLines(request, copied, here, `- ${exercise.id}, Nr. ${n}: ${status}.`, exercise.id);
       });
     }
 
@@ -1066,7 +1174,7 @@ export function explainerTests(root = "."): void {
             await new Promise((resolve) => setTimeout(resolve, 500));
             await route.continue();
           });
-          await page.goto(`./${item.url}?von=tutor#${id}`);
+          await page.goto(`./${item.url}?via=tutor#${id}`);
           const element = page.locator(`[id="${id}"]`);
           await expect(element).toHaveAttribute("data-hydrated", "");
           // outside the component's island, which Vue owns: neither a mismatch nor lost with a new render
@@ -1088,22 +1196,108 @@ export function explainerTests(root = "."): void {
       const component = item.components.find((candidate) => candidate.exercise && candidate.id !== undefined);
       if (component?.id === undefined) continue;
       const id = component.id;
-      test(`${item.url}: "Zurück zum Tutor" copies the result line of the exercise component ${component.name}`, async ({
+      test(`${item.url}: "Zurück zum Tutor" copies the tutor page and the tasks of the exercise component ${component.name}`, async ({
         page,
         request,
       }) => {
         const copied = await recordClipboard(page);
-        await page.goto(`./${item.url}?${id}=3&von=tutor#${id}`);
+        await page.goto(`./${item.url}?${id}=3&via=tutor#${id}`);
         const element = page.locator(`[id="${id}"]`);
         await expect(element).toHaveAttribute("data-hydrated", "");
         const n = await answerRejected(page, component);
         const here = page.url();
-        await page.getByRole("button", { name: messageOf("de", "backToTutor") }).click();
+        await page
+          .getByRole("button", { name: messageOf("de", "backToTutor") })
+          .first()
+          .click();
         // and the input, when the logic module has show, as it gives it, which the test does not know
         const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}`;
-        await expectResultLine(request, copied, here, `, ${id}, Nr. ${n}: ${status}`, id, n);
+        await expectSessionLines(request, copied, here, `- ${id}, Nr. ${n}: ${status}`, id);
       });
     }
+
+    test.describe("a self-assessment", () => {
+      test.skip(({ viewport }) => (viewport?.width ?? 0) > 400, "the self-assessments run at 360 px");
+      for (const assessment of app.assessments) {
+        test(`${assessment.url}: a run with every answer right says each page asked is known`, async ({ page }) => {
+          await runAssessment(page, app, assessment, true);
+          await expectResult(page, assessment, "known");
+          const total = String(assessment.items.length);
+          await expect(page.locator(".explainer-assessment-score")).toHaveText(
+            messageOf("de", "assessmentScore", { right: total, total }),
+          );
+        });
+
+        test(`${assessment.url}: opened by a tutor, a run keeps nothing and copies its result for the chat`, async ({
+          page,
+          request,
+        }) => {
+          const copied = await recordClipboard(page);
+          await page.goto(`./${assessment.url}?via=tutor`);
+          // its own "Zurück zum Tutor", at the end: none at the top
+          await expect(page.locator(".explainer-back")).toHaveCount(0);
+          await page.locator(".explainer-assessment-begin").click();
+          for (let step = 0; step < assessment.steps; step++) {
+            const last = step === assessment.steps - 1;
+            await page
+              .locator(`.explainer-assessment-step[data-step="${step}"]`)
+              .getByRole("button", { name: messageOf("de", last ? "assessmentFinish" : "assessmentNext"), exact: true })
+              .click();
+          }
+          await expectResult(page, assessment, "read");
+          expect(await storedKeys(page), "a run for the tutor keeps nothing").toEqual([]);
+          await expect(page.locator(".explainer-assessment-delete")).toHaveCount(0);
+          await page.getByRole("button", { name: messageOf("de", "backToTutor"), exact: true }).click();
+          await expect.poll(() => copied.length).toBe(1);
+          const lines = (copied[0] ?? "").split("\n");
+          expect(lines[0]).toBe(messageOf("de", "assessmentBackLine"));
+          const prefix = `${messageOf("de", "resultTutor")} `;
+          const tutor = lines.find((line) => line.startsWith(prefix))?.slice(prefix.length) ?? "";
+          // the link of the next round last: the same self-assessment, opened by the tutor
+          const [nextBefore = ""] = messageOf("de", "assessmentNextRound").split("{url}");
+          const next = new URL(lines.at(-1)?.slice(nextBefore.length) ?? "");
+          expect(next.pathname.endsWith(`/${assessment.url}`), "the next round's link").toBe(true);
+          expect(next.searchParams.get("via")).toBe("tutor");
+          const url = new URL(tutor);
+          expect(url.pathname.endsWith(`/${assessment.url}tutor/`), "the self-assessment's tutor page").toBe(true);
+          for (const item of assessment.items) expect(url.searchParams.get(item.key) ?? "").toMatch(/(^|-)offen$/);
+          expect((await request.get(tutor)).status(), "the tutor page answers").toBe(200);
+        });
+
+        test(`${assessment.url}: a run without an answer stays on the device, goes to the tutor and is deleted`, async ({
+          page,
+          request,
+        }) => {
+          const opened = await recordOpen(page);
+          await runAssessment(page, app, assessment, false);
+          await expectResult(page, assessment, "read");
+          expect(await storedKeys(page)).toHaveLength(1);
+          // kept: the page shows it again, and the offer names it
+          await page.reload();
+          await expect(page.locator(".explainer-assessment-result")).toBeVisible();
+          await expectResult(page, assessment, "read");
+          await page.goto(`./${assessment.offer}`);
+          await expect(page.locator(".explainer-assessment-link")).toHaveText(messageOf("de", "assessmentOfferLast"));
+          await page.locator(".explainer-assessment-link").click();
+          // to the tutor: the tutor page with each exercise's result in its address, which answers
+          const select = page.locator(".explainer-assessment-way");
+          const first = (await select.locator("option").first().textContent()) ?? "";
+          await select.selectOption({ index: 0 });
+          await page.locator(".explainer-assessment-go").click();
+          const [address = ""] = await opened();
+          expect(address, `opens ${first}`).not.toBe("");
+          const tutor = /https?:\/\/\S+\/tutor\/\?\S+/.exec(decodeURIComponent(address))?.[0] ?? "";
+          const url = new URL(tutor);
+          expect(url.pathname.endsWith(`/${assessment.url}tutor/`), "the self-assessment's tutor page").toBe(true);
+          for (const item of assessment.items) expect(url.searchParams.get(item.key) ?? "").toMatch(/(^|-)offen$/);
+          expect((await request.get(tutor)).status(), "the tutor page answers").toBe(200);
+          // deleted
+          await page.getByRole("button", { name: messageOf("de", "assessmentDelete"), exact: true }).click();
+          await expect(page.locator(".explainer-assessment-intro")).toBeVisible();
+          expect(await storedKeys(page)).toEqual([]);
+        });
+      }
+    });
 
     test("nothing is stored on the device", async ({ page, context }) => {
       const urls = app.languages.flatMap((lang) => [...(app.others[lang] ?? []), ...(app.pages[lang] ?? [])]);

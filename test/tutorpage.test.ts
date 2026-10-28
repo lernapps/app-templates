@@ -106,7 +106,7 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain("Gerechnet wird in der App");
     expect(text).toContain("Rechne nichts selbst aus");
     expect(text).toContain("dieser Tutor-Seite ohne `tutor/` und ohne `?…`");
-    expect(text).toContain("z. B. `…/zahlen-01/?prozent-rechnen=12&von=tutor#prozent-rechnen`");
+    expect(text).toContain("z. B. `…/zahlen/zahlen-01/?prozent-rechnen=12&via=tutor#prozent-rechnen`");
     expect(text).toContain("nimm eine andere Nummer der Übung");
     expect(text).toContain("„Die App sagt: …“");
     expect(text).toContain("kommt von „Zurück“ in der App");
@@ -150,7 +150,7 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain("- Aufgabe: „Wie viel sind {p} % von {G}?“");
     expect(text).toContain("  - F1: „Du hast nicht durch 100 geteilt.“");
     expect(text).toContain("- Tipp der App: „1 % von {G} ist $\\frac{{G}}{100}$.“");
-    expect(text).toContain("- Link zu Nummer n: `../?prozent-rechnen=n&von=tutor#prozent-rechnen`");
+    expect(text).toContain("- Link zu Nummer n: `../?prozent-rechnen=n&via=tutor#prozent-rechnen`");
     expect(text).toContain("`{answer}` ist die Lösung.");
     // nothing for the tutor to work out: no expressions, no conditions
     expect(text).not.toContain("`G * p / 100`");
@@ -172,7 +172,7 @@ describe("the tutor page of a content page", () => {
     expect(text).not.toMatch(/Wie viel sind (?!1 % von 200\?)\d+ % von \d+\?/);
     // a question without numbers: in full, linked as the exercise on its page
     expect(text).toContain("### Übung prozent-von-200\n");
-    expect(text).toContain("- Link: [../?von=tutor#prozent-von-200](../?von=tutor#prozent-von-200)");
+    expect(text).toContain("- Link: [../?via=tutor#prozent-von-200](../?via=tutor#prozent-von-200)");
   });
 
   test("an exercise component with its table of tasks: its task once, its mistakes as F1, F2 …, every number's inputs and outputs", () => {
@@ -191,7 +191,7 @@ describe("the tutor page of a content page", () => {
     expect(part).toContain(
       "- Typische Fehler (die Meldung der App passt zu einem davon):\n  - F1: Die Reihenfolge umgedreht: unten, was oben hingehört.\n  - F2: Eine Beschriftung zweimal gewählt.",
     );
-    expect(part).toContain("- Link zu Nummer n: `../?assign-labels=n&von=tutor#assign-labels`");
+    expect(part).toContain("- Link zu Nummer n: `../?assign-labels=n&via=tutor#assign-labels`");
     expect(part).toContain(
       "- Aufgaben nach Nummer: die Werte für `{…}`, die Lösung und was bei den Fehlern herauskommt. Ein Fehler ohne Spalte hat keinen festen Wert; die Meldung der App sagt, ob er vorliegt.\n\n```\nNr. | Wahl | Lösung | F1 | F2\n",
     );
@@ -238,7 +238,7 @@ describe("the tutor page of a content page", () => {
     );
     // its mistakes numbered all the same, which the app's message names one of
     expect(text).toContain("  - F1: Die Reihenfolge umgedreht: unten, was oben hingehört.");
-    expect(text).toContain("- Link zu Nummer n: `../?assign-labels=n&von=tutor#assign-labels`");
+    expect(text).toContain("- Link zu Nummer n: `../?assign-labels=n&via=tutor#assign-labels`");
     const tasks = descriptions.get(use.block)?.tasks["de"] ?? [];
     expect(tasks.length).toBeGreaterThan(1);
     for (const task of tasks) {

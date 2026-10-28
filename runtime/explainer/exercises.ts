@@ -132,11 +132,17 @@ function formulaTexts(value: unknown): string[] {
   return [];
 }
 
-function questionExercise(block: QuestionBlock, lang: string, material: MaterialContext): string {
+/** What the browser reads from a question of the question types in `lang`: the question, its formulas as HTML. */
+function questionData(block: QuestionBlock, lang: string): Extract<ExerciseData, { kind: "question" }> {
   const question = questionIn(block, lang);
   const rendered: Record<string, string> = {};
   for (const text of formulaTexts(question)) rendered[text] = renderWithFormulas(text);
-  const data: ExerciseData = { kind: "question", lang, question, rendered };
+  return { kind: "question", lang, question, rendered };
+}
+
+function questionExercise(block: QuestionBlock, lang: string, material: MaterialContext): string {
+  const data = questionData(block, lang);
+  const { question } = data;
   return [
     `<div class="explainer-exercise explainer-question" id="${block.id}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
@@ -151,6 +157,44 @@ function questionExercise(block: QuestionBlock, lang: string, material: Material
     `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
     `</div>`,
   ].join("\n");
+}
+
+/** What the browser reads from a generated exercise in `lang`: the exercise, its templates, data files and seeds. */
+function generatedData(
+  spec: Generated,
+  lang: string,
+  all: Readonly<Record<string, readonly DataRecord[]>>,
+  resolve: (href: string) => string,
+): Extract<ExerciseData, { kind: "generated" }> {
+  const data = dataOf(spec, all);
+  // the examples are test cases for the build: not shipped
+  const { examples: _examples, ...shipped } = spec;
+  return {
+    kind: "generated",
+    lang,
+    spec: shipped,
+    templates: templatesOf(spec, [lang], resolve),
+    data,
+    seeds: taskSeeds(spec, data),
+    texts: {
+      newTask: message(lang, "newTask"),
+      practice: spec.practice === undefined ? message(lang, "practice") : inLanguage(spec.practice, lang),
+      hint: message(lang, "hint"),
+      solution: questionMessagesIn(lang).solution,
+      // with {n} kept for the client module
+      taskNumber: message(lang, "taskNumber"),
+    },
+  };
+}
+
+/** What the browser reads from an exercise in `lang` (script.explainer-exercise-data). */
+export function exerciseData(
+  block: Exercise,
+  lang: string,
+  all: Readonly<Record<string, readonly DataRecord[]>>,
+  resolve: (href: string) => string,
+): ExerciseData {
+  return block.type === "generated" ? generatedData(block, lang, all, resolve) : questionData(block, lang);
 }
 
 function generatedExercise(
@@ -181,24 +225,7 @@ function generatedExercise(
       .filter((part) => part !== "")
       .join(""),
   );
-  // the examples are test cases for the build: not shipped
-  const { examples: _examples, ...shipped } = spec;
-  const exerciseData: ExerciseData = {
-    kind: "generated",
-    lang,
-    spec: shipped,
-    templates,
-    data,
-    seeds: taskSeeds(spec, data),
-    texts: {
-      newTask: message(lang, "newTask"),
-      practice: spec.practice === undefined ? message(lang, "practice") : inLanguage(spec.practice, lang),
-      hint: message(lang, "hint"),
-      solution,
-      // with {n} kept for the client module
-      taskNumber: message(lang, "taskNumber"),
-    },
-  };
+  const exerciseData = generatedData(spec, lang, all, resolve);
   return [
     `<div class="explainer-exercise explainer-generated" id="${spec.id}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,

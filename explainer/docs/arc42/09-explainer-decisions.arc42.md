@@ -25,7 +25,8 @@ addresses: qg-checkable, qg-understandable, con-runtime-unchanged, con-component
 Every fact is in a block, rendered at build; an exercise shows its solution folded, a component its `nojs` text (an
 exercise component's written from its `describe`), so the page is complete without JavaScript and the client module
 only adds. `lernapps check` opens every explainer page a second time with JavaScript off. Rejected: meaning only
-inside a component or a live exercise.
+inside a component or a live exercise. The one exception is the optional self-assessment (`dec-self-assessment`),
+which needs a run in the browser and is no content of its own.
 
 ```arc42
 :::decision
@@ -95,8 +96,11 @@ tutor went straight for the task (hand test on claude.ai, 2026-10-26). B, "Hilfe
 every exercise, before the first input too, "Warum?" after a wrong one: one sentence that names the task, then the
 input with its tries and the app's message word for word, so the tutor starts from what the learner was told: the
 tutor page tells it to go first, briefly, into exactly that input and the task, which mistake of the table it is;
-without a chat they open a new one, and on a page a tutor opened (`von=tutor`) they are copied for the running chat,
-which a new chat would lose. "Zurück zum Tutor" copies a result line with the tutor page and the task. Copying
+without a chat they open a new one, and on a page a tutor opened (`via=tutor`) they are copied for the running chat,
+which a new chat would lose. "Zurück zum Tutor", at the top and the end of the page, copies the page's tutor page with
+the page's task numbers and a line for each task of the session (how far the learner got, a wrong one with its input
+and the app's message), so that the tutor loads the tutor page and coaches on exactly these tasks; "Zurück" at one
+task copies that task's result line. Copying
 instead of an assistant adds the tutor page's Markdown, which lies beside it. Input and message leave the page only
 with the learner's click. Measured on lernapps/elektrizitaet and Mathe-Karte (2026-10-26): with every number, a
 page with two `generated` exercises and a component has 39 kB, the most with `generated` ones alone 54 kB; two
@@ -223,7 +227,7 @@ the channel and a note that playing sends data, among them the IP address, to Yo
 from another host: `con-no-request-before-click` holds, and the page needs no consent banner. The click on "Video
 abspielen" is the learner's consent for this one video, given with the note in view; only then does the player load,
 from YouTube's privacy-enhanced host youtube-nocookie.com, with the app's origin as its only referrer, so YouTube never
-sees the task numbers or `von=tutor` in the address. "Videos immer direkt laden" is a standing consent: kept on the
+sees the task numbers or `via=tutor` in the address. "Videos immer direkt laden" is a standing consent: kept on the
 device under the app's prefix (`con-state-on-device`), shown ticked on every video, and withdrawn by unticking it. No
 thumbnail, as YouTube's image would load before the click and an own one needs the rights to it. An app with a video
 loads from another server after a click, so its catalog entry says `fitness.thirdParty: on-click`. Rejected: a direct
@@ -237,5 +241,90 @@ title: A video is a link until the learner's click loads its player from youtube
 status: accepted
 date: 2026-10-26
 addresses: qg-privacy, qg-explainer-readable-without-js, con-no-request-before-click, con-state-on-device, risk-explainer-video-after-click
+:::
+```
+
+## A Self-Assessment Checked Only as a Whole
+
+A learner may want to know before learning which pages they can skim. So an explainer may offer a self-assessment. A
+chapter declares its own, the unit a learner works through; the app's is every chapter's together, so that one run
+covers all and a tutor can go on chapter by chapter with the same exercises. It shows exercises of the content pages without the page around
+them, a few on each of its pages (best two to five), and checks no single one: only "Auswerten" checks them all
+together, and the result is per content page, the level at which the learner goes on: probably known (all right),
+look at it again (at least half), read it (less); a page none of whose exercises is asked is "not asked", as some
+content, an open activity for one, cannot be checked. One task alone is too little to call a page known: right, it is
+"look at it again". A generated exercise is preferred, as each run draws a new task, and it may be listed twice for
+two tasks of its own; the options of a choice are mixed anew for each run, so that a second run asks the question,
+not the place of its answer. It is optional for the learner and for the app: the content declares it, and an agent adds it when the content
+and its forms of teaching are known, at the end (tooling skill `lernapps-explainer-self-assessment`). It needs
+JavaScript; without it the offer stays hidden and its page says so in one line. Rejected: feedback after each
+exercise (it would teach, not assess); a result per chapter (too coarse to say where to start); a self-assessment of
+the app declared apart from the chapters' (two lists of the same exercises to keep in step); exercises of its own
+(they would duplicate the pages' and miss the tutor's tables); exercise components (their answers come from islands
+that a page of several exercises does not load yet).
+
+```arc42
+:::decision
+id: dec-self-assessment
+title: An optional self-assessment checks its exercises only as a whole and says per content page where to start
+status: accepted
+date: 2026-10-28
+addresses: qg-understandable, qg-explainer-readable-without-js
+:::
+```
+
+## The Last Result of a Self-Assessment Stays on the Device
+
+The learner should find their result again, and a tutor should be able to accompany them from it. So the result of
+the last run stays on the device, under the app's prefix (`con-state-on-device`), one per self-assessment, so the app's
+and a chapter's do not mix; a new run replaces it, and "Ergebnis löschen" removes it. A run a tutor opened
+(`via=tutor`) is no self-assessment of the learner's: it keeps nothing. It holds per exercise its
+reference, its task number, right, wrong or not answered, and the input and typical mistake of a wrong one: nothing
+about the learner, and nothing is sent. The learner takes it to a tutor with a click: the tutor page of the
+self-assessment, its address holding the result (`?a1=17-falsch-F1`), in one sentence with a line per exercise, in the
+address of the assistant chosen or copied with the tutor page's Markdown, as on the content pages
+(`dec-tutor-assistant`). Rejected: keeping every run (a history about the learner); a result only in memory (lost on the way to the
+tutor); the result sent anywhere (`qg-privacy`).
+
+```arc42
+:::decision
+id: dec-self-assessment-result
+title: The last result of a self-assessment stays on the device and goes to a tutor only with a click
+status: accepted
+date: 2026-10-28
+addresses: qg-privacy, con-state-on-device, con-no-request-before-click
+:::
+```
+
+## The Tutor Guides Through Chapters and Rounds
+
+After a self-assessment the tutor is a guide, not a teacher: explaining and practising happen on the pages, with their
+"Hilfe" and their own tutor pages. The self-assessment's tutor page tells the tutor to go chapter by chapter: the pages
+that do not stick, each opened with `via=tutor` and ending in "Zurück zum Tutor", then a new round of the chapter's
+self-assessment, also with `via=tutor`, which draws new tasks; after each round the tutor decides on the next chapter
+or another round, and sends a page that does not stick after two rounds to "Mit einem KI-Tutor lernen" on the page.
+When the learner comes back from a page with a wrong task, the guide loads the page's tutor page and coaches on exactly
+those tasks, then guides on. Each round's "Zurück zum Tutor" ends with the link of the next round, which names the task
+numbers of this one (`vorher=a1.28`): the next round draws others where it can. On
+a page a tutor opened, the clipboard is always the way back: the self-assessment's "Zurück zum Tutor" copies the result
+per page, a line per exercise and the tutor page with the result in its address, as the result
+line of a content page does. The tutor page holds every chapter with its pages and the link to its self-assessment, and
+the exercise behind each key; no tables of solutions, which the pages' tutor pages hold. It holds no address: a static
+page does not know where the app is served, and an assistant resolving relative links led the learner to tutor pages
+(ChatGPT, 2026-10-28). The message the learner sends, written by the browser, ends with the full address of every
+page and every self-assessment of the app with `via=tutor`, and the guide takes links only from there. The
+parameter is `via=tutor`, without the old `von=tutor`. A copy for the running chat keeps the tab open: closing it let the browser show
+some other tab, and the learner did not see that something was copied. The button says "✓ Kopiert" for a while, as the tutor
+bar does after copying, and a line below it where to paste. Rejected: the tutor explaining
+the tasks of the self-assessment itself (a second place to teach, and solutions in view); a new chat per round (the
+tutor would lose the course of the learner).
+
+```arc42
+:::decision
+id: dec-self-assessment-tutor
+title: After a self-assessment the tutor guides chapter by chapter, with rounds whose result comes back through the clipboard
+status: accepted
+date: 2026-10-28
+addresses: qg-understandable, qg-privacy, con-no-request-before-click
 :::
 ```

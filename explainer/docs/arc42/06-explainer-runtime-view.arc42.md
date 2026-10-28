@@ -44,13 +44,14 @@ The learner switches an assistant on once, on the start page or beside the title
 device. Way A: the bar beside the title of a page opens the learner's own assistant with one sentence that names the
 page's tutor page with the page's task numbers, or copies that sentence with the tutor page's Markdown. The assistant
 fetches the tutor page, looks the numbers up in its tables, asks what the child does not understand, explains with
-the page's own example and sends links to tasks of the page with `von=tutor`. On such a page the learner solves the
-task and presses "Zurück zum Tutor": the page copies a result line with the try, the input and the tutor page with
-the task, closes the tab, and the learner pastes the line into the chat; the assistant knows the task's solution and
+the page's own example and sends links to tasks of the page with `via=tutor`. On such a page the learner solves the
+task and presses "Zurück zum Tutor": the page copies the tutor page with the page's task numbers and how each task of
+the session went (the try, the input, the app's message), the button says where to paste them, and the learner switches back and pastes them into the
+chat; the assistant knows the task's solution and
 mistakes from the tutor page and talks about the mistake. Way B: stuck at a task, the learner clicks "Hilfe"
 ("Warum?" after a wrong answer) in the exercise. Without a chat the assistant opens with one sentence that names the
 tutor page and the task, then the input and the app's message word for word; on a page a tutor opened the page copies
-the task, the same lines and the tutor page and closes the tab, and the learner pastes them into the running chat.
+the task, the same lines and the tutor page, and the learner pastes them into the running chat.
 The assistant starts from the app's message and helps without giving the solution away, as the tutor page's guide
 says. Nothing leaves the device before a click, and the app reports nothing back. No model runs in the browser.
 
@@ -77,5 +78,28 @@ id: scenario-explainer-video
 title: Watching a video on a page
 trigger: The learner clicks "Video abspielen", or opens a page after choosing to load videos directly
 involves: bb-render, bb-shell, bb-video, bb-runtime-texts, bb-tooling
+:::
+```
+
+## Doing a self-assessment
+
+The start page, or a chapter's page, offers the self-assessment once the client module runs; it names the last result
+when the device keeps one. The learner starts a run: each generated exercise gets a new task, and the pages follow one
+by one with "Weiter" and "Zurück", the exercises without "Prüfen" and without feedback. "Auswerten" checks all of them
+together, keeps the result on the device (replacing the one before) and shows the score and, for each content page in
+order, whether the learner probably knows it, should look at it again or should read it, each with its link. "Mit
+<name> besprechen" opens the learner's assistant with one sentence that names the self-assessment's tutor page with the
+result in its address, the result per page and a line per exercise. The tutor guides chapter by chapter: it sends the
+learner to the pages that do not stick, each with `via=tutor`, whose "Zurück zum Tutor" copies the result line for the
+chat, and then into a new round of the chapter's self-assessment with `via=tutor`: that run keeps nothing, and its
+"Zurück zum Tutor" copies the result and the tutor page for the running chat. After each round the tutor decides on the
+next chapter or another round. "Neu starten" starts a new run, "Ergebnis löschen" removes the result.
+
+```arc42
+:::runtime-scenario
+id: scenario-explainer-self-assessment
+title: Doing a self-assessment
+trigger: The learner starts the self-assessment offered on the start page or a chapter's page
+involves: bb-render, bb-shell, bb-self-assessment, bb-generated-exercises, bb-questions, bb-task-numbers, bb-tutor-handoff, bb-runtime-texts, bb-tooling
 :::
 ```

@@ -21,7 +21,7 @@ feature: assistants read it before they choose an archetype.
 | Folder | Archetype | What the app supplies |
 |---|---|---|
 | [`quiz/`](quiz/) | a quiz about things to know: questions with options, feedback on every option, score and solutions, in one or more languages (a page per language) | the question bank `src/quiz.json` ([schema](runtime/quiz/quiz.v1.schema.json)) |
-| [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes, code and YouTube videos behind two clicks, and an exercise on every page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages; Vue components for what no block can express | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/`, and `components/` ([schema](runtime/explainer/explainer.v1.schema.json)) |
+| [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes, code and YouTube videos behind two clicks, and an exercise on every page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages; an optional self-assessment of the app or a chapter, checked as a whole; Vue components for what no block can express | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/`, and `components/` ([schema](runtime/explainer/explainer.v1.schema.json)) |
 | [`interactive/`](interactive/) | an interactive app whose doing is the content (a game, a trainer): a static start page, readable without JavaScript, and an app page with the app's own Vue components, its routes as `app/#<id>`; the build plays its playthroughs against its core | `src/app.yaml` ([schema](runtime/interactive/interactive.v1.schema.json)), the core `src/core/index.ts` (`start(seed, route)`, `step(state, input)` with a key or an action of its root component, optional `tick(state, dt)`), its components in `src/ui/`, data in `src/data/`, and `src/playthroughs/*.yaml` ([schema](runtime/interactive/playthrough.v1.schema.json)) |
 
 - [`runtime/`](runtime/): the runtime of each archetype, published from git as `@lernapps/app-templates`; its exports
@@ -71,7 +71,7 @@ feature: assistants read it before they choose an archetype.
   "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:
   `?<id>=<n>` opens task number n of the exercise `<id>` (a number above N wraps around). The address holds one
   parameter per exercise (`?a=3&b=12`), written on load and at every "Neue Aufgabe", so it is the page's state: a link
-  to share in class, a deep link, and what a tutor reads; `seed`, `von`, `uebung` and `abschnitt` are no exercise id, and `?seed=<n>#<id>`
+  to share in class, a deep link, and what a tutor reads; `seed`, `via`, `uebung` and `abschnitt` are no exercise id, and `?seed=<n>#<id>`
   still opens that exercise's task. The build ships each exercise's table of seeds. An exercise with fewer than 67 distinct tasks is
   noted in the build output.
 - For a KI tutor, an assistant the learner brings and controls, the explainer writes static files only (a chat
@@ -89,7 +89,7 @@ feature: assistants read it before they choose an archetype.
   further task; the app's own rules from `tutor.rules` in `app.yaml`. Then the page's content as context (texts,
   formulas as `$…$`, examples, definitions, notes, figures by alt text and caption) and its exercises with every task
   number. A `generated` one is there once as its template (`{G}`), with answer format, hint, steps, its typical
-  mistakes as F1, F2 … with the app's messages and the link pattern `../?<id>=n&von=tutor#<id>`, and below a table of
+  mistakes as F1, F2 … with the app's messages and the link pattern `../?<id>=n&via=tutor#<id>`, and below a table of
   each task number's inputs and outputs, all worked out: `Nr. | p | G | Lösung | F1`, `27 | 15 | 1260 | 189 | 18900`.
   An exercise component has its `about`, and with its table of tasks its task once as its template, its typical
   mistakes as F1, F2 … and the same table as a generated one, `Lösung` and `F1` as `show` gives them, with every
@@ -116,15 +116,16 @@ feature: assistants read it before they choose an archetype.
   nicht weiter.", then `Ich habe <input> eingegeben (<n> Versuche).`, `Die App sagt: „<message>“` (word for word
   what the feedback said: a generated exercise's message of its mistake or the general one, a question's reasons, an
   exercise component's `message`, else its `reason`) and the hint or solution opened; on a page opened with
-  `von=tutor` (B2), where the button is there without an assistant switched on, it copies `Übung <id>, Nr. <n>:`,
-  the same lines and `Tutor-Seite: <tutor page>?…` and closes the tab, as "Zurück zum Tutor" does, and once the task
+  `via=tutor` (B2), where the button is there without an assistant switched on, it copies `Übung <id>, Nr. <n>:`,
+  the same lines and `Tutor-Seite: <tutor page>?…` for the running chat, as "Zurück zum Tutor" does, and once the task
   is right or its solution shown it is "Zurück", which copies the result line. No prompt and no line carries a rule
   for the tutor: the tutor page has them. After a wrong answer a sentence under the row says that input and message
   leave the page only with the click. "Neue Aufgabe" is a circular arrow beside the task number. A page opened with
-  `von=tutor` shows "Zurück zum Tutor": it copies a result line (the exercise, its task number, "richtig im 2.
-  Versuch", "Lösung angesehen" or "noch nicht gelöst (1 Versuch, Eingabe …)", the count of the session on this page,
-  and the absolute address of the page's tutor page with where the learner is), waits 100 ms and closes the tab; when
-  copying fails the tab stays open with the line selected in a field. The line goes to the clipboard only
+  `via=tutor` shows "Zurück zum Tutor" at its top and end: it copies the page's tutor page with its task numbers and a
+  line per task of the session (the exercise, its task number, "richtig im 2. Versuch", "Lösung angesehen" or "noch
+  nicht gelöst (1 Versuch, Eingabe …)" with the app's message), then the count of the session. The tab stays open, and
+  the button says "✓ Kopiert" and a line below it where to paste; when copying fails, the lines are selected in a
+  field. The line goes to the clipboard only
   ([`result.ts`](runtime/explainer/result.ts)).
 - An explainer's `video` block (`youtube`, `title`, `channel`) is a YouTube video behind two clicks: the page, with or
   without JavaScript, shows the title as a link to youtube.com, the channel and a note that playing it sends data,
@@ -161,8 +162,9 @@ rendering, shell, end-to-end tests) and the parts its creator writes. An app's a
   only the last result on the device when the bank asks; no tutor.
 - **Explainer** ([`explainer/docs/arc42/`](explainer/docs/arc42/)): the page rendering writes the YAML pages and the
   component islands at build, the content validation guards the content, the client module and the islands check
-  answers in the browser and keep only the chosen way to the tutor and the choice to load videos directly; the tutor
-  handoff, task numbers and the two-click video are built for it.
+  answers in the browser and keep only the chosen way to the tutor, the choice to load videos directly and the last
+  result of a self-assessment; the tutor handoff, task numbers, the two-click video and the self-assessment are built
+  for it.
 - **Interactive** ([`interactive/docs/arc42/`](interactive/docs/arc42/)): the start page and app page render from
   `src/app.yaml`, the build checks the core and plays the playthroughs, the shell mounts the root component and feeds
   the core inputs (today keys), ticks, route and seed; no tutor yet. Only an interactive app adds an architecture part

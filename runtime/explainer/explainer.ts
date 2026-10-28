@@ -10,18 +10,20 @@
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
 // always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
 // JavaScript. The page keeps in memory how far the learner got with each task (result.ts): a page a tutor opened
-// (von=tutor in the address, beside any seed) gets "Zurück zum Tutor", which copies a result line with the address of
-// the page's tutor page, then closes the tab. The learner switches a way to the tutor on once, on the start page or
-// beside the title of a page: an assistant of the app, or copying the text; it is kept on the device.
+// (via=tutor in the address, beside any seed) gets "Zurück zum Tutor", which copies a result line with the address of
+// the page's tutor page for the running chat; the tab stays open, and its button says where to paste. The learner
+// switches a way to the tutor on once, on the start page or beside the title of a page: an assistant of the app, or copying the text; it is kept on the device.
 // Two ways lead to the tutor, both naming the page's tutor page with where the learner is in its query (position.ts),
 // the one source of what the tutor gets (tutorpage.ts). A: while a way is on, a bar beside the title of a content
 // page, "Mit <name> lernen", opens the assistant with the start prompt (prompt.ts). B: the help button in the row of
 // "Prüfen" and "Lösung" of every exercise, there only while a way is on, "Hilfe" and after a wrong answer "Warum?",
 // gives the lines of that task (stuck.ts: the task, the input, the app's message word for word, the tutor page):
 // without a chat (B1) it opens the way switched on with them; on a page a tutor opened (B2) it copies the lines and
-// closes the tab, and once the task is done it is "Zurück", which copies the result line. Copying instead of an
-// assistant adds the tutor page's Markdown. Input and message leave the page only with the click. A video gets its
-// button, which loads its player, and the choice "Videos immer direkt laden" (video.ts), kept on the device too.
+// says where to paste them, and once the task is done it is "Zurück", which copies the result line. Copying instead
+// of an assistant adds the tutor page's Markdown. Input and message leave the page only with the click. A video gets its
+// button, which loads its player, and the choice "Videos immer direkt laden" (video.ts), kept on the device too. A
+// self-assessment runs on its own page, offered on the start page or its chapter's page (assessment-client.ts); its
+// way to the tutor is the one switched on, or one chosen there.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { startQuestion } from "../shared/questions/engine.ts";
@@ -32,7 +34,7 @@ import { diagnose, questionFor } from "./generated/question.ts";
 import { hintOf, stepsOf, taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { message } from "./messages.ts";
-import { answerShown, Progress, resultLine } from "./result.ts";
+import { answerShown, Progress, resultLine, sessionLines } from "./result.ts";
 import { stuckLines, stuckPrompt } from "./stuck.ts";
 import { currentExercise, pageQuery, taskQuery, type PagePosition } from "./position.ts";
 import {
@@ -46,6 +48,7 @@ import {
 } from "./tasks.ts";
 import { escape } from "../shared/html.ts";
 import { startVideos } from "./video.ts";
+import { startAssessment } from "./assessment-client.ts";
 
 /** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(
@@ -118,20 +121,14 @@ function startGenerated(
   show(false);
 }
 
-/** Whether a tutor opened the page: von=tutor in its address, exactly so. */
-export const fromTutor = (href: string): boolean => new URL(href).searchParams.get("von") === "tutor";
+/** Whether a tutor opened the page: via=tutor in its address, exactly so. */
+export const fromTutor = (href: string): boolean => new URL(href).searchParams.get("via") === "tutor";
 
 /** The event an island sends for an exercise component's answer (islands.ts), with { correct, answer?, message? }. */
 export const ANSWERED_EVENT = "explainer-answered";
 
-/** How long the page waits after window.close() before it tells the learner to close the tab. */
-const CLOSE_WAIT_MS = 300;
-
 /** How long the button says "kopiert" after a copy. */
 const DONE_MS = 8000;
-
-/** The pause between copying and closing: closed at once, headless Chromium lost 6 of 20 lines (Mathe-Karte). */
-const COPY_PAUSE_MS = 100;
 
 /** What the tutor section of a page gives the client module (render.ts, prompt.ts). */
 interface TutorData {
@@ -222,41 +219,31 @@ function resultOf(href: string, lang: string, data: TutorData, progress: Progres
   );
 }
 
-/** The texts of copying for a tutor and closing the tab: once copied, and when copying fails. */
-interface CloseTexts {
+/** The texts of copying for a running chat: the status once copied, and when copying fails. */
+interface CopyTexts {
   copied: string;
   failed: string;
-  open: string;
 }
 
 /**
- * Copies `text` for the chat with the tutor, waits a moment and closes the tab, which the tutor's chat opened; where
- * the browser keeps it open (a tab the learner opened), `status` says to paste and close the tab. When copying fails,
- * the tab stays open, with the text selected in `field` to copy by hand. Without a text it only closes the tab. The
- * text goes to the clipboard only, never over the network ("Zurück zum Tutor", "Hilfe" and "Zurück" in B2).
+ * Copies `text` for the running chat with the tutor ("Zurück zum Tutor", "Hilfe" and "Zurück" on a page a tutor
+ * opened, via=tutor): the tab stays open, as closing it let the browser show some other tab; `button` says "✓ Kopiert"
+ * for a while, as the tutor bar does after copying, and `status`, on a line below it, where to paste it. When
+ * copying fails, the text is selected in `field` to copy by hand. The text goes to the clipboard only, never over the
+ * network.
  */
-function copyAndClose(
+function copyForChat(
   root: Document,
-  text: string | undefined,
+  text: string,
+  button: HTMLButtonElement,
   status: HTMLElement,
   field: HTMLTextAreaElement,
-  texts: CloseTexts,
+  texts: CopyTexts,
 ): void {
-  const view = root.defaultView;
-  const close = (said: string) => {
-    view?.close();
-    setTimeout(() => {
-      if (!view?.closed) status.textContent = said;
-    }, CLOSE_WAIT_MS);
-  };
+  const lang = root.documentElement.lang;
   status.textContent = "";
-  if (text === undefined) {
-    close(texts.open);
-    return;
-  }
   void copyText(text).then((copied) => {
     if (!copied) {
-      // the tab stays open: the text would be lost
       field.value = text;
       field.hidden = false;
       field.focus();
@@ -264,7 +251,16 @@ function copyAndClose(
       status.textContent = texts.failed;
       return;
     }
-    setTimeout(() => close(texts.copied), COPY_PAUSE_MS);
+    field.hidden = true;
+    status.textContent = texts.copied;
+    const before = [...button.childNodes];
+    button.dataset["done"] = "";
+    button.textContent = message(lang, "backToTutorDone");
+    setTimeout(() => {
+      if (button.dataset["done"] === undefined) return;
+      delete button.dataset["done"];
+      button.replaceChildren(...before);
+    }, DONE_MS);
   });
 }
 
@@ -283,27 +279,44 @@ function statusAndField(root: Document, label: string): { status: HTMLElement; f
 }
 
 /**
- * "Zurück zum Tutor" at the top of a page a tutor opened (von=tutor): it copies the result line and closes the tab
- * (copyAndClose).
+ * What "Zurück zum Tutor" copies on the page at `href`: the page's tutor page with the page's task numbers, and each
+ * task the learner did in this session with how it went (result.ts, sessionLines).
+ */
+function sessionOf(href: string, lang: string, data: TutorData, progress: Progress): string | undefined {
+  const { page, tutor } = data;
+  if (page === undefined || tutor === undefined) return undefined;
+  return sessionLines(tutorAddress(href, data, pageQuery(href, page)), progress.tasks(), progress.session(), lang);
+}
+
+/**
+ * "Zurück zum Tutor" at the top and at the end of a page a tutor opened (via=tutor): it copies the page's tutor page
+ * and how each task of the session went, for the running chat (copyForChat).
  */
 function startBackToTutor(root: Document, main: HTMLElement, data: TutorData | undefined, progress: Progress): void {
   const lang = root.documentElement.lang;
-  const box = root.createElement("p");
-  box.className = "explainer-back";
-  const button = root.createElement("button");
-  button.type = "button";
-  button.textContent = message(lang, "backToTutor");
-  const { status, field } = statusAndField(root, message(lang, "resultLabel"));
-  button.addEventListener("click", () => {
-    const line = data === undefined ? undefined : resultOf(root.location.href, lang, data, progress);
-    copyAndClose(root, line, status, field, {
-      copied: message(lang, "backToTutorCopied"),
-      failed: message(lang, "backToTutorFailed"),
-      open: message(lang, "backToTutorOpen"),
+  for (const at of ["top", "end"] as const) {
+    const box = root.createElement("p");
+    box.className = `explainer-back explainer-back-${at}`;
+    const button = root.createElement("button");
+    button.type = "button";
+    button.textContent = message(lang, "backToTutor");
+    const { status, field } = statusAndField(root, message(lang, "resultLabel"));
+    button.addEventListener("click", () => {
+      const lines = data === undefined ? undefined : sessionOf(root.location.href, lang, data, progress);
+      const name = chatName(data, lang);
+      if (lines === undefined) {
+        status.textContent = message(lang, "backToTutorOpen", { name });
+        return;
+      }
+      copyForChat(root, lines, button, status, field, {
+        copied: message(lang, "backToTutorCopied", { name }),
+        failed: message(lang, "backToTutorFailed", { name }),
+      });
     });
-  });
-  box.append(button, " ", status, field);
-  main.prepend(box);
+    box.append(button, " ", status, field);
+    if (at === "top") main.prepend(box);
+    else main.append(box);
+  }
 }
 
 /** The prompts of a way to the tutor: the one a provider link carries, and the one to copy. */
@@ -390,6 +403,15 @@ class WayChoice {
   }
 }
 
+/**
+ * The name of the running chat's assistant, as "zurück zu …" says it: the one the learner switched on, else "deinem
+ * KI-Tutor".
+ */
+function chatName(data: { storage: string; ways: readonly Way[] } | undefined, lang: string): string {
+  const way = data === undefined ? undefined : new WayChoice(data.storage, data.ways).get();
+  return way?.url === undefined ? message(lang, "tutorSomeoneTo") : way.name;
+}
+
 /** The name of a way as the page says it: the assistant's, or "deinen KI-Tutor" for copying. */
 const nameOf = (way: Way | undefined, lang: string): string =>
   way?.url === undefined ? message(lang, "tutorSomeone") : way.name;
@@ -405,15 +427,16 @@ function iconOf(root: Document, way: Way | undefined): HTMLElement {
 
 /**
  * The tutor's help button in every exercise of the page, way B, there only while a way to the tutor is switched on or
- * on a page a tutor opened (von=tutor). It sits in the row of "Prüfen" and "Lösung" (or below an exercise component,
+ * on a page a tutor opened (via=tutor). It sits in the row of "Prüfen" and "Lösung" (or below an exercise component,
  * outside its island),
  * with the assistant's symbol, and says what helps now: "Hilfe" before an answer and after the right one; "Warum?",
  * standing out, after a wrong one, with a sentence that says what the click gives the assistant; on a page a tutor
  * opened, "Zurück" once the task is right or its solution shown. "Hilfe" and "Warum?" give the lines of the task as the
  * learner has it now (stuck.ts): the task, the input with the tries, the app's message word for word, the hint or
  * solution opened, the page's tutor page with the task (taskQuery). B1, without a chat: they open the way switched
- * on, the tutor page and the task in one sentence first. B2, on a page a tutor opened: they copy the lines and close
- * the tab (copyAndClose), so the running chat goes on; "Zurück" copies the result line of the task the same way.
+ * on, the tutor page and the task in one sentence first. B2, on a page a tutor opened: they copy the lines, and the
+ * button says where to paste them (copyForChat), so the running chat goes on; "Zurück" copies the result line of the
+ * task the same way.
  */
 function startHelp(root: Document, data: TutorData, progress: Progress, choice: WayChoice): void {
   const { page, tutor } = data;
@@ -488,18 +511,22 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
     button.addEventListener("click", () => {
       note.hidden = false;
       if (mode === "back") {
-        copyAndClose(root, resultOf(root.location.href, lang, data, progress, exercise.id), status, field, {
-          copied: message(lang, "backToTutorCopied"),
-          failed: message(lang, "backToTutorFailed"),
-          open: message(lang, "backToTutorOpen"),
-        });
+        const name = chatName(data, lang);
+        const line = resultOf(root.location.href, lang, data, progress, exercise.id);
+        if (line === undefined) status.textContent = message(lang, "backToTutorOpen", { name });
+        else {
+          copyForChat(root, line, button, status, field, {
+            copied: message(lang, "backToTutorCopied", { name }),
+            failed: message(lang, "backToTutorFailed", { name }),
+          });
+        }
         return;
       }
       if (running) {
-        copyAndClose(root, stuckLines(stuck(), lang), status, field, {
-          copied: message(lang, "stuckCopied"),
-          failed: message(lang, "stuckFailed"),
-          open: message(lang, "backToTutorOpen"),
+        const name = chatName(data, lang);
+        copyForChat(root, stuckLines(stuck(), lang), button, status, field, {
+          copied: message(lang, "stuckCopied", { name }),
+          failed: message(lang, "stuckFailed", { name }),
         });
         return;
       }
@@ -563,7 +590,7 @@ function startChoice(root: Document): void {
  * the start page changes the way or switches it off. The bar's button does the way: it opens the assistant with the
  * start prompt in its address, the page's tutor page with the page's task numbers (prompt.ts, pageQuery), for a
  * tutor who leads through the page before it comes to a task; or it copies the prompt with the tutor page's Markdown, and opens
- * an assistant whose address takes no prompt. On a page a tutor opened (von=tutor) the chat runs already: the section
+ * an assistant whose address takes no prompt. On a page a tutor opened (via=tutor) the chat runs already: the section
  * stays hidden. Nothing goes over the network but the click's own page, the tutor page's Markdown (the app's own
  * static file, for copying) and the assistant that opens.
  */
@@ -650,7 +677,9 @@ export function startExplainer(root: Document = document): void {
   const main = root.querySelector<HTMLElement>("main");
   const tutor = tutorData(root);
   const progress = new Progress();
-  if (main && fromTutor(root.location.href)) startBackToTutor(root, main, tutor, progress);
+  // a self-assessment a tutor opened has its own "Zurück zum Tutor", with its result (assessment-client.ts)
+  const assessment = root.querySelector(".explainer-assessment-nojs") !== null;
+  if (main && fromTutor(root.location.href) && !assessment) startBackToTutor(root, main, tutor, progress);
   startChoice(root);
   if (tutor !== undefined) {
     const choice = new WayChoice(tutor.storage, tutor.ways);
@@ -672,6 +701,26 @@ export function startExplainer(root: Document = document): void {
     );
   });
   startVideos(root);
+  startAssessment(root, {
+    chosen: (storage, ways) => new WayChoice(storage, ways).get(),
+    open: (way, prompts, say) => openAssistant(root, way, prompts, say),
+    hint: showHint,
+    running: fromTutor(root.location.href),
+    back: (text, button, place, storage, ways) => {
+      const lang = root.documentElement.lang;
+      const { status, field } = statusAndField(root, message(lang, "resultLabel"));
+      place.querySelector(":scope > .explainer-assessment-back-status")?.remove();
+      const line = root.createElement("p");
+      line.className = "explainer-assessment-back-status";
+      line.append(status, field);
+      place.append(line);
+      const name = chatName({ storage, ways }, lang);
+      copyForChat(root, text, button, status, field, {
+        copied: message(lang, "backToTutorCopied", { name }),
+        failed: message(lang, "backToTutorFailed", { name }),
+      });
+    },
+  });
   for (const script of root.querySelectorAll<HTMLScriptElement>("script.explainer-exercise-data")) {
     const element = script.parentElement;
     if (!element) continue;

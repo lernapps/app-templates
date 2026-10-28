@@ -4,7 +4,7 @@
 // the tries, the message the app showed for it word for word (so that the tutor starts from what the learner was
 // told, and does not repeat it), the hint or the solution opened, and the page's tutor page with the position
 // (position.ts, taskQuery), which holds the task and the guide (tutorpage.ts). Without a chat (B1) one sentence names
-// the tutor page and the task, as the prompt of a new chat; on a page a tutor opened (von=tutor, B2) the learner
+// the tutor page and the task, as the prompt of a new chat; on a page a tutor opened (via=tutor, B2) the learner
 // pastes the lines into the running chat, the tutor page last. Pure and without Node: the client module calls it.
 import { message } from "./messages.ts";
 import type { TaskState } from "./result.ts";

@@ -108,7 +108,8 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Die erste Nachricht des Kindes nennt diese Seite und je Übung die Nummer der Aufgabe, die das Kind gerade vor sich hat, z. B. `?{example}`. Schlag die Nummern unten bei den Übungen nach. Kommt das Kind mit „Hilfe“, nennt `uebung=` die Übung und `abschnitt=` ihren Abschnitt.",
       "Steht in der Nachricht „Die App sagt: …“, hat die App das zur Eingabe des Kindes gemeldet. Setz dort an, ohne es zu wiederholen.",
       "Eine Zeile wie „…, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück“ in der App: Übung, Nummer und wie weit das Kind damit kam.",
-      "Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `von=tutor`, z. B. `{link}`. Schick ihn immer als volle Adresse mit `https://`. Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“",
+      "„Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“: diese Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App. Setz bei den falschen an, eine nach der anderen.",
+      "Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `via=tutor`, z. B. `{link}`. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. `https://`). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“",
     ],
     contextTitle: "Kontext: die Seite „{page}“",
     exercise: "Übung",
@@ -154,7 +155,8 @@ const WORDS: Readonly<Record<string, Words>> = {
       "The child's first message names this page and, for each exercise, the number of the task the child has in front of it, e.g. `?{example}`. Look the numbers up below with the exercises. If the child comes with “Help”, `uebung=` names the exercise and `abschnitt=` its section.",
       "If the message says “The app says: …”, the app showed that for the child's input. Build on it without repeating it.",
       "A line like “…, no. 16: right on try 2.” comes from “Back” in the app: the exercise, the number and how far the child got with it.",
-      "Every task has a link: the address of the page, that is of this tutor page without `tutor/` and without `?…`, with the number and `von=tutor`, e.g. `{link}`. Always send it as a full address with `https://`. For a further task take another number of the exercise and say its text. Add: “Solve it in the app, then press ‘Back’. Paste the line here.”",
+      "“I practised on …:” comes from “Back to the tutor”: this page with the numbers, then for each task practised how it went, a wrong one with the input and the app's message. Start with the wrong ones, one after the other.",
+      "Every task has a link: the address of the page, that is of this tutor page without `tutor/` and without `?…`, with the number and `via=tutor`, e.g. `{link}`. Always send it as a full address, with the scheme and host of this tutor page (e.g. `https://`). For a further task take another number of the exercise and say its text. Add: “Solve it in the app, then press ‘Back’. Paste the line here.”",
     ],
     contextTitle: "Context: the page “{page}”",
     exercise: "Exercise",
@@ -271,9 +273,9 @@ const cell = (text: string) => text.replace(/\s+/g, " ").replace(/\|/g, "/").tri
  * and steps, its typical mistakes as F1, F2 … with the app's message, and the link to a number; then a table of each
  * task number's inputs and outputs: the values of the placeholders, the choices of a choice, the solution and what
  * each mistake gives, all as the learner reads them, so that the tutor fills in and works nothing out. The examples
- * stay out: they are test cases.
+ * stay out: they are test cases. The link leads to the exercise's page at `page`, from where the tutor page is.
  */
-function generatedLines(spec: Generated, site: Site, lang: string, format: string[]): string[] {
+export function generatedLines(spec: Generated, site: Site, lang: string, format: string[], page = "../"): string[] {
   const words = wordsIn(lang);
   const shared = tutorWords(lang);
   const lines = [`- ${shared.task}: „${template(spec.task.text, lang)}“`, ...format];
@@ -288,7 +290,7 @@ function generatedLines(spec: Generated, site: Site, lang: string, format: strin
       ...mistakes.map((mistake, index) => `  - F${index + 1}: „${template(mistake.message, lang)}“`),
     );
   }
-  lines.push(`- ${words.linkNumber}: \`../?${spec.id}=n&von=tutor#${spec.id}\``);
+  lines.push(`- ${words.linkNumber}: \`${page}?${spec.id}=n&via=tutor#${spec.id}\``);
   const { paths, answer } = placeholdersOf(spec, lang);
   const data = dataOf(spec, site.data);
   const templates = templatesOf(spec, [lang]);
@@ -485,8 +487,8 @@ function pageMarkdown(
     first === undefined
       ? undefined
       : first.count > 0
-        ? { query: `${first.id}=12`, link: `…/${page.id}/?${first.id}=12&von=tutor#${first.id}` }
-        : { query: `uebung=${first.id}`, link: `…/${page.id}/?von=tutor#${first.id}` };
+        ? { query: `${first.id}=12`, link: `…/${page.chapter}/${page.id}/?${first.id}=12&via=tutor#${first.id}` }
+        : { query: `uebung=${first.id}`, link: `…/${page.chapter}/${page.id}/?via=tutor#${first.id}` };
   lines.push(
     `## ${words.whereTitle}`,
     "",
@@ -527,7 +529,7 @@ function pageMarkdown(
       );
       const declared = descriptions.get(exercise.block)?.exercise?.[lang];
       if (exercise.count > 0) {
-        lines.push(`- ${words.linkNumber}: \`../?${exercise.id}=n&von=tutor#${exercise.id}\``);
+        lines.push(`- ${words.linkNumber}: \`../?${exercise.id}=n&via=tutor#${exercise.id}\``);
         const all = rows.get(exercise.id) ?? [];
         const n = shown.get(exercise.id) ?? all.length;
         if (declared !== undefined) lines.push(...componentTable(declared, lang));
@@ -536,7 +538,7 @@ function pageMarkdown(
         else if (n < all.length) {
           lines.push(`- ${words.shown.replace("{shown}", String(n)).replace("{count}", String(all.length))}`);
         }
-      } else lines.push(`- ${words.link}: [../?von=tutor#${exercise.id}](../?von=tutor#${exercise.id})`);
+      } else lines.push(`- ${words.link}: [../?via=tutor#${exercise.id}](../?via=tutor#${exercise.id})`);
     }
     lines.push("");
   }
@@ -569,7 +571,16 @@ export function tutorPageHtml(site: Site, page: Page, lang: string, descriptions
 export function tutorPageDocument(text: string, site: Site, page: Page, lang: string): string {
   const words = wordsIn(lang);
   const own = (value: Text) => inLanguage(value, lang).replace(/\s+/g, " ").trim();
-  const title = `${own(page.title)} – ${words.tutorPage} – ${own(site.app.title)}`;
+  return tutorDocument(
+    text,
+    `${own(page.title)} – ${words.tutorPage} – ${own(site.app.title)}`,
+    words.forTutor.replace("{page}", own(page.title)),
+    lang,
+  );
+}
+
+/** The HTML document of a tutor page's Markdown `text`, with its `title` and `description`: lean, without script. */
+export function tutorDocument(text: string, title: string, description: string, lang: string): string {
   const body = markdown.parse(text, { async: false }).trim();
   return [
     "<!doctype html>",
@@ -578,7 +589,7 @@ export function tutorPageDocument(text: string, site: Site, page: Page, lang: st
     '<meta charset="utf-8" />',
     '<meta name="viewport" content="width=device-width, initial-scale=1" />',
     `<title>${escape(title)}</title>`,
-    `<meta name="description" content="${escape(words.forTutor.replace("{page}", own(page.title)))}" />`,
+    `<meta name="description" content="${escape(description)}" />`,
     "<style>body{margin:0 auto;max-width:48rem;padding:1rem;font:1rem/1.5 system-ui,sans-serif;color:#1a1a1a;background:#fff;overflow-wrap:anywhere}pre{white-space:pre-wrap}code,pre{font-size:.95em}</style>",
     "</head>",
     "<body>",

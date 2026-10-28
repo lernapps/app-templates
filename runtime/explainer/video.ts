@@ -80,7 +80,7 @@ function loadPlayer(figure: HTMLElement, id: string, clicked: boolean): void {
   player.title = figure.querySelector(".explainer-video-link")?.textContent ?? "";
   player.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
   player.allowFullscreen = true;
-  // YouTube learns the app's origin, never the page's address with its task numbers or von=tutor
+  // YouTube learns the app's origin, never the page's address with its task numbers or via=tutor
   player.referrerPolicy = "strict-origin-when-cross-origin";
   if (!clicked) player.loading = "lazy";
   frame.append(player);

@@ -23,7 +23,15 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   start page or beside the title of a page (one of the KI assistants the runtime offers), with
   an account of their own. Then two ways lead there: a bar beside the title of each page, for a tutor who helps with
   the page, and "Hilfe" ("Warum?" after a wrong answer) in every exercise, with the task, the input and the app's
-  message. "Zurück zum Tutor" copies a result line the learner pastes into the chat.
+  message. "Zurück zum Tutor" copies the page's tutor page and how each task of the session went, for the learner to
+  paste into the chat.
+- Optional: a self-assessment per chapter (`selfAssessment` in its `chapter.yaml`, at `<chapter>/einschaetzung/`);
+  the app's, at `einschaetzung/`, is every chapter's together. It shows exercises of the pages, best two to five on
+  each of its pages, without "Prüfen", and checks them all together: the result says per page whether the learner
+  probably knows it, should look at it again or should read it. The last result stays on the device; with a click the
+  learner takes it to the tutor, who then guides chapter by chapter: to the pages that do not stick, then into a new
+  round of the chapter's self-assessment, whose "Zurück zum Tutor" brings the result back into the chat.
+  The example chapter has one, offered on the start page.
 - German, plus English: a page tree per language.
 
 ## What it cannot do
@@ -33,7 +41,9 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - At most two section levels in a page.
 - An exercise component does not count as a page's required exercise: each page also needs a question or a generated
   exercise.
-- Stores nothing but the learner's choice of AI tutor and, if they make it, the choice to load videos directly.
+- Stores nothing but the learner's choice of AI tutor, if they make it, the choice to load videos directly, and the
+  last result of each self-assessment they do.
+- A self-assessment needs JavaScript (without it, it is not offered) and cannot show an exercise component yet.
 - No video from another platform than YouTube, no thumbnail, no own video files.
 
 ## What the app supplies

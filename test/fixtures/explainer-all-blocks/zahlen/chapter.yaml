@@ -4,3 +4,13 @@ summary: { de: "Zwei Seiten über Zahlen.", en: "Two pages about numbers." }
 pages:
   - zahlen-01
   - zahlen-02
+# The chapter's self-assessment: every exercise type but matching. With the one of formen, the app's at einschaetzung/.
+selfAssessment:
+  pages:
+    - exercises:
+        - /zahlen/zahlen-01/#prozent-rechnen
+        - /zahlen/zahlen-01/#prozent-von-200
+        - /zahlen/zahlen-02/#hundert-prozent
+    - exercises:
+        - /zahlen/zahlen-02/#hauptgruppe
+        - /zahlen/zahlen-02/#gerade-prozente

@@ -94,6 +94,16 @@ export class Progress {
     return this.#last;
   }
 
+  /** Each task the learner answered or looked up in this session, in the order they first did. */
+  tasks(): { id: string; number?: number; state: TaskState }[] {
+    return [...this.#tasks.entries()]
+      .filter(([, state]) => state.attempts > 0 || state.revealed)
+      .map(([key, state]) => {
+        const [id = "", n] = key.split("=");
+        return { id, ...(n === undefined ? {} : { number: Number(n) }), state };
+      });
+  }
+
   /** The count of the session. */
   session(): Session {
     // a hint alone does not count: the learner neither answered nor looked up the task
@@ -125,6 +135,36 @@ function statusOf(state: TaskState, lang: string): string {
     state.attempts === 1 ? message(lang, "resultTry") : message(lang, "resultTries", { n: String(state.attempts) });
   const input = state.input === undefined ? "" : `, ${message(lang, "resultInput", { input: state.input })}`;
   return `${status} (${tries}${input})`;
+}
+
+/**
+ * What "Zurück zum Tutor" at the top or the end of a page copies, in `lang`: the page's tutor page with the page's
+ * task numbers, then a line for each task the learner answered or looked up in this session (the exercise, its task
+ * number, how far the learner got, the last wrong input and the app's message for it, word for word), then the count of
+ * the session; a tutor loads the tutor page and coaches on exactly these tasks.
+ */
+export function sessionLines(
+  tutor: string,
+  tasks: readonly { id: string; number?: number; state: TaskState }[],
+  session: Session,
+  lang: string,
+): string {
+  if (tasks.length === 0) return message(lang, "sessionNone", { url: tutor });
+  return [
+    message(lang, "sessionIntro", { url: tutor }),
+    ...tasks.map((task) => {
+      const said =
+        task.state.rightAt === undefined && task.state.message !== undefined
+          ? ` ${message(lang, "stuckMessage", { message: task.state.message.replace(/\s+/g, " ").trim() })}`
+          : "";
+      return `- ${message(lang, "sessionTask", {
+        exercise: task.id,
+        number: task.number === undefined ? "" : message(lang, "resultNumber", { n: String(task.number) }),
+        status: statusOf(task.state, lang),
+      })}${said}`;
+    }),
+    message(lang, "resultSession", { right: String(session.right), total: String(session.total) }),
+  ].join("\n");
 }
 
 /** The result line, two lines in `lang`: the result, and the page's tutor page. */

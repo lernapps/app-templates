@@ -42,11 +42,11 @@ export const nextTaskNumber = (n: number, count: number): number => (n % count) 
 export const randomTaskNumber = (count: number): number => 1 + Math.floor(Math.random() * count);
 
 /**
- * Address parameters that are no exercise's: the page's (seed, von) and those of its tutor page, whose address holds
+ * Address parameters that are no exercise's: the page's (seed, via) and those of its tutor page, whose address holds
  * the page's task numbers beside them (uebung, abschnitt; position.ts). An exercise id must not be one of them (the
  * build checks).
  */
-export const RESERVED_PARAMS: readonly string[] = ["seed", "von", "uebung", "abschnitt"];
+export const RESERVED_PARAMS: readonly string[] = ["seed", "via", "uebung", "abschnitt"];
 
 /**
  * The task number the address `href` gives the exercise `id`: the parameter named by its id (?<id>=<n>, one per

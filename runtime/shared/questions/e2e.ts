@@ -14,6 +14,14 @@ export const question = (page: Page, item: Question) => page.locator(`#${questio
 
 /** Gives `answer` to the question through its controls, as a learner does, on a page in `lang`. */
 export async function answerQuestion(page: Page, item: Question, answer: Answer, lang = "de"): Promise<void> {
+  await giveAnswer(page, item, answer);
+  await question(page, item)
+    .getByRole("button", { name: messagesOf(lang).check })
+    .click();
+}
+
+/** Puts `answer` into the controls of the question, as a learner does, without checking it. */
+export async function giveAnswer(page: Page, item: Question, answer: Answer): Promise<void> {
   const form = question(page, item);
   switch (item.type) {
     case "single-choice":
@@ -36,7 +44,6 @@ export async function answerQuestion(page: Page, item: Question, answer: Answer,
       break;
     }
   }
-  await form.getByRole("button", { name: messagesOf(lang).check }).click();
 }
 
 /** What the learner learns about a question shows in `where`: each option's background, the explanation, the links. */

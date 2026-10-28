@@ -10,7 +10,8 @@
 // the shell of every page: each page is the shell with its language, its head and its body where it says
 // <!-- explainer -->, written into its folder, with the shell's relative asset URLs (./assets/…) rewritten for its
 // depth. The bundled images go to images/, the tutor page of each content page to <chapter>/<page>/tutor/ with its
-// Markdown beside it (index.md; tutorpage.ts), every link of it checked, and 404.html, which leads every address the
+// Markdown beside it (index.md; tutorpage.ts), and of each self-assessment to <assessment>/tutor/ (assessment-page.ts),
+// every link of them checked, and 404.html, which leads every address the
 // app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same pages and tutor pages, rendered on each request.
 //
 // Components (src/components/<Name>.vue, components.ts): only when the app has them, the plugin compiles them with
@@ -39,6 +40,8 @@ import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/p
 import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";
 import { anchorsOf, linkProblems, tutorPageOf } from "./tutor.ts";
+import { assessments, stepHint } from "./assessment.ts";
+import { assessmentTutorDocument, assessmentTutorMarkdown, assessmentTutorOf } from "./assessment-page.ts";
 import {
   bytesOf,
   type Cut,
@@ -203,8 +206,8 @@ interface TutorAsset {
 }
 
 /**
- * What the build writes for a tutor beside the pages: the tutor page of each content page, by its folder from the
- * app's root (with the language root), its HTML as index.html and its Markdown beside it.
+ * What the build writes for a tutor beside the pages: the tutor page of each content page and of each self-assessment,
+ * by its folder from the app's root (with the language root), its HTML as index.html and its Markdown beside it.
  */
 function tutorAssets(site: Site, descriptions: Descriptions): Map<string, TutorAsset> {
   const pages = new Map<string, TutorAsset>();
@@ -215,6 +218,14 @@ function tutorAssets(site: Site, descriptions: Descriptions): Map<string, TutorA
         markdown,
         html: tutorPageDocument(markdown, site, page, lang),
         cut,
+      });
+    }
+    for (const assessment of assessments(site)) {
+      const markdown = assessmentTutorMarkdown(site, assessment, lang);
+      pages.set(`${languageRoot(lang)}${assessmentTutorOf(assessment)}`, {
+        markdown,
+        html: assessmentTutorDocument(markdown, site, lang),
+        cut: [],
       });
     }
   }
@@ -288,14 +299,17 @@ export function explainer(): Plugin[] {
             .filter((route) => route.lang === lang)
             .map((route) => route.local),
           ...contentPages(content).map((page) => tutorPageOf(page)),
+          ...assessments(content).map((assessment) => assessmentTutorOf(assessment)),
         ]);
         const anchors = new Map(
           contentPages(content).map((page) => [`${page.chapter}/${page.id}/`, anchorsOf(content, page)]),
         );
-        // the tutor page of each content page with its Markdown, each link checked against the pages and anchors of
-        // the language tree
-        for (const contentPage of contentPages(content)) {
-          const local = tutorPageOf(contentPage);
+        // the tutor page of each content page and each self-assessment with its Markdown, each link checked against
+        // the pages and anchors of the language tree
+        for (const local of [
+          ...contentPages(content).map((contentPage) => tutorPageOf(contentPage)),
+          ...assessments(content).map((assessment) => assessmentTutorOf(assessment)),
+        ]) {
           const page = tutor.get(`${languageRoot(lang)}${local}`);
           if (page === undefined) continue;
           problems.push(
@@ -327,6 +341,9 @@ export function explainer(): Plugin[] {
       // an exercise component without its table of tasks: a hint for now
       const hint = tableHint(content, descriptions);
       if (hint !== undefined) this.info(hint);
+      // a page of a self-assessment with fewer or more exercises than it should show: a hint
+      const steps = stepHint(content);
+      if (steps !== undefined) this.info(steps);
       // the exercises with fewer distinct tasks than the numbers allow: noted, no problem
       const few = [
         ...contentPages(content).flatMap((page) =>

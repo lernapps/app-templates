@@ -2,7 +2,7 @@
 // tests: per language, the content pages in order with their headings by nesting (page h1, section h2, subsection h3,
 // a box one level below the heading it is under), their sections with their anchors, the number of formulas and the
 // name of every figure, its videos, its exercises with what each must accept, and its components with their nojs text; and the
-// other pages (start, chapters, glossary) with their titles.
+// other pages (start, chapters, glossary, self-assessments) with their titles.
 import { questionIn, type Question } from "../shared/questions/question.ts";
 import { answerText } from "../shared/questions/render.ts";
 import { inLanguage, timelineEvents, type Block, type ComponentExample, type Site, type Text } from "./content.ts";
@@ -13,10 +13,11 @@ import { type Data, type Generated, type Templates } from "./generated/types.ts"
 import { loadSite } from "./load.ts";
 import { inspect, renderMarkdown } from "../shared/text/markdown.ts";
 import { routes } from "./routes.ts";
+import { assessments, titleOf } from "./assessment.ts";
 
 export interface PageOutline {
-  /** What page it is: the start page, a chapter, a content page, the glossary. */
-  kind: "start" | "chapter" | "page" | "glossary";
+  /** What page it is: the start page, a chapter, a content page, the glossary, a self-assessment. */
+  kind: "start" | "chapter" | "page" | "glossary" | "assessment";
   /** Where the page is, from the app's root: "prozent/prozentwert/", "en/prozent/prozentwert/". */
   url: string;
   lang: string;
@@ -70,12 +71,28 @@ export type ExerciseOutline =
       worked: { task: string; answer: string }[];
     };
 
+/** A self-assessment (assessment.ts), in German: where it is offered, and its exercises by the content pages' outline. */
+export interface AssessmentOutline {
+  /** Its page and the page that offers it, from the app's root: "einschaetzung/" and "", "formen/einschaetzung/" and "formen/". */
+  url: string;
+  offer: string;
+  /** The key its last result is kept under on the device, without the app's prefix. */
+  key: string;
+  steps: number;
+  /** Its exercises in order: the key, its page of the self-assessment, the content page and the exercise's id there. */
+  items: { key: string; step: number; page: string; id: string }[];
+  /** The content pages it says something about, in order, each with its title and how many of its exercises it asks. */
+  pages: { url: string; title: string; asked: number }[];
+}
+
 export interface Outline {
   languages: readonly string[];
   /** The content pages of each language, in the order of the lists. */
   pages: Readonly<Record<string, PageOutline[]>>;
-  /** The start page, the chapter pages and the glossary of each language. */
+  /** The start page, the chapter pages, the glossary and the self-assessments of each language. */
   others: Readonly<Record<string, PageOutline[]>>;
+  /** The self-assessments, in German. */
+  assessments: AssessmentOutline[];
 }
 
 /** The headings, sections, formulas and figures of `blocks` in `lang`, under a heading of level `level`. */
@@ -223,5 +240,22 @@ export function outline(root = "."): Outline {
       (pages[route.lang] ??= []).push(item);
     }
   }
-  return { languages: site.app.languages, pages, others };
+  const asked = assessments(site).map((assessment) => ({
+    url: assessment.local,
+    offer: assessment.chapter === undefined ? "" : `${assessment.chapter.id}/`,
+    key: assessment.key,
+    steps: assessment.steps,
+    items: assessment.items.map((item) => ({
+      key: item.key,
+      step: item.step,
+      page: `${item.page.chapter}/${item.page.id}/`,
+      id: item.block.id,
+    })),
+    pages: assessment.pages.map((page) => ({
+      url: `${page.chapter}/${page.id}/`,
+      title: titleOf(page, "de"),
+      asked: assessment.items.filter((item) => item.page === page).length,
+    })),
+  }));
+  return { languages: site.app.languages, pages, others, assessments: asked };
 }

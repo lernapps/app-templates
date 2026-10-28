@@ -33,6 +33,13 @@ export interface App {
   };
 }
 
+/**
+ * A self-assessment (assessment.ts): its pages in order, each with its exercises, each as /<chapter>/<page>/#<exercise>.
+ */
+export interface SelfAssessment {
+  pages: readonly { exercises: readonly string[] }[];
+}
+
 export interface Event {
   date: number | string;
   label?: Text;
@@ -77,6 +84,8 @@ export interface Chapter {
   title: Text;
   summary?: Text;
   pages: readonly Page[];
+  /** A self-assessment over the exercises of this chapter (assessment.ts). */
+  selfAssessment?: SelfAssessment;
 }
 
 export type { DataRecord };
@@ -204,6 +213,14 @@ export interface ComponentDescription {
   tasks: Readonly<Record<string, readonly DescribedTask[]>>;
   /** The exercise in each language, when its logic declares its inputs and outputs; else none. */
   exercise?: Readonly<Record<string, ComponentExercise>>;
+}
+
+/** Every block of `blocks`, depth first, with the blocks inside sections and boxes. */
+export function* allBlocks(blocks: readonly Block[]): Generator<Block> {
+  for (const block of blocks) {
+    yield block;
+    if (block.type === "section" || block.type === "example" || block.type === "note") yield* allBlocks(block.blocks);
+  }
 }
 
 /** Whether a block is an exercise. */

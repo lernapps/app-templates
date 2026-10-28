@@ -78,13 +78,14 @@ async function hook(...files: string[]) {
 }
 
 describe("what a push checks", () => {
+  // the first push of a run fetches the classifier of lernapps/tooling from github.com: its time is GitHub's
   test("a push of only the plan checks nothing, in one line", async () => {
     const { code, out, ran } = await hook(".vibe/plan.md");
     expect(code).toBe(0);
     expect(ran).toBeUndefined();
     expect(out.trim().split("\n")).toHaveLength(1);
     expect(out).toContain("nothing to check");
-  });
+  }, 60_000);
 
   test("a push of only docs checks nothing: this repo has no site", async () => {
     const { code, out, ran } = await hook("docs/guide.md", ".vibe/plan.md");

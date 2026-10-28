@@ -48,9 +48,9 @@ test("the address holds one parameter per exercise; ?seed=<n>#<id> still names a
 
 test("a task number is written into the address with the other parameters and the anchor kept", () => {
   const page = "https://app.example/kapitel/seite/";
-  expect(addressOf(`${page}?a=3&von=tutor#b`, "b", 5)).toBe(`${page}?a=3&von=tutor&b=5#b`);
+  expect(addressOf(`${page}?a=3&via=tutor#b`, "b", 5)).toBe(`${page}?a=3&via=tutor&b=5#b`);
   expect(addressOf(`${page}?a=3`, "a", 4)).toBe(`${page}?a=4`);
   // the old form of the exercise becomes its own parameter
   expect(addressOf(`${page}?seed=7#a`, "a", 8)).toBe(`${page}?a=8#a`);
-  expect(RESERVED_PARAMS).toEqual(["seed", "von", "uebung", "abschnitt"]);
+  expect(RESERVED_PARAMS).toEqual(["seed", "via", "uebung", "abschnitt"]);
 });
