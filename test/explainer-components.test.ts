@@ -258,7 +258,7 @@ function addData(root: string, ...names: string[]): void {
 
 const TIMELINE = "      - type: timeline\n        data: ereignisse\n";
 const unused = (name: string) =>
-  `src/data/${name}.yaml: never used; no timeline, generated exercise or component prop names { data: ${name} }. Use it, or remove it (explainer-data-used)`;
+  `src/data/${name}.yaml: never used; no timeline, generated exercise or component prop names { data: ${name} }. Use it, or remove it (explainer-unused-data)`;
 
 const dataCases: [string, (root: string) => void, string[]][] = [
   [
