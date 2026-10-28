@@ -31,6 +31,7 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   probably knows it, should look at it again or should read it. The last result stays on the device; with a click the
   learner takes it to the tutor, who then guides chapter by chapter: to the pages that do not stick, then into a new
   round of the chapter's self-assessment, whose "Zurück zum Tutor" brings the result back into the chat.
+  The example chapter has one, offered on the start page.
 - German, plus English: a page tree per language.
 
 ## What it cannot do

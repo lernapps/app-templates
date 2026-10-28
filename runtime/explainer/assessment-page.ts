@@ -211,6 +211,8 @@ interface Words {
   unasked: string;
   itemsTitle: string;
   item: string;
+  /** After an exercise whose task is the same in every round and on its page. */
+  same: string;
   /** A title in quotes. */
   quoted: string;
 }
@@ -242,6 +244,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Nach jeder Runde entscheidest du: Kann das Kind alle abgefragten Seiten des Kapitels wahrscheinlich schon, geht ihr zum nächsten Kapitel. Sonst geht es noch einmal zu den Seiten, die nicht sitzen, und dann in eine neue Runde. Sitzt eine Seite nach zwei Runden noch nicht, sag dem Kind, es soll sie mit „Mit einem KI-Tutor lernen“ auf der Seite durchgehen, und geht danach weiter.",
       "Sind alle Kapitel durch, schick das Kind in eine Runde der ganzen App. Sitzt danach eine Seite nicht, geht ihr zu ihrem Kapitel wie oben. Sitzt alles, sag es dem Kind: Ihr seid fertig.",
       "Die Aufgaben der Selbsteinschätzung erklärst du nicht und verrätst keine Lösung: Ihre Seiten haben dieselben Übungen, dort übt das Kind.",
+      "Eine Aufgabe „immer dieselbe Aufgabe“ (Liste unten) kann das Kind sich gemerkt haben. Sitzt eine Seite in einer neuen Runde nur mit solchen Aufgaben, frag kurz, warum die Antwort stimmt, bevor ihr weitergeht.",
       "Jeder Link ist eine volle Adresse, mit Schema und Host dieser Seite: die Adresse dieser Seite ohne `{here}` und ohne `?…`, mit dem Pfad aus der Liste unten und `?von=tutor`. Ohne `?von=tutor` fehlt der Knopf „Zurück zum Tutor“.",
     ],
     appRules: "Regeln dieser App",
@@ -256,6 +259,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     unasked: "nicht abgefragt",
     itemsTitle: "Die Aufgaben dieser Selbsteinschätzung",
     item: "{key}: Übung {exercise} der Seite „{page}“",
+    same: " (immer dieselbe Aufgabe, auch auf der Seite: richtig kann gemerkt sein)",
     quoted: "„{title}“",
   },
   en: {
@@ -284,6 +288,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "After each round you decide: if the child probably knows every page of the chapter asked, you go on to the next chapter. Else it goes once more to the pages that do not stick, then into a new round. If a page still does not stick after two rounds, tell the child to go through it with “Learn with an AI tutor” on the page, and go on after that.",
       "Once every chapter is done, send the child into a round of the whole app. If a page does not stick then, go to its chapter as above. If all stick, tell the child: you are done.",
       "You do not explain the tasks of the self-assessment and give no solution away: their pages have the same exercises, the child practises there.",
+      "A task “always the same task” (list below) the child may have remembered. If a page sticks in a new round only by such tasks, ask briefly why the answer is right before you go on.",
       "Every link is a full address, with the scheme and host of this page: the address of this page without `{here}` and without `?…`, with the path from the list below and `?von=tutor`. Without `?von=tutor` the button “Back to the tutor” is missing.",
     ],
     appRules: "Rules of this app",
@@ -298,6 +303,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     unasked: "not asked",
     itemsTitle: "The tasks of this self-assessment",
     item: "{key}: exercise {exercise} of the page “{page}”",
+    same: " (always the same task, on its page too: right may be remembered)",
     quoted: "“{title}”",
   },
 };
@@ -372,7 +378,7 @@ export function assessmentTutorMarkdown(site: Site, assessment: Assessment, lang
       `- ${words.item
         .replace("{key}", item.key.toUpperCase())
         .replace("{exercise}", item.block.id)
-        .replace("{page}", titleOf(item.page, lang))}`,
+        .replace("{page}", titleOf(item.page, lang))}${item.block.type === "generated" ? "" : words.same}`,
     );
   }
   return `${lines.join("\n").trimEnd()}\n`;

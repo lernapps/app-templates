@@ -97,14 +97,13 @@ describe("the build checks a self-assessment", () => {
   test("an exercise component cannot be in it yet; an app with one chapter has it in its chapter.yaml", () => {
     const root = mkdtempSync(join(tmpdir(), "explainer-assessment-"));
     cpSync(join(import.meta.dirname, "../explainer/src"), join(root, "src"), { recursive: true });
-    edit(
-      root,
-      "prozent/chapter.yaml",
-      "pages: [prozentwert, prozentsatz, grundwert]",
-      "pages: [prozentwert, prozentsatz, grundwert]\nselfAssessment:\n  pages:\n    - exercises: [/prozent/prozentwert/#prozentfeld]",
-    );
+    edit(root, "prozent/chapter.yaml", "/prozent/prozentsatz/#welche-rechnung", "/prozent/prozentwert/#prozentfeld");
+    const line =
+      readFileSync(join(root, "src/prozent/chapter.yaml"), "utf8")
+        .split("\n")
+        .findIndex((text) => text.includes("#prozentfeld")) + 1;
     expect(problems(root)).toEqual([
-      "src/prozent/chapter.yaml:7: selfAssessment.pages[0].exercises[0]: /prozent/prozentwert/#prozentfeld is an exercise component, which a self-assessment cannot show yet; choose a generated exercise or a question",
+      `src/prozent/chapter.yaml:${line}: selfAssessment.pages[0].exercises[2]: /prozent/prozentwert/#prozentfeld is an exercise component, which a self-assessment cannot show yet; choose a generated exercise or a question`,
     ]);
     edit(root, "prozent/chapter.yaml", "#prozentfeld", "#prozentwert-ueben");
     const site = loadSite(root, 0);
@@ -226,6 +225,9 @@ describe("the pages of a self-assessment", () => {
       "- Selbsteinschätzung der ganzen App: [einschaetzung/?von=tutor](../../einschaetzung/?von=tutor)",
     );
     expect(markdown).toContain("- A1: Übung prozent-rechnen der Seite „Zahlen 1“");
+    // a question is the same task in every round: the tutor knows right may be remembered
+    expect(markdown).toContain("- A2: Übung prozent-von-200 der Seite „Zahlen 1“ (immer dieselbe Aufgabe");
+    expect(markdown).not.toContain("prozent-rechnen der Seite „Zahlen 1“ (immer");
     // a guide: no tables of solutions
     expect(markdown).not.toContain("```");
     // a chapter's names the pages of the other chapters without keys
