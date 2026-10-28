@@ -69,15 +69,13 @@ Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschr
 
 ### Übung
 
-Bild: Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten. Bildunterschrift: Beschrifte A und B. Beschriftungen: A Grundwert, B Prozentwert
-
 - Übung `klammern` (unten)
 
 - Übung `grundwert-ueben` (unten)
 
 ### Übung klammern
 
-- Aufgabe: Welcher Begriff gehört zu welcher Klammer?
+- Aufgabe: Beschrifte A und B. Welcher Begriff gehört zu welcher Klammer?
 - Antwortformat: jedem Eintrag links den passenden rechts zuordnen
 - Lösung: A – Grundwert; B – Prozentwert
 - Erklärung: Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.
