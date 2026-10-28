@@ -1,7 +1,7 @@
 // The vue-component block, at build time only: each case breaks the history fixture (test/fixtures/explainer-history,
 // with its component AssignLabels) in one way, and its build fails with exactly one problem line, which names the file
 // and the place in it; and the property test of an exercise component's logic module.
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
@@ -228,6 +228,7 @@ const cases: [string, (root: string) => void, string][] = [
         join(root, "src/data/profile.yaml"),
         "- title: { de: Eins, en: One }\n  uses:\n    - { de: Nur deutsch }\n",
       );
+      withDates(root, "title: string", "{ data: profile }");
     },
     "src/data/profile.yaml:3: [0].uses[0] (en): the translation is missing",
   ],
@@ -245,6 +246,81 @@ describe("a broken component fails the build with its one line", () => {
       const root = app();
       breakIt(root);
       expect(await problems(root)).toEqual([line]);
+    },
+    30_000,
+  );
+});
+
+/** Adds the data files `names` to the app: copies of the events of the fixture, which no block names yet. */
+function addData(root: string, ...names: string[]): void {
+  for (const name of names) copyFileSync(join(root, "src/data/ereignisse.yaml"), join(root, `src/data/${name}.yaml`));
+}
+
+const TIMELINE = "      - type: timeline\n        data: ereignisse\n";
+const unused = (name: string) =>
+  `src/data/${name}.yaml: never used; no timeline, generated exercise or component prop names { data: ${name} }. Use it, or remove it (explainer-data-used)`;
+
+const dataCases: [string, (root: string) => void, string[]][] = [
+  [
+    "a data file that nothing names",
+    (root) => writeFileSync(join(root, "src/data/feste.yaml"), "- date: 2026-04-01\n  title: Pessach\n"),
+    [unused("feste")],
+  ],
+  [
+    "a timeline names the file",
+    (root) => {
+      addData(root, "feste");
+      edit(root, "revolution/sommer-1789.yaml", TIMELINE, `${TIMELINE}      - type: timeline\n        data: feste\n`);
+    },
+    [],
+  ],
+  [
+    "a generated exercise names the file",
+    (root) => {
+      addData(root, "feste");
+      edit(root, "revolution/sommer-1789.yaml", "from: { data: ereignisse }", "from: { data: feste }");
+    },
+    [],
+  ],
+  [
+    "a component prop names the file",
+    (root) => (addData(root, "feste"), withDates(root, "title: string", "{ data: feste }")),
+    [],
+  ],
+  [
+    "two pages name the same file",
+    (root) => {
+      addData(root, "feste");
+      withDates(root, "title: string", "{ data: feste }");
+      edit(root, "revolution/sommer-1789.yaml", TIMELINE, `${TIMELINE}      - type: timeline\n        data: feste\n`);
+    },
+    [],
+  ],
+  [
+    "two files, only one is named",
+    (root) => {
+      addData(root, "feste", "synagoge");
+      edit(root, "revolution/sommer-1789.yaml", TIMELINE, `${TIMELINE}      - type: timeline\n        data: feste\n`);
+    },
+    [unused("synagoge")],
+  ],
+  [
+    "a file named only in a comment",
+    (root) => {
+      addData(root, "feste");
+      edit(root, "revolution/sommer-1789.yaml", "\nblocks:\n", "\n# data: feste\nblocks:\n");
+    },
+    [unused("feste")],
+  ],
+];
+
+describe("a data file that nothing names is an error of the check", () => {
+  test.each(dataCases)(
+    "%s",
+    async (_name, change, lines) => {
+      const root = app();
+      change(root);
+      expect(await problems(root)).toEqual(lines);
     },
     30_000,
   );
@@ -522,6 +598,7 @@ describe("a list prop given as { data: <name> }", () => {
   test("reads a record of texts as a record, not as a text by language: its fields are no languages", async () => {
     const root = app();
     writeFileSync(join(root, "src/data/orte.yaml"), "- { name: Paris, land: Frankreich }\n");
+    withDates(root, "name: unknown; land: unknown", "{ data: orte }");
     expect(await problems(root)).toEqual([]);
   }, 30_000);
 });

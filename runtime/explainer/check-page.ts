@@ -67,6 +67,17 @@ export interface PageCheck {
   components: ReturnType<typeof readComponents> | undefined;
   /** The vue-component blocks so far. */
   uses: ComponentUse[];
+  /** The data files that a timeline, a generated exercise or a component prop names so far, over all pages. */
+  dataUsed: Set<string>;
+}
+
+/** The names of the data files that `value` gives as { data: <name> }, at any depth. */
+function dataNames(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap(dataNames);
+  if (!isObject(value)) return [];
+  const keys = Object.keys(value);
+  if (keys.length === 1 && keys[0] === "data" && typeof value["data"] === "string") return [value["data"]];
+  return Object.values(value).flatMap(dataNames);
 }
 
 function checkEvents(check: PageCheck, yaml: YamlFile, path: Path, events: readonly Event[]): void {
@@ -168,6 +179,7 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
         checkMaterialBlock(check, block, at);
         break;
       case "timeline": {
+        if (block.data !== undefined) check.dataUsed.add(block.data);
         if ((block.events === undefined) === (block.data === undefined)) {
           problems.at(
             yaml,
@@ -254,6 +266,7 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
 function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: Path): void {
   const { yaml, texts, problems } = check;
   texts.check(yaml, [...at, "nojs"], "markdown");
+  for (const name of dataNames(block.props)) check.dataUsed.add(name);
   const component = check.components?.components.get(block.component);
   if (component === undefined) {
     // a component with problems of its own has them reported already
@@ -384,6 +397,7 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
   };
   for (const [name, arbitrary] of Object.entries(block.given)) {
     const path = [...at, "given", name];
+    for (const used of dataNames(arbitrary.from)) check.dataUsed.add(used);
     const kinds = ARBITRARIES.filter((kind) => arbitrary[kind] !== undefined);
     if (kinds.length !== 1) {
       problems.at(
