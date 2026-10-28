@@ -8,7 +8,7 @@
 // of each exercise judges its examples as they are listed, a vue-component block names a component of src/components/
 // that passes its checks (components.ts), its props match the component's prop types, it has its nojs text (an exercise
 // component's is generated from its describe) and, for an exercise component, its examples (which the build step
-// runs, plugin.ts) and an anchor once on the page (its id, or its name in kebab case), and src/ holds nothing else. Each problem is one line: the file,
+// runs, plugin.ts) and an anchor once on the page (its id, or its name in kebab case), every data file is named by a timeline, a generated exercise or a component prop, and src/ holds nothing else. Each problem is one line: the file,
 // its line, the place in the file, the language where it matters, and what to do.
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -191,6 +191,9 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   const images = new Map<string, string>();
   const anchors = new Map<string, Set<string>>();
   const uses: ComponentUse[] = [];
+  const dataUsed = new Set<string>();
+  // false once a chapter or page could not be read: what it names is unknown, so no data file counts as unused
+  let complete = true;
   const chapters: Chapter[] = [];
   for (const chapterId of chaptersOk ? app.chapters : chapterIds) {
     const folder = join(src, chapterId);
@@ -220,10 +223,14 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         `src/${chapterId}/chapter.yaml`,
         "is missing: a chapter folder needs its chapter.yaml with its title and the order of its pages",
       );
+      complete = false;
       continue;
     }
     const chapterYaml = readYaml(root, `src/${chapterId}/chapter.yaml`, problems);
-    if (chapterYaml === undefined || !validate(chapterYaml, "chapter", problems)) continue;
+    if (chapterYaml === undefined || !validate(chapterYaml, "chapter", problems)) {
+      complete = false;
+      continue;
+    }
     const chapter = chapterYaml.value as { title: Text; summary?: Text; pages: string[] };
     texts.check(chapterYaml, ["title"], "plain");
     texts.check(chapterYaml, ["summary"], "markdown");
@@ -239,7 +246,10 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
     for (const pageId of pagesOk ? chapter.pages : pageIds) {
       const file = `src/${chapterId}/${pageId}.yaml`;
       const yaml = readYaml(root, file, problems);
-      if (yaml === undefined || !validate(yaml, "page", problems)) continue;
+      if (yaml === undefined || !validate(yaml, "page", problems)) {
+        complete = false;
+        continue;
+      }
       const page = yaml.value as Omit<Page, "id" | "chapter" | "file">;
       texts.check(yaml, ["title"], "plain");
       texts.check(yaml, ["description"], "plain");
@@ -259,6 +269,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
           seeds,
           components,
           uses,
+          dataUsed,
         },
         page.blocks,
         ["blocks"],
@@ -290,6 +301,17 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       ...(chapter.summary === undefined ? {} : { summary: chapter.summary }),
       pages,
     });
+  }
+
+  // a data file that nothing names is dead: the author believes its content is in the app
+  if (complete) {
+    for (const id of dataFiles.keys()) {
+      if (dataUsed.has(id)) continue;
+      problems.file(
+        `src/data/${id}.yaml`,
+        `never used; no timeline, generated exercise or component prop names { data: ${id} }. Use it, or remove it (explainer-data-used)`,
+      );
+    }
   }
 
   // links to pages of the app
