@@ -24,6 +24,29 @@ blocks:
         text: |
           Du kennst den **Prozentwert** $W$ (den Teil) und den **Prozentsatz** $p\,\%$. Über 1 % kommst du zum
           Ganzen: $W$ geteilt durch $p$ ist 1 %, mal 100 ist das Ganze.
+      - type: labelled-figure
+        image: images/hunderterfeld-klammern.svg
+        alt: Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten.
+        caption: Beschrifte A und B.
+        source: eigene Zeichnung
+        licence: CC0-1.0
+        legend: false
+        labels:
+          - { marker: A, x: 50, y: 94, text: Grundwert }
+          - { marker: B, x: 21, y: 5, text: Prozentwert }
+      - type: matching
+        id: klammern
+        text: Welcher Begriff gehört zu welcher Klammer?
+        pairs:
+          - { left: A, right: Grundwert }
+          - { left: B, right: Prozentwert }
+        explanation: Die Klammer um das ganze Feld zeigt das Ganze, den Grundwert. Die Klammer um die gefärbten Spalten zeigt den Teil, den Prozentwert.
+        examples:
+          accepted: [[[A, Grundwert], [B, Prozentwert]]]
+          rejected: [[[0, 1], [1, 0]]]
+        links:
+          - title: Prozentrechnung (Wikipedia)
+            url: https://de.wikipedia.org/wiki/Prozentrechnung
       - type: note
         title: Achtung
         blocks:
