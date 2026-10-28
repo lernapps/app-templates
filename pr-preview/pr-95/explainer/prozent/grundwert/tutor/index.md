@@ -44,9 +44,7 @@ $G = \frac{W \cdot 100}{p}$
 Du kennst den **Prozentwert** $W$ (den Teil) und den **Prozentsatz** $p\,\%$. Über 1 % kommst du zum
 Ganzen: $W$ geteilt durch $p$ ist 1 %, mal 100 ist das Ganze.
 
-Bild: Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten. Bildunterschrift: Beschrifte A und B. Beschriftungen: A Grundwert, B Prozentwert
-
-- Übung `klammern` (unten)
+Bild: Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten. Bildunterschrift: Die Klammer um das ganze Feld und die Klammer um den gefärbten Teil. Beschriftungen: A Grundwert: das Ganze, 100 %, B Prozentwert: der gefärbte Teil
 
 **Merke: Achtung**
 
@@ -70,6 +68,10 @@ Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschr
 Über 1 %: 30 € : 12 = 2,50 € sind 1 %. Dann 2,50 € · 100 = 250 €.
 
 ### Übung
+
+Bild: Ein Hunderterfeld mit 10 mal 10 Kästchen, die linken drei Spalten sind gefärbt. A die Klammer unter dem ganzen Feld, B die Klammer über den gefärbten Spalten. Bildunterschrift: Beschrifte A und B. Beschriftungen: A Grundwert, B Prozentwert
+
+- Übung `klammern` (unten)
 
 - Übung `grundwert-ueben` (unten)
 
