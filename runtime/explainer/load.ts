@@ -309,7 +309,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       if (dataUsed.has(id)) continue;
       problems.file(
         `src/data/${id}.yaml`,
-        `never used; no timeline, generated exercise or component prop names { data: ${id} }. Use it, or remove it (explainer-data-used)`,
+        `never used; no timeline, generated exercise or component prop names { data: ${id} }. Use it, or remove it (explainer-unused-data)`,
       );
     }
   }
