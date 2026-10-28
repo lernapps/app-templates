@@ -24,6 +24,7 @@ import {
   questionTexts,
   type Answer,
   type Examples,
+  type Matching,
   type Question,
 } from "./question.ts";
 
@@ -194,6 +195,50 @@ export interface QuestionProblem {
   /** In Markdown, the line below its first. */
   line?: number;
   message: string;
+}
+
+/** Where the pairs of a matching question come from: written, or taken from the labelled figure of its material. */
+function pairsSourceProblems(question: Matching<Text>): QuestionProblem[] {
+  const written = (question.pairs as unknown) !== undefined;
+  if (question.pairsFrom === undefined) {
+    return written
+      ? []
+      : [
+          {
+            path: ["pairs"],
+            message:
+              "pairs is missing; write the pairs, or take them from the labelled figure of the material with pairsFrom: material",
+          },
+        ];
+  }
+  if (written) {
+    return [
+      {
+        path: ["pairsFrom"],
+        message: "pairs and pairsFrom: write the pairs, or take them from the material, not both",
+      },
+    ];
+  }
+  const index = question.material?.findIndex((block) => block.type === "labelled-figure") ?? -1;
+  const figure = question.material?.[index];
+  if (figure?.type !== "labelled-figure") {
+    return [{ path: ["pairsFrom"], message: "the material has no labelled figure; add one, or write the pairs" }];
+  }
+  const problems: QuestionProblem[] = [];
+  if (figure.legend !== false) {
+    problems.push({
+      path: ["material", index, "legend"],
+      message:
+        "the legend of the figure lists the answers before the question is answered; write legend: false, the solution shows them",
+    });
+  }
+  if (figure.labels.length < 2 || figure.labels.length > 8) {
+    problems.push({
+      path: ["pairsFrom"],
+      message: `the figure has ${figure.labels.length} labels; a matching question takes 2 to 8 pairs`,
+    });
+  }
+  return problems;
 }
 
 /** What the schema cannot say about one question, its texts in German. */
@@ -419,6 +464,10 @@ export function questionDetails(
     });
     for (const problem of found) problems.push({ ...problem, path: ["material", ...problem.path] });
   }
+  if (question.type === "matching") {
+    const source = pairsSourceProblems(question);
+    if (source.length > 0) return [...problems, ...source];
+  }
   for (const { path, text } of questionTexts(question)) {
     for (const problem of textLanguages(text, languages, false, declaredIn).problems) {
       problems.push({ path, lang: problem.lang, message: problem.message });
@@ -430,7 +479,13 @@ export function questionDetails(
     }
   }
   const german = questionIn(question, "de");
-  return [...problems, ...questionProblems(german), ...exampleProblems(german, question.examples)];
+  // the problems of pairs taken from the material are not in a place of the question's own
+  const own = questionProblems(german).map((problem) =>
+    question.type === "matching" && question.pairsFrom !== undefined && problem.path[0] === "pairs"
+      ? { ...problem, path: ["pairsFrom"] }
+      : problem,
+  );
+  return [...problems, ...own, ...exampleProblems(german, question.examples)];
 }
 
 /** Whether `value` matches the schema of one question; its errors as messages at `at` otherwise. */

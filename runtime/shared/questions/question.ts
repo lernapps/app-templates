@@ -5,7 +5,7 @@
 // A learner text is a string; an app in several languages writes each as a map of texts by language,
 // { de: …, en: … } (Question<Text>), and questionIn gives it in the page's language. The address of a link is one
 // for every language, or a map of addresses by language where the page to read differs.
-import { materialIn, type MaterialBlock } from "../blocks/block.ts";
+import { markerOf, materialIn, type LabelledFigure, type MaterialBlock } from "../blocks/block.ts";
 import { inLanguage, type Text } from "../languages.ts";
 export type { Text };
 
@@ -82,10 +82,32 @@ export interface Ordering<T extends Text = string> extends Base<T> {
   items: T[];
 }
 
-/** `pairs` as they belong together. */
+/**
+ * `pairs` as they belong together. With `pairsFrom: "material"` the pairs are not written: they are the labels of the
+ * labelled figure in the material, each marker with its text (materialPairs); `pairs` is then only there after
+ * materialPairs has filled it in.
+ */
 export interface Matching<T extends Text = string> extends Base<T> {
   type: "matching";
   pairs: { left: T; right: T }[];
+  pairsFrom?: "material";
+}
+
+/**
+ * The pairs that `pairsFrom: "material"` takes from the first labelled figure of the material: left the marker of a
+ * label, right its text. A marker is the same in every language. Without `pairsFrom` there are none to take.
+ */
+export function materialPairs(question: Matching<Text>): Matching<Text>["pairs"] | undefined {
+  if (question.pairsFrom === undefined) return undefined;
+  const figure = question.material?.find((block): block is LabelledFigure<Text> => block.type === "labelled-figure");
+  return (figure?.labels ?? []).map((label, index) => {
+    const marker = markerOf(label, index);
+    const left: Text =
+      typeof label.text === "string"
+        ? marker
+        : Object.fromEntries(Object.keys(label.text).map((lang) => [lang, marker]));
+    return { left, right: label.text };
+  });
 }
 
 export type Question<T extends Text = string> =
@@ -133,7 +155,8 @@ export function questionTexts(question: Question<Text>): { path: (string | numbe
       question.items.forEach((item, index) => texts.push({ path: ["items", index], text: item }));
       break;
     case "matching":
-      question.pairs.forEach((pair, index) => {
+      // the pairs taken from the material: their texts are the labels' texts, which the material's checks cover
+      (question.pairsFrom === undefined ? question.pairs : []).forEach((pair, index) => {
         texts.push({ path: ["pairs", index, "left"], text: pair.left });
         texts.push({ path: ["pairs", index, "right"], text: pair.right });
       });
@@ -201,7 +224,10 @@ export function questionIn(question: Question<Text>, lang: string): Question {
       return {
         ...base,
         type: question.type,
-        pairs: question.pairs.map((pair) => ({ left: t(pair.left), right: t(pair.right) })),
+        pairs: (materialPairs(question) ?? question.pairs).map((pair) => ({
+          left: t(pair.left),
+          right: t(pair.right),
+        })),
       };
   }
 }
