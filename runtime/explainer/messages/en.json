@@ -28,9 +28,9 @@
   "textDescription": "Text description",
   "taskNumber": "Task no. {n}",
   "backToTutor": "Back to the tutor",
-  "backToTutorOpen": "Close this tab and go back to the chat with your tutor.",
-  "backToTutorCopied": "The result is copied. Close this tab and paste it into the chat with your tutor.",
-  "backToTutorFailed": "Copying did not work. Copy the selected line, close this tab and paste it into the chat with your tutor.",
+  "backToTutorOpen": "Switch back to the chat with {name}.",
+  "backToTutorCopied": "Copied. Switch back to {name} and paste it there. You may leave this tab open.",
+  "backToTutorFailed": "Copying did not work. Copy the selected lines, switch back to {name} and paste them there.",
   "resultLabel": "Result line for your tutor",
   "resultLine": "{page}, {exercise}{number}: {status}.",
   "resultNumber": ", no. {n}",
@@ -54,8 +54,8 @@
   "stuckSolution": "I viewed the solution.",
   "stuckPrivacy": "With your click, “Why?” gives {name} the task, your input and the app's message.",
   "stuckPrivacyCopy": "Your click copies the task, your input and the app's message for the chat with your tutor; the app sends nothing anywhere.",
-  "stuckCopied": "Copied. Close this tab and paste the lines into the chat with your tutor.",
-  "stuckFailed": "Copying did not work. Copy the selected lines, close this tab and paste them into the chat with your tutor.",
+  "stuckCopied": "Copied. Switch back to {name} and paste the lines there.",
+  "stuckFailed": "Copying did not work. Copy the selected lines, switch back to {name} and paste them there.",
   "stuckLabel": "Lines for your tutor",
   "tutorTitle": "Learn with an AI tutor",
   "tutorAbout": "An AI tutor is an AI assistant of your choice that accompanies you while you learn with this app. It explains the topic with the examples of the pages, gives you tasks from the app and helps you when you are stuck. You solve the tasks in the app: it checks your answers.",
@@ -140,5 +140,7 @@
   "assessmentLinkChapter": "Chapter “{chapter}”, self-assessment: {url}",
   "assessmentLinkChapterNone": "Chapter “{chapter}” (no self-assessment):",
   "assessmentLinkPage": "“{page}”: {url}",
-  "assessmentLinkWhole": "Self-assessment of the whole app: {url}"
+  "assessmentLinkWhole": "Self-assessment of the whole app: {url}",
+  "backToTutorDone": "✓ Copied – back to {name}, paste it there",
+  "tutorSomeoneTo": "your AI tutor"
 }

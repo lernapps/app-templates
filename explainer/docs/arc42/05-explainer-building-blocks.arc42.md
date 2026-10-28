@@ -280,7 +280,7 @@ own address has them (`?<id>=<n>`); way B adds the exercise (`uebung`) and its s
 beside the title of each content page, "Mit <name> lernen", opens the assistant with one sentence that asks for help
 with the page, and the tutor page tells the tutor to lead through the page first. Way B, "Hilfe" ("Warum?" after a wrong answer) in the row of "Prüfen" and "Lösung" of every exercise, adds the
 task, the input with its tries and the app's message word for word; without a chat it opens the assistant with them
-(B1), on a page a tutor opened it copies them and closes the tab (B2). "Zurück zum Tutor", at the top and the end of a
+(B1), on a page a tutor opened it copies them for the running chat (B2). "Zurück zum Tutor", at the top and the end of a
 page a tutor opened, leads back with the page's tutor page and the result of each task of the session on the
 clipboard. A chat assistant fetches only addresses its user wrote into the conversation, so the one
 address the tutor needs comes in the prompt or in a line the learner pastes. The tutor page is the one source of what

@@ -117,14 +117,15 @@ feature: assistants read it before they choose an archetype.
   what the feedback said: a generated exercise's message of its mistake or the general one, a question's reasons, an
   exercise component's `message`, else its `reason`) and the hint or solution opened; on a page opened with
   `via=tutor` (B2), where the button is there without an assistant switched on, it copies `Übung <id>, Nr. <n>:`,
-  the same lines and `Tutor-Seite: <tutor page>?…` and closes the tab, as "Zurück zum Tutor" does, and once the task
+  the same lines and `Tutor-Seite: <tutor page>?…` for the running chat, as "Zurück zum Tutor" does, and once the task
   is right or its solution shown it is "Zurück", which copies the result line. No prompt and no line carries a rule
   for the tutor: the tutor page has them. After a wrong answer a sentence under the row says that input and message
   leave the page only with the click. "Neue Aufgabe" is a circular arrow beside the task number. A page opened with
-  `via=tutor` shows "Zurück zum Tutor": it copies a result line (the exercise, its task number, "richtig im 2.
-  Versuch", "Lösung angesehen" or "noch nicht gelöst (1 Versuch, Eingabe …)", the count of the session on this page,
-  and the absolute address of the page's tutor page with where the learner is), waits 100 ms and closes the tab; when
-  copying fails the tab stays open with the line selected in a field. The line goes to the clipboard only
+  `via=tutor` shows "Zurück zum Tutor" at its top and end: it copies the page's tutor page with its task numbers and a
+  line per task of the session (the exercise, its task number, "richtig im 2. Versuch", "Lösung angesehen" or "noch
+  nicht gelöst (1 Versuch, Eingabe …)" with the app's message), then the count of the session. The tab stays open, and
+  the button says "✓ Kopiert – zurück zu <assistant>, dort einfügen"; when copying fails, the lines are selected in a
+  field. The line goes to the clipboard only
   ([`result.ts`](runtime/explainer/result.ts)).
 - An explainer's `video` block (`youtube`, `title`, `channel`) is a YouTube video behind two clicks: the page, with or
   without JavaScript, shows the title as a link to youtube.com, the channel and a note that playing it sends data,

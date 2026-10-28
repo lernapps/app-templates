@@ -44,7 +44,7 @@
 // answer says each page asked is to be read, stays on the device across a reload (the offer then names the last
 // result), takes the result to the tutor in the address of its tutor page, which answers, and goes on "Ergebnis
 // löschen". Opened by a tutor (via=tutor), a run keeps nothing, and its own "Zurück zum Tutor" copies the result with
-// the tutor page last. No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
+// the tutor page; a copy for a running chat keeps the tab open, and its button says where to paste. No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
 import {
@@ -602,7 +602,7 @@ async function expectLanguages(page: Page, item: PageOutline, languages: readonl
 
 /**
  * The clipboard of the page, recorded in the test (nothing leaves the browser): each text the page writes, kept even
- * when the page closes its tab right after.
+ * when the page goes on right after.
  */
 async function recordClipboard(page: Page): Promise<string[]> {
   const copied: string[] = [];
@@ -1115,10 +1115,10 @@ export function explainerTests(root = "."): void {
         const here = page.url();
         // at the top and at the end of the page
         await expect(page.getByRole("button", { name: messageOf("de", "backToTutor") })).toHaveCount(2);
-        await page
-          .getByRole("button", { name: messageOf("de", "backToTutor") })
-          .last()
-          .click();
+        const back = page.locator(".explainer-back-end button");
+        await back.click();
+        // the tab stays open, and the button says it is copied and where to paste it
+        await expect(back).toHaveText(messageOf("de", "backToTutorDone", { name: messageOf("de", "tutorSomeoneTo") }));
         const status = `${messageOf("de", "resultOpen")} (${messageOf("de", "resultTry")}, ${messageOf("de", "resultInput", { input: answerShown(question, wrong, "de") })})`;
         await expectSessionLines(request, copied, here, `- ${exercise.id}, Nr. ${n}: ${status}.`, exercise.id);
       });

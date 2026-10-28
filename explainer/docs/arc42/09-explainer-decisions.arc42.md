@@ -307,13 +307,15 @@ When the learner comes back from a page with a wrong task, the guide loads the p
 those tasks, then guides on. Each round's "Zurück zum Tutor" ends with the link of the next round, which names the task
 numbers of this one (`vorher=a1.28`): the next round draws others where it can. On
 a page a tutor opened, the clipboard is always the way back: the self-assessment's "Zurück zum Tutor" copies the result
-per page, a line per exercise and the tutor page with the result in its address, and closes the tab, as the result
+per page, a line per exercise and the tutor page with the result in its address, as the result
 line of a content page does. The tutor page holds every chapter with its pages and the link to its self-assessment, and
 the exercise behind each key; no tables of solutions, which the pages' tutor pages hold. It holds no address: a static
 page does not know where the app is served, and an assistant resolving relative links led the learner to tutor pages
 (ChatGPT, 2026-10-28). The message the learner sends, written by the browser, ends with the full address of every
 page and every self-assessment of the app with `via=tutor`, and the guide takes links only from there. The
-parameter is `via=tutor`, without the old `von=tutor`. Rejected: the tutor explaining
+parameter is `via=tutor`, without the old `von=tutor`. A copy for the running chat keeps the tab open: closing it let the browser show
+some other tab, and the learner did not see that something was copied. The button says "✓ Kopiert – zurück zu
+<assistant>, dort einfügen" for a while, as the tutor bar does after copying. Rejected: the tutor explaining
 the tasks of the self-assessment itself (a second place to teach, and solutions in view); a new chat per round (the
 tutor would lose the course of the learner).
 

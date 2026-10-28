@@ -52,8 +52,11 @@ export interface TutorWays {
   hint: (select: HTMLSelectElement, hint: HTMLElement | null) => void;
   /** Whether a tutor opened the page (via=tutor): its chat runs already. */
   running: boolean;
-  /** Copies `text` for the running chat and closes the tab, saying in `place` what happened. */
-  back: (text: string, place: HTMLElement) => void;
+  /**
+   * Copies `text` for the running chat: `button` says it is copied and where to paste it (the assistant switched on
+   * under the app's name `storage`, of `ways`), and `place` says it too.
+   */
+  back: (text: string, button: HTMLButtonElement, place: HTMLElement, storage: string, ways: readonly Way[]) => void;
 }
 
 /** The value of copying the text in the select of the ways. */
@@ -310,7 +313,13 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       const numbers = shown.flatMap((one) => (one.number === undefined ? [] : [`${one.key}.${one.number}`]));
       if (numbers.length > 0) next.searchParams.set("vorher", numbers.join(","));
       const lines = assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "back", links());
-      ways.back(`${lines}\n${t("assessmentNextRound", { url: next.href.replace(/%2C/g, ",") })}`, tutorBox);
+      ways.back(
+        `${lines}\n${t("assessmentNextRound", { url: next.href.replace(/%2C/g, ",") })}`,
+        back,
+        tutorBox,
+        data.storage,
+        data.ways,
+      );
     });
     result.querySelector(".explainer-assessment-delete")?.remove();
     const privacy = root.querySelector<HTMLElement>(".explainer-assessment-privacy");
