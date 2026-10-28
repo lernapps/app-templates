@@ -1,6 +1,6 @@
-// What the build writes for a self-assessment (assessment.ts): the offer on the start page or the chapter's page,
-// hidden until the client module runs; its page, whose every part is hidden until the client module runs, with a line
-// for a reader without JavaScript; and its tutor page, <assessment>/tutor/ with its Markdown beside it (index.md), the
+// What the build writes for a self-assessment (assessment.ts): the offer on the start page or the chapter's page, and
+// every part of its page but a line for a reader without JavaScript, each in a <template>, inert until the client
+// module puts it into the page: without JavaScript the page shows no heading, button or exercise of it; and its tutor page, <assessment>/tutor/ with its Markdown beside it (index.md), the
 // one source of what a tutor gets about a run. The page holds the intro, each of its pages with its exercises (a
 // question of the question types rendered as the shared questions render it, without "Prüfen"; a generated one as the
 // place of its live task, which the client module draws), the place of the result with the way to the tutor, and the
@@ -63,19 +63,21 @@ export interface AssessmentData {
 const json = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
 /**
- * The offer of a self-assessment on the start page or its chapter's page, hidden until the client module runs, which
- * says "Dein letztes Ergebnis ansehen" when the device keeps one.
+ * The offer of a self-assessment on the start page or its chapter's page, in a <template> until the client module
+ * puts it into the page; it says "Dein letztes Ergebnis ansehen" when the device keeps one.
  */
 export function assessmentOffer(context: AssessmentContext, assessment: Assessment): string {
   const { lang, site } = context;
   const t = (key: Parameters<typeof message>[1], params?: Record<string, string>) => plain(message(lang, key, params));
   const offer = assessment.chapter === undefined ? "assessmentOfferApp" : "assessmentOfferChapter";
   return [
+    `<template class="explainer-assessment-template">`,
     `<section class="explainer-assessment-offer" aria-labelledby="selbsteinschaetzung" hidden data-key="${plain(assessment.key)}" data-storage="${plain(site.storage ?? "explainer")}">`,
     `<h2 id="selbsteinschaetzung">${t("assessmentOfferTitle")}</h2>`,
     `<p>${t(offer, { count: String(assessment.items.length) })}</p>`,
     `<p><a class="explainer-assessment-link" href="${context.to(assessment.local)}" data-last="${t("assessmentOfferLast")}">${t("assessmentOfferStart")}</a></p>`,
     `</section>`,
+    `</template>`,
   ].join("\n");
 }
 
@@ -93,8 +95,8 @@ function itemHtml(context: AssessmentContext, data: ExerciseData, n: number): st
 }
 
 /**
- * The page of a self-assessment: the line for a reader without JavaScript, and, hidden until the client module runs,
- * the intro with its start button, each of its pages with its exercises and the buttons to move on, the place of the
+ * The page of a self-assessment: the line for a reader without JavaScript, and, in a <template> until the client
+ * module puts it into the page, the intro with its start button, each of its pages with its exercises and the buttons to move on, the place of the
  * result with the way to the tutor, and the client module's data.
  */
 export function assessmentMain(context: AssessmentContext, assessment: Assessment): string {
@@ -153,6 +155,7 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
   return [
     `<h1>${t("assessmentTitle")}</h1>`,
     `<p class="explainer-assessment-nojs">${t("assessmentNojs")} <a href="${context.to(back)}">${plain(assessment.chapter === undefined ? message(lang, "start") : inLanguage(assessment.chapter.title, lang))}</a></p>`,
+    `<template class="explainer-assessment-template">`,
     `<div class="explainer-assessment" hidden>`,
     `<div class="explainer-assessment-intro">`,
     `<p>${t("assessmentIntro", { count: String(assessment.items.length), steps: String(assessment.steps) })}</p>`,
@@ -179,6 +182,7 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
     `</section>`,
     `<script type="application/json" class="explainer-assessment-data">${json(data)}</script>`,
     `</div>`,
+    `</template>`,
   ].join("\n");
 }
 

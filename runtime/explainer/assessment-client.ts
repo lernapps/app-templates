@@ -1,5 +1,5 @@
-// The self-assessment in the browser (assessment.ts), started by the client module (explainer.ts). On the start page
-// or a chapter's page it shows the offer, which the build hid, and names the last result when the device keeps one.
+// The self-assessment in the browser (assessment.ts), started by the client module (explainer.ts). It puts into the
+// page what the build wrote into a <template> for it. On the start page or a chapter's page it shows the offer, and names the last result when the device keeps one.
 // On the self-assessment's page it shows the intro, or the last result when the device keeps one. A start draws a new
 // task of each generated exercise (a random task number) and shows the pages one by one, "Weiter" and "Zurück"
 // between them: the exercises have no "Prüfen" and give no feedback. "Auswerten" checks them all together, keeps the
@@ -83,8 +83,16 @@ interface Live {
   mistake?: (answer: Parameters<typeof isCorrect>[1]) => number | undefined;
 }
 
+/** Puts what the build wrote for JavaScript into the page: each <template> of a self-assessment, in its place. */
+function unpack(root: Document): void {
+  for (const template of root.querySelectorAll<HTMLTemplateElement>("template.explainer-assessment-template")) {
+    template.replaceWith(root.importNode(template.content, true));
+  }
+}
+
 /** Starts the self-assessment's page, and the offers on the start page and the chapters' pages. */
 export function startAssessment(root: Document, ways: TutorWays): void {
+  unpack(root);
   startOffers(root);
   const box = root.querySelector<HTMLElement>(".explainer-assessment");
   const script = box?.querySelector("script.explainer-assessment-data");

@@ -171,6 +171,13 @@ describe("the pages of a self-assessment", () => {
     const html = page("de", "einschaetzung/");
     expect(html).toContain('<p class="explainer-assessment-nojs">Die Selbsteinschätzung braucht JavaScript.');
     expect(html).toContain('<div class="explainer-assessment" hidden>');
+    // every heading, button and exercise of it in a <template>: no page shows one without JavaScript
+    // (explainer-readable-without-js)
+    const outside = (body: string) =>
+      body.replace(/<template class="explainer-assessment-template">[\s\S]*?<\/template>/g, "");
+    expect(outside(html)).not.toMatch(/explainer-assessment-(step|item|result|intro)|<h2/);
+    expect(outside(page("de", ""))).not.toContain("explainer-assessment-offer");
+    expect(outside(page("de", "formen/"))).not.toContain("explainer-assessment-offer");
     expect(html.match(/class="explainer-assessment-step"/g)).toHaveLength(2);
     expect(html.match(/class="explainer-assessment-item"/g)).toHaveLength(6);
     // a question by its key: the same id may be on two pages
