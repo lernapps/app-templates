@@ -324,6 +324,17 @@
 }
 
 /* "Zurück zum Tutor", on a page a tutor opened (via=tutor) */
+/* what a copy for the running chat says: always on a line of its own, below its button */
+.explainer-back > [role="status"],
+.explainer-help-note > [role="status"] {
+  display: block;
+}
+
+.explainer-back > [role="status"]:not(:empty),
+.explainer-help-note > [role="status"]:not(:empty) {
+  margin-top: 0.5rem;
+}
+
 .explainer-back button {
   font: inherit;
   min-height: 2.75rem;
