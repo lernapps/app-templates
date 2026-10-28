@@ -12,6 +12,9 @@ const PATH = String.raw`[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*`;
 const PLACEHOLDER = new RegExp(String.raw`\{\{(${PATH})\}\}`, "g");
 /** What looks meant as a placeholder but is not one: one brace in prose, or spaces inside two braces. */
 const ONE_BRACE = new RegExp(String.raw`(?<!\{)\{(${PATH})\}(?!\})`, "g");
+/** Anything between two braces, as written: a placeholder, or what only looks like one ({{opts[0].x}}, {{}}, {{1x}}). */
+const BRACED = /\{\{([^{}]*)\}\}/g;
+const PATH_ONLY = new RegExp(String.raw`^${PATH}$`);
 const SPACED = new RegExp(String.raw`\{\{\s*(${PATH})\s*\}\}`, "g");
 /** A formula ($…$) or a run of prose, in a template. */
 const SEGMENT = /\$((?:\\.|[^\\$\n])+?)\$|([^$]+)/g;
@@ -65,7 +68,11 @@ export function placeholdersIn(text: string): string[] {
   return [...text.matchAll(PLACEHOLDER)].map((match) => match[1] ?? "");
 }
 
-/** The problems of the placeholders of one template: unknown roots, one brace in prose, spaces inside. */
+/**
+ * The problems of the placeholders of one template: unknown roots, one brace in prose, spaces inside, and double
+ * braces around anything but a name or a name's field (an index, a number, nothing). A literal {{ in a formula is
+ * written { { }.
+ */
 export function placeholderProblems(text: string, known: ReadonlySet<string>): string[] {
   const problems: string[] = [];
   const list = [...known].map((name) => `{{${name}}}`).join(", ");
@@ -81,6 +88,13 @@ export function placeholderProblems(text: string, known: ReadonlySet<string>): s
     if (match[0] !== `{{${match[1]}}}`) {
       problems.push(`${match[0]} has spaces inside; a placeholder is written {{${match[1]}}}, without spaces`);
     }
+  }
+  for (const match of text.matchAll(BRACED)) {
+    const inner = match[1] ?? "";
+    if (PATH_ONLY.test(inner) || PATH_ONLY.test(inner.trim())) continue; // a placeholder, or reported as spaced
+    problems.push(
+      `${match[0]} is no placeholder: a placeholder is a name or a name's field ({{e.brauch}}); to show one record, pick it on its own (given: { e: { pick: 1, from: { data: feste } } }) and write {{e.brauch}}; a literal {{ in a formula is written { {`,
+    );
   }
   for (const match of text.matchAll(SEGMENT)) {
     if (match[2] === undefined) continue;

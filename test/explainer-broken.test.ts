@@ -213,6 +213,11 @@ const cases: [string, (root: string) => void, string][] = [
     "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): {b} has one pair of braces; a placeholder is written with two: {{b}}",
   ],
   [
+    "a placeholder with an index",
+    (root) => edit(root, "kapitel/eins.yaml", `de: "Was ist {{a}} + {{b}}?"`, `de: "Was ist {{a}} + {{b[0].x}}?"`),
+    "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): {{b[0].x}} is no placeholder: a placeholder is a name or a name's field ({{e.brauch}}); to show one record, pick it on its own (given: { e: { pick: 1, from: { data: feste } } }) and write {{e.brauch}}; a literal {{ in a formula is written { {",
+  ],
+  [
     "an unused variable",
     (root) => edit(root, "kapitel/eins.yaml", "b: { int: [1, 9] }", "b: { int: [1, 9] }\n          c: { int: [1, 9] }"),
     "src/kapitel/eins.yaml:26: blocks[1].blocks[0].given.c: c is never used: no placeholder {{c}} in the task, figure, steps, hint or mistakes, and no expression of the figure, answer or mistakes names it; use it, or remove it from given",
