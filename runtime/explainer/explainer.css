@@ -323,7 +323,7 @@
   gap: 0.25rem;
 }
 
-/* "Zurück zum Tutor", on a page a tutor opened (von=tutor) */
+/* "Zurück zum Tutor", on a page a tutor opened (via=tutor) */
 .explainer-back button {
   font: inherit;
   min-height: 2.75rem;

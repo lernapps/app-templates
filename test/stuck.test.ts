@@ -1,5 +1,5 @@
 // "Hilfe" (stuck.ts, way B to the tutor): without a chat yet (B1) the button opens an assistant with one sentence that
-// names the page's tutor page and the task, and the learner's lines; on a page a tutor opened (von=tutor, B2) it copies
+// names the page's tutor page and the task, and the learner's lines; on a page a tutor opened (via=tutor, B2) it copies
 // the lines alone, the task first and the tutor page last. The lines say the learner's input with the tries, the app's
 // message word for word and the hint or solution opened, all in the learner's voice: the tutor page has the guide.
 import { describe, expect, test } from "vite-plus/test";

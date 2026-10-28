@@ -135,5 +135,10 @@
   "sessionIntro": "Ich habe auf {url} geübt:",
   "sessionNone": "Ich habe auf {url} noch keine Aufgabe gelöst.",
   "sessionTask": "{exercise}{number}: {status}.",
-  "assessmentNextRound": "Link für eine neue Runde: {url}"
+  "assessmentNextRound": "Link für eine neue Runde: {url}",
+  "assessmentLinks": "Links für meinen Tutor, genau diese nehmen:",
+  "assessmentLinkChapter": "Kapitel „{chapter}“, Selbsteinschätzung: {url}",
+  "assessmentLinkChapterNone": "Kapitel „{chapter}“ (keine Selbsteinschätzung):",
+  "assessmentLinkPage": "„{page}“: {url}",
+  "assessmentLinkWhole": "Selbsteinschätzung der ganzen App: {url}"
 }

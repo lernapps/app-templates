@@ -10,6 +10,7 @@ import {
   assessments,
   bandOf,
   isStoredResult,
+  linkLines,
   pageResults,
   resultQuery,
   stepHint,
@@ -210,20 +211,15 @@ describe("the pages of a self-assessment", () => {
     expect(markdown).toContain("Du bist sein Wegweiser");
     expect(markdown).toContain("Geh Kapitel für Kapitel vor");
     expect(markdown).toContain("„Zurück zum Tutor“");
-    expect(markdown).toContain("### Kapitel „Zahlen“");
+    expect(markdown).toContain("Du bist Wegweiser, kein Lehrer");
+    expect(markdown).toContain("Bilde keine Adresse selbst");
     expect(markdown).toContain(
-      "- Selbsteinschätzung des Kapitels: [zahlen/einschaetzung/?von=tutor](../../zahlen/einschaetzung/?von=tutor)",
+      "### Kapitel „Zahlen“\n\n- Selbsteinschätzung des Kapitels\n- „Zahlen 1“ · Aufgaben A1, A2\n",
     );
-    expect(markdown).toContain(
-      "- „Zahlen 1“: [Seite](../../zahlen/zahlen-01/?von=tutor) · [Tutor-Seite](../../zahlen/zahlen-01/tutor/) · Aufgaben A1, A2",
-    );
-    // a page none of whose exercises is asked
-    expect(markdown).toContain(
-      "- „Formen 2“: [Seite](../../formen/formen-02/?von=tutor) · [Tutor-Seite](../../formen/formen-02/tutor/) · nicht abgefragt",
-    );
-    expect(markdown).toContain(
-      "- Selbsteinschätzung der ganzen App: [einschaetzung/?von=tutor](../../einschaetzung/?von=tutor)",
-    );
+    // a page none of whose exercises is asked; no link at all: the links come from the child's message
+    expect(markdown).toContain("- „Formen 2“ · nicht abgefragt");
+    // no link but the one back to the self-assessment for parents and teachers
+    expect(markdown.match(/\]\(/g)).toHaveLength(1);
     expect(markdown).toContain("- A1: Übung prozent-rechnen der Seite „Zahlen 1“");
     // a question is the same task in every round: the tutor knows right may be remembered
     expect(markdown).toContain("- A2: Übung prozent-von-200 der Seite „Zahlen 1“ (immer dieselbe Aufgabe");
@@ -233,10 +229,8 @@ describe("the pages of a self-assessment", () => {
     // a chapter's names the pages of the other chapters without keys
     const chapter = assessmentTutorMarkdown(site, formen, "en");
     expect(chapter).toContain("the self-assessment of the chapter “Shapes”");
-    expect(chapter).toContain("[Page](../../../formen/formen-01/?von=tutor)");
-    expect(chapter).toMatch(
-      /“Numbers 1”: \[Page\]\(\.\.\/\.\.\/\.\.\/zahlen\/zahlen-01\/\?von=tutor\) · \[Tutor page\]\([^)]+\)\n/,
-    );
+    expect(chapter).toContain("- “Shapes 1” · Tasks A1, A2, A3");
+    expect(chapter).toContain("- “Numbers 1”\n");
   });
 });
 
@@ -311,6 +305,25 @@ describe("a run in the browser", () => {
       "- A2 (Prozentwert, Übung y): richtig.",
       "- A3 (Grundwert, Übung z, Nr. 3): nicht beantwortet.",
       "Tutor-Seite: https://a.example/einschaetzung/tutor/?a1=x",
+    ]);
+  });
+
+  test("the links a tutor gets: every chapter's self-assessment and page, full, with via=tutor", () => {
+    const chapters = [
+      {
+        title: "Zahlen",
+        assessment: "zahlen/einschaetzung/",
+        pages: [{ title: "Zahlen 1", local: "zahlen/zahlen-01/" }],
+      },
+      { title: "Formen", pages: [{ title: "Formen 1", local: "formen/formen-01/" }] },
+    ];
+    expect(linkLines("https://lernapps.net/app/", chapters, "einschaetzung/", "de")).toEqual([
+      "Links für meinen Tutor, genau diese nehmen:",
+      "Kapitel „Zahlen“, Selbsteinschätzung: https://lernapps.net/app/zahlen/einschaetzung/?via=tutor",
+      "- „Zahlen 1“: https://lernapps.net/app/zahlen/zahlen-01/?via=tutor",
+      "Kapitel „Formen“ (keine Selbsteinschätzung):",
+      "- „Formen 1“: https://lernapps.net/app/formen/formen-01/?via=tutor",
+      "Selbsteinschätzung der ganzen App: https://lernapps.net/app/einschaetzung/?via=tutor",
     ]);
   });
 

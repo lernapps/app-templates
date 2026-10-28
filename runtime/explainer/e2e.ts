@@ -43,7 +43,7 @@
 // feedback; one with every answer right says each content page asked is known, the others not asked; one without an
 // answer says each page asked is to be read, stays on the device across a reload (the offer then names the last
 // result), takes the result to the tutor in the address of its tutor page, which answers, and goes on "Ergebnis
-// löschen". Opened by a tutor (von=tutor), a run keeps nothing, and its own "Zurück zum Tutor" copies the result with
+// löschen". Opened by a tutor (via=tutor), a run keeps nothing, and its own "Zurück zum Tutor" copies the result with
 // the tutor page last. No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
@@ -668,9 +668,9 @@ function expectTutorAddress(address: string, here: string, id: string | undefine
   const url = new URL(address);
   expect(`${url.origin}${url.pathname}`, "the page's tutor page").toBe(new URL("tutor/", new URL(".", here)).href);
   for (const [key, value] of new URL(here).searchParams) {
-    if (key !== "von") expect(url.searchParams.get(key), `the task number of ${key}`).toBe(value);
+    if (key !== "via") expect(url.searchParams.get(key), `the task number of ${key}`).toBe(value);
   }
-  expect(url.searchParams.get("von"), "no von=tutor").toBeNull();
+  expect(url.searchParams.get("via"), "no via=tutor").toBeNull();
   if (id === undefined) {
     expect(url.searchParams.get("uebung"), "no exercise").toBeNull();
     expect(url.searchParams.get("abschnitt"), "no section").toBeNull();
@@ -1035,7 +1035,7 @@ export function explainerTests(root = "."): void {
         const n = taskNumber(SEED, seeds.length);
         const task = generate(spec, seeds[n - 1] ?? n, data);
         const question = questionFor(spec, task, "de", templates);
-        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&via=tutor#${exercise.id}`);
         await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
         const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
         await answerQuestion(page, question, wrong);
@@ -1074,7 +1074,7 @@ export function explainerTests(root = "."): void {
         const n = taskNumber(SEED, seeds.length);
         const task = generate(spec, seeds[n - 1] ?? n, data);
         const question = questionFor(spec, task, "de", templates);
-        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&via=tutor#${exercise.id}`);
         await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
         const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
         await answerQuestion(page, question, wrong);
@@ -1107,7 +1107,7 @@ export function explainerTests(root = "."): void {
         const n = taskNumber(SEED, seeds.length);
         const task = generate(spec, seeds[n - 1] ?? n, data);
         const question = questionFor(spec, task, "de", templates);
-        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&von=tutor#${exercise.id}`);
+        await page.goto(`./${generatedPage.url}?${exercise.id}=${SEED}&via=tutor#${exercise.id}`);
         await expect(page.locator(`[id="${questionId(question)}"] legend`)).toBeVisible();
         const wrong = task.mistakes.length > 0 ? answerFor(spec, task, question, 0) : wrongAnswer(question);
         await answerQuestion(page, question, wrong);
@@ -1171,7 +1171,7 @@ export function explainerTests(root = "."): void {
             await new Promise((resolve) => setTimeout(resolve, 500));
             await route.continue();
           });
-          await page.goto(`./${item.url}?von=tutor#${id}`);
+          await page.goto(`./${item.url}?via=tutor#${id}`);
           const element = page.locator(`[id="${id}"]`);
           await expect(element).toHaveAttribute("data-hydrated", "");
           // outside the component's island, which Vue owns: neither a mismatch nor lost with a new render
@@ -1198,7 +1198,7 @@ export function explainerTests(root = "."): void {
         request,
       }) => {
         const copied = await recordClipboard(page);
-        await page.goto(`./${item.url}?${id}=3&von=tutor#${id}`);
+        await page.goto(`./${item.url}?${id}=3&via=tutor#${id}`);
         const element = page.locator(`[id="${id}"]`);
         await expect(element).toHaveAttribute("data-hydrated", "");
         const n = await answerRejected(page, component);
@@ -1230,7 +1230,7 @@ export function explainerTests(root = "."): void {
           request,
         }) => {
           const copied = await recordClipboard(page);
-          await page.goto(`./${assessment.url}?von=tutor`);
+          await page.goto(`./${assessment.url}?via=tutor`);
           // its own "Zurück zum Tutor", at the end: none at the top
           await expect(page.locator(".explainer-back")).toHaveCount(0);
           await page.locator(".explainer-assessment-begin").click();
@@ -1254,7 +1254,7 @@ export function explainerTests(root = "."): void {
           const [nextBefore = ""] = messageOf("de", "assessmentNextRound").split("{url}");
           const next = new URL(lines.at(-1)?.slice(nextBefore.length) ?? "");
           expect(next.pathname.endsWith(`/${assessment.url}`), "the next round's link").toBe(true);
-          expect(next.searchParams.get("von")).toBe("tutor");
+          expect(next.searchParams.get("via")).toBe("tutor");
           const url = new URL(tutor);
           expect(url.pathname.endsWith(`/${assessment.url}tutor/`), "the self-assessment's tutor page").toBe(true);
           for (const item of assessment.items) expect(url.searchParams.get(item.key) ?? "").toMatch(/(^|-)offen$/);

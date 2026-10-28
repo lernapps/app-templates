@@ -135,5 +135,10 @@
   "sessionIntro": "I practised on {url}:",
   "sessionNone": "I have not solved a task on {url} yet.",
   "sessionTask": "{exercise}{number}: {status}.",
-  "assessmentNextRound": "Link for a new round: {url}"
+  "assessmentNextRound": "Link for a new round: {url}",
+  "assessmentLinks": "Links for my tutor, take exactly these:",
+  "assessmentLinkChapter": "Chapter “{chapter}”, self-assessment: {url}",
+  "assessmentLinkChapterNone": "Chapter “{chapter}” (no self-assessment):",
+  "assessmentLinkPage": "“{page}”: {url}",
+  "assessmentLinkWhole": "Self-assessment of the whole app: {url}"
 }

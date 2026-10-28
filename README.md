@@ -71,7 +71,7 @@ feature: assistants read it before they choose an archetype.
   "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:
   `?<id>=<n>` opens task number n of the exercise `<id>` (a number above N wraps around). The address holds one
   parameter per exercise (`?a=3&b=12`), written on load and at every "Neue Aufgabe", so it is the page's state: a link
-  to share in class, a deep link, and what a tutor reads; `seed`, `von`, `uebung` and `abschnitt` are no exercise id, and `?seed=<n>#<id>`
+  to share in class, a deep link, and what a tutor reads; `seed`, `via`, `uebung` and `abschnitt` are no exercise id, and `?seed=<n>#<id>`
   still opens that exercise's task. The build ships each exercise's table of seeds. An exercise with fewer than 67 distinct tasks is
   noted in the build output.
 - For a KI tutor, an assistant the learner brings and controls, the explainer writes static files only (a chat
@@ -89,7 +89,7 @@ feature: assistants read it before they choose an archetype.
   further task; the app's own rules from `tutor.rules` in `app.yaml`. Then the page's content as context (texts,
   formulas as `$…$`, examples, definitions, notes, figures by alt text and caption) and its exercises with every task
   number. A `generated` one is there once as its template (`{G}`), with answer format, hint, steps, its typical
-  mistakes as F1, F2 … with the app's messages and the link pattern `../?<id>=n&von=tutor#<id>`, and below a table of
+  mistakes as F1, F2 … with the app's messages and the link pattern `../?<id>=n&via=tutor#<id>`, and below a table of
   each task number's inputs and outputs, all worked out: `Nr. | p | G | Lösung | F1`, `27 | 15 | 1260 | 189 | 18900`.
   An exercise component has its `about`, and with its table of tasks its task once as its template, its typical
   mistakes as F1, F2 … and the same table as a generated one, `Lösung` and `F1` as `show` gives them, with every
@@ -116,12 +116,12 @@ feature: assistants read it before they choose an archetype.
   nicht weiter.", then `Ich habe <input> eingegeben (<n> Versuche).`, `Die App sagt: „<message>“` (word for word
   what the feedback said: a generated exercise's message of its mistake or the general one, a question's reasons, an
   exercise component's `message`, else its `reason`) and the hint or solution opened; on a page opened with
-  `von=tutor` (B2), where the button is there without an assistant switched on, it copies `Übung <id>, Nr. <n>:`,
+  `via=tutor` (B2), where the button is there without an assistant switched on, it copies `Übung <id>, Nr. <n>:`,
   the same lines and `Tutor-Seite: <tutor page>?…` and closes the tab, as "Zurück zum Tutor" does, and once the task
   is right or its solution shown it is "Zurück", which copies the result line. No prompt and no line carries a rule
   for the tutor: the tutor page has them. After a wrong answer a sentence under the row says that input and message
   leave the page only with the click. "Neue Aufgabe" is a circular arrow beside the task number. A page opened with
-  `von=tutor` shows "Zurück zum Tutor": it copies a result line (the exercise, its task number, "richtig im 2.
+  `via=tutor` shows "Zurück zum Tutor": it copies a result line (the exercise, its task number, "richtig im 2.
   Versuch", "Lösung angesehen" or "noch nicht gelöst (1 Versuch, Eingabe …)", the count of the session on this page,
   and the absolute address of the page's tutor page with where the learner is), waits 100 ms and closes the tab; when
   copying fails the tab stays open with the line selected in a field. The line goes to the clipboard only

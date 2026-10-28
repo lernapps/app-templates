@@ -10,7 +10,7 @@
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
 // always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
 // JavaScript. The page keeps in memory how far the learner got with each task (result.ts): a page a tutor opened
-// (von=tutor in the address, beside any seed) gets "Zurück zum Tutor", which copies a result line with the address of
+// (via=tutor in the address, beside any seed) gets "Zurück zum Tutor", which copies a result line with the address of
 // the page's tutor page, then closes the tab. The learner switches a way to the tutor on once, on the start page or
 // beside the title of a page: an assistant of the app, or copying the text; it is kept on the device.
 // Two ways lead to the tutor, both naming the page's tutor page with where the learner is in its query (position.ts),
@@ -121,8 +121,8 @@ function startGenerated(
   show(false);
 }
 
-/** Whether a tutor opened the page: von=tutor in its address, exactly so. */
-export const fromTutor = (href: string): boolean => new URL(href).searchParams.get("von") === "tutor";
+/** Whether a tutor opened the page: via=tutor in its address, exactly so. */
+export const fromTutor = (href: string): boolean => new URL(href).searchParams.get("via") === "tutor";
 
 /** The event an island sends for an exercise component's answer (islands.ts), with { correct, answer?, message? }. */
 export const ANSWERED_EVENT = "explainer-answered";
@@ -296,7 +296,7 @@ function sessionOf(href: string, lang: string, data: TutorData, progress: Progre
 }
 
 /**
- * "Zurück zum Tutor" at the top and at the end of a page a tutor opened (von=tutor): it copies the page's tutor page
+ * "Zurück zum Tutor" at the top and at the end of a page a tutor opened (via=tutor): it copies the page's tutor page
  * and how each task of the session went, and closes the tab (copyAndClose).
  */
 function startBackToTutor(root: Document, main: HTMLElement, data: TutorData | undefined, progress: Progress): void {
@@ -421,7 +421,7 @@ function iconOf(root: Document, way: Way | undefined): HTMLElement {
 
 /**
  * The tutor's help button in every exercise of the page, way B, there only while a way to the tutor is switched on or
- * on a page a tutor opened (von=tutor). It sits in the row of "Prüfen" and "Lösung" (or below an exercise component,
+ * on a page a tutor opened (via=tutor). It sits in the row of "Prüfen" and "Lösung" (or below an exercise component,
  * outside its island),
  * with the assistant's symbol, and says what helps now: "Hilfe" before an answer and after the right one; "Warum?",
  * standing out, after a wrong one, with a sentence that says what the click gives the assistant; on a page a tutor
@@ -579,7 +579,7 @@ function startChoice(root: Document): void {
  * the start page changes the way or switches it off. The bar's button does the way: it opens the assistant with the
  * start prompt in its address, the page's tutor page with the page's task numbers (prompt.ts, pageQuery), for a
  * tutor who leads through the page before it comes to a task; or it copies the prompt with the tutor page's Markdown, and opens
- * an assistant whose address takes no prompt. On a page a tutor opened (von=tutor) the chat runs already: the section
+ * an assistant whose address takes no prompt. On a page a tutor opened (via=tutor) the chat runs already: the section
  * stays hidden. Nothing goes over the network but the click's own page, the tutor page's Markdown (the app's own
  * static file, for copying) and the assistant that opens.
  */

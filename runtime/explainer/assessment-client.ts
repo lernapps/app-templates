@@ -16,6 +16,7 @@ import { isComplete, isCorrect, shuffled, type Question } from "../shared/questi
 import {
   assessmentPrompt,
   BAND_MESSAGES,
+  linkLines,
   isStoredResult,
   pageResults,
   resultQuery,
@@ -49,7 +50,7 @@ export interface TutorWays {
   ) => void;
   /** Shows in `hint` how the chosen option works, when it says so. */
   hint: (select: HTMLSelectElement, hint: HTMLElement | null) => void;
-  /** Whether a tutor opened the page (von=tutor): its chat runs already. */
+  /** Whether a tutor opened the page (via=tutor): its chat runs already. */
   running: boolean;
   /** Copies `text` for the running chat and closes the tab, saying in `place` what happened. */
   back: (text: string, place: HTMLElement) => void;
@@ -264,6 +265,9 @@ export function startAssessment(root: Document, ways: TutorWays): void {
     show(result, focus);
   };
 
+  // the full address of every page and self-assessment, as the browser has them: the tutor builds none itself
+  const links = () => linkLines(new URL(data.root, root.location.href).href, data.chapters, data.whole, lang);
+
   // what the prompt says of the exercises and of each content page
   const promptItems = () =>
     data.items.map((item) => ({
@@ -302,10 +306,10 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       const next = new URL(root.location.href);
       next.search = "";
       next.hash = "";
-      next.searchParams.set("von", "tutor");
+      next.searchParams.set("via", "tutor");
       const numbers = shown.flatMap((one) => (one.number === undefined ? [] : [`${one.key}.${one.number}`]));
       if (numbers.length > 0) next.searchParams.set("vorher", numbers.join(","));
-      const lines = assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "back");
+      const lines = assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "back", links());
       ways.back(`${lines}\n${t("assessmentNextRound", { url: next.href.replace(/%2C/g, ",") })}`, tutorBox);
     });
     result.querySelector(".explainer-assessment-delete")?.remove();
@@ -327,7 +331,7 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       const href = root.location.href;
       const base = new URL(data.root, href);
       const tutor = new URL(`${data.tutor}${resultQuery(shown)}`, base).href;
-      const prompt = () => assessmentPrompt(tutor, promptItems(), shown, lang, promptPages());
+      const prompt = () => assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "ask", links());
       const copy = async () => {
         try {
           const response = await fetch(new URL(data.markdown, base).href);

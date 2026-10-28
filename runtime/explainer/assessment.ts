@@ -249,7 +249,7 @@ const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
  * The prompt that takes a run to a tutor, in `lang`, in the learner's voice: the tutor page with the results in its
  * address first, then the result of each content page as the learner saw it (its title in `pages`), so that the tutor
  * works nothing out, then one line per exercise (its page, the exercise, its task number, how it went, the input of a
- * wrong one). The solution is never in it. `back`: for a chat that runs already (von=tutor), the lines with the tutor
+ * wrong one). The solution is never in it. `back`: for a chat that runs already (via=tutor), the lines with the tutor
  * page last, which "Zurück zum Tutor" copies.
  */
 export function assessmentPrompt(
@@ -259,6 +259,7 @@ export function assessmentPrompt(
   lang: string,
   pages: readonly (PageResult & { title: string })[] = [],
   opening: "ask" | "back" = "ask",
+  links: readonly string[] = [],
 ): string {
   const bands = pages.map((page) =>
     page.band === "unasked"
@@ -295,6 +296,7 @@ export function assessmentPrompt(
       ...bands,
       message(lang, "assessmentTasks"),
       ...lines,
+      ...links,
       `${message(lang, "resultTutor")} ${tutor}`,
     ].join("\n");
   }
@@ -303,7 +305,39 @@ export function assessmentPrompt(
     ...bands,
     ...(bands.length === 0 ? [] : [message(lang, "assessmentTasks")]),
     ...lines,
+    ...links,
   ].join("\n");
+}
+
+/** A chapter for the links a tutor gets: its title, its self-assessment if any, its pages, each within the language tree. */
+export interface LinkChapter {
+  title: string;
+  assessment?: string;
+  pages: { title: string; local: string }[];
+}
+
+/**
+ * The full address of every page and every self-assessment of the app, chapter by chapter, each with via=tutor, from
+ * `root`, the address of the language tree as the browser has it: a tutor takes these and builds no address itself.
+ */
+export function linkLines(root: string, chapters: readonly LinkChapter[], whole: string, lang: string): string[] {
+  const at = (local: string) => {
+    const url = new URL(local, root);
+    url.searchParams.set("via", "tutor");
+    return url.href;
+  };
+  return [
+    message(lang, "assessmentLinks"),
+    ...chapters.flatMap((chapter) => [
+      chapter.assessment === undefined
+        ? message(lang, "assessmentLinkChapterNone", { chapter: chapter.title })
+        : message(lang, "assessmentLinkChapter", { chapter: chapter.title, url: at(chapter.assessment) }),
+      ...chapter.pages.map(
+        (page) => `- ${message(lang, "assessmentLinkPage", { page: page.title, url: at(page.local) })}`,
+      ),
+    ]),
+    ...(chapters.length > 1 ? [message(lang, "assessmentLinkWhole", { url: at(whole) })] : []),
+  ];
 }
 
 /** The title of a content page in `lang`, on one line. */

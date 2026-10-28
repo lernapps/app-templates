@@ -109,7 +109,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Steht in der Nachricht „Die App sagt: …“, hat die App das zur Eingabe des Kindes gemeldet. Setz dort an, ohne es zu wiederholen.",
       "Eine Zeile wie „…, Nr. 16: richtig im 2. Versuch.“ kommt von „Zurück“ in der App: Übung, Nummer und wie weit das Kind damit kam.",
       "„Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“: diese Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App. Setz bei den falschen an, eine nach der anderen.",
-      "Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `von=tutor`, z. B. `{link}`. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. `https://`). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“",
+      "Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `via=tutor`, z. B. `{link}`. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. `https://`). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“",
     ],
     contextTitle: "Kontext: die Seite „{page}“",
     exercise: "Übung",
@@ -156,7 +156,7 @@ const WORDS: Readonly<Record<string, Words>> = {
       "If the message says “The app says: …”, the app showed that for the child's input. Build on it without repeating it.",
       "A line like “…, no. 16: right on try 2.” comes from “Back” in the app: the exercise, the number and how far the child got with it.",
       "“I practised on …:” comes from “Back to the tutor”: this page with the numbers, then for each task practised how it went, a wrong one with the input and the app's message. Start with the wrong ones, one after the other.",
-      "Every task has a link: the address of the page, that is of this tutor page without `tutor/` and without `?…`, with the number and `von=tutor`, e.g. `{link}`. Always send it as a full address, with the scheme and host of this tutor page (e.g. `https://`). For a further task take another number of the exercise and say its text. Add: “Solve it in the app, then press ‘Back’. Paste the line here.”",
+      "Every task has a link: the address of the page, that is of this tutor page without `tutor/` and without `?…`, with the number and `via=tutor`, e.g. `{link}`. Always send it as a full address, with the scheme and host of this tutor page (e.g. `https://`). For a further task take another number of the exercise and say its text. Add: “Solve it in the app, then press ‘Back’. Paste the line here.”",
     ],
     contextTitle: "Context: the page “{page}”",
     exercise: "Exercise",
@@ -290,7 +290,7 @@ export function generatedLines(spec: Generated, site: Site, lang: string, format
       ...mistakes.map((mistake, index) => `  - F${index + 1}: „${template(mistake.message, lang)}“`),
     );
   }
-  lines.push(`- ${words.linkNumber}: \`${page}?${spec.id}=n&von=tutor#${spec.id}\``);
+  lines.push(`- ${words.linkNumber}: \`${page}?${spec.id}=n&via=tutor#${spec.id}\``);
   const { paths, answer } = placeholdersOf(spec, lang);
   const data = dataOf(spec, site.data);
   const templates = templatesOf(spec, [lang]);
@@ -487,8 +487,8 @@ function pageMarkdown(
     first === undefined
       ? undefined
       : first.count > 0
-        ? { query: `${first.id}=12`, link: `…/${page.id}/?${first.id}=12&von=tutor#${first.id}` }
-        : { query: `uebung=${first.id}`, link: `…/${page.id}/?von=tutor#${first.id}` };
+        ? { query: `${first.id}=12`, link: `…/${page.chapter}/${page.id}/?${first.id}=12&via=tutor#${first.id}` }
+        : { query: `uebung=${first.id}`, link: `…/${page.chapter}/${page.id}/?via=tutor#${first.id}` };
   lines.push(
     `## ${words.whereTitle}`,
     "",
@@ -529,7 +529,7 @@ function pageMarkdown(
       );
       const declared = descriptions.get(exercise.block)?.exercise?.[lang];
       if (exercise.count > 0) {
-        lines.push(`- ${words.linkNumber}: \`../?${exercise.id}=n&von=tutor#${exercise.id}\``);
+        lines.push(`- ${words.linkNumber}: \`../?${exercise.id}=n&via=tutor#${exercise.id}\``);
         const all = rows.get(exercise.id) ?? [];
         const n = shown.get(exercise.id) ?? all.length;
         if (declared !== undefined) lines.push(...componentTable(declared, lang));
@@ -538,7 +538,7 @@ function pageMarkdown(
         else if (n < all.length) {
           lines.push(`- ${words.shown.replace("{shown}", String(n)).replace("{count}", String(all.length))}`);
         }
-      } else lines.push(`- ${words.link}: [../?von=tutor#${exercise.id}](../?von=tutor#${exercise.id})`);
+      } else lines.push(`- ${words.link}: [../?via=tutor#${exercise.id}](../?via=tutor#${exercise.id})`);
     }
     lines.push("");
   }

@@ -44,7 +44,7 @@ The learner switches an assistant on once, on the start page or beside the title
 device. Way A: the bar beside the title of a page opens the learner's own assistant with one sentence that names the
 page's tutor page with the page's task numbers, or copies that sentence with the tutor page's Markdown. The assistant
 fetches the tutor page, looks the numbers up in its tables, asks what the child does not understand, explains with
-the page's own example and sends links to tasks of the page with `von=tutor`. On such a page the learner solves the
+the page's own example and sends links to tasks of the page with `via=tutor`. On such a page the learner solves the
 task and presses "Zurück zum Tutor": the page copies the tutor page with the page's task numbers and how each task of
 the session went (the try, the input, the app's message), closes the tab, and the learner pastes the lines into the
 chat; the assistant knows the task's solution and
@@ -90,8 +90,8 @@ together, keeps the result on the device (replacing the one before) and shows th
 order, whether the learner probably knows it, should look at it again or should read it, each with its link. "Mit
 <name> besprechen" opens the learner's assistant with one sentence that names the self-assessment's tutor page with the
 result in its address, the result per page and a line per exercise. The tutor guides chapter by chapter: it sends the
-learner to the pages that do not stick, each with `von=tutor`, whose "Zurück zum Tutor" copies the result line for the
-chat, and then into a new round of the chapter's self-assessment with `von=tutor`: that run keeps nothing, and its
+learner to the pages that do not stick, each with `via=tutor`, whose "Zurück zum Tutor" copies the result line for the
+chat, and then into a new round of the chapter's self-assessment with `via=tutor`: that run keeps nothing, and its
 "Zurück zum Tutor" copies the result and the tutor page, and closes the tab. After each round the tutor decides on the
 next chapter or another round. "Neu starten" starts a new run, "Ergebnis löschen" removes the result.
 
