@@ -114,7 +114,7 @@ function checkAssessment(
         problems.at(
           yaml,
           path,
-          `${ref} is not an exercise of the chapter ${chapter}; a chapter's self-assessment asks only its own pages, the app's (src/app.yaml) all of them`,
+          `${ref} is not an exercise of the chapter ${chapter}; a chapter's self-assessment asks only its own pages; the app's is every chapter's together`,
         );
         return;
       }

@@ -68,7 +68,7 @@ describe("the build checks a self-assessment", () => {
       "an exercise of another chapter",
       "/zahlen/zahlen-01/#prozent-rechnen",
       "/formen/formen-01/#ecken",
-      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /formen/formen-01/#ecken is not an exercise of the chapter zahlen; a chapter's self-assessment asks only its own pages, the app's (src/app.yaml) all of them",
+      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /formen/formen-01/#ecken is not an exercise of the chapter zahlen; a chapter's self-assessment asks only its own pages; the app's is every chapter's together",
     ],
   ])("%s", (_name, from, to, line) => {
     const root = app();
