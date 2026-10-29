@@ -193,6 +193,17 @@ describe("the pages of a self-assessment", () => {
   test("its page has one line without JavaScript and no check of a single exercise", () => {
     const html = page("de", "einschaetzung/");
     expect(html).toContain('<p class="explainer-assessment-nojs">Die Selbsteinschätzung braucht JavaScript.');
+    // what it covers: the number of tasks, and each content page none of them asks, with its link
+    expect(html).toContain(
+      "<p>Mit dieser Selbsteinschätzung bekommst du mit 8 Aufgaben einen Überblick, was du schon kannst. Eine Seite fragt sie nicht ab.",
+    );
+    expect(html).toMatch(
+      /<ul class="explainer-assessment-unasked">\n<li><a href="\.\.\/formen\/formen-02\/">[^<]+<\/a><\/li>\n<\/ul>/,
+    );
+    expect(page("de", "zahlen/einschaetzung/")).toContain("Sie fragt jede Seite ab.</p>");
+    expect(page("de", "zahlen/einschaetzung/")).not.toContain("explainer-assessment-unasked");
+    expect(page("en", "formen/einschaetzung/")).toContain("It does not ask about one page. So it is worth a look:");
+    expect(page("en", "einschaetzung/")).toContain("With this self-assessment, 8 tasks give you an overview");
     expect(html.match(/class="explainer-assessment-step"/g)).toHaveLength(3);
     expect(html.match(/class="explainer-assessment-item"/g)).toHaveLength(8);
     // a question by its key: the same id may be on two pages
