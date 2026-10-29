@@ -37,7 +37,7 @@ Eltern und Lehrkräfte sehen hier, was der Tutor bekommt. [Zur Selbsteinschätzu
 ## Die Aufgaben dieser Selbsteinschätzung
 
 - A1: Übung prozentwert-ueben der Seite „Prozentwert“
-- A2: Übung prozentwert-ueben der Seite „Prozentwert“
+- A2: Übung prozentfeld der Seite „Prozentwert“
 - A3: Übung welche-rechnung der Seite „Prozentsatz“ (immer dieselbe Aufgabe, auch auf der Seite: richtig kann gemerkt sein)
 - A4: Übung prozentsatz-ueben der Seite „Prozentsatz“
 - A5: Übung klammern der Seite „Grundwert“ (immer dieselbe Aufgabe, auch auf der Seite: richtig kann gemerkt sein)
