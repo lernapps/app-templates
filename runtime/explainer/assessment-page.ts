@@ -169,13 +169,30 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
     placeholder: placeholderPrompt(lang),
   };
   const back = assessment.chapter === undefined ? "" : `${assessment.chapter.id}/`;
+  // what it covers and what not: the content pages none of its exercises asks, each a link to look at
+  const unasked = assessment.pages.filter((page) => !assessment.items.some((item) => item.page === page));
+  const unaskedText =
+    unasked.length === 0
+      ? t("assessmentAllAsked")
+      : t(unasked.length === 1 ? "assessmentLeftOutOne" : "assessmentLeftOut", { n: String(unasked.length) });
   return [
     `<h1>${t("assessmentTitle")}</h1>`,
     `<p class="explainer-assessment-nojs">${t("assessmentNojs")} <a href="${context.to(back)}">${plain(assessment.chapter === undefined ? message(lang, "start") : inLanguage(assessment.chapter.title, lang))}</a></p>`,
     `<template class="explainer-assessment-template">`,
     `<div class="explainer-assessment" hidden>`,
     `<div class="explainer-assessment-intro">`,
-    `<p>${t(assessment.steps === 1 ? "assessmentIntroOne" : "assessmentIntro", { count: String(assessment.items.length), steps: String(assessment.steps) })}</p>`,
+    `<p>${t("assessmentIntro", { count: String(assessment.items.length) })} ${unaskedText}</p>`,
+    ...(unasked.length === 0
+      ? []
+      : [
+          `<ul class="explainer-assessment-unasked">`,
+          ...unasked.map(
+            (page) =>
+              `<li><a href="${context.to(`${page.chapter}/${page.id}/`)}">${plain(titleOf(page, lang))}</a></li>`,
+          ),
+          `</ul>`,
+        ]),
+    `<p>${t("assessmentHow")}</p>`,
     `<p class="explainer-assessment-privacy">${t("assessmentPrivacy")}</p>`,
     `<p><button type="button" class="explainer-assessment-begin">${t("assessmentBegin")}</button></p>`,
     `</div>`,
