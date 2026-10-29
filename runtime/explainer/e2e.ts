@@ -1251,14 +1251,32 @@ export function explainerTests(root = "."): void {
           await page.goto(`./${assessment.url}?via=tutor`);
           // its own "Zurück zum Tutor", at the end: none at the top
           await expect(page.locator(".explainer-back")).toHaveCount(0);
+          const errors: string[] = [];
+          page.on("pageerror", (error) => errors.push(error.message));
           await page.locator(".explainer-assessment-begin").click();
           for (let step = 0; step < assessment.steps; step++) {
             const last = step === assessment.steps - 1;
-            await page
-              .locator(`.explainer-assessment-step[data-step="${step}"]`)
+            const view = page.locator(`.explainer-assessment-step[data-step="${step}"]`);
+            // an exercise component answered, then emptied: it counts as not answered
+            for (const item of assessment.items.filter((candidate) => candidate.step === step)) {
+              const component = app.pages["de"]
+                ?.find((candidate) => candidate.url === item.page)
+                ?.components.find((candidate) => candidate.exercise && candidate.id === item.id);
+              const example = component?.examples?.accepted;
+              if (example === undefined) continue;
+              const element = view.locator(`[data-key="${item.key}"] .explainer-component`);
+              await expect(element).toHaveAttribute("data-hydrated", "");
+              await element.evaluate(emitAnswer, example.answer);
+              await element.evaluate(emitAnswer, undefined);
+            }
+            // each component has ids of its own
+            const ids = await view.locator("[id]").evaluateAll((nodes) => nodes.map((node) => node.id));
+            expect(ids.length, `step ${step}: ids once`).toBe(new Set(ids).size);
+            await view
               .getByRole("button", { name: messageOf("de", last ? "assessmentFinish" : "assessmentNext"), exact: true })
               .click();
           }
+          expect(errors, "no error in the page").toEqual([]);
           await expectResult(page, assessment, "read");
           expect(await storedKeys(page), "a run for the tutor keeps nothing").toEqual([]);
           await expect(page.locator(".explainer-assessment-delete")).toHaveCount(0);

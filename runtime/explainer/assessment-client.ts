@@ -173,7 +173,12 @@ export function startAssessment(root: Document, ways: TutorWays): void {
   const answers = new Map<string, AssessmentAnswer>();
   box.addEventListener(ASSESSMENT_ANSWER_EVENT, (event) => {
     const key = (event.target as HTMLElement).closest<HTMLElement>(".explainer-assessment-item")?.dataset["key"];
-    if (key !== undefined) answers.set(key, (event as CustomEvent<AssessmentAnswer>).detail);
+    const answer = (event as CustomEvent<AssessmentAnswer | null>).detail;
+    // none: emptied, incomplete, or one the logic cannot read
+    if (key !== undefined) {
+      if (answer === null) answers.delete(key);
+      else answers.set(key, answer);
+    }
   });
   const element = (key: string) => box.querySelector<HTMLElement>(`.explainer-assessment-item[data-key="${key}"]`);
 

@@ -106,21 +106,29 @@ function assess(
   // each task the self-assessment gives mounts it afresh, with no answer, the same seed again too
   const round = ref(0);
   const declaresChecked = element.dataset["checked"] !== undefined;
-  const onAnswer = (answer: unknown) => {
-    const task = logic.generate(seed.value, props);
-    const correct = logic.check(task, answer) === true;
-    const message = correct ? undefined : textOf(logic.reason?.(task, answer, props, lang));
-    const shown = logic.show === undefined ? undefined : textOf(logic.show(answer, task, props, lang));
-    const mistake = correct ? undefined : mistakeOf(logic, task, answer, props);
-    const detail: AssessmentAnswer = {
-      correct,
-      ...(shown === undefined ? {} : { answer: shown }),
-      ...(message === undefined ? {} : { message }),
-      ...(mistake === undefined ? {} : { mistake }),
-    };
-    element.dispatchEvent(new CustomEvent(ASSESSMENT_ANSWER_EVENT, { bubbles: true, detail }));
+  /** What the answer the component has now gives: null for none, an incomplete one, or one its logic cannot read. */
+  const judge = (answer: unknown): AssessmentAnswer | null => {
+    if (answer === undefined) return null;
+    try {
+      const task = logic.generate(seed.value, props);
+      const correct = logic.check(task, answer) === true;
+      const message = correct ? undefined : textOf(logic.reason?.(task, answer, props, lang));
+      const shown = logic.show === undefined ? undefined : textOf(logic.show(answer, task, props, lang));
+      const mistake = correct ? undefined : mistakeOf(logic, task, answer, props);
+      return {
+        correct,
+        ...(shown === undefined ? {} : { answer: shown }),
+        ...(message === undefined ? {} : { message }),
+        ...(mistake === undefined ? {} : { mistake }),
+      };
+    } catch {
+      return null;
+    }
   };
-  createSSRApp({
+  const onAnswer = (answer: unknown) => {
+    element.dispatchEvent(new CustomEvent(ASSESSMENT_ANSWER_EVENT, { bubbles: true, detail: judge(answer) }));
+  };
+  const app = createSSRApp({
     render: () =>
       h(component, {
         ...props,
@@ -129,7 +137,10 @@ function assess(
         ...(declaresChecked ? { checked: false } : {}),
         onAnswer,
       }),
-  }).mount(island);
+  });
+  // ids of its own (useId): several components share a page of the self-assessment, each a Vue app of its own
+  app.config.idPrefix = element.id || "aufgabe";
+  app.mount(island);
   const given = Number(element.dataset["seed"]);
   if (given > 0) {
     seed.value = given;
