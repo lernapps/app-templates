@@ -175,7 +175,7 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
     `<template class="explainer-assessment-template">`,
     `<div class="explainer-assessment" hidden>`,
     `<div class="explainer-assessment-intro">`,
-    `<p>${t("assessmentIntro", { count: String(assessment.items.length), steps: String(assessment.steps) })}</p>`,
+    `<p>${t(assessment.steps === 1 ? "assessmentIntroOne" : "assessmentIntro", { count: String(assessment.items.length), steps: String(assessment.steps) })}</p>`,
     `<p class="explainer-assessment-privacy">${t("assessmentPrivacy")}</p>`,
     `<p><button type="button" class="explainer-assessment-begin">${t("assessmentBegin")}</button></p>`,
     `</div>`,

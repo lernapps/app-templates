@@ -96,6 +96,7 @@
   "assessmentOfferStart": "Start the self-assessment",
   "assessmentOfferLast": "See your last result",
   "assessmentIntro": "Here you solve {count} tasks on {steps} pages. The app does not tell you for each task whether it is right. Only at the end do you see for each page whether you know it already. What you leave empty counts as not known.",
+  "assessmentIntroOne": "Here you solve {count} tasks on one page. The app does not tell you for each task whether it is right. Only at the end do you see for each page whether you know it already. What you leave empty counts as not known.",
   "assessmentPrivacy": "Your result stays on this device only. A new start replaces it.",
   "assessmentBegin": "Let's go",
   "assessmentStep": "Page {n} of {count}",

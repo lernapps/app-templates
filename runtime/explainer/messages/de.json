@@ -96,6 +96,7 @@
   "assessmentOfferStart": "Selbsteinschätzung starten",
   "assessmentOfferLast": "Dein letztes Ergebnis ansehen",
   "assessmentIntro": "Hier löst du {count} Aufgaben auf {steps} Seiten. Die App sagt dir nicht bei jeder Aufgabe, ob sie stimmt. Erst am Ende siehst du für jede Seite, ob du sie schon kannst. Was du leer lässt, zählt als nicht gekonnt.",
+  "assessmentIntroOne": "Hier löst du {count} Aufgaben auf einer Seite. Die App sagt dir nicht bei jeder Aufgabe, ob sie stimmt. Erst am Ende siehst du für jede Seite, ob du sie schon kannst. Was du leer lässt, zählt als nicht gekonnt.",
   "assessmentPrivacy": "Dein Ergebnis bleibt nur auf diesem Gerät. Ein neuer Start ersetzt es.",
   "assessmentBegin": "Los geht's",
   "assessmentStep": "Seite {n} von {count}",

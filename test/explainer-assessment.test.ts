@@ -193,6 +193,10 @@ describe("the pages of a self-assessment", () => {
   test("its page has one line without JavaScript and no check of a single exercise", () => {
     const html = page("de", "einschaetzung/");
     expect(html).toContain('<p class="explainer-assessment-nojs">Die Selbsteinschätzung braucht JavaScript.');
+    expect(html).toContain("<p>Hier löst du 8 Aufgaben auf 3 Seiten.");
+    // one step: one page, in words
+    expect(page("de", "formen/einschaetzung/")).toContain("<p>Hier löst du 3 Aufgaben auf einer Seite.");
+    expect(page("en", "formen/einschaetzung/")).toContain("<p>Here you solve 3 tasks on one page.");
     expect(html.match(/class="explainer-assessment-step"/g)).toHaveLength(3);
     expect(html.match(/class="explainer-assessment-item"/g)).toHaveLength(8);
     // a question by its key: the same id may be on two pages
