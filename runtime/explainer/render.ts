@@ -414,7 +414,38 @@ const assessmentContext = (context: Context): AssessmentContext => ({
   resolve: context.resolve,
   material: context.material,
   ways: wayOptions(context),
+  component: (block, key) => assessmentComponent(context, block, key),
 });
+
+/**
+ * An exercise component as one exercise of a self-assessment, by its key: its island with the task of number 1 as the
+ * build rendered it, its props and its task numbers, without "Prüfen", feedback, task number or nojs text (the
+ * self-assessment runs with JavaScript only); the islands hydrate it with the task the self-assessment draws.
+ */
+function assessmentComponent(
+  context: Context,
+  block: BlockOf<"vue-component">,
+  key: string,
+): { html: string; seeds: number[] } | undefined {
+  const use = context.site.components.find((candidate) => candidate.block === block);
+  if (use === undefined || !use.component.exercise) return undefined;
+  context.hasIslands = true;
+  const { component } = use;
+  const seeds = context.descriptions.get(block)?.seeds ?? [1];
+  const attributes = [
+    `id="aufgabe-${key}"`,
+    `data-component="${component.name}"`,
+    `data-exercise data-assessment data-seeds="${JSON.stringify(seeds)}"`,
+    ...(component.checked ? ["data-checked"] : []),
+  ];
+  const html = [
+    `<div class="explainer-component" ${attributes.join(" ")}>`,
+    `<div class="explainer-island" hidden>${context.islands.get(block)?.get(context.lang) ?? ""}</div>`,
+    `<script type="application/json" class="explainer-component-props">${json(propsIn(block.props, component, context.lang))}</script>`,
+    `</div>`,
+  ].join("\n");
+  return { html, seeds: [...seeds] };
+}
 
 /**
  * What a KI tutor is, on the start page: a section of its own that says what the tutor does and where it shows, the

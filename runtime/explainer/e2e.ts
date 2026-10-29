@@ -64,7 +64,7 @@ import { fill, plainText, taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
-import { nextTaskNumber, taskNumber } from "./tasks.ts";
+import { ASSESSMENT_TASK_EVENT, nextTaskNumber, taskNumber } from "./tasks.ts";
 import {
   outline,
   type AssessmentOutline,
@@ -98,9 +98,24 @@ async function runAssessment(page: Page, app: Outline, assessment: AssessmentOut
     await expect(view.locator(".question-check:visible"), "no exercise is checked alone").toHaveCount(0);
     for (const item of assessment.items.filter((candidate) => candidate.step === step)) {
       if (!right) continue;
-      const exercise = app.pages["de"]
-        ?.find((candidate) => candidate.url === item.page)
-        ?.exercises.find((candidate) => candidate.id === item.id);
+      const content = app.pages["de"]?.find((candidate) => candidate.url === item.page);
+      const component = content?.components.find((candidate) => candidate.exercise && candidate.id === item.id);
+      if (component !== undefined) {
+        // an exercise component: the task of its block's accepted example in place of the one drawn, as the
+        // self-assessment gives a task, and that answer, as the component emits it; no "Prüfen", no feedback
+        const element = view.locator(`[data-key="${item.key}"] .explainer-component`);
+        await expect(element, `${item.key}: ${component.name} hydrates`).toHaveAttribute("data-hydrated", "");
+        await expect(element.locator(".question-check, .question-feedback, .explainer-task-controls")).toHaveCount(0);
+        const example = component.examples?.accepted;
+        if (example === undefined) throw new Error(`${component.name}: its block has no accepted example`);
+        await element.evaluate(
+          (node, [name, seed]) => node.dispatchEvent(new CustomEvent(String(name), { detail: { seed } })),
+          [ASSESSMENT_TASK_EVENT, example.seed ?? 1] as const,
+        );
+        await element.evaluate(emitAnswer, example.answer);
+        continue;
+      }
+      const exercise = content?.exercises.find((candidate) => candidate.id === item.id);
       if (exercise === undefined) throw new Error(`${item.page}#${item.id} is not in the outline`);
       let question: Question;
       if (exercise.kind === "question") question = { ...exercise.question, id: item.key };

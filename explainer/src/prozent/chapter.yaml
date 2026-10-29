@@ -3,12 +3,12 @@ title: Prozent
 summary: Mit Prozenten vergleichst du Anteile, egal wie groß das Ganze ist.
 pages: [prozentwert, prozentsatz, grundwert]
 # The chapter's self-assessment, offered on the start page (an app with one chapter): two or three tasks per page,
-# prozentwert-ueben twice for two tasks of its own.
+# prozentwert-ueben and the exercise component prozentfeld each drawing a task of their own.
 selfAssessment:
   pages:
     - exercises:
         - /prozent/prozentwert/#prozentwert-ueben
-        - /prozent/prozentwert/#prozentwert-ueben
+        - /prozent/prozentwert/#prozentfeld
         - /prozent/prozentsatz/#welche-rechnung
     - exercises:
         - /prozent/prozentsatz/#prozentsatz-ueben

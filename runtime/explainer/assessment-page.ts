@@ -12,8 +12,15 @@
 import { renderQuestion } from "../shared/questions/render.ts";
 import { type MaterialContext, renderMaterial } from "../shared/blocks/index.ts";
 import { plain, renderWithFormulas } from "../shared/text/markdown.ts";
-import { assessments, type Assessment, type LinkChapter, titleOf } from "./assessment.ts";
-import { inLanguage, type Site, type Text } from "./content.ts";
+import {
+  assessments,
+  drawsTasks,
+  type Assessment,
+  type AssessmentItem,
+  type LinkChapter,
+  titleOf,
+} from "./assessment.ts";
+import { inLanguage, type BlockOf, type Site, type Text } from "./content.ts";
 import { exerciseData, type ExerciseData } from "./exercises.ts";
 import { message } from "./messages.ts";
 import { PROVIDERS, placeholderPrompt } from "./prompt.ts";
@@ -31,7 +38,15 @@ export interface AssessmentContext {
   material: MaterialContext;
   /** The app's assistants as the options of a select, and copying the text. */
   ways: string;
+  /** An exercise component as the exercise `key` of the self-assessment, with its task numbers' seeds. */
+  component: (block: BlockOf<"vue-component">, key: string) => { html: string; seeds: number[] } | undefined;
 }
+
+/**
+ * What the browser reads of one exercise of a self-assessment: a question or a generated exercise as on its page, or
+ * an exercise component, whose task the islands show (islands.ts), with the seed of each task number.
+ */
+export type AssessmentItemData = ExerciseData | { kind: "component"; seeds: number[] };
 
 /** The address of a self-assessment's tutor page within its language tree. */
 export const assessmentTutorOf = (assessment: Pick<Assessment, "local">): string => `${assessment.local}${TUTOR_PAGE}/`;
@@ -49,7 +64,7 @@ export interface AssessmentData {
     page: string;
     exercise: string;
     step: number;
-    data: ExerciseData;
+    data: AssessmentItemData;
   }[];
   /** The content pages it says something about, in order. */
   pages: { page: string; title: string; href: string }[];
@@ -86,11 +101,15 @@ export function assessmentOffer(context: AssessmentContext, assessment: Assessme
   ].join("\n");
 }
 
-/** One exercise of a self-assessment: its number, and its question, or the place of its live task. */
-function itemHtml(context: AssessmentContext, data: ExerciseData, n: number): string {
+/**
+ * One exercise of a self-assessment: its number, and its question, the place of its live task, or the component
+ * (`component`, its markup).
+ */
+function itemHtml(context: AssessmentContext, data: AssessmentItemData, n: number, component = ""): string {
   const { lang } = context;
   const label = `<p class="explainer-assessment-label">${plain(message(lang, "assessmentTask", { n: String(n) }))}</p>`;
   if (data.kind === "generated") return `${label}<div class="explainer-assessment-live"></div>`;
+  if (data.kind === "component") return `${label}${component}`;
   const { question, rendered } = data;
   return `${label}${renderQuestion(question, {
     lang,
@@ -107,7 +126,11 @@ function itemHtml(context: AssessmentContext, data: ExerciseData, n: number): st
 export function assessmentMain(context: AssessmentContext, assessment: Assessment): string {
   const { lang, site } = context;
   const t = (key: Parameters<typeof message>[1], params?: Record<string, string>) => plain(message(lang, key, params));
-  const items = assessment.items.map((item) => {
+  const items = assessment.items.map((item): { item: AssessmentItem; data: AssessmentItemData; html?: string } => {
+    if (item.block.type === "vue-component") {
+      const component = context.component(item.block, item.key);
+      return { item, data: { kind: "component", seeds: component?.seeds ?? [1] }, html: component?.html ?? "" };
+    }
     const data = exerciseData(item.block, lang, site.data, context.resolve);
     // the question by its key: the same id may be on two pages
     return { item, data: data.kind === "question" ? { ...data, question: { ...data.question, id: item.key } } : data };
@@ -120,8 +143,8 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
       `<h2 id="teil-${index + 1}" tabindex="-1">${t("assessmentStep", { n: String(index + 1), count: String(assessment.steps) })}</h2>`,
       `<ol class="explainer-assessment-items">`,
       ...own.map(
-        ({ item, data }) =>
-          `<li class="explainer-assessment-item" data-key="${item.key}">${itemHtml(context, data, items.findIndex((other) => other.item === item) + 1)}</li>`,
+        ({ item, data, html }) =>
+          `<li class="explainer-assessment-item" data-key="${item.key}">${itemHtml(context, data, items.findIndex((other) => other.item === item) + 1, html)}</li>`,
       ),
       `</ol>`,
       `<p class="explainer-assessment-nav">${index === 0 ? "" : `<button type="button" class="explainer-assessment-back">${t("assessmentBack")}</button> `}<button type="button" class="${last ? "explainer-assessment-finish" : "explainer-assessment-next"}">${t(last ? "assessmentFinish" : "assessmentNext")}</button></p>`,
@@ -139,7 +162,7 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
       key: item.key,
       ref: item.ref,
       page: `${item.page.chapter}/${item.page.id}/`,
-      exercise: item.block.id,
+      exercise: item.exercise,
       step: item.step,
       data: exercise,
     })),
@@ -405,8 +428,8 @@ export function assessmentTutorMarkdown(site: Site, assessment: Assessment, lang
     lines.push(
       `- ${words.item
         .replace("{key}", item.key.toUpperCase())
-        .replace("{exercise}", item.block.id)
-        .replace("{page}", titleOf(item.page, lang))}${item.block.type === "generated" ? "" : words.same}`,
+        .replace("{exercise}", item.exercise)
+        .replace("{page}", titleOf(item.page, lang))}${drawsTasks(item.block) ? "" : words.same}`,
     );
   }
   return `${lines.join("\n").trimEnd()}\n`;

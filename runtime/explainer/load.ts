@@ -26,7 +26,7 @@ import {
   type Site,
 } from "./content.ts";
 import { allBlocks } from "./routes.ts";
-import { ASSESSMENT, exerciseOf, parseRef } from "./assessment.ts";
+import { ASSESSMENT, drawsTasks, exerciseOf, parseRef } from "./assessment.ts";
 import { SCHEMA_FILE, validate } from "./schema.ts";
 import { appName } from "../shared/appname.ts";
 import { isObject, Problems, readYaml, Texts, type Path, type YamlFile } from "../shared/content.ts";
@@ -97,6 +97,7 @@ function checkAssessment(
   assessment: SelfAssessment,
   chapters: readonly Chapter[],
   chapter: string | undefined,
+  components: Site["components"],
   problems: Problems,
 ): void {
   const seen = new Set<string>();
@@ -122,28 +123,26 @@ function checkAssessment(
         problems.at(yaml, path, `${ref} names no page of the app; write /<chapter>/<page>/#<exercise>`);
         return;
       }
-      const exercise = exerciseOf(page, parts.exercise);
-      // a generated exercise may be listed again: each listing draws a task of its own
-      if (twice && exercise !== undefined && exercise.type !== "generated") {
+      const exercise = exerciseOf(components, page, parts.exercise);
+      // a generated exercise or an exercise component may be listed again: each listing draws a task of its own
+      if (twice && exercise !== undefined && !drawsTasks(exercise)) {
         problems.at(
           yaml,
           path,
-          `${ref} is listed twice, and a question shows the same task each time; list it once (a generated exercise may be listed again: each listing draws a task of its own)`,
+          `${ref} is listed twice, and a question shows the same task each time; list it once (a generated exercise or an exercise component may be listed again: each listing draws a task of its own)`,
         );
         return;
       }
       if (exercise !== undefined) return;
-      const component = [...allBlocks(page.blocks)].some(
-        (block) =>
-          block.type === "vue-component" &&
-          (block.id ?? block.component.replace(/(?<=[a-z0-9])(?=[A-Z])/g, "-").toLowerCase()) === parts.exercise,
+      const component = components.some(
+        (use) => use.id === parts.exercise && [...allBlocks(page.blocks)].some((block) => block === use.block),
       );
       problems.at(
         yaml,
         path,
         component
-          ? `${ref} is an exercise component, which a self-assessment cannot show yet; choose a generated exercise or a question`
-          : `${ref} names no exercise of ${page.file}; use the id of one of its exercises: generated, or a question type`,
+          ? `${ref} is a component that checks no answer; choose an exercise: generated, a question type, or an exercise component`
+          : `${ref} names no exercise of ${page.file}; use the id of one of its exercises: generated, a question type, or an exercise component`,
       );
     });
   });
@@ -376,7 +375,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
     for (const chapter of chapters) {
       const yaml = chapterFiles.get(chapter.id);
       if (chapter.selfAssessment === undefined || yaml === undefined) continue;
-      checkAssessment(yaml, chapter.selfAssessment, chapters, chapter.id, problems);
+      checkAssessment(yaml, chapter.selfAssessment, chapters, chapter.id, uses, problems);
     }
   }
 

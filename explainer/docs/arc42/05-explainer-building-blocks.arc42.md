@@ -237,7 +237,9 @@ path: runtime/explainer/explainer.ts
 
 Built. Only on a page with a component: loads Vue, hydrates each component's island with the props of the page's
 language, gives an exercise component the seed of its task number, takes the answer it emits, checks it on "Prüfen"
-with its logic module, and shows the feedback (`dec-explainer-checks`).
+with its logic module, and shows the feedback (`dec-explainer-checks`). On a self-assessment's page it hydrates the
+components once the self-assessment put them into the page, shows the task the run draws, and judges each answer
+silently, without "Prüfen", for "Auswerten" (`dec-self-assessment`).
 
 ```arc42
 :::building-block
@@ -393,13 +395,14 @@ path: runtime/explainer/video.ts
 
 Built. An optional self-assessment (`dec-self-assessment`), declared per chapter: `selfAssessment` in its
 `chapter.yaml`, its pages with the exercises it asks, each by `/<chapter>/<page>/#<exercise>` of the chapter (a
-generated one or a question type; no exercise component yet). The app's is every chapter's in the order of the
+generated one, a question type or an exercise component). The app's is every chapter's in the order of the
 chapters (`einschaetzung/`), a chapter's its own (`<chapter>/einschaetzung/`; in an app with one chapter, the app's is
 the chapter's). The validation checks each reference, that it is of the chapter and that an exercise is listed once;
 the build notes a page of it with fewer than two or more than five exercises. The page rendering writes its page and
 the offer on the start page or the chapter's page, every part of them in a `<template>` until the client module puts it
 into the page, and its tutor page `<assessment>/tutor/`, which makes the tutor a guide (`dec-self-assessment-tutor`).
-In the browser a run draws a new task of each generated exercise, shows the pages one by one without "Prüfen", checks
+In the browser a run draws a new task of each generated exercise and exercise component (the islands show a
+component's task and judge its answer silently, `bb-islands`), shows the pages one by one without "Prüfen", checks
 all exercises together at "Auswerten" and shows for each content page in its scope whether the learner probably knows
 it, should look at it again or should read it; a page with no exercise in it is not asked. The last result stays on the
 device, one per self-assessment (`dec-self-assessment-result`); a run a tutor opened keeps nothing and ends in "Zurück

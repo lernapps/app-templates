@@ -83,3 +83,22 @@ export const NEW_TASK_ICON =
 
 /** The event an exercise sends on its element once it shows a task: the tutor's help button takes its place again. */
 export const SHOWN_EVENT = "explainer-shown";
+
+/**
+ * The events between a self-assessment (assessment-client.ts) and the islands (islands.ts): the self-assessment put
+ * its exercises into the page (on the document); it gives an exercise component the task of `seed` (on its element);
+ * the component's answer changed, as { correct, answer?, message?, mistake? }, with mistake the index of the typical
+ * mistake it makes from 0 (on its element, bubbling).
+ */
+export const ASSESSMENT_UNPACKED_EVENT = "explainer-assessment-unpacked";
+export const ASSESSMENT_TASK_EVENT = "explainer-assessment-task";
+export const ASSESSMENT_ANSWER_EVENT = "explainer-assessment-answer";
+
+/** What an exercise component of a self-assessment says of the answer it has now (ASSESSMENT_ANSWER_EVENT). */
+export interface AssessmentAnswer {
+  correct: boolean;
+  /** The answer as text. */
+  answer?: string;
+  message?: string;
+  mistake?: number;
+}

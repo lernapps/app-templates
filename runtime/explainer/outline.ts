@@ -249,7 +249,7 @@ export function outline(root = "."): Outline {
       key: item.key,
       step: item.step,
       page: `${item.page.chapter}/${item.page.id}/`,
-      id: item.block.id,
+      id: item.exercise,
     })),
     pages: assessment.pages.map((page) => ({
       url: `${page.chapter}/${page.id}/`,

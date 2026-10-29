@@ -31,7 +31,8 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   probably knows it, should look at it again or should read it. The last result stays on the device; with a click the
   learner takes it to the tutor, who then guides chapter by chapter: to the pages that do not stick, then into a new
   round of the chapter's self-assessment, whose "Zurück zum Tutor" brings the result back into the chat.
-  The example chapter has one, offered on the start page.
+  An exercise component may be in it: it shows the task the run draws, without "Prüfen". The example chapter has
+  one, with the exercise component `prozentfeld`, offered on the start page.
 - German, plus English: a page tree per language.
 
 ## What it cannot do
@@ -43,7 +44,7 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   exercise.
 - Stores nothing but the learner's choice of AI tutor, if they make it, the choice to load videos directly, and the
   last result of each self-assessment they do.
-- A self-assessment needs JavaScript (without it, it is not offered) and cannot show an exercise component yet.
+- A self-assessment needs JavaScript (without it, it is not offered).
 - No video from another platform than YouTube, no thumbnail, no own video files.
 
 ## What the app supplies
