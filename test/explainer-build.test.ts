@@ -55,6 +55,8 @@ function shipped(file: string): string[] {
 /** An exercise component of a content: the pages it is on, and what each shows of it, by language. */
 interface ComponentPages {
   pages: string[];
+  /** The self-assessments that ask it: with its island, in a <template> until the client module runs. */
+  assessments: string[];
   /** Its markup, rendered at build. */
   island: RegExp;
   /** Its anchor and the seeds of its numbers, as the page starts them. */
@@ -72,6 +74,7 @@ const contents: [string, string, number, ComponentPages | undefined][] = [
     3,
     {
       pages: ["prozent/prozentwert/"],
+      assessments: ["einschaetzung/"],
       island: /<div class="explainer-island" hidden><div class="prozent-feld"[^>]*><p[^>]*>Das Feld hat 40 Kästchen/,
       component:
         '<div class="explainer-component" id="prozentfeld" data-component="ProzentFeld" data-exercise data-seeds="[1,2,4,',
@@ -86,6 +89,7 @@ const contents: [string, string, number, ComponentPages | undefined][] = [
     3,
     {
       pages: ["revolution/staende/", "en/revolution/staende/"],
+      assessments: [],
       island: /<div class="explainer-island" hidden><div class="assign-labels"[^>]*><svg /,
       component:
         '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise data-seeds="[1,2,5,7,10]" data-checked>',
@@ -125,7 +129,12 @@ describe("one build writes every page", () => {
         expect(existsSync(join(dirname(file), href)), `${route.path}: ${href}`).toBe(true);
         // Vue only where there is a component: its markup rendered at build, hidden until it hydrates
         const vue = shipped(file).some((script) => readFileSync(script, "utf8").includes(VUE));
-        expect(vue, `${route.path}: ships Vue`).toBe(withComponents.includes(route.path));
+        const asking = component?.assessments.includes(route.path) ?? false;
+        expect(vue, `${route.path}: ships Vue`).toBe(withComponents.includes(route.path) || asking);
+        if (component !== undefined && asking) {
+          expect(html).toMatch(component.island);
+          expect(html).toContain('data-component="ProzentFeld" data-exercise data-assessment data-seeds="[1,2,4,');
+        }
         if (component !== undefined && withComponents.includes(route.path)) {
           expect(html).toMatch(component.island);
           // in a form with the explainer's "Prüfen", hidden and disabled until it hydrates and there is an answer

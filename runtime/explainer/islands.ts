@@ -15,8 +15,24 @@
 // build ships (data-seeds; tasks.ts): the build rendered task number 1, it hydrates with it, and then moves to the
 // number the address names (?<id>=<n>, wrapped into 1 to N) or to a random one; "Aufgabe Nr. <n>" shows above
 // it, and "Neue Aufgabe" moves to the next number, writes it into the address and mounts the component afresh. Nothing is stored.
+// In a self-assessment (data-assessment) an exercise component has no "Prüfen", no feedback and no task number: it
+// shows the task of the seed the self-assessment gives (data-seed, then ASSESSMENT_TASK_EVENT, each mounting it
+// afresh) and judges each answer as it changes, silently, for the self-assessment's "Auswerten"
+// (ASSESSMENT_ANSWER_EVENT). Its elements are in a <template> until the self-assessment puts them into the page
+// (ASSESSMENT_UNPACKED_EVENT); the islands hydrate them then.
 import { createSSRApp, h, nextTick, ref, shallowRef, type Component } from "vue";
-import { addressOf, nextTaskNumber, numberFromAddress, randomTaskNumber, SHOWN_EVENT, taskNumber } from "./tasks.ts";
+import {
+  addressOf,
+  ASSESSMENT_ANSWER_EVENT,
+  ASSESSMENT_TASK_EVENT,
+  ASSESSMENT_UNPACKED_EVENT,
+  nextTaskNumber,
+  numberFromAddress,
+  randomTaskNumber,
+  SHOWN_EVENT,
+  taskNumber,
+  type AssessmentAnswer,
+} from "./tasks.ts";
 
 /** The components of the app by name, each loaded on first use. */
 export type Components = Readonly<Record<string, () => Promise<{ default: Component }>>>;
@@ -27,6 +43,8 @@ export interface Logic {
   check(task: unknown, answer: unknown): unknown;
   reason?(task: unknown, answer: unknown, props: unknown, lang: string): unknown;
   show?(answer: unknown, task: unknown, props: unknown, lang: string): unknown;
+  /** The answer of each typical mistake, in the order of about.mistakes. */
+  mistakes?(task: unknown, props: unknown): unknown;
 }
 
 /** The logic modules of the app's exercise components by name, each loaded on first use. */
@@ -60,6 +78,69 @@ function foldCaption(element: HTMLElement, nojs: HTMLElement): void {
   nojs.classList.add("explainer-caption");
 }
 
+/** The index of the typical mistake `answer` makes, from 0, compared as JSON; undefined for none. */
+function mistakeOf(logic: Logic, task: unknown, answer: unknown, props: unknown): number | undefined {
+  const mistakes = logic.mistakes?.(task, props);
+  if (!Array.isArray(mistakes)) return undefined;
+  const index = mistakes.findIndex(
+    (mistake) => mistake !== undefined && JSON.stringify(mistake) === JSON.stringify(answer),
+  );
+  return index < 0 ? undefined : index;
+}
+
+/**
+ * Mounts an exercise component of a self-assessment: the task of the seed it gives, each answer judged as it changes
+ * and sent on, no "Prüfen".
+ */
+function assess(
+  element: HTMLElement,
+  island: HTMLElement,
+  component: Component,
+  props: Record<string, unknown>,
+  logic: Logic,
+): void {
+  const lang = element.ownerDocument.documentElement.lang || "de";
+  const seeds = JSON.parse(element.dataset["seeds"] ?? "[1]") as number[];
+  // hydrates with the task of number 1, as the build rendered it, then shows the task the self-assessment gave
+  const seed = ref(seeds[0] ?? 1);
+  // each task the self-assessment gives mounts it afresh, with no answer, the same seed again too
+  const round = ref(0);
+  const declaresChecked = element.dataset["checked"] !== undefined;
+  const onAnswer = (answer: unknown) => {
+    const task = logic.generate(seed.value, props);
+    const correct = logic.check(task, answer) === true;
+    const message = correct ? undefined : textOf(logic.reason?.(task, answer, props, lang));
+    const shown = logic.show === undefined ? undefined : textOf(logic.show(answer, task, props, lang));
+    const mistake = correct ? undefined : mistakeOf(logic, task, answer, props);
+    const detail: AssessmentAnswer = {
+      correct,
+      ...(shown === undefined ? {} : { answer: shown }),
+      ...(message === undefined ? {} : { message }),
+      ...(mistake === undefined ? {} : { mistake }),
+    };
+    element.dispatchEvent(new CustomEvent(ASSESSMENT_ANSWER_EVENT, { bubbles: true, detail }));
+  };
+  createSSRApp({
+    render: () =>
+      h(component, {
+        ...props,
+        seed: seed.value,
+        key: round.value,
+        ...(declaresChecked ? { checked: false } : {}),
+        onAnswer,
+      }),
+  }).mount(island);
+  const given = Number(element.dataset["seed"]);
+  if (given > 0) {
+    seed.value = given;
+    round.value += 1;
+  }
+  element.addEventListener(ASSESSMENT_TASK_EVENT, (event) => {
+    seed.value = (event as CustomEvent<{ seed: number }>).detail.seed;
+    round.value += 1;
+  });
+}
+
 /** Hydrates one component in place, with the logic module of an exercise component. */
 async function hydrate(
   element: HTMLElement,
@@ -76,6 +157,8 @@ async function hydrate(
   const { default: component } = await load();
   if (element.dataset["exercise"] === undefined || loadLogic === undefined) {
     createSSRApp(component, props).mount(island);
+  } else if (element.dataset["assessment"] !== undefined) {
+    assess(element, island, component, props, await loadLogic());
   } else {
     const logic = await loadLogic();
     const lang = element.ownerDocument.documentElement.lang || "de";
@@ -171,9 +254,17 @@ async function hydrate(
 
 /** Hydrates every component of the page. */
 export function startIslands(components: Components, logics: Logics = {}, root: Document = document): void {
-  for (const element of root.querySelectorAll<HTMLElement>(".explainer-component")) {
-    const name = element.dataset["component"] ?? "";
-    const load = components[name];
-    if (load) void hydrate(element, load, logics[name]);
+  const start = () => {
+    for (const element of root.querySelectorAll<HTMLElement>(".explainer-component:not([data-started])")) {
+      element.dataset["started"] = "";
+      const name = element.dataset["component"] ?? "";
+      const load = components[name];
+      if (load) void hydrate(element, load, logics[name]);
+    }
+  };
+  start();
+  // the components of a self-assessment, once it put them into the page
+  if (root.querySelector("template.explainer-assessment-template")) {
+    root.addEventListener(ASSESSMENT_UNPACKED_EVENT, start, { once: true });
   }
 }

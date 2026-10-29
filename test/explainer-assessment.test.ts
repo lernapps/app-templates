@@ -16,7 +16,7 @@ import {
   stepHint,
   type ItemResult,
 } from "../runtime/explainer/assessment.ts";
-import { assessmentTutorMarkdown } from "../runtime/explainer/assessment-page.ts";
+import { assessmentTutorMarkdown, type AssessmentData } from "../runtime/explainer/assessment-page.ts";
 import { check, loadSite } from "../runtime/explainer/load.ts";
 import { renderPage } from "../runtime/explainer/render.ts";
 import { routes } from "../runtime/explainer/routes.ts";
@@ -57,13 +57,13 @@ describe("the build checks a self-assessment", () => {
       "an exercise the page does not have",
       "/zahlen/zahlen-01/#prozent-rechnen",
       "/zahlen/zahlen-01/#prozent-raten",
-      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-01/#prozent-raten names no exercise of src/zahlen/zahlen-01.yaml; use the id of one of its exercises: generated, or a question type",
+      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-01/#prozent-raten names no exercise of src/zahlen/zahlen-01.yaml; use the id of one of its exercises: generated, a question type, or an exercise component",
     ],
     [
       "a question listed twice",
       "/zahlen/zahlen-01/#prozent-rechnen",
       "/zahlen/zahlen-01/#prozent-von-200",
-      "src/zahlen/chapter.yaml:12: selfAssessment.pages[0].exercises[1]: /zahlen/zahlen-01/#prozent-von-200 is listed twice, and a question shows the same task each time; list it once (a generated exercise may be listed again: each listing draws a task of its own)",
+      "src/zahlen/chapter.yaml:12: selfAssessment.pages[0].exercises[1]: /zahlen/zahlen-01/#prozent-von-200 is listed twice, and a question shows the same task each time; list it once (a generated exercise or an exercise component may be listed again: each listing draws a task of its own)",
     ],
     [
       "an exercise of another chapter",
@@ -95,21 +95,35 @@ describe("the build checks a self-assessment", () => {
     expect(problems(root)[0]).toMatch(/^src\/app\.yaml:\d+: /);
   });
 
-  test("an exercise component cannot be in it yet; an app with one chapter has it in its chapter.yaml", () => {
+  test("an exercise component can be in it, also twice; an app with one chapter has it in its chapter.yaml", () => {
     const root = mkdtempSync(join(tmpdir(), "explainer-assessment-"));
     cpSync(join(import.meta.dirname, "../explainer/src"), join(root, "src"), { recursive: true });
+    expect(problems(root)).toEqual([]);
     edit(root, "prozent/chapter.yaml", "/prozent/prozentsatz/#welche-rechnung", "/prozent/prozentwert/#prozentfeld");
-    const line =
-      readFileSync(join(root, "src/prozent/chapter.yaml"), "utf8")
-        .split("\n")
-        .findIndex((text) => text.includes("#prozentfeld")) + 1;
-    expect(problems(root)).toEqual([
-      `src/prozent/chapter.yaml:${line}: selfAssessment.pages[0].exercises[2]: /prozent/prozentwert/#prozentfeld is an exercise component, which a self-assessment cannot show yet; choose a generated exercise or a question`,
-    ]);
-    edit(root, "prozent/chapter.yaml", "#prozentfeld", "#prozentwert-ueben");
+    expect(problems(root), "each listing draws a task of its own").toEqual([]);
     const site = loadSite(root, 0);
     // the app's is the chapter's: no page of its own for the chapter, whose page the app hides
+    const [whole] = assessments(site);
     expect(assessments(site).map((assessment) => assessment.local)).toEqual(["einschaetzung/"]);
+    expect(whole?.items.filter((item) => item.block.type === "vue-component").map((item) => item.key)).toEqual([
+      "a2",
+      "a3",
+    ]);
+    // its page: the component's island in a form of its own, no "Prüfen", and the islands module loads
+    const route = routes(site).find((candidate) => candidate.kind === "assessment" && candidate.lang === "de");
+    if (route === undefined) throw new Error("no self-assessment page");
+    const page = renderPage(site, route);
+    expect(page.islands).toBe(true);
+    expect(page.body).toContain(
+      '<div class="explainer-component" id="aufgabe-a2" data-component="ProzentFeld" data-exercise data-assessment data-seeds="[',
+    );
+    expect(page.body).not.toMatch(/id="aufgabe-a2"[\s\S]*?question-check[\s\S]*?id="aufgabe-a3"/);
+    const data = JSON.parse(
+      /<script type="application\/json" class="explainer-assessment-data">([\s\S]*?)<\/script>/.exec(page.body)?.[1] ??
+        "{}",
+    ) as AssessmentData;
+    expect(data.items[1]?.data.kind).toBe("component");
+    expect(data.items[1]?.exercise).toBe("prozentfeld");
   });
 
   test("a generated exercise may be listed again: each listing draws a task of its own", () => {

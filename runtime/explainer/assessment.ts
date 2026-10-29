@@ -9,7 +9,16 @@
 // the result to a KI tutor with a click, as the address of the self-assessment's tutor page (assessment-page.ts) with
 // the result in its query, ?a1=17-falsch-F1&a2=richtig, and the lines of the prompt. Pure and without Node: the client
 // module calls it too.
-import { allBlocks, inLanguage, isExercise, type Chapter, type Exercise, type Page, type Site } from "./content.ts";
+import {
+  allBlocks,
+  inLanguage,
+  isExercise,
+  type BlockOf,
+  type Chapter,
+  type Exercise,
+  type Page,
+  type Site,
+} from "./content.ts";
 import { message } from "./messages.ts";
 
 /** The folder of a self-assessment: einschaetzung/ for the app, <chapter>/einschaetzung/ for a chapter. */
@@ -30,7 +39,9 @@ export interface AssessmentItem {
   /** /<chapter>/<page>/#<exercise>, as the content names it. */
   ref: string;
   page: Page;
-  block: Exercise;
+  /** Its id on the page. */
+  exercise: string;
+  block: AssessmentBlock;
   /** The index of its page in the self-assessment, from 0. */
   step: number;
 }
@@ -56,13 +67,28 @@ export function parseRef(ref: string): { chapter: string; page: string; exercise
   return match === null ? undefined : { chapter: match[1] ?? "", page: match[2] ?? "", exercise: match[3] ?? "" };
 }
 
-/** The exercise of `page` with the id `id`: a question of the question types, or generated; none for anything else. */
-export function exerciseOf(page: Page, id: string): Exercise | undefined {
-  for (const block of allBlocks(page.blocks)) {
+/** An exercise a self-assessment can ask: a question of the question types, generated, or an exercise component. */
+export type AssessmentBlock = Exercise | BlockOf<"vue-component">;
+
+/**
+ * The exercise of `page` with the id `id`: a question of the question types, generated, or an exercise component
+ * (of the component uses `components`, by its anchor); none for anything else.
+ */
+export function exerciseOf(components: Site["components"], page: Page, id: string): AssessmentBlock | undefined {
+  const blocks = [...allBlocks(page.blocks)];
+  for (const block of blocks) {
     if (isExercise(block) && block.id === id) return block;
   }
-  return undefined;
+  const use = components.find(
+    (candidate) =>
+      candidate.component.exercise && candidate.id === id && blocks.some((block) => block === candidate.block),
+  );
+  return use?.block;
 }
+
+/** Whether each listing of `block` draws a task of its own: a generated exercise, or an exercise component. */
+export const drawsTasks = (block: AssessmentBlock): boolean =>
+  block.type === "generated" || block.type === "vue-component";
 
 /** The self-assessments of a valid site, the app's first, then each chapter's in order. */
 export function assessments(site: Site): Assessment[] {
@@ -76,10 +102,11 @@ export function assessments(site: Site): Assessment[] {
       for (const ref of step.exercises) {
         const parts = parseRef(ref);
         const page = pages.find((candidate) => candidate.chapter === parts?.chapter && candidate.id === parts.page);
-        const block = page === undefined || parts === undefined ? undefined : exerciseOf(page, parts.exercise);
+        const block =
+          page === undefined || parts === undefined ? undefined : exerciseOf(site.components, page, parts.exercise);
         // the build checked every reference
-        if (page === undefined || block === undefined) continue;
-        items.push({ key: `a${items.length + 1}`, ref, page, block, step: index });
+        if (page === undefined || parts === undefined || block === undefined) continue;
+        items.push({ key: `a${items.length + 1}`, ref, page, exercise: parts.exercise, block, step: index });
       }
     });
     return {

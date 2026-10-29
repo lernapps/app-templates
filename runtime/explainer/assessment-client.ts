@@ -1,7 +1,8 @@
 // The self-assessment in the browser (assessment.ts), started by the client module (explainer.ts). It puts into the
 // page what the build wrote into a <template> for it. On the start page or a chapter's page it shows the offer, and names the last result when the device keeps one.
 // On the self-assessment's page it shows the intro, or the last result when the device keeps one. A start draws a new
-// task of each generated exercise (a random task number) and shows the pages one by one, "Weiter" and "Zurück"
+// task of each generated exercise and exercise component (a random task number; the islands show a component's task,
+// islands.ts) and shows the pages one by one, "Weiter" and "Zurück"
 // between them: the exercises have no "Prüfen" and give no feedback. "Auswerten" checks them all together, keeps the
 // result on the device (it replaces the one before) and shows it: for each content page whether the learner probably
 // knows it, should look at it again or should read it, with its link. The way to the tutor takes the result along on
@@ -29,7 +30,13 @@ import { taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { message, type Messages } from "./messages.ts";
 import { answerShown } from "./result.ts";
-import { randomTaskNumber } from "./tasks.ts";
+import {
+  ASSESSMENT_ANSWER_EVENT,
+  ASSESSMENT_TASK_EVENT,
+  ASSESSMENT_UNPACKED_EVENT,
+  randomTaskNumber,
+  type AssessmentAnswer,
+} from "./tasks.ts";
 
 /** A way to the tutor: an assistant of the app, or copying the text (no address). */
 interface Way {
@@ -111,10 +118,14 @@ function previousNumbers(href: string, items: readonly { key: string; ref: strin
   return numbers;
 }
 
-/** One exercise of a run: how to read and check its answer. */
+/**
+ * One exercise of a run: how to read and check its answer; of an exercise component, the islands judge it
+ * (`component`).
+ */
 interface Live {
-  question: Question;
-  /** The task number of a generated exercise. */
+  question?: Question;
+  component?: true;
+  /** The task number of a generated exercise or an exercise component. */
   number?: number;
   /** The typical mistake a wrong answer makes, from 0. */
   mistake?: (answer: Parameters<typeof isCorrect>[1]) => number | undefined;
@@ -125,6 +136,8 @@ function unpack(root: Document): void {
   for (const template of root.querySelectorAll<HTMLTemplateElement>("template.explainer-assessment-template")) {
     template.replaceWith(root.importNode(template.content, true));
   }
+  // the islands hydrate the exercise components in it now
+  root.dispatchEvent(new CustomEvent(ASSESSMENT_UNPACKED_EVENT));
 }
 
 /** Starts the self-assessment's page, and the offers on the start page and the chapters' pages. */
@@ -155,8 +168,13 @@ export function startAssessment(root: Document, ways: TutorWays): void {
     if (focus && heading) moveFocus(heading);
   };
 
-  // the exercises of the run
+  // the exercises of the run, and the answer each exercise component has now, as the islands judged it
   const live = new Map<string, Live>();
+  const answers = new Map<string, AssessmentAnswer>();
+  box.addEventListener(ASSESSMENT_ANSWER_EVENT, (event) => {
+    const key = (event.target as HTMLElement).closest<HTMLElement>(".explainer-assessment-item")?.dataset["key"];
+    if (key !== undefined) answers.set(key, (event as CustomEvent<AssessmentAnswer>).detail);
+  });
   const element = (key: string) => box.querySelector<HTMLElement>(`.explainer-assessment-item[data-key="${key}"]`);
 
   // the task numbers of the round before, which a tutor's link names (vorher=a1.28,a4.2): a new round avoids them
@@ -165,6 +183,7 @@ export function startAssessment(root: Document, ways: TutorWays): void {
   /** A new run: a new task of each generated exercise, every answer empty, the options mixed, the first page. */
   const begin = () => {
     live.clear();
+    answers.clear();
     // the task numbers drawn of each exercise: listed again, it draws another
     const drawn = new Map<string, Set<number>>();
     for (const item of data.items) {
@@ -177,13 +196,25 @@ export function startAssessment(root: Document, ways: TutorWays): void {
         live.set(item.key, { question: exercise.question });
         continue;
       }
-      const { spec, templates, seeds } = exercise;
+      const { seeds } = exercise;
       const used = drawn.get(item.ref) ?? new Set<number>();
       drawn.set(item.ref, used);
       const number = drawNumber(Math.max(seeds.length, 1), [used, before.get(item.ref) ?? new Set<number>()]);
       used.add(number);
       // the task number drawn, for the tests and a look at the page
       place.dataset["number"] = String(number);
+      if (exercise.kind === "component") {
+        // the islands show its task: at once when hydrated, else when they hydrate it
+        const component = place.querySelector<HTMLElement>(".explainer-component");
+        const seed = seeds[number - 1] ?? number;
+        if (component) {
+          component.dataset["seed"] = String(seed);
+          component.dispatchEvent(new CustomEvent(ASSESSMENT_TASK_EVENT, { detail: { seed } }));
+        }
+        live.set(item.key, { component: true, number });
+        continue;
+      }
+      const { spec, templates } = exercise;
       const task = generate(spec, seeds[number - 1] ?? number, exercise.data);
       const question = { ...questionFor(spec, task, lang, templates), id: item.key };
       const target = place.querySelector<HTMLElement>(".explainer-assessment-live");
@@ -206,7 +237,18 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       const run = live.get(item.key);
       const form = element(item.key)?.querySelector("form");
       const base = { key: item.key, ref: item.ref, ...(run?.number === undefined ? {} : { number: run.number }) };
-      if (!run || !form) return { ...base, state: "offen" };
+      if (run?.component === true) {
+        const answer = answers.get(item.key);
+        if (answer === undefined) return { ...base, state: "offen" };
+        if (answer.correct) return { ...base, state: "richtig" };
+        return {
+          ...base,
+          state: "falsch",
+          ...(answer.answer === undefined ? {} : { input: answer.answer }),
+          ...(answer.mistake === undefined ? {} : { mistake: answer.mistake + 1 }),
+        };
+      }
+      if (!run?.question || !form) return { ...base, state: "offen" };
       const answer = readAnswer(run.question, form);
       if (!isComplete(run.question, answer)) return { ...base, state: "offen" };
       if (isCorrect(run.question, answer)) return { ...base, state: "richtig" };

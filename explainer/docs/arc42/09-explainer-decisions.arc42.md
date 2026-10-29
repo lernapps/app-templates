@@ -260,8 +260,10 @@ and its forms of teaching are known, at the end (tooling skill `lernapps-explain
 JavaScript; without it the offer stays hidden and its page says so in one line. Rejected: feedback after each
 exercise (it would teach, not assess); a result per chapter (too coarse to say where to start); a self-assessment of
 the app declared apart from the chapters' (two lists of the same exercises to keep in step); exercises of its own
-(they would duplicate the pages' and miss the tutor's tables); exercise components (their answers come from islands
-that a page of several exercises does not load yet).
+(they would duplicate the pages' and miss the tutor's tables). An exercise component may be in it as well, and may be
+listed twice like a generated exercise: its island shows the task the run draws, without "Prüfen", and judges each
+answer silently for "Auswerten"; its typical mistake comes from its logic's mistakes. Its tasks often check a page
+best, so leaving components out left whole chapters unasked.
 
 ```arc42
 :::decision
