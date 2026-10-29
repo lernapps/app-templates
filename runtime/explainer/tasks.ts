@@ -88,7 +88,8 @@ export const SHOWN_EVENT = "explainer-shown";
  * The events between a self-assessment (assessment-client.ts) and the islands (islands.ts): the self-assessment put
  * its exercises into the page (on the document); it gives an exercise component the task of `seed` (on its element);
  * the component's answer changed, as { correct, answer?, message?, mistake? }, with mistake the index of the typical
- * mistake it makes from 0 (on its element, bubbling).
+ * mistake it makes from 0, or null when it has none: emptied, incomplete, or one its logic cannot read (on its
+ * element, bubbling).
  */
 export const ASSESSMENT_UNPACKED_EVENT = "explainer-assessment-unpacked";
 export const ASSESSMENT_TASK_EVENT = "explainer-assessment-task";
