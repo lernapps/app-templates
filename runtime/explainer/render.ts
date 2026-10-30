@@ -31,6 +31,7 @@ import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { tutorPageOf } from "./tutor.ts";
+import { LANGUAGES, languageName, NEEDS, OTHER_LANGUAGE, type Need } from "./needs.ts";
 import { BASE, placeholderPrompt, plainAddress, PROVIDERS, QUERY, startPrompt } from "./prompt.ts";
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
@@ -467,11 +468,72 @@ function tutorAbout(context: Context): string {
     `<h2 id="ki-tutor">${plain(context.t("tutorTitle"))}</h2>`,
     `<p>${plain(context.t("tutorAbout"))}</p>`,
     `<p>${plain(context.t("tutorAboutStart"))}</p>`,
-    `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label></p>`,
+    `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label> <button type="button" class="explainer-tutor-needs-open" aria-haspopup="dialog" aria-label="${plain(context.t("needsOpen"))}" title="${plain(context.t("needsOpen"))}">${SETTINGS_ICON}</button></p>`,
     `<p class="explainer-tutor-hint" role="status" aria-live="polite" hidden></p>`,
     `<p>${plain(context.t("tutorAccount"))}</p>`,
     `<p>${plain(context.t("tutorAboutPrivacy"))}</p>`,
     `</section>`,
+    needsChoice(context),
+  ].join("\n");
+}
+
+/** The symbol of "Einstellungen", which opens the dialog of the learner's needs: a gear, its name in aria-label. */
+const SETTINGS_ICON =
+  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+
+/** The name and the description of each need on the start page. */
+const NEED_TEXTS: Readonly<Record<Need, readonly [keyof Messages, keyof Messages]>> = {
+  "kurze-schritte": ["needKurzeSchritte", "needKurzeSchritteAbout"],
+  "wenig-lesen": ["needWenigLesen", "needWenigLesenAbout"],
+  "mehr-tiefe": ["needMehrTiefe", "needMehrTiefeAbout"],
+  "andere-muttersprache": ["needAndereMuttersprache", "needAndereMutterspracheAbout"],
+  "klar-und-woertlich": ["needKlarUndWoertlich", "needKlarUndWoertlichAbout"],
+  "rechnen-anschaulich": ["needRechnenAnschaulich", "needRechnenAnschaulichAbout"],
+};
+
+/**
+ * The choice of the learner's needs for the tutor, on the start page (dec-tutor-needs): a dialog that "Einstellungen"
+ * beside the choice of the assistant opens, with a box per need and one or two sentences on what it does, the first
+ * language below `andere-muttersprache`, and whether the choice holds for every explainer or for this app only. The
+ * tutor needs JavaScript, so the dialog does too: it stays in a <template> until the client module puts it into the
+ * page, opens it and keeps the choice on the device.
+ */
+function needsChoice(context: Context): string {
+  const { site, lang } = context;
+  const languages = [...LANGUAGES]
+    .map((tag) => ({ tag, name: languageName(tag, lang) }))
+    .sort((a, b) => a.name.localeCompare(b.name, lang));
+  const language = [
+    `<p class="explainer-tutor-language-choice" hidden><label>${plain(context.t("needsLanguage"))} <select class="explainer-tutor-language">`,
+    `<option value="">${plain(context.t("needsLanguageNone"))}</option>`,
+    ...languages.map(({ tag, name }) => `<option value="${plain(tag)}">${plain(name)}</option>`),
+    `</select></label></p>`,
+  ].join("");
+  const needs = NEEDS.map((need) => {
+    const [name, about] = NEED_TEXTS[need];
+    const id = `bedarf-${need}`;
+    return [
+      `<div class="explainer-tutor-need-choice"><input type="checkbox" class="explainer-tutor-need" id="${id}" value="${need}" aria-describedby="${id}-text" />`,
+      `<label for="${id}">${plain(context.t(name))}</label>`,
+      `<p class="explainer-tutor-need-text" id="${id}-text">${plain(context.t(about))}</p></div>`,
+      need === OTHER_LANGUAGE ? language : "",
+    ].join("");
+  });
+  const scope = (value: string, key: keyof Messages) =>
+    `<label><input type="radio" class="explainer-tutor-needs-scope" name="bedarf-gilt" value="${value}" /> ${plain(context.t(key))}</label>`;
+  return [
+    `<template class="explainer-tutor-needs-template">`,
+    `<dialog class="explainer-tutor-needs" data-storage="${plain(site.storage ?? "explainer")}" aria-labelledby="bedarf-titel">`,
+    `<form method="dialog">`,
+    `<h2 id="bedarf-titel">${plain(context.t("needsTitle"))}</h2>`,
+    `<p>${plain(context.t("needsAbout"))}</p>`,
+    ...needs,
+    `<fieldset class="explainer-tutor-needs-where"><legend>${plain(context.t("needsScopeTitle"))}</legend>${scope("archetype", "needsScopeAll")} ${scope("app", "needsScopeApp")}</fieldset>`,
+    `<p class="explainer-tutor-note">${plain(context.t("needsPrivacy"))}</p>`,
+    `<p><button class="explainer-tutor-needs-done">${plain(context.t("needsDone"))}</button></p>`,
+    `</form>`,
+    `</dialog>`,
+    `</template>`,
   ].join("\n");
 }
 

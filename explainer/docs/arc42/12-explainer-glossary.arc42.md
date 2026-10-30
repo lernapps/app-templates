@@ -135,6 +135,18 @@ definition: One of the app's assistants, or copying the text, chosen once by the
 :::
 ```
 
+## Need
+
+What helps a learner when the tutor talks to them, named by what helps, never by a diagnosis.
+
+```arc42
+:::glossary-term
+id: term-tutor-need
+title: Need
+definition: One of the ways the tutor can talk that a learner chooses, none, one or several, for every explainer or for one app (kurze-schritte, wenig-lesen, mehr-tiefe, andere-muttersprache, klar-und-woertlich, rechnen-anschaulich); the tutor page's query names them in bedarf=, and the tutor page holds a short section for each.
+:::
+```
+
 ## Lines of "Hilfe"
 
 What way B gives the tutor about one task.

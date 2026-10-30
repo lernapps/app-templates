@@ -888,7 +888,10 @@ export function explainerTests(root = "."): void {
             forward.push(relative(page.url()));
             const next = page.locator('a[rel="next"]');
             if ((await next.count()) === 0) break;
+            // the next page before its links count: a large page may still load when the loop looks again
+            const here = page.url();
             await next.click();
+            await page.waitForURL((url) => url.href !== here);
           }
           expect(forward, "next leads through every page in order").toEqual(order);
           const backward: string[] = [];
@@ -896,7 +899,9 @@ export function explainerTests(root = "."): void {
             backward.push(relative(page.url()));
             const previous = page.locator('a[rel="prev"]');
             if ((await previous.count()) === 0) break;
+            const here = page.url();
             await previous.click();
+            await page.waitForURL((url) => url.href !== here);
           }
           expect(backward, "previous leads back through every page").toEqual([...order].reverse());
         });
@@ -1239,6 +1244,55 @@ export function explainerTests(root = "."): void {
         await page.goto(`./${firstPage.url}`);
         await expect(tutor.locator(".explainer-tutor-bar")).toBeHidden();
         await expect(page.locator("button.explainer-help").first(), "no help without a tutor").toBeHidden();
+      });
+
+      test("the start page keeps the learner's needs for every explainer or this app; way A names them", async ({
+        page,
+      }) => {
+        await page.goto("./");
+        const needs = page.locator("dialog.explainer-tutor-needs");
+        await expect(needs, "closed at first").toBeHidden();
+        await page.locator("button.explainer-tutor-needs-open").click();
+        await expect(needs, "opened by Einstellungen").toBeVisible();
+        const language = needs.locator("select.explainer-tutor-language");
+        await expect(language, "the first language only with andere-muttersprache").toBeHidden();
+        await needs.locator('input.explainer-tutor-need[value="kurze-schritte"]').check();
+        await needs.locator('input.explainer-tutor-need[value="andere-muttersprache"]').check();
+        await expect(language).toBeVisible();
+        await language.selectOption("tr");
+        const stored = (key: string) => page.evaluate((name) => localStorage.getItem(name), key);
+        expect(
+          JSON.parse((await stored("lernapps:settings:explainer:tutor-bedarf")) ?? "null"),
+          "for every explainer",
+        ).toEqual({
+          needs: ["kurze-schritte", "andere-muttersprache"],
+          language: "tr",
+        });
+        await needs.locator('input.explainer-tutor-needs-scope[value="app"]').check();
+        const own = await page.evaluate(() =>
+          Object.keys(localStorage).find(
+            (key) => /^lernapps:[a-z0-9-]+:settings:tutor-bedarf$/.test(key) && !key.startsWith("lernapps:settings:"),
+          ),
+        );
+        expect(own, "for this app only, under its own prefix").toBeDefined();
+        await needs.locator("button.explainer-tutor-needs-done").click();
+        await expect(needs, "closed by Fertig").toBeHidden();
+        await page.reload();
+        await page.locator("button.explainer-tutor-needs-open").click();
+        await expect(needs.locator('input.explainer-tutor-needs-scope[value="app"]')).toBeChecked();
+        await expect(needs.locator('input.explainer-tutor-need[value="kurze-schritte"]')).toBeChecked();
+
+        const opened = await recordOpen(page);
+        await page.goto(`./${firstPage.url}`);
+        const assistant = await firstAssistant(page);
+        test.skip(!assistant.url.includes("{prompt}"), "the app's first assistant takes no prompt in its address");
+        await (await switchOn(page, assistant.name)).locator(".explainer-tutor-go").click();
+        const prompt = promptOf(assistant.url, (await opened())[0] ?? "");
+        const address = /https?:\/\/\S+/.exec(prompt)?.[0] ?? "";
+        expect(new URL(address).searchParams.get("bedarf"), "the needs in the tutor page's query").toBe(
+          "kurze-schritte,andere-muttersprache",
+        );
+        expect(prompt, "the first language in the learner's voice").toContain("Meine Muttersprache ist Türkisch.");
       });
     }
 

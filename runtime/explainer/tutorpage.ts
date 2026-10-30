@@ -11,7 +11,8 @@
 // hidden, as hidden instructions to an AI look like prompt injection: who the tutor helps and where the child is; how
 // to guide (short answers, ask what is not understood, step by step from the topic to the task, the page's own tasks,
 // nothing worked out by itself, no solution, practising in the app, never copying a task); how to read where the
-// child is and how a task's link looks; the app's own rules. Then the page's content as context (tutor.ts,
+// child is and how a task's link looks; the app's own rules; the learner's needs, a short section for each, which holds
+// when the query names it in `bedarf=` (needs.ts). Then the page's content as context (tutor.ts,
 // contentLines), and its exercises: a generated one once as its template, with hint, steps and its typical mistakes
 // as F1, F2 …, and below a table of each task number's inputs and outputs, the values of its placeholders, the
 // solution and what each mistake gives, all worked out; an exercise component by its about in prose, and with its
@@ -38,6 +39,7 @@ import { questionFor } from "./generated/question.ts";
 import { label, placeholderValue, placeholdersIn, plainText } from "./generated/texts.ts";
 import { type Generated } from "./generated/types.ts";
 import { generate } from "./generated/values.ts";
+import { NEEDS, type Need } from "./needs.ts";
 import { contentLines, exercisePart, tutorWords } from "./tutor.ts";
 
 /** The name of a tutor page's Markdown, beside the page in its folder: for an assistant that fetches nothing. */
@@ -65,6 +67,10 @@ interface Words {
   appRules: string;
   whereTitle: string;
   where: string[];
+  /** The learner's needs (needs.ts): what holds when the query names them, then a short section for each. */
+  needsTitle: string;
+  needsIntro: string;
+  needs: Readonly<Record<Need, string>>;
   contextTitle: string;
   exercise: string;
   steps: string;
@@ -115,6 +121,23 @@ const WORDS: Readonly<Record<string, Words>> = {
       "„Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“: diese Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App. Setz bei den falschen an, eine nach der anderen.",
       "Jede Aufgabe hat einen Link: die Adresse der Seite, also dieser Tutor-Seite ohne `tutor/` und ohne `?…`, mit der Nummer und `via=tutor`, z. B. `{link}`. Schick ihn immer als volle Adresse, mit Schema und Host dieser Tutor-Seite (z. B. `https://`). Für eine weitere Aufgabe nimm eine andere Nummer der Übung und nenn ihren Text. Sag dazu: „Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“",
     ],
+    needsTitle: "Besondere Anforderungen",
+    needsIntro:
+      "Nennt die Adresse dieser Seite `bedarf=`, gilt jeder Abschnitt, den sie nennt, mehrere durch Komma getrennt. Er geht dem oben Gesagten vor; widersprechen sich zwei, gilt der strengere. Ohne `bedarf=` gilt keiner.",
+    needs: {
+      "kurze-schritte":
+        "Im Gegensatz zu oben: höchstens zwei kurze Sätze, ein Gedanke pro Nachricht, jeder Teil eines Abschnitts mit eigener Frage. Sag, wie weit es noch ist.",
+      "wenig-lesen":
+        "Im Gegensatz zu oben: höchstens zwei kurze Sätze ohne Nebensätze; sag den Kern eines Abschnitts selbst, statt ihn lesen zu lassen. Erklär jedes Fachwort einmal, korrigier keine Rechtschreibung.",
+      "mehr-tiefe":
+        "Hak sichere Abschnitte mit einer Prüffrage ab. Im Gegensatz zu oben darfst du an den Beispielen der Seite Warum- und Was-wäre-wenn-Fragen stellen; erfinde aber keine Rechenaufgaben.",
+      "andere-muttersprache":
+        "Antworte in einfachem Deutsch; nenn ein neues Fachwort mit Artikel, Mehrzahl und, wenn du sie sicher kennst, der Übersetzung in Klammern. Versteht das Kind zweimal nicht, erklär einen Satz in seiner Sprache.",
+      "klar-und-woertlich":
+        "Schreib wörtlich: keine Ironie, keine Redewendungen. Im Gegensatz zu oben fragst du am Anfang mit zwei oder drei Antworten zur Auswahl und nennst immer „Abschnitt x von y“.",
+      "rechnen-anschaulich":
+        "Zeig Zahlen der Seite als Menge, z. B. „37 sind 3 Zehner und 7 Einer“, aber nie das Ergebnis einer Aufgabe. Ein Schritt pro Nachricht, nie Zeitdruck.",
+    },
     contextTitle: "Kontext: die Seite „{page}“",
     exercise: "Übung",
     steps: "Lösungsweg",
@@ -164,6 +187,23 @@ const WORDS: Readonly<Record<string, Words>> = {
       "“I practised on …:” comes from “Back to the tutor”: this page with the numbers, then for each task practised how it went, a wrong one with the input and the app's message. Start with the wrong ones, one after the other.",
       "Every task has a link: the address of the page, that is of this tutor page without `tutor/` and without `?…`, with the number and `via=tutor`, e.g. `{link}`. Always send it as a full address, with the scheme and host of this tutor page (e.g. `https://`). For a further task take another number of the exercise and say its text. Add: “Solve it in the app, then press ‘Back’. Paste the line here.”",
     ],
+    needsTitle: "Special requirements",
+    needsIntro:
+      "If the address of this page names `bedarf=`, each section it names holds, several separated by commas. It goes before what is said above; if two contradict each other, the stricter one holds. Without `bedarf=` none holds.",
+    needs: {
+      "kurze-schritte":
+        "Unlike above: two short sentences at most, one thought per message, each part of a section with a question of its own. Say how far there is still to go.",
+      "wenig-lesen":
+        "Unlike above: two short sentences at most, without subordinate clauses; say the core of a section yourself instead of having it read. Explain every technical term once, do not correct spelling.",
+      "mehr-tiefe":
+        "Tick off sections the child knows with one checking question. Unlike above you may ask why and what-if questions about the page's examples; but do not make up tasks to work out.",
+      "andere-muttersprache":
+        "Answer in simple language, in the language of this page; give a new technical term with its article and plural, if any, and, if you know it for sure, its translation in brackets. If the child does not understand twice, explain one sentence in its language.",
+      "klar-und-woertlich":
+        "Write literally: no irony, no idioms. Unlike above, at the start you ask with two or three answers to choose from, and you always say “section x of y”.",
+      "rechnen-anschaulich":
+        "Show numbers of the page as amounts, e.g. “37 is 3 tens and 7 ones”, but never the result of a task. One step per message, never time pressure.",
+    },
     contextTitle: "Context: the page “{page}”",
     exercise: "Exercise",
     steps: "Steps of the solution",
@@ -452,6 +492,22 @@ export function tutorPage(
   return { markdown, cut };
 }
 
+/**
+ * The learner's needs on a tutor page, in `lang`, after its guide (dec-tutor-needs): what holds when the query names
+ * them in `bedarf=`, then a short section for each, as Markdown lines.
+ */
+export function needsLines(lang: string): string[] {
+  const words = wordsIn(lang);
+  return [
+    `## ${words.needsTitle}`,
+    "",
+    words.needsIntro,
+    "",
+    ...NEEDS.map((need) => `- \`${need}\`: ${words.needs[need]}`),
+    "",
+  ];
+}
+
 /** The tutor page of `page` in `lang`, as Markdown (tutorPage). */
 export const tutorPageMarkdown = (site: Site, page: Page, lang: string, descriptions: Descriptions): string =>
   tutorPage(site, page, lang, descriptions).markdown;
@@ -509,6 +565,7 @@ function pageMarkdown(
           : [`- ${text.replace("{example}", example.query).replace("{link}", example.link)}`],
     ),
     "",
+    ...needsLines(lang),
     `## ${fill(words.contextTitle)}`,
     "",
   );

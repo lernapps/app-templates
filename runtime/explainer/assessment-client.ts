@@ -12,6 +12,7 @@
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { startOpenTask, type OpenTaskResult } from "./open-task.ts";
+import { withLanguage, withNeeds, type NeedsChoice } from "./needs.ts";
 import { readAnswer } from "../shared/questions/engine.ts";
 import { renderQuestion } from "../shared/questions/render.ts";
 import { isComplete, isCorrect, shuffled, type Question } from "../shared/questions/question.ts";
@@ -58,6 +59,8 @@ export interface TutorWays {
   ) => void;
   /** Shows in `hint` how the chosen option works, when it says so. */
   hint: (select: HTMLSelectElement, hint: HTMLElement | null) => void;
+  /** The needs the learner chose for the tutor, kept under the app's name `storage` or for every explainer. */
+  needs: (storage: string) => NeedsChoice | undefined;
   /** Whether a tutor opened the page (via=tutor): its chat runs already. */
   running: boolean;
   /**
@@ -416,8 +419,11 @@ export function startAssessment(root: Document, ways: TutorWays): void {
     go.addEventListener("click", () => {
       const href = root.location.href;
       const base = new URL(data.root, href);
-      const tutor = new URL(`${data.tutor}${resultQuery(shown)}`, base).href;
-      const prompt = () => assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "ask", links());
+      // a new chat: with the learner's needs (dec-tutor-needs)
+      const needs = ways.needs(data.storage);
+      const tutor = new URL(`${data.tutor}${withNeeds(resultQuery(shown), needs)}`, base).href;
+      const prompt = () =>
+        withLanguage(assessmentPrompt(tutor, promptItems(), shown, lang, promptPages(), "ask", links()), needs, lang);
       const copy = async () => {
         try {
           const response = await fetch(new URL(data.markdown, base).href);

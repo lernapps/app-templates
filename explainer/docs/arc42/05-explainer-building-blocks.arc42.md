@@ -208,8 +208,8 @@ path: runtime/explainer/routes.ts
 
 Built. Makes a page's exercises live: answered before the solution shows, the reason of a wrong answer, "Neue
 Aufgabe", the task numbers in the address; the tutor button; and starts the videos (`bb-video`). It keeps only the
-learner's chosen way to the tutor and their choice to load videos directly on the device; the last result of a
-self-assessment is kept by `bb-self-assessment`, which it starts.
+learner's chosen way to the tutor and their choice to load videos directly on the device, and the needs the learner chose for the tutor (`dec-tutor-needs`), for every explainer or
+for this app only; the last result of a self-assessment is kept by `bb-self-assessment`, which it starts.
 
 ```arc42
 :::building-block
@@ -334,8 +334,9 @@ the tutor gets: a short visible guide, then the page's content and its exercises
 `generated` one once as its template with a table of each number's inputs and outputs (the values, the solution, what
 each typical mistake gives), an exercise component with its `about` and the same table from its exercise logic
 (`dec-component-table`), or without one each number's task and solution from its `describe` as far as they fit into
-64 kB; its Markdown lies beside it for copying. No prompt and no line
-carries a rule for the tutor, and the app writes no `llms.txt`.
+64 kB; its Markdown lies beside it for copying. Under "Besondere Anforderungen" it ends with a short section for each
+need a learner can choose, which holds when the query names it in `bedarf=` (`dec-tutor-needs`). No
+prompt and no line carries a rule for the tutor, and the app writes no `llms.txt`.
 
 ```arc42
 :::building-block
@@ -352,10 +353,12 @@ implements: concept-tutor
 #### Tutor pages and the learner's lines
 
 The start prompt of way A, the lines of "Hilfe" (way B) and the result line of "Zurück zum Tutor" name the page's
-tutor page with the page's task numbers, those of way B also with `uebung` and `abschnitt`, absolute; the lines of way B and the result line
+tutor page with the page's task numbers, those of way B also with `uebung` and `abschnitt`, those that start a chat
+(way A, B1) also with the learner's needs in `bedarf`, absolute; the start prompt adds "Meine Muttersprache ist …"
+when `andere-muttersprache` is chosen; the lines of way B and the result line
 add the task, the input, the app's message word for word and how far the learner got. A chat assistant reads the
 tutor page without running JavaScript; its Markdown (`index.md`) is the text "Ein anderer: Text kopieren" copies. The
-page ids, exercise ids, the query parameters, the tutor page's structure, the result line and the lines of way B are
+page ids, exercise ids, the query parameters, the ids of the needs, the tutor page's structure, the result line and the lines of way B are
 a contract with every tutor.
 
 ```arc42

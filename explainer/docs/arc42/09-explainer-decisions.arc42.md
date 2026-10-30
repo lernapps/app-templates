@@ -247,6 +247,40 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click
 :::
 ```
 
+## The Learner Names What Helps; the Tutor Page Holds a Short Section for Each
+
+Some learners learn better when the tutor talks to them in a particular way: in short steps, with
+little to read, with deeper questions, in simple German for another first language, literally, or with numbers as
+amounts. So beside the assistant the learner chooses none, one or several of six needs, each named by what helps,
+never by a diagnosis: `kurze-schritte`, `wenig-lesen`, `mehr-tiefe`, `andere-muttersprache`, `klar-und-woertlich`,
+`rechnen-anschaulich`; with `andere-muttersprache` also the first language, from a list. Beside each need one or two
+sentences say what it does. Unlike the assistant, which each app keeps apart (`dec-tutor-assistant`), the needs are
+the learner's own and the same in every explainer: the choice holds for every explainer of lernapps.net
+(`lernapps:settings:explainer:`) or for this app only (`lernapps:<id>:`, which wins); nothing is sent before a click. Every address the learner hands to a
+tutor that starts a chat, the start prompt of way A, the lines of way B1 and the prompt of a self-assessment, carries the needs in the tutor page's
+query (`bedarf=kurze-schritte,andere-muttersprache`); with `andere-muttersprache` the prompt adds one sentence in the
+learner's voice, "Meine Muttersprache ist Türkisch." A running chat (B2, "Zurück zum Tutor") has them already. The
+tutor page is static, so it holds the section of every need, after its guide under "Besondere Anforderungen": they
+hold when the query names them and go before the guide; each says where it departs from it ("Im Gegensatz zu oben
+…") and has at most two sentences, about 200 characters, so that the six together do not drown the guide. Of two needs that differ, the stricter one holds. The tutor reads the
+query as it reads the task numbers. The sections draw on research on teaching, support and feedback; none of it is
+on tutoring in a chat, so each section is checked by a hand test like the guide.
+Rejected: a page per need or a central page of all needs on the GitHub Pages of lernapps/app-templates (a second
+address to fetch, untested; several needs multiply the addresses); the needs as rules in the prompt (they would
+contradict the tutor page); free text (the same, and nothing to check); names of diagnoses (health data about a child
+in an address sent to the assistant's provider, and a label); learning styles (no evidence); a need for
+encouragement and one for learners who cannot see the figures, not now.
+
+```arc42
+:::decision
+id: dec-tutor-needs
+title: The learner chooses needs named by what helps; the tutor page holds a short section for each, chosen by its query
+status: accepted
+date: 2026-10-30
+addresses: qg-privacy, qg-understandable, qg-accessibility, con-no-request-before-click, con-state-on-device
+:::
+```
+
 ## A Video Loads Only After a Click
 
 A video block is a link to YouTube until the learner asks for the player. Before the click the page shows the title,

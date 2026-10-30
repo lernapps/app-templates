@@ -25,7 +25,7 @@ import { exerciseData, type ExerciseData } from "./exercises.ts";
 import { message } from "./messages.ts";
 import { PROVIDERS, placeholderPrompt } from "./prompt.ts";
 import { TUTOR_PAGE } from "./tutor.ts";
-import { TUTOR_MARKDOWN, tutorDocument } from "./tutorpage.ts";
+import { needsLines, TUTOR_MARKDOWN, tutorDocument } from "./tutorpage.ts";
 
 /** What rendering a part of a self-assessment needs of the page it is on (render.ts). */
 export interface AssessmentContext {
@@ -407,7 +407,7 @@ export function assessmentTutorMarkdown(site: Site, assessment: Assessment, lang
   if (site.app.tutor?.rules !== undefined) {
     lines.push(`## ${words.appRules}`, "", inLanguage(site.app.tutor.rules, lang).trim(), "");
   }
-  lines.push(`## ${words.chaptersTitle}`, "");
+  lines.push(...needsLines(lang), `## ${words.chaptersTitle}`, "");
   for (const chapter of site.chapters) {
     // a chapter's own self-assessment; in an app with one chapter, the app's is the chapter's
     const its =
