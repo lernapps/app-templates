@@ -231,8 +231,9 @@ describe("one build writes every page", () => {
         expect(start).toContain(
           '<button type="button" class="explainer-tutor-needs-open" aria-haspopup="dialog" aria-label="',
         );
+        // in a <template>: the tutor needs JavaScript, and without it nothing of the dialog is on the page
         expect(start).toMatch(
-          /<dialog class="explainer-tutor-needs" data-storage="[^"]+" aria-labelledby="bedarf-titel">/,
+          /<template class="explainer-tutor-needs-template">\n<dialog class="explainer-tutor-needs" data-storage="[^"]+" aria-labelledby="bedarf-titel">/,
         );
         expect(start).toContain(
           '<input type="checkbox" class="explainer-tutor-need" id="bedarf-kurze-schritte" value="kurze-schritte"',

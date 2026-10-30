@@ -488,7 +488,8 @@ const NEED_TEXTS: Readonly<Record<Need, readonly [keyof Messages, keyof Messages
  * The choice of the learner's needs for the tutor, on the start page (dec-tutor-needs): a dialog that "Einstellungen"
  * beside the choice of the assistant opens, with a box per need and one or two sentences on what it does, the first
  * language below `andere-muttersprache`, and whether the choice holds for every explainer or for this app only. The
- * tutor needs JavaScript, so the dialog does too: the client module opens it and keeps the choice on the device.
+ * tutor needs JavaScript, so the dialog does too: it stays in a <template> until the client module puts it into the
+ * page, opens it and keeps the choice on the device.
  */
 function needsChoice(context: Context): string {
   const { site, lang } = context;
@@ -514,6 +515,7 @@ function needsChoice(context: Context): string {
   const scope = (value: string, key: keyof Messages) =>
     `<label><input type="radio" class="explainer-tutor-needs-scope" name="bedarf-gilt" value="${value}" /> ${plain(context.t(key))}</label>`;
   return [
+    `<template class="explainer-tutor-needs-template">`,
     `<dialog class="explainer-tutor-needs" data-storage="${plain(site.storage ?? "explainer")}" aria-labelledby="bedarf-titel">`,
     `<form method="dialog">`,
     `<h2 id="bedarf-titel">${plain(context.t("needsTitle"))}</h2>`,
@@ -524,6 +526,7 @@ function needsChoice(context: Context): string {
     `<p><button class="explainer-tutor-needs-done">${plain(context.t("needsDone"))}</button></p>`,
     `</form>`,
     `</dialog>`,
+    `</template>`,
   ].join("\n");
 }
 

@@ -607,12 +607,14 @@ function startChoice(root: Document): void {
 }
 
 /**
- * The choice of the learner's needs on the start page (dec-tutor-needs): "Einstellungen" beside the choice of the
- * assistant opens a dialog with a box per need, the first language once `andere-muttersprache` is ticked, and whether
+ * The choice of the learner's needs on the start page (dec-tutor-needs), put into the page from its <template>:
+ * "Einstellungen" beside the choice of the assistant opens a dialog with a box per need, the first language once `andere-muttersprache` is ticked, and whether
  * the choice holds for every explainer or for this app only; each change is kept on the device at once as a setting
  * (createSettings), where the learner said.
  */
 function startNeeds(root: Document): void {
+  const template = root.querySelector<HTMLTemplateElement>("template.explainer-tutor-needs-template");
+  template?.replaceWith(root.importNode(template.content, true));
   const box = root.querySelector<HTMLDialogElement>("dialog.explainer-tutor-needs");
   const open = root.querySelector<HTMLButtonElement>("button.explainer-tutor-needs-open");
   if (!box || !open) return;
