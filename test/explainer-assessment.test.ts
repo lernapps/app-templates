@@ -251,6 +251,9 @@ describe("the pages of a self-assessment", () => {
     expect(markdown).not.toContain("prozent-rechnen der Seite „Zahlen 1“ (immer");
     // a guide: no tables of solutions
     expect(markdown).not.toContain("```");
+    // the learner's needs, as on every tutor page, after the guide (dec-tutor-needs)
+    expect(markdown.indexOf("## Besondere Anforderungen")).toBeGreaterThan(markdown.indexOf("## So leitest du an"));
+    expect(markdown).toContain("- `kurze-schritte`: ");
     // a chapter's names the pages of the other chapters without keys
     const chapter = assessmentTutorMarkdown(site, formen, "en");
     expect(chapter).toContain("the self-assessment of the chapter “Shapes”");

@@ -66,6 +66,7 @@ export const ROOT_ONLY = [
   "skills-lock.json",
   "AGENTS.md", // what agents in this repo read (CLAUDE.md imports it)
   "CLAUDE.md",
+  ".mcp.json", // the MCP servers agents in this repo use
 ];
 
 /** Whether a path (relative to the repo root, with "/") is one of the patterns: the path, or below a folder "x/". */
