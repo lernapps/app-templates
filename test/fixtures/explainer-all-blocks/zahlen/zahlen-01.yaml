@@ -179,3 +179,20 @@ blocks:
               de: "$\\frac{{{G}} \\cdot {{p}}}{100} = {{answer}}$",
               en: "$\\frac{{{G}} \\cdot {{p}}}{100} = {{answer}}$",
             }
+      - type: open-task
+        id: erklaeren
+        task:
+          { de: "Erkläre in zwei Sätzen, was diese Seite zeigt.", en: "Explain in two sentences what this page shows." }
+        points:
+          - text: { de: "Nennt die Grundlagen der Seite.", en: "Names the basics of the page." }
+            source: /zahlen/zahlen-01/#grundlagen
+          - text: { de: "Nennt eine Anwendung.", en: "Names an application." }
+            source: /zahlen/zahlen-01/#anwendung
+          - text: { de: "Schreibt ganze Sätze.", en: "Writes whole sentences." }
+            kind: form
+        solution:
+          {
+            de: "Die Seite zeigt die Grundlagen mit einer Formel. Sie wendet sie in einem Beispiel an.",
+            en: "The page shows the basics with a formula. It applies them in an example.",
+          }
+        hint: { de: "Schau dir die Abschnitte der Seite an.", en: "Look at the sections of the page." }
