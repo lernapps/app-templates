@@ -821,7 +821,10 @@ export function explainerTests(root = "."): void {
             forward.push(relative(page.url()));
             const next = page.locator('a[rel="next"]');
             if ((await next.count()) === 0) break;
+            // the next page before its links count: a large page may still load when the loop looks again
+            const here = page.url();
             await next.click();
+            await page.waitForURL((url) => url.href !== here);
           }
           expect(forward, "next leads through every page in order").toEqual(order);
           const backward: string[] = [];
@@ -829,7 +832,9 @@ export function explainerTests(root = "."): void {
             backward.push(relative(page.url()));
             const previous = page.locator('a[rel="prev"]');
             if ((await previous.count()) === 0) break;
+            const here = page.url();
             await previous.click();
+            await page.waitForURL((url) => url.href !== here);
           }
           expect(backward, "previous leads back through every page").toEqual([...order].reverse());
         });
