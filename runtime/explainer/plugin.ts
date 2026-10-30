@@ -301,9 +301,7 @@ export function explainer(): Plugin[] {
             .map((route) => route.local),
           ...contentPages(content).map((page) => tutorPageOf(page)),
           ...assessments(content).map((assessment) => assessmentTutorOf(assessment)),
-          ...(content.scope === undefined
-            ? []
-            : [...scopeFiles(content.scope).keys()].map((folder) => `${folder}${SCOPE_PAGE}`)),
+          ...[...scopeFiles(content, lang).keys()].map((folder) => `${folder}${SCOPE_PAGE}`),
         ]);
         const anchors = new Map(
           contentPages(content).map((page) => [`${page.chapter}/${page.id}/`, anchorsOf(content, page)]),
@@ -329,22 +327,21 @@ export function explainer(): Plugin[] {
       }
       // the scopes beside the app, each chapter and each page of each language tree, for the tutor only: their
       // Markdown and a page for no menu
-      if (content.scope !== undefined) {
-        for (const lang of content.app.languages) {
-          for (const [folder, markdown] of scopeFiles(content.scope)) {
-            const at = `${languageRoot(lang)}${folder}${SCOPE_PAGE}`;
-            this.emitFile({ type: "asset", fileName: `${at}${TUTOR_MARKDOWN}`, source: markdown });
-            this.emitFile({
-              type: "asset",
-              fileName: `${at}index.html`,
-              source: scopeDocument(markdown, inLanguage(content.app.title, lang), lang, folder),
-            });
+      for (const lang of content.app.languages) {
+        for (const [folder, markdown] of scopeFiles(content, lang)) {
+          const at = `${languageRoot(lang)}${folder}${SCOPE_PAGE}`;
+          this.emitFile({ type: "asset", fileName: `${at}${TUTOR_MARKDOWN}`, source: markdown });
+          this.emitFile({
+            type: "asset",
+            fileName: `${at}index.html`,
+            source: scopeDocument(markdown, inLanguage(content.app.title, lang), lang, folder),
+          });
+          // the whole scope beyond the budget of a tutor page: noted, no problem
+          if (folder === "" && bytesOf(markdown) > TUTOR_PAGE_BUDGET) {
+            this.info(
+              `lernapps explainer: the scope of the whole app (${languageRoot(lang)}${SCOPE_PAGE}) is larger than ${TUTOR_PAGE_BUDGET / 1000} kB (${(bytesOf(markdown) / 1000).toFixed(0)} kB), which a tutor may get cut off`,
+            );
           }
-        }
-        if (bytesOf(content.scope) > TUTOR_PAGE_BUDGET) {
-          this.info(
-            `lernapps explainer: src/scope.md is larger than ${TUTOR_PAGE_BUDGET / 1000} kB (${(bytesOf(content.scope) / 1000).toFixed(0)} kB), which a tutor may get cut off`,
-          );
         }
       }
       // a tutor page beyond its budget: noted, no problem (the tutor may get it cut off)
@@ -446,7 +443,7 @@ export function explainer(): Plugin[] {
         renderComponents(content, (id) => dev.ssrLoadModule(id), false)
           .then(({ islands: rendered, descriptions: described, problems }) => {
             if (problems.length > 0) throw new ContentError(problems);
-            if (forScope && content.scope !== undefined) {
+            if (forScope) {
               const markdown = path.endsWith(TUTOR_MARKDOWN);
               const lang =
                 content.app.languages.find((one) => languageRoot(one) !== "" && path.startsWith(languageRoot(one))) ??
@@ -456,7 +453,7 @@ export function explainer(): Plugin[] {
               const folder = path
                 .slice(languageRoot(lang).length)
                 .replace(new RegExp(`${SCOPE_PAGE}(${TUTOR_MARKDOWN.replace(".", "\\.")})?$`), "");
-              const scope = scopeFiles(content.scope).get(folder);
+              const scope = scopeFiles(content, lang).get(folder);
               if (scope === undefined) return next();
               response.setHeader("content-type", `text/${markdown ? "markdown" : "html"}; charset=utf-8`);
               response.end(markdown ? scope : scopeDocument(scope, inLanguage(content.app.title, lang), lang, folder));

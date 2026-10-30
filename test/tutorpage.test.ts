@@ -61,7 +61,7 @@ function tree(site: Site, lang: string) {
       .map((route) => route.local),
     ...contentPages(site).map((page) => tutorPageOf(page)),
     // the scopes beside the app, each chapter and each page, as the build writes them (plugin.ts)
-    ...(site.scope === undefined ? [] : [...scopeFiles(site.scope).keys()].map((folder) => `${folder}${SCOPE_PAGE}`)),
+    ...[...scopeFiles(site, lang).keys()].map((folder) => `${folder}${SCOPE_PAGE}`),
   ]);
   const anchors = new Map(contentPages(site).map((page) => [`${page.chapter}/${page.id}/`, anchorsOf(site, page)]));
   return { files, anchors };

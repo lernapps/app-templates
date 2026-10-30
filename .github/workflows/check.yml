@@ -162,7 +162,7 @@ jobs:
       - run: npm ci # the runtime's build tools, for file:..
       - run: npm install --no-audit --no-fund
         working-directory: explainer
-      - run: rm -r src/app.yaml src/prozent src/scope.md && cp -r "../test/fixtures/${{ matrix.fixture }}/." src/
+      - run: rm -r src/app.yaml src/prozent && cp -r "../test/fixtures/${{ matrix.fixture }}/." src/
         working-directory: explainer
       - run: npx lernapps check --pre-push
         working-directory: explainer

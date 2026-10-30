@@ -14,3 +14,4 @@ selfAssessment:
     - exercises:
         - /zahlen/zahlen-02/#hauptgruppe
         - /zahlen/zahlen-02/#gerade-prozente
+scope: { de: "Das Kapitel rechnet mit Prozent.", en: "The chapter calculates with percent." }

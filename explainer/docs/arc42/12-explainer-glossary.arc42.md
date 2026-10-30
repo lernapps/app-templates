@@ -76,7 +76,7 @@ definition: One checkable sentence a good answer to an open task has, about its 
 
 ## Scope
 
-`src/scope.md`, written at `scope/` for the tutor.
+`scope` in the content, written at `scope/` beside each page, chapter and the app for the tutor.
 
 ```arc42
 :::glossary-term

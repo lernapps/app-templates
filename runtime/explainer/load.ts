@@ -10,7 +10,7 @@
 // component's is generated from its describe) and, for an exercise component, its examples (which the build step
 // runs, plugin.ts) and an anchor once on the page (its id, or its name in kebab case), every data file is named by a timeline, a generated exercise or a component prop, and src/ holds nothing else. Each problem is one line: the file,
 // its line, the place in the file, the language where it matters, and what to do.
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { checkBlocks } from "./check-page.ts";
 import { readComponents } from "./components/read.ts";
@@ -28,7 +28,6 @@ import {
 import { allBlocks } from "./routes.ts";
 import { ASSESSMENT, drawsTasks, exerciseOf, parseRef } from "./assessment.ts";
 import { SCHEMA_FILE, validate } from "./schema.ts";
-import { SCOPE_SOURCE, scopeProblems } from "./scope.ts";
 import { appName } from "../shared/appname.ts";
 import { isObject, Problems, readYaml, Texts, type Path, type YamlFile } from "../shared/content.ts";
 import { isLanguage, LANGUAGES, languageListProblems } from "../shared/languages.ts";
@@ -37,7 +36,7 @@ export { SCHEMA_ID } from "./schema.ts";
 export const RULE_URL = "https://lernapps.net/tooling/rules/#explainer-content-valid";
 
 /** What src/ may hold besides the chapter folders. */
-const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, components/, main.ts and scope.md";
+const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, components/ and main.ts";
 /** Chapter ids that would collide with other addresses: data files, images, the glossary, the scope, language trees. */
 const RESERVED = new Set(["data", "images", "glossar", "components", "assets", "scope", ASSESSMENT]);
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -169,7 +168,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   const dataFiles = new Map<string, YamlFile>();
   for (const name of entries(src)) {
     const path = join(src, name);
-    if (name === "app.yaml" || name === "main.ts" || name === SCOPE_SOURCE) continue;
+    if (name === "app.yaml" || name === "main.ts") continue;
     if (name === "components" && isDirectory(path)) continue;
     if (!isDirectory(path)) {
       problems.file(`src/${name}`, `not part of an explainer; ${SRC}`);
@@ -367,6 +366,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       title: chapter.title,
       ...(chapter.summary === undefined ? {} : { summary: chapter.summary }),
       ...(chapter.selfAssessment === undefined ? {} : { selfAssessment: chapter.selfAssessment }),
+      ...(chapter.scope === undefined ? {} : { scope: chapter.scope }),
       pages,
     });
   }
@@ -412,12 +412,21 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
     }
   }
 
-  // the scope for a tutor: each part names a chapter or page, each content page has its part (scope.ts)
-  const scopeFile = join(src, SCOPE_SOURCE);
-  const scope = existsSync(scopeFile) ? readFileSync(scopeFile, "utf8") : undefined;
-  // only against content without problems: a chapter that failed to load would make every part of it a problem too
-  if (scope !== undefined && problems.lines.length === 0) {
-    for (const problem of scopeProblems(scope, chapters)) problems.add(problem);
+  // the scope for the tutor: with the app's, every page has its own; a page's without the app's would be lost
+  for (const chapter of chapters) {
+    for (const page of chapter.pages) {
+      if (app.scope !== undefined && page.scope === undefined) {
+        problems.file(
+          page.file,
+          "has no scope; src/app.yaml has one, so each page says in scope: what it teaches, in your own words from the material",
+        );
+      } else if (app.scope === undefined && page.scope !== undefined) {
+        problems.file(
+          page.file,
+          "has a scope, but src/app.yaml has none; add scope: { in: [...], out: [...] } to src/app.yaml, what belongs to the scope and what does not",
+        );
+      }
+    }
   }
 
   if (problems.lines.length > 0) return { problems: problems.lines };
@@ -431,7 +440,6 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       images,
       components: uses,
       storage: appName(root, "explainer"),
-      ...(scope === undefined ? {} : { scope }),
     },
     problems: [],
   };

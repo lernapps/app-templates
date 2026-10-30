@@ -136,6 +136,34 @@
               "$ref": "#/$defs/markdown"
             }
           }
+        },
+        "scope": {
+          "description": "The scope for the tutor, never shown to the learner: with it every page has its scope, and the build writes the scope beside each page, chapter and the app, linked from every tutor page. The tutor judges open answers by it, not by general knowledge.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["in", "out"],
+          "properties": {
+            "text": {
+              "description": "Optional: what the app is about as a whole, in your own words.",
+              "$ref": "#/$defs/markdown"
+            },
+            "in": {
+              "description": "What belongs to the scope, one item each.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "out": {
+              "description": "What does not belong to it, one item each: what a learner or tutor might expect but the material does not teach.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
         }
       }
     },
@@ -164,6 +192,10 @@
         "selfAssessment": {
           "description": "Optional: the chapter's self-assessment, at <chapter>/einschaetzung/, offered on the chapter's page. The app's, at einschaetzung/ and offered on the start page, is every chapter's in the order of the chapters; in an app with one chapter it is the only one.",
           "$ref": "#/$defs/selfAssessment"
+        },
+        "scope": {
+          "description": "Optional, for the tutor: what the chapter is about as a whole, in your own words; its pages' scopes follow it at <chapter>/scope/.",
+          "$ref": "#/$defs/markdown"
         }
       }
     },
@@ -183,6 +215,10 @@
         },
         "blocks": {
           "$ref": "#/$defs/blocks"
+        },
+        "scope": {
+          "description": "For the tutor, never shown to the learner: what this page teaches, in your own words from the material, as continuous prose with the exact content (facts, terms, reasons, examples). Required on every page when src/app.yaml has scope. The build writes it beside the page at scope/, with what belongs to the scope and what does not.",
+          "$ref": "#/$defs/markdown"
         }
       }
     },

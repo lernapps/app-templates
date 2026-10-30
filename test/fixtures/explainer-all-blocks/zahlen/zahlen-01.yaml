@@ -2,6 +2,11 @@
 
 title: { de: "Zahlen 1", en: "Numbers 1" }
 description: { de: "Seite 1 der Fixture mit allen Blöcken.", en: "Page 1 of the fixture with all blocks." }
+scope:
+  {
+    de: "Die Grundlagen der Prozentrechnung mit Formel, Begriff und Bild, dann eine Anwendung im Beispiel.",
+    en: "The basics of percent with a formula, a term and a picture, then an application in an example.",
+  }
 blocks:
   - type: text
     text:

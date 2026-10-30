@@ -1,89 +1,60 @@
-// The scope of an explainer (runtime/explainer/scope.ts): each part names a chapter or page of the app, each content
-// page has its part, and it ends with what belongs to it and what does not; its page is for no menu and no search.
+// The scope of an explainer (runtime/explainer/scope.ts): with the app's scope every page has its own; the build
+// writes a scope beside each page, chapter and the app, each with what belongs to it and what does not and a link one
+// level up; its page is for no menu and no search engine.
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
-import type { Chapter } from "../runtime/explainer/content.ts";
-import { scopeDocument, scopeFiles, scopeProblems } from "../runtime/explainer/scope.ts";
+import { check, loadSite } from "../runtime/explainer/load.ts";
+import { scopeDocument, scopeFiles } from "../runtime/explainer/scope.ts";
 
-const chapters = [
-  {
-    id: "feste",
-    title: "Feste",
-    pages: [
-      { id: "jahreskreis", chapter: "feste", file: "", title: "Jahreskreis", blocks: [] },
-      { id: "chanukka", chapter: "feste", file: "", title: "Chanukka", blocks: [] },
-    ],
-  },
-] satisfies Chapter[];
+/** A copy of the example explainer's content, to change. */
+function example(): string {
+  const root = mkdtempSync(join(tmpdir(), "explainer-scope-"));
+  cpSync(join(import.meta.dirname, "../explainer/src"), join(root, "src"), { recursive: true });
+  return root;
+}
 
-const scope = (parts: string) =>
-  [
-    "# Judentum",
-    "",
-    "Einleitung.",
-    "",
-    parts,
-    "",
-    "## Gehört dazu",
-    "",
-    "- Feste",
-    "",
-    "## Gehört nicht dazu",
-    "",
-    "- Geschichte",
-  ].join("\n");
+const edit = (root: string, file: string, from: RegExp, to: string) => {
+  const path = join(root, "src", file);
+  writeFileSync(path, readFileSync(path, "utf8").replace(from, to));
+};
 
 describe("the scope", () => {
-  test("a part for each page, the closing parts: no problem", () => {
-    expect(
-      scopeProblems(
-        scope(
-          "## Feste (/feste/)\n\n### Jahreskreis (/feste/jahreskreis/)\n\nText.\n\n### Chanukka (/feste/chanukka/)\n\nText.",
-        ),
-        chapters,
-      ),
-    ).toEqual([]);
-  });
-
-  test("a part that names no page, a page without its part, no closing parts", () => {
-    expect(
-      scopeProblems(
-        "## Feste (/feste/)\n\n### Purim (/feste/purim/)\n\n### Jahreskreis (/feste/jahreskreis/)",
-        chapters,
-      ),
-    ).toEqual([
-      "src/scope.md:3: /feste/purim/ names no page of the app; write ### <title> (/<chapter>/<page>/)",
-      "src/scope.md: has no part for /feste/chanukka/; give each content page its part, ### <title> (/<chapter>/<page>/), with what the page teaches in your own words",
-      "src/scope.md: ends with what belongs to the scope and what does not: ## Gehört dazu and ## Gehört nicht dazu (in English ## In scope and ## Out of scope)",
-    ]);
-  });
-
   test("a scope per page and per chapter, each with the closing parts and a link one level up; the whole at the root", () => {
-    const whole = scope(
-      "## Feste (/feste/)\n\nDas Jahr.\n\n### Jahreskreis (/feste/jahreskreis/)\n\nSabbat.\n\n### Chanukka (/feste/chanukka/)\n\nLichter.",
-    );
-    const files = scopeFiles(whole);
-    expect([...files.keys()]).toEqual(["", "feste/", "feste/jahreskreis/", "feste/chanukka/"]);
-    expect(files.get("")).toBe(whole);
-    expect(files.get("feste/jahreskreis/")?.split("\n")).toEqual([
-      "# Jahreskreis (/feste/jahreskreis/)",
-      "",
-      "Sabbat.",
-      "",
-      "## Gehört dazu",
-      "",
-      "- Feste",
-      "",
-      "## Gehört nicht dazu",
-      "",
-      "- Geschichte",
-      "",
-      "Alle Seiten des Kapitels: [Scope des Kapitels](../../scope/)",
+    const files = scopeFiles(loadSite(example(), 5), "de");
+    expect([...files.keys()]).toEqual([
+      "prozent/",
+      "prozent/prozentwert/",
+      "prozent/prozentsatz/",
+      "prozent/grundwert/",
       "",
     ]);
-    expect(files.get("feste/")).toContain("# Feste (/feste/)");
-    expect(files.get("feste/")).toContain("\n## Chanukka (/feste/chanukka/)\n");
-    expect(files.get("feste/")).toContain("Lichter.");
-    expect(files.get("feste/")).toContain("Die ganze App: [Scope der App](../../scope/)");
+    const page = files.get("prozent/prozentsatz/") ?? "";
+    expect(page.split("\n")[0]).toBe("# Prozentsatz");
+    expect(page).toContain("Gesucht ist, welcher Anteil der Teil vom Ganzen ist");
+    expect(page).toContain("## Gehört dazu\n\n- die drei Größen");
+    expect(page).toContain("## Gehört nicht dazu\n\n- Zinsen und Zinseszins");
+    expect(page.trimEnd().split("\n").at(-1)).toBe("Alle Seiten des Kapitels: [Scope des Kapitels](../../scope/)");
+    const chapter = files.get("prozent/") ?? "";
+    expect(chapter).toContain("\n## Prozentwert\n");
+    expect(chapter).toContain("Die ganze App: [Scope der App](../../scope/)");
+    expect(files.get("")).toContain("# Prozentrechnung\n\nDie App führt in die Prozentrechnung ein.");
+    expect(files.get("")).toContain("\n### Grundwert\n");
+  });
+
+  test("with the app's scope, a page without its own is a problem; a page's without the app's too", () => {
+    const missing = example();
+    edit(missing, "prozent/grundwert.yaml", /^scope: \|\n(  .*\n|\n)*/m, "");
+    expect(check(missing, 5).problems).toEqual([
+      "src/prozent/grundwert.yaml: has no scope; src/app.yaml has one, so each page says in scope: what it teaches, in your own words from the material",
+    ]);
+    const lost = example();
+    edit(lost, "app.yaml", /^scope:\n(  .*\n|    .*\n)*/m, "");
+    expect(check(lost, 5).problems).toHaveLength(3);
+    expect(check(lost, 5).problems[0]).toMatch(
+      /^src\/prozent\/prozentwert\.yaml: has a scope, but src\/app\.yaml has none/,
+    );
   });
 
   test("its page: for no search engine, links within the language tree from its folder", () => {

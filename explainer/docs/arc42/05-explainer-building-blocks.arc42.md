@@ -297,13 +297,13 @@ requires: if-archetype-content
 
 ### Scope
 
-Built, optional per app, required by lernapps/practice. `src/scope.md` is the whole learning path for a tutor, written
-by the creator's assistant in its own words from the material: one part per chapter and per content page, each naming
-its page by its path, then what belongs to the scope and what does not (`dec-scope`). The build checks that each part
-names a chapter or page and each content page has its part, and writes a scope per content page
-(`<chapter>/<page>/scope/`: its part and the closing parts), per chapter (`<chapter>/scope/`: all its pages) and for the
-whole app (`scope/`), each linking one level up, as Markdown and a page for no menu and no search engine; every tutor
-page links its page's scope.
+Built, optional per app, required by lernapps/practice. The scope is the whole learning path for a tutor, written by
+the creator's assistant in its own words from the material: `scope` in each page's YAML says what the page teaches,
+optionally `scope` in a chapter's what it is about, and `scope` in `src/app.yaml` what the app is about and what
+belongs to the scope and what does not (`dec-scope`). With the app's, the build requires a page's on every page, and
+writes a scope per content page (`<chapter>/<page>/scope/`: its text and the closing parts), per chapter
+(`<chapter>/scope/`: all its pages) and for the whole app (`scope/`), in each language, each linking one level up, as
+Markdown and a page for no menu and no search engine; every tutor page links its page's scope.
 
 ```arc42
 :::building-block
@@ -548,7 +548,7 @@ path: runtime/explainer/messages
 ## Content
 
 Built in the template, written by the creator: `src/app.yaml` and a folder per chapter with `chapter.yaml` and its
-pages of blocks, each page with an exercise; optionally `src/scope.md`, the scope for the tutor (`bb-scope`).
+pages of blocks, each page with an exercise; optionally the scope for the tutor in them (`bb-scope`).
 
 ```arc42
 :::building-block

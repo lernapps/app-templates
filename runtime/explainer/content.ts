@@ -52,6 +52,12 @@ export interface App {
   tutor?: {
     rules?: Text;
   };
+  /** The scope for the tutor: what the app is about, what belongs to it and what does not (scope.ts). */
+  scope?: {
+    text?: Text;
+    in: readonly Text[];
+    out: readonly Text[];
+  };
 }
 
 /**
@@ -97,6 +103,8 @@ export interface Page {
   file: string;
   title: Text;
   description?: Text;
+  /** What the page teaches, for the tutor's scope (scope.ts). */
+  scope?: Text;
   blocks: readonly Block[];
 }
 
@@ -107,6 +115,8 @@ export interface Chapter {
   pages: readonly Page[];
   /** A self-assessment over the exercises of this chapter (assessment.ts). */
   selfAssessment?: SelfAssessment;
+  /** What the chapter is about, for the tutor's scope. */
+  scope?: Text;
 }
 
 export type { DataRecord };
@@ -122,8 +132,6 @@ export interface Site {
   components: readonly ComponentUse[];
   /** The app's name for what it keeps on the device (its package.json name; @lernapps/tooling/storage). */
   storage?: string;
-  /** The scope for a tutor, src/scope.md as written (scope.ts). */
-  scope?: string;
 }
 
 // What the build reads of a component (components.ts). Declared here, not there: the client module reaches this file,

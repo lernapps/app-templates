@@ -8,3 +8,4 @@ pages:
 selfAssessment:
   pages:
     - exercises: [/formen/formen-01/#ecken, /formen/formen-01/#erfindungen-ordnen, /formen/formen-01/#formen-ordnen]
+scope: { de: "Das Kapitel zeigt Formen.", en: "The chapter shows shapes." }
