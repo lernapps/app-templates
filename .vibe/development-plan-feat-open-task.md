@@ -202,7 +202,11 @@ Step 1, app-templates: result `teilweise` (D2), on this branch: done (see Comple
 - [ ] `result.ts` (the page's result line, `TaskState`): moved to step 2, since only the open task gives a partly
       right answer on a page
 
-Step 2, app-templates: block `open-task` (D1, D3)
+Step 2, app-templates: block `open-task` (D1, D3), on this branch (owner: B, 2026-10-30): done (see Completed), except
+- [ ] keeping text and ticks until the tab closes: `createStorage` of tooling knows only `localStorage`, the lint rule
+      `storage-through-wrapper` forbids `sessionStorage`, and the generic e2e test asserts that a page keeps nothing in
+      `sessionStorage` either. Today the answer stays in memory (gone on reload). Open question to the owner.
+
 Step 3, app-templates: learning-path text (D4)
 Step 4, tooling: pin, rules, skills, rubric (D5)
 Step 5, practice: skills, plan template, validation (D6)
@@ -213,6 +217,15 @@ Step 5, practice: skills, plan template, validation (D6)
       stored results; `assessment-client.ts`: evaluate, score; `bandOf`/`pageResults`: counts half; `tasks.ts`:
       `AssessmentAnswer.partly`/`missed`; messages de/en; the tutor's reading guide on the self-assessment's tutor
       page; tests; arc42 `dec-self-assessment-partly` and the self-assessment interface)
+- [x] Step 2: block `open-task`: schema and types; the build checks each point's source as a link to a section;
+      rendering without JavaScript (task, points with "Nachlesen", model answer under "Lösung"); the client part
+      `open-task.ts` ("Deine Lösung": tippen / Papier und Foto, "Vergleichen", tick boxes, "Auswerten", result with
+      the missing points and links, model answer after the answer; photo in memory only), on a content page and in a
+      self-assessment; result line (`Progress.compared`, "teilweise richtig (…, es fehlen P2, P4), Antwort „…“");
+      tutor page part (points P1… with sources, model answer, how to help); outline and generic e2e tests; styles;
+      messages de/en; the example explainer has the open task `tauschen-erklaeren` on Prozentwert and in its
+      self-assessment; unit tests; arc42 `dec-open-task`, `bb-open-tasks`, glossary (open task, point).
+      `lernapps check` on the example: ok, 10 rules, no findings
 - [x] `scripts/pre-push.ts`: `.mcp.json` and `.vibe/` in the positive list (the test failed on main already for
       `.mcp.json`)
 

@@ -56,6 +56,7 @@ flowchart TB
         bb-shell["Client module"]
         bb-islands["Component islands"]
         bb-generated-exercises["Generated exercises"]
+        bb-open-tasks["Open tasks"]
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
         bb-video["Video block"]
@@ -83,6 +84,7 @@ flowchart TB
     bb-islands -->|"if-vue-component"| bb-explainer-components
     bb-islands -->|"if-task-numbers"| bb-task-numbers
     bb-generated-exercises -->|"if-archetype-content"| bb-explainer-content
+    bb-open-tasks -->|"if-archetype-content"| bb-explainer-content
     bb-generated-exercises -->|"if-data-files"| bb-explainer-data
     bb-tutor-handoff -->|"if-archetype-content"| bb-explainer-content
     bb-tutor-handoff -->|"if-exercise-logic"| bb-explainer-components
@@ -269,6 +271,25 @@ path: runtime/explainer/generated
 technology: TypeScript, exact fractions
 requires: if-archetype-content, if-data-files, if-questions
 implements: concept-determinism
+:::
+```
+
+### Open tasks
+
+Built. An open task (`open-task`) is answered in the learner's own words, typed or written on paper and photographed,
+then compared with the points of a good answer, which the learner ticks: all right, some partly right (`teilweise`),
+none wrong, the missed points named P1, P2 …; the model answer opens after the learner's own answer
+(`dec-open-task`). Each content point names its source, a section of the app, which the build checks as it checks every
+link. The same client part runs on a content page and in a self-assessment, where the ticks are the answer.
+
+```arc42
+:::building-block
+id: bb-open-tasks
+title: Open tasks
+parent: bb-archetype-runtime
+path: runtime/explainer/open-task.ts
+technology: TypeScript, DOM
+requires: if-archetype-content
 :::
 ```
 

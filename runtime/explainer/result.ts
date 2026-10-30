@@ -20,6 +20,8 @@ export interface TaskState {
   input?: string;
   message?: string;
   hint?: boolean;
+  /** For an open task not all right: how many of its points the learner ticked, of how many, and the missed ones (P1). */
+  points?: { ticked: number; total: number; missed: string };
 }
 
 /** The count of the session: the tasks answered right, of all the learner answered or looked up. */
@@ -66,6 +68,24 @@ export class Progress {
       ...(right ? { rightAt: attempts } : {}),
       ...(right || input === undefined ? {} : { input }),
       ...(right || message === undefined || message === "" ? {} : { message }),
+    });
+  }
+
+  /**
+   * The learner evaluated the open task `id`: `ticked` of `total` points, the `missed` ones named (P2, P4), the answer
+   * as text (or that it is a photo). Its model answer shows then; a new evaluation after a changed answer counts again.
+   */
+  compared(id: string, ticked: number, total: number, missed: string, input: string): void {
+    this.#last = id;
+    const state = this.state(id, undefined);
+    if (state.rightAt !== undefined) return;
+    const attempts = state.attempts + 1;
+    const { points: _points, input: _input, ...rest } = state;
+    this.#set(id, undefined, {
+      ...rest,
+      attempts,
+      revealed: true,
+      ...(ticked === total ? { rightAt: attempts } : { points: { ticked, total, missed }, input }),
     });
   }
 
@@ -129,6 +149,14 @@ export interface ResultLine {
 /** How far the learner got with a task, in `lang`: "richtig im 2. Versuch", "noch nicht gelöst (1 Versuch, …)". */
 function statusOf(state: TaskState, lang: string): string {
   if (state.rightAt !== undefined) return message(lang, "resultRight", { n: String(state.rightAt) });
+  if (state.points !== undefined) {
+    const partly = message(lang, "resultPartly", {
+      n: String(state.points.ticked),
+      total: String(state.points.total),
+      missed: state.points.missed,
+    });
+    return state.input === undefined ? partly : `${partly}, ${message(lang, "resultAnswer", { input: state.input })}`;
+  }
   const status = message(lang, state.revealed ? "resultSolution" : "resultOpen");
   if (state.attempts === 0) return status;
   const tries =

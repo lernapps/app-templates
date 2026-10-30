@@ -35,6 +35,7 @@ import { hintOf, stepsOf, taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { message } from "./messages.ts";
 import { answerShown, Progress, resultLine, sessionLines } from "./result.ts";
+import { pointNames, startOpenTask } from "./open-task.ts";
 import { stuckLines, stuckPrompt } from "./stuck.ts";
 import { currentExercise, pageQuery, taskQuery, type PagePosition } from "./position.ts";
 import {
@@ -741,6 +742,27 @@ export function startExplainer(root: Document = document): void {
           progress.answered(id, undefined, right, answerShown(question, answer, lang), said),
         onReveal: () => progress.revealed(id, undefined),
       });
+    } else if (data.kind === "open") {
+      const { id, lang, points } = data;
+      startOpenTask(element, data, {
+        onResult: (result) =>
+          progress.compared(
+            id,
+            result.ticked.length,
+            points.length,
+            pointNames(result.missed),
+            result.photo ? message(lang, "resultPhoto") : shortened(result.text ?? ""),
+          ),
+      });
     } else startGenerated(element, data, progress);
   }
 }
+
+/** How much of an open answer a result line carries: the rest is the learner's to paste, if the tutor asks. */
+const ANSWER_IN_LINE = 2000;
+
+/** An open answer on one line, at most ANSWER_IN_LINE characters. */
+const shortened = (text: string): string => {
+  const line = text.replace(/\s+/g, " ").trim();
+  return line.length <= ANSWER_IN_LINE ? line : `${line.slice(0, ANSWER_IN_LINE)} …`;
+};

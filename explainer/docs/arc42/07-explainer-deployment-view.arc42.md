@@ -29,6 +29,6 @@ id: dn-explainer-page
 title: Explainer page
 type: container
 parent: dn-learner-browser
-hosts: bb-islands, bb-generated-exercises, bb-task-numbers, bb-video, bb-self-assessment, bb-runtime-texts, bb-explainer-components
+hosts: bb-islands, bb-generated-exercises, bb-open-tasks, bb-task-numbers, bb-video, bb-self-assessment, bb-runtime-texts, bb-explainer-components
 :::
 ```

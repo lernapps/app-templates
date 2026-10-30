@@ -9,13 +9,13 @@ import { questionIn, type Question } from "../shared/questions/question.ts";
 import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
-import type { DataRecord, Exercise, QuestionBlock } from "./content.ts";
+import type { DataRecord, Exercise, OpenTask, QuestionBlock } from "./content.ts";
 import { hintOf, stepsOf, taskText, tokenize } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { questionFor, taskKey } from "./generated/question.ts";
 import { WORKED_TASKS } from "./tasks.ts";
 import { type Data, type Generated, type LanguageTemplates, type Templates } from "./generated/types.ts";
-import { plain, renderInline, renderWithFormulas } from "../shared/text/markdown.ts";
+import { plain, renderInline, renderMarkdown, renderWithFormulas } from "../shared/text/markdown.ts";
 import { distinctSeeds } from "./tasks.ts";
 import { message } from "./messages.ts";
 
@@ -37,7 +37,24 @@ export type ExerciseData =
       /** The seed of each task number, from 1 (taskSeeds). */
       seeds: number[];
       texts: { newTask: string; practice: string; hint: string; solution: string; taskNumber: string };
-    };
+    }
+  | OpenTaskData;
+
+/** What the browser reads from an open task: its texts as HTML, its points, how the learner may answer. */
+export interface OpenTaskData {
+  kind: "open";
+  lang: string;
+  id: string;
+  /** The task as HTML. */
+  task: string;
+  answer: readonly ("text" | "photo")[];
+  /** Each point as plain text, its kind, and the address of its source on this page's tree. */
+  points: { text: string; kind: "content" | "form"; href?: string }[];
+  /** The model answer as HTML. */
+  solution: string;
+  /** The hint as HTML. */
+  hint?: string;
+}
 
 /** The templates of a generated exercise in each of `languages`; links inside them through `resolve`. */
 export function templatesOf(
@@ -187,6 +204,24 @@ function generatedData(
   };
 }
 
+/** What the browser reads from an open task in `lang`; links and sources through `resolve`. */
+export function openTaskData(block: OpenTask, lang: string, resolve: (href: string) => string): OpenTaskData {
+  return {
+    kind: "open",
+    lang,
+    id: block.id,
+    task: renderMarkdown(inLanguage(block.task, lang), resolve),
+    answer: block.answer ?? ["text", "photo"],
+    points: block.points.map((point) => ({
+      text: inLanguage(point.text, lang),
+      kind: point.kind ?? "content",
+      ...(point.source === undefined ? {} : { href: resolve(point.source) }),
+    })),
+    solution: renderMarkdown(inLanguage(block.solution, lang), resolve),
+    ...(block.hint === undefined ? {} : { hint: renderMarkdown(inLanguage(block.hint, lang), resolve) }),
+  };
+}
+
 /** What the browser reads from an exercise in `lang` (script.explainer-exercise-data). */
 export function exerciseData(
   block: Exercise,
@@ -194,7 +229,44 @@ export function exerciseData(
   all: Readonly<Record<string, readonly DataRecord[]>>,
   resolve: (href: string) => string,
 ): ExerciseData {
-  return block.type === "generated" ? generatedData(block, lang, all, resolve) : questionData(block, lang);
+  if (block.type === "generated") return generatedData(block, lang, all, resolve);
+  if (block.type === "open-task") return openTaskData(block, lang, resolve);
+  return questionData(block, lang);
+}
+
+/**
+ * An open task in `lang`: the task, the points of a good answer with a link to each one's source, and the model answer
+ * under "Lösung", which is all the page shows without JavaScript; with JavaScript the learner answers first (explainer.ts).
+ */
+function openTaskExercise(block: OpenTask, lang: string, resolve: (href: string) => string): string {
+  const data = openTaskData(block, lang, resolve);
+  const points = data.points.map((point) => {
+    const where =
+      point.href === undefined
+        ? ` <span class="explainer-open-kind">(${plain(message(lang, "openTaskForm"))})</span>`
+        : ` <a class="explainer-open-source" href="${plain(point.href)}">${plain(message(lang, "openTaskSource"))}</a>`;
+    return `<li>${plain(point.text)}${where}</li>`;
+  });
+  return [
+    `<div class="explainer-exercise explainer-open-task" id="${block.id}">`,
+    `<p class="explainer-exercise-label">${plain(message(lang, "openTaskLabel"))}</p>`,
+    `<div class="explainer-open-task-text">${data.task}</div>`,
+    data.hint === undefined
+      ? ""
+      : `<details class="explainer-hint"><summary>${plain(message(lang, "hint"))}</summary>${data.hint}</details>`,
+    `<div class="explainer-open-live" hidden></div>`,
+    `<div class="explainer-open-points">`,
+    `<p class="explainer-open-points-intro">${plain(message(lang, "openTaskPoints"))}</p>`,
+    `<ul>${points.join("")}</ul>`,
+    `</div>`,
+    `<details class="explainer-solution"><summary>${plain(questionMessagesIn(lang).solution)}</summary>`,
+    `<div class="explainer-open-solution">${data.solution}</div>`,
+    `</details>`,
+    `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
+    `</div>`,
+  ]
+    .filter((part) => part !== "")
+    .join("\n");
 }
 
 function generatedExercise(
@@ -245,7 +317,7 @@ export function renderExercise(
   resolve: (href: string) => string,
   material: MaterialContext,
 ): string {
-  return block.type === "generated"
-    ? generatedExercise(block, lang, data, resolve)
-    : questionExercise(block, lang, material);
+  if (block.type === "generated") return generatedExercise(block, lang, data, resolve);
+  if (block.type === "open-task") return openTaskExercise(block, lang, resolve);
+  return questionExercise(block, lang, material);
 }

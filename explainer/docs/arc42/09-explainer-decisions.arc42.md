@@ -293,6 +293,31 @@ addresses: qg-understandable
 :::
 ```
 
+## An Open Task Is Answered First, Then Compared With Points
+
+Some subjects need answers in the learner's own words: German, foreign languages, religion (lernapps/practice#19). An
+example with a model answer beside it was only read, tied to nothing in the material, and gave the self-assessment and
+the tutor nothing to work with. So an open task asks for the answer first, typed or written on paper and photographed
+(the choice "Deine Lösung"), and only then shows the points of a good answer, 2 to 5, each about the content with its
+source in the app or about the form; the learner ticks those the answer has, which gives right, partly right
+(`dec-self-assessment-partly`) or wrong, names the missing points with a link to read up, and opens the model answer.
+Without JavaScript the page shows the task, the points and the model answer under "Lösung", as every exercise has one.
+The tutor page gives the tutor the points as P1, P2 … with their sources, the model answer and how to help; the result
+line carries the ticked points and the answer, a photo only as a note that the learner attaches it. The answer stays on
+the device: the photo is shown from memory and never stored or sent. Rejected: grading by a model (no model runs in
+the browser, `dec-tutor-variant`; a server would collect what learners write); a model answer without the learner's own
+answer first (it is only read); a word search over the answer (easy to fool; at most a hint).
+
+```arc42
+:::decision
+id: dec-open-task
+title: An open task is answered first, then compared with points that name their sources
+status: accepted
+date: 2026-10-30
+addresses: qg-understandable, qg-privacy, qg-explainer-readable-without-js
+:::
+```
+
 ## The Last Result of a Self-Assessment Stays on the Device
 
 The learner should find their result again, and a tutor should be able to accompany them from it. So the result of

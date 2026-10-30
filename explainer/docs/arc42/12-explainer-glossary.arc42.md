@@ -50,6 +50,30 @@ definition: An exercise of the explainer drawn from a seed, property-tested at b
 :::
 ```
 
+## Open Task
+
+Written as `open-task` in the content. German: offene Aufgabe.
+
+```arc42
+:::glossary-term
+id: term-open-task
+title: Open task
+definition: An exercise the learner answers in their own words, typed or on paper with a photo, then compares with the points of a good answer.
+:::
+```
+
+## Point
+
+A point of a good answer to an open task, named P1, P2 … in the result and on the tutor page.
+
+```arc42
+:::glossary-term
+id: term-point
+title: Point
+definition: One checkable sentence a good answer to an open task has, about its content with the section it comes from, or about its form.
+:::
+```
+
 ## Tutor Page
 
 `<chapter>/<page>/tutor/`, the address a tutor's prompt names for a page.

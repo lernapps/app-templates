@@ -69,6 +69,19 @@ export type ExerciseOutline =
       templates: Templates;
       /** The worked tasks without JavaScript: the task's text and the right answer as its "Lösung" states it. */
       worked: { task: string; answer: string }[];
+    }
+  | {
+      kind: "open";
+      id: string;
+      type: "open-task";
+      /** The task as plain text. */
+      task: string;
+      /** How the learner may answer. */
+      answer: readonly ("text" | "photo")[];
+      /** The points of a good answer, as plain text, and whether each has a source to read up. */
+      points: { text: string; source: boolean }[];
+      /** The model answer as plain text, in the pieces between its formulas (which a reader reads otherwise). */
+      solution: string[];
     };
 
 /** A self-assessment (assessment.ts), in German: where it is offered, and its exercises by the content pages' outline. */
@@ -190,6 +203,31 @@ function walk(
           data,
           templates,
           worked: worked.map((item) => ({ task: plainText(item.task), answer: plainText(item.answer) })),
+        });
+        break;
+      }
+      case "open-task": {
+        // the formulas of its task, hint and model answer, as the page renders them
+        const html = renderExercise(block, lang, site.data, (href) => href, { lang, href: (image) => image });
+        into.formulas += (html.split('<script type="application/json"')[0] ?? "").split("<math").length - 1;
+        into.exercises.push({
+          kind: "open",
+          id: block.id,
+          type: "open-task",
+          task: plainText(renderMarkdown(inLanguage(block.task, lang), (href) => href)),
+          answer: block.answer ?? ["text", "photo"],
+          points: block.points.map((point) => ({
+            text: inLanguage(point.text, lang),
+            source: point.source !== undefined,
+          })),
+          solution: inLanguage(block.solution, lang)
+            .split(/\$[^$]+\$/)
+            .map((piece) =>
+              plainText(renderMarkdown(piece, (href) => href))
+                .replace(/\s+/g, " ")
+                .trim(),
+            )
+            .filter((piece) => piece !== ""),
         });
         break;
       }

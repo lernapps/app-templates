@@ -93,3 +93,20 @@ blocks:
             - { answer: 5, seed: 1 }
             - { answer: 38, seed: 1 }
             - { answer: 0 }
+      - type: open-task
+        id: tauschen-erklaeren
+        task: Erkläre in zwei bis vier Sätzen, warum 20 % von 50 € genauso viel sind wie 50 % von 20 €.
+        points:
+          - text: Der Prozentwert ist Grundwert mal Prozentsatz, geteilt durch 100.
+            source: /prozent/prozentwert/#regel
+          - text: "Beide Male kommt 20 · 50 : 100 = 10 heraus, also 10 €."
+            source: /prozent/prozentwert/#regel
+          - text: Beim Malnehmen darf man die Zahlen tauschen, darum ist das Ergebnis gleich.
+            source: /prozent/prozentwert/#regel
+          - text: Ganze Sätze mit einer Begründung (weil …, darum …).
+            kind: form
+        solution: |
+          Den Prozentwert rechnet man mit $W = \frac{G \cdot p}{100}$. Für 20 % von 50 € ist das
+          $\frac{50 \cdot 20}{100} = 10$, für 50 % von 20 € ist es $\frac{20 \cdot 50}{100} = 10$. Weil man beim
+          Malnehmen die Zahlen tauschen darf, kommt beide Male 10 € heraus.
+        hint: Setz beide Male in die Formel ein und vergleich, was im Zähler steht.

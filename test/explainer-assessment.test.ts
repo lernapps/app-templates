@@ -105,9 +105,10 @@ describe("the build checks a self-assessment", () => {
     // the app's is the chapter's: no page of its own for the chapter, whose page the app hides
     const [whole] = assessments(site);
     expect(assessments(site).map((assessment) => assessment.local)).toEqual(["einschaetzung/"]);
+    // a3 is the open task between them
     expect(whole?.items.filter((item) => item.block.type === "vue-component").map((item) => item.key)).toEqual([
       "a2",
-      "a3",
+      "a4",
     ]);
     // its page: the component's island in a form of its own, no "Prüfen", and the islands module loads
     const route = routes(site).find((candidate) => candidate.kind === "assessment" && candidate.lang === "de");

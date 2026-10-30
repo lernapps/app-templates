@@ -117,6 +117,10 @@ async function runAssessment(page: Page, app: Outline, assessment: AssessmentOut
       }
       const exercise = content?.exercises.find((candidate) => candidate.id === item.id);
       if (exercise === undefined) throw new Error(`${item.page}#${item.id} is not in the outline`);
+      if (exercise.kind === "open") {
+        await answerOpenTask(view.locator(`[data-key="${item.key}"]`), exercise, exercise.points.length);
+        continue;
+      }
       let question: Question;
       if (exercise.kind === "question") question = { ...exercise.question, id: item.key };
       else {
@@ -166,11 +170,13 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
   const expected = item.exercises.map((exercise) =>
     exercise.kind === "question"
       ? { id: exercise.id, texts: [exercise.question.text], answers: [exercise.answers] }
-      : {
-          id: exercise.id,
-          texts: exercise.worked.map((worked) => worked.task),
-          answers: exercise.worked.map((worked) => [worked.answer]),
-        },
+      : exercise.kind === "open"
+        ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solution] }
+        : {
+            id: exercise.id,
+            texts: exercise.worked.map((worked) => worked.task),
+            answers: exercise.worked.map((worked) => [worked.answer]),
+          },
   );
   const read = () =>
     main.locator(".explainer-exercise").evaluateAll((elements) =>
@@ -178,7 +184,9 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
         const fold = (text: string | null) => (text ?? "").replace(/\s+/g, " ").trim();
         const own = element.classList.contains("explainer-question")
           ? [...element.querySelectorAll("legend")]
-          : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
+          : element.classList.contains("explainer-open-task")
+            ? [...element.querySelectorAll(":scope > .explainer-open-task-text")]
+            : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
         const solutions = [...element.querySelectorAll<HTMLDetailsElement>("details.explainer-solution")];
         return {
           id: element.id,
@@ -520,6 +528,67 @@ async function checkQuestion(
   await wrongThenSolution(page, exercise.id, question, reasonFor(question, wrong));
 }
 
+/** An example answer to an open task, which the tests type. */
+const OPEN_ANSWER = "Meine Antwort in eigenen Worten.";
+
+/**
+ * Answers the open task in `item` as text (or, if it takes only photos, with none) and ticks the first `ticks` of its
+ * points: in a self-assessment that is the answer.
+ */
+async function answerOpenTask(
+  item: Locator,
+  exercise: Extract<ExerciseOutline, { kind: "open" }>,
+  ticks: number,
+): Promise<void> {
+  if (!exercise.answer.includes("text")) return;
+  const choice = item.getByRole("radio", { name: messageOf("de", "openTaskType") });
+  if ((await choice.count()) > 0) await choice.check();
+  await item.getByRole("textbox", { name: messageOf("de", "openTaskAnswer") }).fill(OPEN_ANSWER);
+  await item.getByRole("button", { name: messageOf("de", "openTaskCompare") }).click();
+  const boxes = item.getByRole("checkbox");
+  await expect(boxes, `${exercise.id}: a tick box per point`).toHaveCount(exercise.points.length);
+  for (let index = 0; index < ticks; index += 1) await boxes.nth(index).check();
+}
+
+/**
+ * With JavaScript: an open task is answered before its points and model answer show; "Vergleichen" waits for an
+ * answer; the ticks give right or partly right with the missing points; the model answer opens after "Auswerten".
+ */
+async function checkOpenTask(
+  page: Page,
+  url: string,
+  exercise: Extract<ExerciseOutline, { kind: "open" }>,
+): Promise<void> {
+  const item = page.locator(`[id="${exercise.id}"]`);
+  await page.goto(`./${url}#${exercise.id}`);
+  await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung before the answer`).toBeHidden();
+  await expect(item.locator(".explainer-open-points"), `${exercise.id}: no points before the answer`).toBeHidden();
+  if (!exercise.answer.includes("text")) return;
+  await item.getByRole("button", { name: messageOf("de", "openTaskCompare") }).click();
+  await expect(item.locator(".explainer-open-need"), `${exercise.id}: compare waits for an answer`).toHaveText(
+    messageOf("de", "openTaskWriteFirst"),
+  );
+  const total = String(exercise.points.length);
+  await answerOpenTask(item, exercise, exercise.points.length);
+  await item.getByRole("button", { name: messageOf("de", "openTaskEvaluate") }).click();
+  await expect(item.locator(".explainer-open-result"), `${exercise.id}: all points ticked`).toHaveText(
+    messageOf("de", "openTaskRight", { total }),
+  );
+  await expect(item.locator("details.explainer-solution"), `${exercise.id}: the Lösung after the answer`).toBeVisible();
+  await item.getByRole("button", { name: messageOf("de", "openTaskChange") }).click();
+  await item.getByRole("button", { name: messageOf("de", "openTaskCompare") }).click();
+  await item.getByRole("checkbox").last().uncheck();
+  await item.getByRole("button", { name: messageOf("de", "openTaskEvaluate") }).click();
+  const result = item.locator(".explainer-open-result");
+  await expect(result, `${exercise.id}: one point not ticked`).toContainText(
+    messageOf("de", "openTaskPartly", { n: String(exercise.points.length - 1), total }),
+  );
+  const last = exercise.points.at(-1)?.text ?? "";
+  await expect(result, `${exercise.id}: the missing point`).toContainText(
+    messageOf("de", "openTaskMissing", { point: last }),
+  );
+}
+
 /** With JavaScript: a generated exercise at its deep link, its answers, a mistake, and "Neue Aufgabe". */
 async function checkGenerated(
   page: Page,
@@ -850,6 +919,7 @@ export function explainerTests(root = "."): void {
         }) => {
           for (const exercise of types.values()) {
             if (exercise.kind === "question") await checkQuestion(page, item.url, exercise);
+            else if (exercise.kind === "open") await checkOpenTask(page, item.url, exercise);
             else await checkGenerated(page, item.url, exercise);
           }
           expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual([]);

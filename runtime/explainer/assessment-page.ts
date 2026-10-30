@@ -110,6 +110,9 @@ function itemHtml(context: AssessmentContext, data: AssessmentItemData, n: numbe
   const label = `<p class="explainer-assessment-label">${plain(message(lang, "assessmentTask", { n: String(n) }))}</p>`;
   if (data.kind === "generated") return `${label}<div class="explainer-assessment-live"></div>`;
   if (data.kind === "component") return `${label}${component}`;
+  // an open task: its task, and the place its answer and ticks go (open-task.ts); no points, no model answer
+  if (data.kind === "open")
+    return `${label}<div class="explainer-open-task-text">${data.task}</div><div class="explainer-open-live" hidden></div>`;
   const { question, rendered } = data;
   return `${label}${renderQuestion(question, {
     lang,

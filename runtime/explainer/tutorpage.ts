@@ -231,6 +231,8 @@ export function pageExercises(site: Site, page: Page, descriptions: Descriptions
           if (use?.id !== undefined && use.component.exercise) {
             found.push({ id: use.id, block, ...where, count: description?.seeds.length ?? 0 });
           }
+        } else if (block.type === "open-task") {
+          found.push({ id: block.id, block, ...where, count: 0 });
         } else if (QUESTIONS.has(block.type) && "id" in block && typeof block.id === "string") {
           found.push({ id: block.id, block, ...where, count: 0 });
         }
