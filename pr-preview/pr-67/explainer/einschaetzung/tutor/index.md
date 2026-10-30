@@ -6,8 +6,8 @@ Eltern und Lehrkräfte sehen hier, was der Tutor bekommt. [Zur Selbsteinschätzu
 
 ## So liest du ein Ergebnis
 
-- Nach einer Runde fügt das Kind ein: das Ergebnis je Seite, eine Zeile je Aufgabe, diese Seite mit dem Ergebnis in der Adresse (z. B. `?a1=17-falsch-F1&a2=richtig&a3=offen`) und den „Link für eine neue Runde“. Nimm das Ergebnis je Seite, wie es dasteht; rechne es nicht nach.
-- Eine Seite mit allen Aufgaben richtig, und mindestens zwei, kann das Kind wahrscheinlich schon. Mit mindestens der Hälfte richtig soll es sie noch einmal ansehen, mit weniger genau lesen. Eine offene Aufgabe zählt als nicht richtig. Eine Seite ohne Aufgabe wurde nicht abgefragt.
+- Nach einer Runde fügt das Kind ein: das Ergebnis je Seite, eine Zeile je Aufgabe, diese Seite mit dem Ergebnis in der Adresse (z. B. `?a1=17-falsch-F1&a2=richtig&a3=offen&a4=teilweise-P2`) und den „Link für eine neue Runde“. Nimm das Ergebnis je Seite, wie es dasteht; rechne es nicht nach.
+- Eine Seite mit allen Aufgaben richtig, und mindestens zwei, kann das Kind wahrscheinlich schon. Mit mindestens der Hälfte richtig soll es sie noch einmal ansehen, mit weniger genau lesen. Eine teilweise richtige Aufgabe zählt halb; `P2` nennt einen Punkt einer guten Antwort, der ihr fehlte. Eine nicht beantwortete Aufgabe (`offen`) zählt als nicht richtig. Eine Seite ohne Aufgabe wurde nicht abgefragt.
 - Für jedes Kapitel gilt sein letztes Ergebnis: aus der letzten Runde dieses Kapitels, sonst aus der ersten Selbsteinschätzung. Merk es dir für die Kapitel, die noch kommen.
 - „Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“ auf einer Seite: deren Tutor-Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App.
 
@@ -41,15 +41,16 @@ Nennt die Adresse dieser Seite `bedarf=`, gilt jeder Abschnitt, den sie nennt, m
 ### Kapitel „Prozent“
 
 - Selbsteinschätzung des Kapitels
-- „Prozentwert“ · Aufgaben A1, A2
-- „Prozentsatz“ · Aufgaben A3, A4
-- „Grundwert“ · Aufgaben A5, A6
+- „Prozentwert“ · Aufgaben A1, A2, A3
+- „Prozentsatz“ · Aufgaben A4, A5
+- „Grundwert“ · Aufgaben A6, A7
 
 ## Die Aufgaben dieser Selbsteinschätzung
 
 - A1: Übung prozentwert-ueben der Seite „Prozentwert“
 - A2: Übung prozentfeld der Seite „Prozentwert“
-- A3: Übung welche-rechnung der Seite „Prozentsatz“ (immer dieselbe Aufgabe, auch auf der Seite: richtig kann gemerkt sein)
-- A4: Übung prozentsatz-ueben der Seite „Prozentsatz“
-- A5: Übung klammern der Seite „Grundwert“ (immer dieselbe Aufgabe, auch auf der Seite: richtig kann gemerkt sein)
-- A6: Übung grundwert-ueben der Seite „Grundwert“
+- A3: Übung tauschen-erklaeren der Seite „Prozentwert“ (immer dieselbe Aufgabe, auch auf der Seite: richtig kann gemerkt sein)
+- A4: Übung welche-rechnung der Seite „Prozentsatz“ (immer dieselbe Aufgabe, auch auf der Seite: richtig kann gemerkt sein)
+- A5: Übung prozentsatz-ueben der Seite „Prozentsatz“
+- A6: Übung klammern der Seite „Grundwert“ (immer dieselbe Aufgabe, auch auf der Seite: richtig kann gemerkt sein)
+- A7: Übung grundwert-ueben der Seite „Grundwert“
