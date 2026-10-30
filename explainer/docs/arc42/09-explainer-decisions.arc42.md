@@ -299,8 +299,9 @@ Some subjects need answers in the learner's own words: German, foreign languages
 example with a model answer beside it was only read, tied to nothing in the material, and gave the self-assessment and
 the tutor nothing to work with. So an open task asks for the answer first, typed or written on paper and photographed
 (the choice "Deine Lösung"), and only then shows the points of a good answer, 2 to 5, each about the content with its
-source in the app or about the form; the learner ticks those the answer has, which gives right, partly right
-(`dec-self-assessment-partly`) or wrong, names the missing points with a link to read up, and opens the model answer.
+source in the app, linked to read up, or about the form; the learner ticks those the answer has, which makes them read
+each point, and "Auswerten" gives right, partly right (`dec-self-assessment-partly`) or wrong, without repeating the
+points, and opens the model answer.
 Without JavaScript the page shows the task, the points and the model answer under "Lösung", as every exercise has one.
 The tutor page gives the tutor the points as P1, P2 … with their sources, the model answer and how to help; the result
 line carries the ticked points and the answer, a photo only as a note that the learner attaches it. The answer stays on

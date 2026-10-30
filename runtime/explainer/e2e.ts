@@ -590,10 +590,11 @@ async function checkOpenTask(
   await expect(result, `${exercise.id}: one point not ticked`).toContainText(
     messageOf("de", "openTaskPartly", { n: String(exercise.points.length - 1), total }),
   );
-  const last = exercise.points.at(-1)?.text ?? "";
-  await expect(result, `${exercise.id}: the missing point`).toContainText(
-    messageOf("de", "openTaskMissing", { point: last }),
-  );
+  // each point of the content links its source while the learner compares
+  await expect(
+    item.locator(".explainer-open-check").getByRole("link", { name: messageOf("de", "openTaskSource") }),
+    `${exercise.id}: a link to read up per point of the content`,
+  ).toHaveCount(exercise.points.filter((point) => point.source).length);
 }
 
 /** With JavaScript: a generated exercise at its deep link, its answers, a mistake, and "Neue Aufgabe". */

@@ -175,7 +175,6 @@
   "openTaskRight": "Right: all {total} points are in your answer.",
   "openTaskPartly": "Partly: {n} of {total} points are in your answer.",
   "openTaskWrong": "Not yet: none of the {total} points is in your answer.",
-  "openTaskMissing": "Missing: {point}",
   "openTaskLocked": "The solution opens after your answer.",
   "resultPartly": "partly right ({n} of {total} points, missing {missed})",
   "resultPhoto": "answer as a photo",

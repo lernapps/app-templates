@@ -1,9 +1,9 @@
 // An open task in the browser (explainer.ts, assessment-client.ts): the learner answers first, then compares. "Deine
 // Lösung" offers the ways the task allows: typing into a text field, or writing on paper and taking a photo of the
 // sheet. "Vergleichen" opens once there is text or a photo; it shows the points of a good answer as tick boxes ("Was
-// steht in deiner Antwort?"). On a content page "Auswerten" then says right (all ticked), partly right (some) or not
-// yet (none), names each missing point with a link to its source, and opens the model answer ("Lösung"), which stays
-// shut before the learner's own answer. In a self-assessment there is no result and no model answer: the ticks are the
+// steht in deiner Antwort?"), each point of the content with its link to read up: ticking makes the learner read each
+// point. On a content page "Auswerten" then says right (all ticked), partly right (some) or not yet (none), without
+// repeating the points, and opens the model answer ("Lösung"), which stays shut before the learner's own answer. In a self-assessment there is no result and no model answer: the ticks are the
 // answer, read at "Auswerten" of the whole run. The photo is shown from memory (an object URL), never stored or sent.
 // On a content page the text, the way chosen and the ticks are kept while the tab is open (sessionStorage through
 // @lernapps/tooling/storage, under the app's prefix), so that a reload loses no answer and a new day starts afresh; a
@@ -120,7 +120,7 @@ export function startOpenTask(
     points
       .map(
         (point, index) =>
-          `<label><input type="checkbox" value="${index}"> <span>${escape(point.text)}${point.kind === "form" ? ` <small>(${t("openTaskForm")})</small>` : ""}</span></label>`,
+          `<label><input type="checkbox" value="${index}"> <span>${escape(point.text)}${point.kind === "form" ? ` <small>(${t("openTaskForm")})</small>` : ""}${point.href === undefined ? "" : ` <a href="${escape(point.href)}">${t("openTaskSource")}</a>`}</span></label>`,
       )
       .join(""),
     `</fieldset>`,
@@ -232,20 +232,8 @@ export function startOpenTask(
       const total = String(points.length);
       const key =
         now.state === "richtig" ? "openTaskRight" : now.state === "teilweise" ? "openTaskPartly" : "openTaskWrong";
-      result.innerHTML = [
-        `<p><strong>${t(key, { n: String(now.ticked.length), total })}</strong></p>`,
-        now.missed.length === 0
-          ? ""
-          : `<ul>${now.missed
-              .map((index) => {
-                const point = points[index];
-                if (!point) return "";
-                const link =
-                  point.href === undefined ? "" : ` <a href="${escape(point.href)}">${t("openTaskSource")}</a>`;
-                return `<li>${t("openTaskMissing", { point: point.text })}${link}</li>`;
-              })
-              .join("")}</ul>`,
-      ].join("");
+      // the points stay above with their sources: the result does not repeat them
+      result.innerHTML = `<p><strong>${t(key, { n: String(now.ticked.length), total })}</strong></p>`;
       result.hidden = false;
       result.dataset["state"] = now.state;
     }
