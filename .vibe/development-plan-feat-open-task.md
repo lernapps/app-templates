@@ -206,15 +206,20 @@ Step 2, app-templates: block `open-task` (D1, D3), on this branch (owner: B, 202
 - [x] keeping text and ticks until the tab closes (owner: "nichts ist frustrierender, als Eingaben zu verlieren",
       2026-10-30): first lernapps/tooling branch `feat/session-storage` (088d473): `createStorage(app, { type: "sessionStorage" })`;
       (PR lernapps/tooling#210); then the open task keeps way, text and ticks under `antwort:<path>#<id>` in sessionStorage; the e2e tests check a
-      reload and allow only that key. The templates pin tooling at 088d473: **move the pin to tooling's main once
-      feat/session-storage is merged, before this branch merges**
+      reload and allow only that key. The templates pin tooling's main at 7cf7e41, where #210 is merged (2026-10-30)
 - [ ] note for step 4: `lernapps check` measures `fitness.storage` by visiting pages without typing, so an app whose
       only storage is an open task's answer is measured `none`; to decide whether the measurement should type
 
 Step 3, app-templates: the scope (D4, KD-03; named "scope" by the owner, 2026-10-30), on this branch: done (see
 Completed)
 
-Step 4, tooling: pin, rules, skills, rubric (D5)
+Step 4, tooling (D5), branch lernapps/tooling `feat/open-task`
+- [x] skill `lernapps-explainer`: open task (`exercises.md`), runtime, scope, tutor (`runtime.md`), `structure.md`
+- [x] rules and rubric items `explainer-open-points`, `explainer-scope-matches` (warning)
+- [ ] `fitness.storage`: measured by visiting pages without input, so storage that starts with input (an open task's
+      answer, the tutor's assistant once chosen) is measured `none`: open question to the owner
+- [ ] move tooling's `appTemplates` pin once app-templates' feat/open-task is merged
+
 Step 5, practice: skills, plan template, validation (D6)
 
 ### Completed
