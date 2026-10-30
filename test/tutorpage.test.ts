@@ -23,6 +23,7 @@ import {
   tutorPageMarkdown,
 } from "../runtime/explainer/tutorpage.ts";
 import { anchorsOf, linkProblems, tutorPageOf } from "../runtime/explainer/tutor.ts";
+import { NEEDS } from "../runtime/explainer/needs.ts";
 import * as assignLabels from "./fixtures/explainer-history/components/AssignLabels.ts";
 import type { Props, Task } from "./fixtures/explainer-history/components/AssignLabels.ts";
 
@@ -117,6 +118,25 @@ describe("the tutor page of a content page", () => {
     // only this page
     expect(text).not.toContain("Zahlen 2");
     expect(tutorPageMarkdown(site, page, "en", new Map())).toContain("## How you guide");
+  });
+
+  test("the needs: a short section for each, which holds when the query names it, after the guide", () => {
+    const site = fixture("explainer-all-blocks");
+    const { page, text } = firstPage(site);
+    const needs = text.indexOf("## Besondere Anforderungen");
+    expect(needs).toBeGreaterThan(text.indexOf("## Wo das Kind gerade ist"));
+    expect(needs).toBeLessThan(text.indexOf("## Kontext: die Seite"));
+    expect(text).toContain("Nennt die Adresse dieser Seite `bedarf=`, gilt jeder Abschnitt, den sie nennt");
+    expect(text).toContain("widersprechen sich zwei, gilt der strengere");
+    for (const need of NEEDS) expect(text).toContain(`- \`${need}\`: `);
+    // short, so that they do not drown the guide: at most two sentences of about 200 characters each
+    const sections = text
+      .slice(needs)
+      .split("\n")
+      .filter((line) => /^- `[a-z-]+`: /.test(line));
+    expect(sections).toHaveLength(NEEDS.length);
+    for (const section of sections) expect(section.length).toBeLessThan(260);
+    expect(tutorPageMarkdown(site, page, "en", new Map())).toContain("## Special requirements");
   });
 
   test("the page's content as context", () => {

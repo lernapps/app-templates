@@ -31,6 +31,7 @@ import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
 import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { tutorPageOf } from "./tutor.ts";
+import { LANGUAGES, languageName, NEEDS, OTHER_LANGUAGE, type Need } from "./needs.ts";
 import { BASE, placeholderPrompt, plainAddress, PROVIDERS, QUERY, startPrompt } from "./prompt.ts";
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
@@ -462,9 +463,58 @@ function tutorAbout(context: Context): string {
     `<p>${plain(context.t("tutorAboutStart"))}</p>`,
     `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label></p>`,
     `<p class="explainer-tutor-hint" role="status" aria-live="polite" hidden></p>`,
+    needsChoice(context),
     `<p>${plain(context.t("tutorAccount"))}</p>`,
     `<p>${plain(context.t("tutorAboutPrivacy"))}</p>`,
     `</section>`,
+  ].join("\n");
+}
+
+/** The name and the description of each need on the start page. */
+const NEED_TEXTS: Readonly<Record<Need, readonly [keyof Messages, keyof Messages]>> = {
+  "kurze-schritte": ["needKurzeSchritte", "needKurzeSchritteAbout"],
+  "wenig-lesen": ["needWenigLesen", "needWenigLesenAbout"],
+  "mehr-tiefe": ["needMehrTiefe", "needMehrTiefeAbout"],
+  "andere-muttersprache": ["needAndereMuttersprache", "needAndereMutterspracheAbout"],
+  "klar-und-woertlich": ["needKlarUndWoertlich", "needKlarUndWoertlichAbout"],
+  "rechnen-anschaulich": ["needRechnenAnschaulich", "needRechnenAnschaulichAbout"],
+};
+
+/**
+ * The choice of the learner's needs for the tutor, on the start page (dec-tutor-needs): a box per need with one or two
+ * sentences on what it does, the first language below `andere-muttersprache`, and whether the choice holds for every
+ * explainer or for this app only. Hidden until the client module, which keeps it on the device, shows it.
+ */
+function needsChoice(context: Context): string {
+  const { site, lang } = context;
+  const languages = [...LANGUAGES]
+    .map((tag) => ({ tag, name: languageName(tag, lang) }))
+    .sort((a, b) => a.name.localeCompare(b.name, lang));
+  const language = [
+    `<p class="explainer-tutor-language-choice" hidden><label>${plain(context.t("needsLanguage"))} <select class="explainer-tutor-language">`,
+    `<option value="">${plain(context.t("needsLanguageNone"))}</option>`,
+    ...languages.map(({ tag, name }) => `<option value="${plain(tag)}">${plain(name)}</option>`),
+    `</select></label></p>`,
+  ].join("");
+  const needs = NEEDS.map((need) => {
+    const [name, about] = NEED_TEXTS[need];
+    const id = `bedarf-${need}`;
+    return [
+      `<p class="explainer-tutor-need-choice"><label><input type="checkbox" class="explainer-tutor-need" value="${need}" aria-describedby="${id}-text" /> ${plain(context.t(name))}</label>`,
+      `<span class="explainer-tutor-need-text" id="${id}-text">${plain(context.t(about))}</span></p>`,
+      need === OTHER_LANGUAGE ? language : "",
+    ].join("");
+  });
+  const scope = (value: string, key: keyof Messages) =>
+    `<label><input type="radio" class="explainer-tutor-needs-scope" name="bedarf-gilt" value="${value}" /> ${plain(context.t(key))}</label>`;
+  return [
+    `<fieldset class="explainer-tutor-needs" data-storage="${plain(site.storage ?? "explainer")}" hidden>`,
+    `<legend>${plain(context.t("needsTitle"))}</legend>`,
+    `<p>${plain(context.t("needsAbout"))}</p>`,
+    ...needs,
+    `<fieldset class="explainer-tutor-needs-where"><legend>${plain(context.t("needsScopeTitle"))}</legend>${scope("archetype", "needsScopeAll")} ${scope("app", "needsScopeApp")}</fieldset>`,
+    `<p>${plain(context.t("needsPrivacy"))}</p>`,
+    `</fieldset>`,
   ].join("\n");
 }
 

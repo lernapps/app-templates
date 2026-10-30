@@ -227,6 +227,11 @@ describe("one build writes every page", () => {
           /<p class="explainer-tutor-choice" hidden><label>[^<]+ <select class="explainer-tutor-choose" data-storage="[^"]+"><option value="">(Keiner|None)<\/option><option value="Claude">/,
         );
         expect(start).toContain(lang === "de" ? "kein Angebot von lernapps.net" : "not offered by lernapps.net");
+        // the choice of the needs for the tutor, a box per need, shown once the client module runs (dec-tutor-needs)
+        expect(start).toMatch(/<fieldset class="explainer-tutor-needs" data-storage="[^"]+" hidden>/);
+        expect(start).toContain('<input type="checkbox" class="explainer-tutor-need" value="kurze-schritte"');
+        expect(start).toContain('<select class="explainer-tutor-language">');
+        expect(start).toContain('name="bedarf-gilt" value="archetype"');
         // the header holds the language switch and nothing else (no link with the app's name), and an app with one
         // language has none
         expect(start).not.toContain("explainer-brand");

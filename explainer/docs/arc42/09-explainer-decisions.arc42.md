@@ -222,7 +222,7 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click
 
 ## The Learner Names What Helps; the Tutor Page Holds a Short Section for Each
 
-Not built yet. Some learners learn better when the tutor talks to them in a particular way: in short steps, with
+Some learners learn better when the tutor talks to them in a particular way: in short steps, with
 little to read, with deeper questions, in simple German for another first language, literally, or with numbers as
 amounts. So beside the assistant the learner chooses none, one or several of six needs, each named by what helps,
 never by a diagnosis: `kurze-schritte`, `wenig-lesen`, `mehr-tiefe`, `andere-muttersprache`, `klar-und-woertlich`,

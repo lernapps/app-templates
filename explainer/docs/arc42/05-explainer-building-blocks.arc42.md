@@ -204,7 +204,7 @@ path: runtime/explainer/routes.ts
 
 Built. Makes a page's exercises live: answered before the solution shows, the reason of a wrong answer, "Neue
 Aufgabe", the task numbers in the address; the tutor button; and starts the videos (`bb-video`). It keeps only the
-learner's chosen way to the tutor and their choice to load videos directly on the device, and the needs the learner chose for the tutor (`dec-tutor-needs`; not built yet), for every explainer or
+learner's chosen way to the tutor and their choice to load videos directly on the device, and the needs the learner chose for the tutor (`dec-tutor-needs`), for every explainer or
 for this app only; the last result of a self-assessment is kept by `bb-self-assessment`, which it starts.
 
 ```arc42
@@ -291,7 +291,7 @@ the tutor gets: a short visible guide, then the page's content and its exercises
 each typical mistake gives), an exercise component with its `about` and the same table from its exercise logic
 (`dec-component-table`), or without one each number's task and solution from its `describe` as far as they fit into
 64 kB; its Markdown lies beside it for copying. Under "Besondere Anforderungen" it ends with a short section for each
-need a learner can choose, which holds when the query names it in `bedarf=` (`dec-tutor-needs`; not built yet). No
+need a learner can choose, which holds when the query names it in `bedarf=` (`dec-tutor-needs`). No
 prompt and no line carries a rule for the tutor, and the app writes no `llms.txt`.
 
 ```arc42

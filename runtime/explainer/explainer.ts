@@ -25,7 +25,7 @@
 // self-assessment runs on its own page, offered on the start page or its chapter's page (assessment-client.ts); its
 // way to the tutor is the one switched on, or one chosen there.
 import { moveFocus } from "@lernapps/tooling/a11y";
-import { createStorage } from "@lernapps/tooling/storage";
+import { createSettings, createStorage, type SettingScope } from "@lernapps/tooling/storage";
 import { startQuestion } from "../shared/questions/engine.ts";
 import { renderQuestion } from "../shared/questions/render.ts";
 import { questionId } from "../shared/questions/question.ts";
@@ -37,6 +37,15 @@ import { message } from "./messages.ts";
 import { answerShown, Progress, resultLine, sessionLines } from "./result.ts";
 import { stuckLines, stuckPrompt } from "./stuck.ts";
 import { currentExercise, pageQuery, taskQuery, type PagePosition } from "./position.ts";
+import {
+  isNeedsChoice,
+  languageSentence,
+  NEEDS_KEY,
+  OTHER_LANGUAGE,
+  withNeeds,
+  type Need,
+  type NeedsChoice,
+} from "./needs.ts";
 import {
   addressOf,
   NEW_TASK_ICON,
@@ -403,6 +412,17 @@ class WayChoice {
   }
 }
 
+/** The archetype whose settings the needs are: they hold for every explainer, or for one app (dec-tutor-needs). */
+const ARCHETYPE = "explainer";
+
+/** The needs the learner chose for the tutor (needs.ts), for this app or for every explainer, if any. */
+const chosenNeeds = (storage: string): NeedsChoice | undefined =>
+  createSettings(storage, ARCHETYPE).load(NEEDS_KEY, isNeedsChoice)?.value;
+
+/** A prompt that starts a chat, with the sentence of the learner's first language after it when they chose one. */
+const withLanguage = (prompt: string, choice: NeedsChoice | undefined, lang: string): string =>
+  [prompt, languageSentence(choice, lang)].filter((part) => part !== "").join("\n");
+
 /**
  * The name of the running chat's assistant, as "zurück zu …" says it: the one the learner switched on, else "deinem
  * KI-Tutor".
@@ -505,7 +525,14 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
         exercise: exercise.id,
         ...(number === undefined ? {} : { number }),
         state: progress.state(exercise.id, number),
-        tutor: tutorAddress(href, data, taskQuery(href, page, exercise.id)),
+        // a new chat gets the learner's needs; a running one has them (dec-tutor-needs)
+        tutor: tutorAddress(
+          href,
+          data,
+          running
+            ? taskQuery(href, page, exercise.id)
+            : withNeeds(taskQuery(href, page, exercise.id), chosenNeeds(data.storage)),
+        ),
       };
     };
     button.addEventListener("click", () => {
@@ -531,7 +558,7 @@ function startHelp(root: Document, data: TutorData, progress: Progress, choice: 
         return;
       }
       const way = choice.get();
-      const prompt = () => stuckPrompt(stuck(), lang);
+      const prompt = () => withLanguage(stuckPrompt(stuck(), lang), chosenNeeds(data.storage), lang);
       const copy = () => withMarkdown(prompt(), data, root.location.href);
       openAssistant(root, way, { start: prompt, copy, placeholder: data.placeholder }, (copied) => {
         status.textContent = copied === undefined ? "" : copied ? data.copied : data.failed;
@@ -580,6 +607,44 @@ function startChoice(root: Document): void {
     explain();
   });
   explain();
+  box.hidden = false;
+}
+
+/**
+ * The choice of the learner's needs on the start page (dec-tutor-needs): a box per need, the first language once
+ * `andere-muttersprache` is ticked, and whether the choice holds for every explainer or for this app only; shown once
+ * the client module runs, and kept on the device at once as a setting (createSettings), where the learner said.
+ */
+function startNeeds(root: Document): void {
+  const box = root.querySelector<HTMLFieldSetElement>("fieldset.explainer-tutor-needs");
+  if (!box) return;
+  const settings = createSettings(box.dataset["storage"] ?? "explainer", ARCHETYPE);
+  const boxes = [...box.querySelectorAll<HTMLInputElement>("input.explainer-tutor-need")];
+  const scopes = [...box.querySelectorAll<HTMLInputElement>("input.explainer-tutor-needs-scope")];
+  const language = box.querySelector<HTMLSelectElement>("select.explainer-tutor-language");
+  const languageBox = language?.closest<HTMLElement>(".explainer-tutor-language-choice");
+  const stored = settings.load(NEEDS_KEY, isNeedsChoice);
+  for (const input of boxes) input.checked = stored?.value.needs.includes(input.value as Need) === true;
+  const where: SettingScope = stored?.scope === "app" ? "app" : "archetype";
+  for (const input of scopes) input.checked = input.value === where;
+  if (language) {
+    const tags = [...language.options].map((option) => option.value);
+    const tag = stored?.value.language;
+    language.value = tag !== undefined && tags.includes(tag) ? tag : "";
+  }
+  const showLanguage = () => {
+    if (languageBox) languageBox.hidden = !boxes.some((input) => input.checked && input.value === OTHER_LANGUAGE);
+  };
+  const save = () => {
+    const needs = boxes.filter((input) => input.checked).map((input) => input.value as Need);
+    const tag = language?.value ?? "";
+    const choice: NeedsChoice = { needs, ...(tag !== "" && needs.includes(OTHER_LANGUAGE) ? { language: tag } : {}) };
+    const scope: SettingScope = scopes.find((input) => input.checked)?.value === "app" ? "app" : "archetype";
+    settings.save(NEEDS_KEY, choice, scope);
+    showLanguage();
+  };
+  box.addEventListener("change", save);
+  showLanguage();
   box.hidden = false;
 }
 
@@ -653,11 +718,13 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
 
   // the prompt's address starts at the root of the language tree, whichever page the section is on
   const tree = new URL(data.root, root.location.href).href;
-  /** The start prompt: the page's tutor page with the page's task numbers. */
+  /** The start prompt: the page's tutor page with the page's task numbers and the learner's needs. */
   const start = (): string => {
     const text = data.start.split(data.base).join(tree);
     const { page } = data;
-    return text.split(data.query).join(page === undefined ? "" : pageQuery(root.location.href, page));
+    const needs = chosenNeeds(data.storage);
+    const query = withNeeds(page === undefined ? "" : pageQuery(root.location.href, page), needs);
+    return withLanguage(text.split(data.query).join(query), needs, root.documentElement.lang);
   };
   const whole = () => withMarkdown(start(), data, root.location.href);
   go.addEventListener("click", () => {
@@ -681,6 +748,7 @@ export function startExplainer(root: Document = document): void {
   const assessment = root.querySelector(".explainer-assessment-nojs") !== null;
   if (main && fromTutor(root.location.href) && !assessment) startBackToTutor(root, main, tutor, progress);
   startChoice(root);
+  startNeeds(root);
   if (tutor !== undefined) {
     const choice = new WayChoice(tutor.storage, tutor.ways);
     startTutor(root, tutor, choice);
