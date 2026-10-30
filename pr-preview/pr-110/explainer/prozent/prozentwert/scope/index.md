@@ -7,12 +7,6 @@ bei einem Feld mit anderer Größe aber nicht. Weil man beim Malnehmen die Zahle
 von 50 € dasselbe wie 50 % von 20 €, nämlich 10 €. Ein häufiger Fehler ist, das Teilen durch 100 zu vergessen; ein
 anderer, den neuen Preis statt des Rabatts auszurechnen.
 
-## Gehört dazu
-
-- die drei Größen Grundwert, Prozentsatz und Prozentwert und was sie bedeuten
-- die drei Formeln und der Weg über 1 %
-- Sachaufgaben zu Rabatt, Anteilen in einer Klasse und dem Akku eines Handys
-
 ## Gehört nicht dazu
 
 - Zinsen und Zinseszins

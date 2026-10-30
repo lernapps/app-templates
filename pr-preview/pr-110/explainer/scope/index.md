@@ -30,12 +30,6 @@ sind und das 12 % waren. Man rechnet $G = \frac{W \cdot 100}{p}$: $W$ geteilt du
 Bei einem Prozentsatz unter 100 % ist der Grundwert immer größer als der Prozentwert; kommt etwas Kleineres heraus,
 wurde die Formel für den Prozentwert benutzt.
 
-## Gehört dazu
-
-- die drei Größen Grundwert, Prozentsatz und Prozentwert und was sie bedeuten
-- die drei Formeln und der Weg über 1 %
-- Sachaufgaben zu Rabatt, Anteilen in einer Klasse und dem Akku eines Handys
-
 ## Gehört nicht dazu
 
 - Zinsen und Zinseszins

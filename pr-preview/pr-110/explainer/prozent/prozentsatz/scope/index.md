@@ -5,12 +5,6 @@ $p = \frac{W}{G} \cdot 100$: Teil durch Ganzes gibt den Anteil, mal 100 die Proz
 Anteile vergleichbar, auch wenn das Ganze verschieden groß ist. Wer unsicher ist, welche Formel passt, fragt sich,
 welche zwei der drei Größen in der Aufgabe stehen.
 
-## Gehört dazu
-
-- die drei Größen Grundwert, Prozentsatz und Prozentwert und was sie bedeuten
-- die drei Formeln und der Weg über 1 %
-- Sachaufgaben zu Rabatt, Anteilen in einer Klasse und dem Akku eines Handys
-
 ## Gehört nicht dazu
 
 - Zinsen und Zinseszins
