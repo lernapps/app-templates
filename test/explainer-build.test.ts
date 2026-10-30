@@ -227,9 +227,12 @@ describe("one build writes every page", () => {
           /<p class="explainer-tutor-choice" hidden><label>[^<]+ <select class="explainer-tutor-choose" data-storage="[^"]+"><option value="">(Keiner|None)<\/option><option value="Claude">/,
         );
         expect(start).toContain(lang === "de" ? "kein Angebot von lernapps.net" : "not offered by lernapps.net");
-        // the choice of the needs for the tutor, a box per need, shown once the client module runs (dec-tutor-needs)
-        expect(start).toMatch(/<fieldset class="explainer-tutor-needs" data-storage="[^"]+" hidden>/);
-        expect(start).toContain('<input type="checkbox" class="explainer-tutor-need" value="kurze-schritte"');
+        // the needs for the tutor in a dialog that "Einstellungen" beside the assistant opens (dec-tutor-needs)
+        expect(start).toContain('<button type="button" class="explainer-tutor-needs-open" aria-haspopup="dialog">');
+        expect(start).toMatch(
+          /<dialog class="explainer-tutor-needs" data-storage="[^"]+" aria-labelledby="bedarf-titel">/,
+        );
+        expect(start).toContain('<input type="checkbox" class="explainer-tutor-need" id="bedarf-kurze-schritte" value="kurze-schritte"');
         expect(start).toContain('<select class="explainer-tutor-language">');
         expect(start).toContain('name="bedarf-gilt" value="archetype"');
         // the header holds the language switch and nothing else (no link with the app's name), and an app with one

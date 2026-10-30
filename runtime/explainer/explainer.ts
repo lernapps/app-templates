@@ -607,13 +607,16 @@ function startChoice(root: Document): void {
 }
 
 /**
- * The choice of the learner's needs on the start page (dec-tutor-needs): a box per need, the first language once
- * `andere-muttersprache` is ticked, and whether the choice holds for every explainer or for this app only; shown once
- * the client module runs, and kept on the device at once as a setting (createSettings), where the learner said.
+ * The choice of the learner's needs on the start page (dec-tutor-needs): "Einstellungen" beside the choice of the
+ * assistant opens a dialog with a box per need, the first language once `andere-muttersprache` is ticked, and whether
+ * the choice holds for every explainer or for this app only; each change is kept on the device at once as a setting
+ * (createSettings), where the learner said.
  */
 function startNeeds(root: Document): void {
-  const box = root.querySelector<HTMLFieldSetElement>("fieldset.explainer-tutor-needs");
-  if (!box) return;
+  const box = root.querySelector<HTMLDialogElement>("dialog.explainer-tutor-needs");
+  const open = root.querySelector<HTMLButtonElement>("button.explainer-tutor-needs-open");
+  if (!box || !open) return;
+  open.addEventListener("click", () => box.showModal());
   const settings = createSettings(box.dataset["storage"] ?? "explainer", ARCHETYPE);
   const boxes = [...box.querySelectorAll<HTMLInputElement>("input.explainer-tutor-need")];
   const scopes = [...box.querySelectorAll<HTMLInputElement>("input.explainer-tutor-needs-scope")];
@@ -641,7 +644,6 @@ function startNeeds(root: Document): void {
   };
   box.addEventListener("change", save);
   showLanguage();
-  box.hidden = false;
 }
 
 /**

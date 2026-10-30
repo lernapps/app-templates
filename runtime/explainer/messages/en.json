@@ -66,6 +66,8 @@
   "tutorChoose": "Your AI assistant",
   "tutorNone": "None",
   "needsTitle": "What helps you learn",
+  "needsOpen": "Settings",
+  "needsDone": "Done",
   "needsAbout": "Here you can tell your tutor how it should talk to you. Tick what helps you; you can choose several.",
   "needKurzeSchritte": "Short steps",
   "needKurzeSchritteAbout": "The tutor explains in small steps, only one thing at a time. You always know how far there is still to go.",

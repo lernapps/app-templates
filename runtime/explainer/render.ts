@@ -461,12 +461,12 @@ function tutorAbout(context: Context): string {
     `<h2 id="ki-tutor">${plain(context.t("tutorTitle"))}</h2>`,
     `<p>${plain(context.t("tutorAbout"))}</p>`,
     `<p>${plain(context.t("tutorAboutStart"))}</p>`,
-    `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label></p>`,
+    `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label> <button type="button" class="explainer-tutor-needs-open" aria-haspopup="dialog">${plain(context.t("needsOpen"))}</button></p>`,
     `<p class="explainer-tutor-hint" role="status" aria-live="polite" hidden></p>`,
-    needsChoice(context),
     `<p>${plain(context.t("tutorAccount"))}</p>`,
     `<p>${plain(context.t("tutorAboutPrivacy"))}</p>`,
     `</section>`,
+    needsChoice(context),
   ].join("\n");
 }
 
@@ -481,9 +481,10 @@ const NEED_TEXTS: Readonly<Record<Need, readonly [keyof Messages, keyof Messages
 };
 
 /**
- * The choice of the learner's needs for the tutor, on the start page (dec-tutor-needs): a box per need with one or two
- * sentences on what it does, the first language below `andere-muttersprache`, and whether the choice holds for every
- * explainer or for this app only. Hidden until the client module, which keeps it on the device, shows it.
+ * The choice of the learner's needs for the tutor, on the start page (dec-tutor-needs): a dialog that "Einstellungen"
+ * beside the choice of the assistant opens, with a box per need and one or two sentences on what it does, the first
+ * language below `andere-muttersprache`, and whether the choice holds for every explainer or for this app only. The
+ * tutor needs JavaScript, so the dialog does too: the client module opens it and keeps the choice on the device.
  */
 function needsChoice(context: Context): string {
   const { site, lang } = context;
@@ -500,21 +501,25 @@ function needsChoice(context: Context): string {
     const [name, about] = NEED_TEXTS[need];
     const id = `bedarf-${need}`;
     return [
-      `<p class="explainer-tutor-need-choice"><label><input type="checkbox" class="explainer-tutor-need" value="${need}" aria-describedby="${id}-text" /> ${plain(context.t(name))}</label>`,
-      `<span class="explainer-tutor-need-text" id="${id}-text">${plain(context.t(about))}</span></p>`,
+      `<div class="explainer-tutor-need-choice"><input type="checkbox" class="explainer-tutor-need" id="${id}" value="${need}" aria-describedby="${id}-text" />`,
+      `<label for="${id}">${plain(context.t(name))}</label>`,
+      `<p class="explainer-tutor-need-text" id="${id}-text">${plain(context.t(about))}</p></div>`,
       need === OTHER_LANGUAGE ? language : "",
     ].join("");
   });
   const scope = (value: string, key: keyof Messages) =>
     `<label><input type="radio" class="explainer-tutor-needs-scope" name="bedarf-gilt" value="${value}" /> ${plain(context.t(key))}</label>`;
   return [
-    `<fieldset class="explainer-tutor-needs" data-storage="${plain(site.storage ?? "explainer")}" hidden>`,
-    `<legend>${plain(context.t("needsTitle"))}</legend>`,
+    `<dialog class="explainer-tutor-needs" data-storage="${plain(site.storage ?? "explainer")}" aria-labelledby="bedarf-titel">`,
+    `<form method="dialog">`,
+    `<h2 id="bedarf-titel">${plain(context.t("needsTitle"))}</h2>`,
     `<p>${plain(context.t("needsAbout"))}</p>`,
     ...needs,
     `<fieldset class="explainer-tutor-needs-where"><legend>${plain(context.t("needsScopeTitle"))}</legend>${scope("archetype", "needsScopeAll")} ${scope("app", "needsScopeApp")}</fieldset>`,
-    `<p>${plain(context.t("needsPrivacy"))}</p>`,
-    `</fieldset>`,
+    `<p class="explainer-tutor-note">${plain(context.t("needsPrivacy"))}</p>`,
+    `<p><button class="explainer-tutor-needs-done">${plain(context.t("needsDone"))}</button></p>`,
+    `</form>`,
+    `</dialog>`,
   ].join("\n");
 }
 

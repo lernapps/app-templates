@@ -1170,8 +1170,10 @@ export function explainerTests(root = "."): void {
         page,
       }) => {
         await page.goto("./");
-        const needs = page.locator("fieldset.explainer-tutor-needs");
-        await expect(needs, "shown once the client module runs").toBeVisible();
+        const needs = page.locator("dialog.explainer-tutor-needs");
+        await expect(needs, "closed at first").toBeHidden();
+        await page.locator("button.explainer-tutor-needs-open").click();
+        await expect(needs, "opened by Einstellungen").toBeVisible();
         const language = needs.locator("select.explainer-tutor-language");
         await expect(language, "the first language only with andere-muttersprache").toBeHidden();
         await needs.locator('input.explainer-tutor-need[value="kurze-schritte"]').check();
@@ -1193,7 +1195,10 @@ export function explainerTests(root = "."): void {
           ),
         );
         expect(own, "for this app only, under its own prefix").toBeDefined();
+        await needs.locator("button.explainer-tutor-needs-done").click();
+        await expect(needs, "closed by Fertig").toBeHidden();
         await page.reload();
+        await page.locator("button.explainer-tutor-needs-open").click();
         await expect(needs.locator('input.explainer-tutor-needs-scope[value="app"]')).toBeChecked();
         await expect(needs.locator('input.explainer-tutor-need[value="kurze-schritte"]')).toBeChecked();
 
