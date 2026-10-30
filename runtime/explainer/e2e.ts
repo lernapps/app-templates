@@ -569,6 +569,13 @@ async function checkOpenTask(
     messageOf("de", "openTaskWriteFirst"),
   );
   const total = String(exercise.points.length);
+  // a reload loses no answer: the tab keeps it
+  await item.getByRole("textbox", { name: messageOf("de", "openTaskAnswer") }).fill(OPEN_ANSWER);
+  await page.reload();
+  await expect(
+    item.getByRole("textbox", { name: messageOf("de", "openTaskAnswer") }),
+    `${exercise.id}: kept`,
+  ).toHaveValue(OPEN_ANSWER);
   await answerOpenTask(item, exercise, exercise.points.length);
   await item.getByRole("button", { name: messageOf("de", "openTaskEvaluate") }).click();
   await expect(item.locator(".explainer-open-result"), `${exercise.id}: all points ticked`).toHaveText(
@@ -922,7 +929,14 @@ export function explainerTests(root = "."): void {
             else if (exercise.kind === "open") await checkOpenTask(page, item.url, exercise);
             else await checkGenerated(page, item.url, exercise);
           }
-          expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual([]);
+          // only an open task keeps something, its answer, and only while the tab is open
+          expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+          const kept = await page.evaluate(() => Object.keys(sessionStorage));
+          expect(
+            kept.filter((key) => !/^lernapps:[^:]+:antwort:/.test(key)),
+            "nothing else in the tab",
+          ).toEqual([]);
+          expect(kept.length, "an answer per open task").toBe(types.has("open-task") ? 1 : 0);
         });
       }
       for (const item of app.pages["de"] ?? []) {

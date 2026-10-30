@@ -304,7 +304,9 @@ source in the app or about the form; the learner ticks those the answer has, whi
 Without JavaScript the page shows the task, the points and the model answer under "Lösung", as every exercise has one.
 The tutor page gives the tutor the points as P1, P2 … with their sources, the model answer and how to help; the result
 line carries the ticked points and the answer, a photo only as a note that the learner attaches it. The answer stays on
-the device: the photo is shown from memory and never stored or sent. Rejected: grading by a model (no model runs in
+the device: the text, the way chosen and the ticks are kept while the tab is open (sessionStorage through the tooling's
+storage, under the app's prefix), so that a reload loses nothing and a new day starts afresh; the photo is shown from
+memory and never stored or sent; a self-assessment keeps nothing of its own. Rejected: grading by a model (no model runs in
 the browser, `dec-tutor-variant`; a server would collect what learners write); a model answer without the learner's own
 answer first (it is only read); a word search over the answer (easy to fool; at most a hint).
 

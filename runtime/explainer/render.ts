@@ -190,7 +190,14 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
     case "vue-component":
       return renderComponent(context, block);
     default:
-      return renderExercise(block, context.lang, context.site.data, context.resolve, context.material);
+      return renderExercise(
+        block,
+        context.lang,
+        context.site.data,
+        context.resolve,
+        context.material,
+        context.site.storage ?? "explainer",
+      );
   }
 }
 

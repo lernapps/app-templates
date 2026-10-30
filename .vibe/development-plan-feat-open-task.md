@@ -203,9 +203,13 @@ Step 1, app-templates: result `teilweise` (D2), on this branch: done (see Comple
       right answer on a page
 
 Step 2, app-templates: block `open-task` (D1, D3), on this branch (owner: B, 2026-10-30): done (see Completed), except
-- [ ] keeping text and ticks until the tab closes: `createStorage` of tooling knows only `localStorage`, the lint rule
-      `storage-through-wrapper` forbids `sessionStorage`, and the generic e2e test asserts that a page keeps nothing in
-      `sessionStorage` either. Today the answer stays in memory (gone on reload). Open question to the owner.
+- [x] keeping text and ticks until the tab closes (owner: "nichts ist frustrierender, als Eingaben zu verlieren",
+      2026-10-30): first lernapps/tooling branch `feat/session-storage` (283e67f): `createStorage(app, { session: true })`;
+      then the open task keeps way, text and ticks under `antwort:<path>#<id>` in sessionStorage; the e2e tests check a
+      reload and allow only that key. The templates pin tooling at 283e67f: **move the pin to tooling's main once
+      feat/session-storage is merged, before this branch merges**
+- [ ] note for step 4: `lernapps check` measures `fitness.storage` by visiting pages without typing, so an app whose
+      only storage is an open task's answer is measured `none`; to decide whether the measurement should type
 
 Step 3, app-templates: learning-path text (D4)
 Step 4, tooling: pin, rules, skills, rubric (D5)

@@ -4,9 +4,12 @@
 // steht in deiner Antwort?"). On a content page "Auswerten" then says right (all ticked), partly right (some) or not
 // yet (none), names each missing point with a link to its source, and opens the model answer ("Lösung"), which stays
 // shut before the learner's own answer. In a self-assessment there is no result and no model answer: the ticks are the
-// answer, read at "Auswerten" of the whole run. The photo is shown from memory (an object URL), never stored or sent;
-// the text and the ticks stay in memory too.
+// answer, read at "Auswerten" of the whole run. The photo is shown from memory (an object URL), never stored or sent.
+// On a content page the text, the way chosen and the ticks are kept while the tab is open (sessionStorage through
+// @lernapps/tooling/storage, under the app's prefix), so that a reload loses no answer and a new day starts afresh; a
+// self-assessment keeps nothing of its own (each run starts empty).
 import { moveFocus } from "@lernapps/tooling/a11y";
+import { createStorage } from "@lernapps/tooling/storage";
 import { escape } from "../shared/html.ts";
 import type { OpenTaskData } from "./exercises.ts";
 import { message } from "./messages.ts";
@@ -20,6 +23,26 @@ export interface OpenTaskResult {
   text?: string;
   photo: boolean;
 }
+
+/** What a content page keeps of an open task while the tab is open. */
+interface Kept {
+  way: "text" | "photo";
+  text: string;
+  ticked: number[];
+  compared: boolean;
+}
+
+const isKept = (value: unknown): value is Kept => {
+  if (typeof value !== "object" || value === null) return false;
+  const kept = value as Partial<Kept>;
+  return (
+    (kept.way === "text" || kept.way === "photo") &&
+    typeof kept.text === "string" &&
+    Array.isArray(kept.ticked) &&
+    kept.ticked.every((index) => Number.isInteger(index)) &&
+    typeof kept.compared === "boolean"
+  );
+};
 
 export interface OpenTaskOptions {
   /** In a self-assessment: no "Auswerten" of its own, no result, no model answer. */
@@ -58,6 +81,19 @@ export function startOpenTask(
   let photo: string | undefined;
   let ticked: number[] = [];
   let compared = false;
+  // kept while the tab is open, by the page and the exercise; a self-assessment keeps nothing
+  const storage = options.assessment
+    ? undefined
+    : createStorage(element.dataset["storage"] ?? "explainer", { session: true });
+  const key = `antwort:${element.ownerDocument.location.pathname}#${id}`;
+  const kept = storage?.load(key, isKept);
+  if (kept !== undefined && data.answer.includes(kept.way)) {
+    ({ way, text, compared } = kept);
+    ticked = kept.ticked.filter((index) => index < points.length);
+    // a photo is never kept: comparing it again needs a new one
+    if (way === "photo") compared = false;
+  }
+  const keep = () => storage?.save(key, { way, text, ticked, compared } satisfies Kept);
 
   const choice = both
     ? [
@@ -141,11 +177,13 @@ export function startOpenTask(
   for (const radio of live.querySelectorAll<HTMLInputElement>(".explainer-open-choice input")) {
     radio.addEventListener("change", () => {
       if (radio.checked) way = radio.value === "photo" ? "photo" : "text";
+      keep();
       show();
     });
   }
   field?.addEventListener("input", () => {
     text = field.value;
+    keep();
     show();
   });
   file?.addEventListener("change", () => {
@@ -168,6 +206,7 @@ export function startOpenTask(
       return;
     }
     compared = true;
+    keep();
     show();
     const legend = check?.querySelector<HTMLElement>("legend");
     if (legend) moveFocus(legend);
@@ -175,6 +214,7 @@ export function startOpenTask(
   });
   change?.addEventListener("click", () => {
     compared = false;
+    keep();
     show();
     if (field && way === "text") moveFocus(field);
   });
@@ -182,6 +222,7 @@ export function startOpenTask(
     box.addEventListener("change", () => {
       const index = Number(box.value);
       ticked = box.checked ? [...ticked, index].sort((a, b) => a - b) : ticked.filter((one) => one !== index);
+      keep();
       if (options.assessment) options.onResult?.(current());
     });
   }
@@ -212,6 +253,12 @@ export function startOpenTask(
     if (solution) solution.hidden = false;
     options.onResult?.(now);
   });
+  // what the tab kept: the way, the text and the ticks
+  for (const radio of live.querySelectorAll<HTMLInputElement>(".explainer-open-choice input"))
+    radio.checked = radio.value === way;
+  if (field) field.value = text;
+  for (const box of check?.querySelectorAll<HTMLInputElement>("input") ?? [])
+    box.checked = ticked.includes(Number(box.value));
   show();
   return { result: current };
 }

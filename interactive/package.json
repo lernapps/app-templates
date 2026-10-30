@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@lernapps/app-templates": "file:..",
-    "@lernapps/tooling": "github:lernapps/tooling#73b90426ed503aa73e9e4f5f909724fd137b121c",
+    "@lernapps/tooling": "github:lernapps/tooling#283e67fc0b363e2467928547c335a792e67254ff",
     "vite-plus": "1.0.0"
   },
   "overrides": {

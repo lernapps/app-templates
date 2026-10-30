@@ -238,7 +238,7 @@ export function exerciseData(
  * An open task in `lang`: the task, the points of a good answer with a link to each one's source, and the model answer
  * under "Lösung", which is all the page shows without JavaScript; with JavaScript the learner answers first (explainer.ts).
  */
-function openTaskExercise(block: OpenTask, lang: string, resolve: (href: string) => string): string {
+function openTaskExercise(block: OpenTask, lang: string, resolve: (href: string) => string, storage: string): string {
   const data = openTaskData(block, lang, resolve);
   const points = data.points.map((point) => {
     const where =
@@ -248,7 +248,7 @@ function openTaskExercise(block: OpenTask, lang: string, resolve: (href: string)
     return `<li>${plain(point.text)}${where}</li>`;
   });
   return [
-    `<div class="explainer-exercise explainer-open-task" id="${block.id}">`,
+    `<div class="explainer-exercise explainer-open-task" id="${block.id}" data-storage="${plain(storage)}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "openTaskLabel"))}</p>`,
     `<div class="explainer-open-task-text">${data.task}</div>`,
     data.hint === undefined
@@ -309,15 +309,16 @@ function generatedExercise(
   ].join("\n");
 }
 
-/** An exercise of a page in `lang`. */
+/** An exercise of a page in `lang`; an open task keeps its answer while the tab is open under the app's `storage`. */
 export function renderExercise(
   block: Exercise,
   lang: string,
   data: Readonly<Record<string, readonly DataRecord[]>>,
   resolve: (href: string) => string,
   material: MaterialContext,
+  storage = "explainer",
 ): string {
   if (block.type === "generated") return generatedExercise(block, lang, data, resolve);
-  if (block.type === "open-task") return openTaskExercise(block, lang, resolve);
+  if (block.type === "open-task") return openTaskExercise(block, lang, resolve, storage);
   return questionExercise(block, lang, material);
 }
