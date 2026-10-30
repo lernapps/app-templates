@@ -230,7 +230,7 @@ never by a diagnosis: `kurze-schritte`, `wenig-lesen`, `mehr-tiefe`, `andere-mut
 sentences say what it does. Unlike the assistant, which each app keeps apart (`dec-tutor-assistant`), the needs are
 the learner's own and the same in every explainer: the choice holds for every explainer of lernapps.net
 (`lernapps:settings:explainer:`) or for this app only (`lernapps:<id>:`, which wins); nothing is sent before a click. Every address the learner hands to a
-tutor that starts a chat, the start prompt of way A and the lines of way B1, carries the needs in the tutor page's
+tutor that starts a chat, the start prompt of way A, the lines of way B1 and the prompt of a self-assessment, carries the needs in the tutor page's
 query (`bedarf=kurze-schritte,andere-muttersprache`); with `andere-muttersprache` the prompt adds one sentence in the
 learner's voice, "Meine Muttersprache ist Türkisch." A running chat (B2, "Zurück zum Tutor") has them already. The
 tutor page is static, so it holds the section of every need, after its guide under "Besondere Anforderungen": they

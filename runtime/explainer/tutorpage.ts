@@ -484,6 +484,22 @@ export function tutorPage(
   return { markdown, cut };
 }
 
+/**
+ * The learner's needs on a tutor page, in `lang`, after its guide (dec-tutor-needs): what holds when the query names
+ * them in `bedarf=`, then a short section for each, as Markdown lines.
+ */
+export function needsLines(lang: string): string[] {
+  const words = wordsIn(lang);
+  return [
+    `## ${words.needsTitle}`,
+    "",
+    words.needsIntro,
+    "",
+    ...NEEDS.map((need) => `- \`${need}\`: ${words.needs[need]}`),
+    "",
+  ];
+}
+
 /** The tutor page of `page` in `lang`, as Markdown (tutorPage). */
 export const tutorPageMarkdown = (site: Site, page: Page, lang: string, descriptions: Descriptions): string =>
   tutorPage(site, page, lang, descriptions).markdown;
@@ -540,12 +556,7 @@ function pageMarkdown(
           : [`- ${text.replace("{example}", example.query).replace("{link}", example.link)}`],
     ),
     "",
-    `## ${words.needsTitle}`,
-    "",
-    words.needsIntro,
-    "",
-    ...NEEDS.map((need) => `- \`${need}\`: ${words.needs[need]}`),
-    "",
+    ...needsLines(lang),
     `## ${fill(words.contextTitle)}`,
     "",
   );

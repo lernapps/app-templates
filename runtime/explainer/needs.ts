@@ -116,3 +116,7 @@ export function languageSentence(choice: NeedsChoice | undefined, lang: string):
   const text = FIRST_LANGUAGE[lang] ?? FIRST_LANGUAGE["de"] ?? "";
   return text.replace("{language}", languageName(choice.language, lang));
 }
+
+/** A prompt that starts a chat, with the sentence of the learner's first language after it when they chose one. */
+export const withLanguage = (prompt: string, choice: NeedsChoice | undefined, lang: string): string =>
+  [prompt, languageSentence(choice, lang)].filter((part) => part !== "").join("\n");

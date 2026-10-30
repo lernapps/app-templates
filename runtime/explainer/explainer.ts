@@ -39,9 +39,9 @@ import { stuckLines, stuckPrompt } from "./stuck.ts";
 import { currentExercise, pageQuery, taskQuery, type PagePosition } from "./position.ts";
 import {
   isNeedsChoice,
-  languageSentence,
   NEEDS_KEY,
   OTHER_LANGUAGE,
+  withLanguage,
   withNeeds,
   type Need,
   type NeedsChoice,
@@ -419,10 +419,6 @@ const ARCHETYPE = "explainer";
 const chosenNeeds = (storage: string): NeedsChoice | undefined =>
   createSettings(storage, ARCHETYPE).load(NEEDS_KEY, isNeedsChoice)?.value;
 
-/** A prompt that starts a chat, with the sentence of the learner's first language after it when they chose one. */
-const withLanguage = (prompt: string, choice: NeedsChoice | undefined, lang: string): string =>
-  [prompt, languageSentence(choice, lang)].filter((part) => part !== "").join("\n");
-
 /**
  * The name of the running chat's assistant, as "zurück zu …" says it: the one the learner switched on, else "deinem
  * KI-Tutor".
@@ -771,6 +767,7 @@ export function startExplainer(root: Document = document): void {
   startVideos(root);
   startAssessment(root, {
     chosen: (storage, ways) => new WayChoice(storage, ways).get(),
+    needs: chosenNeeds,
     open: (way, prompts, say) => openAssistant(root, way, prompts, say),
     hint: showHint,
     running: fromTutor(root.location.href),
