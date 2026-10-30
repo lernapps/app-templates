@@ -46,16 +46,13 @@ nothing about learners, running costs).
 
 ### Tasks
 
-- [ ] Photo handoff to the learner's own chat: check the Web Share API (`navigator.share` with `files`, after a click)
-      on Android and iOS with the ChatGPT, Claude and Gemini apps; check whether any chat offers a documented link or
-      API to attach an image (first search, 2026-10-30, found none). Fallback: the tutor asks for the photo (KD-02)
-
 ### Completed
 
 - [x] Created development plan file
 - [x] Placed the feature in the platform design (lernapps/docs, pdt42): see Notes, "Platform fit"
 - [x] Read the explainer's architecture where it is touched: see Notes, "Architecture today"
 - [x] Asked the owner the open questions; answers recorded as KD-01 to KD-04 (2026-10-30)
+- [x] Photo handoff: out of scope (owner, 2026-10-30); the fallback of KD-02 is enough
 
 ## Plan
 
@@ -85,8 +82,9 @@ nothing about learners, running costs).
 ### KD-02: The answer stays on the device
 - **Decision** (owner, 2026-10-30): the learner's text and photo stay local. The photo is only shown, kept in memory,
   never stored or sent by the app. The text goes with the result line, as inputs do today, only on the learner's
-  click. Until a direct way is found (Explore task: Web Share API, chat APIs), the tutor page tells the tutor to ask
-  the learner for the photo or text of an open task when it lacks it.
+  click. The tutor page tells the tutor to ask the learner for the photo or text of an open task when it lacks it.
+- **Out of scope** (owner, 2026-10-30): a direct handoff of the photo to the learner's chat (Web Share API, chat
+  APIs). A first search found no documented link or API to open a chat with an image attached.
 
 ### KD-03: A learning-path summary for the tutor
 - **Decision** (owner, 2026-10-30): the creator's assistant writes a short summary of the whole learning path in the
