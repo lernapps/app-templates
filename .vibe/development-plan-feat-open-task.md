@@ -46,19 +46,16 @@ nothing about learners, running costs).
 
 ### Tasks
 
-- [ ] Clarify the photo: stays in the browser, never sent by the app; what the page shows, how it reaches the tutor
-- [ ] Clarify the learning-path summary against `dec-tutor-page` (rejected: one tutor page per chapter, `llms.txt`,
-      a second source): what it is, who writes it, where it lies, how the tutor page points to it
-- [ ] Clarify the result of a self-judged task: does `teilweise` exist, how it counts in self-assessment
-- [ ] Clarify scope: explainer only, or also quiz; which changes in lernapps/tooling (checks, review) and
-      lernapps/practice (guidance)
-- [ ] Ask the owner the open questions; record the answers as Key Decisions
+- [ ] Photo handoff to the learner's own chat: check the Web Share API (`navigator.share` with `files`, after a click)
+      on Android and iOS with the ChatGPT, Claude and Gemini apps; check whether any chat offers a documented link or
+      API to attach an image (first search, 2026-10-30, found none). Fallback: the tutor asks for the photo (KD-02)
 
 ### Completed
 
 - [x] Created development plan file
 - [x] Placed the feature in the platform design (lernapps/docs, pdt42): see Notes, "Platform fit"
 - [x] Read the explainer's architecture where it is touched: see Notes, "Architecture today"
+- [x] Asked the owner the open questions; answers recorded as KD-01 to KD-04 (2026-10-30)
 
 ## Plan
 
@@ -79,6 +76,27 @@ nothing about learners, running costs).
 ### Completed
 
 ## Key Decisions
+
+### KD-01: A third result, `teilweise`
+- **Decision** (owner, 2026-10-30): an exercise's result is `richtig`, `teilweise`, `falsch` or `offen`. An open task
+  gives `teilweise` when some, not all, points of its checklist are ticked; the unticked points are named like a
+  typical mistake. Self-assessment, result line and tutor query know the new state for every exercise type.
+
+### KD-02: The answer stays on the device
+- **Decision** (owner, 2026-10-30): the learner's text and photo stay local. The photo is only shown, kept in memory,
+  never stored or sent by the app. The text goes with the result line, as inputs do today, only on the learner's
+  click. Until a direct way is found (Explore task: Web Share API, chat APIs), the tutor page tells the tutor to ask
+  the learner for the photo or text of an open task when it lacks it.
+
+### KD-03: A learning-path summary for the tutor
+- **Decision** (owner, 2026-10-30): the creator's assistant writes a short summary of the whole learning path in the
+  app's own words, from the material; every tutor page links it as background. This revises `dec-tutor-page` (one
+  source of what the tutor gets): the tutor page stays the source for the task, the summary is background only.
+
+### KD-04: Scope: explainer, practice guidance, tooling checks
+- **Decision** (owner, 2026-10-30): the open task is built for the explainer, not for the quiz. The same increment
+  promotes it in the practice skills (instead of `example` + `note` "Musterlösung") and checks its consistency in
+  lernapps/tooling (each point's source exists, the model answer is present, the summary exists).
 
 ## Notes
 
@@ -109,15 +127,4 @@ nothing about learners, running costs).
 
 ### Open questions for the owner
 
-1. **Result**: is a third state `teilweise` added (all exercise types see it in self-assessment and tutor query), or
-   does the open task map ticked points to `richtig` (all) / `falsch` (some missing, the missing points as mistakes)?
-2. **Photo**: the page shows it only (kept in memory, never stored, never sent); for the tutor, the learner attaches
-   it in their own chat. Is that enough, or should the photo be kept on the device, too?
-3. **Learning-path summary**: a short Markdown page per app (or chapter), written by the creator's assistant from the
-   material, linked from every tutor page as background, not as a task. `dec-tutor-page` rejected a long page per
-   chapter as *the* tutor page; as background it is a second source. Acceptable?
-4. **Scope**: explainer only (the quiz has no tutor), with the guidance in lernapps/practice and the checks in
-   lernapps/tooling in the same increment, or the runtime first?
-
-- The `workflows` MCP server (`.mcp.json`) is not loaded in this session, because the session started in `/home/user`,
-  not in a repository. This plan follows the EPCC template by hand until a session loads the server.
+Answered 2026-10-30, see KD-01 to KD-04.
