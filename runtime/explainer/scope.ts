@@ -138,7 +138,11 @@ export function scopeFiles(markdown: string): Map<string, string> {
   const files = new Map<string, string>([["", markdown]]);
   for (const chapter of chapters) {
     const folder = chapter.path.slice(1);
-    files.set(folder, join(asTop(chapter.lines), ...chapter.pages.map((page) => page.lines), closing, [up.app]));
+    // its pages one level up, under the chapter as # heading, beside the closing parts
+    const pages = chapter.pages.map((page) =>
+      page.lines.map((text, index) => (index === 0 ? text.replace(/^### /, "## ") : text)),
+    );
+    files.set(folder, join(asTop(chapter.lines), ...pages, closing, [up.app]));
     for (const page of chapter.pages) files.set(page.path.slice(1), join(asTop(page.lines), closing, [up.chapter]));
   }
   return files;

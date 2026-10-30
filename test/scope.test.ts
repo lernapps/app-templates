@@ -81,6 +81,7 @@ describe("the scope", () => {
       "",
     ]);
     expect(files.get("feste/")).toContain("# Feste (/feste/)");
+    expect(files.get("feste/")).toContain("\n## Chanukka (/feste/chanukka/)\n");
     expect(files.get("feste/")).toContain("Lichter.");
     expect(files.get("feste/")).toContain("Die ganze App: [Scope der App](../../scope/)");
   });
