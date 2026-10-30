@@ -1,5 +1,9 @@
 name: Preview
 
+# On main, the same bundle is published for good with the app publish action of lernapps/tooling (actions/app-publish):
+# at the repo's address, https://lernapps.net/app-templates/, with quiz/, explainer/ and interactive/ below it, so that
+# the example apps of the templates stay to be seen after a merge. The previews below pr-preview/ stay.
+
 # A preview of the templates for every pull request, published like the preview of an app: the app preview action of
 # lernapps/tooling (actions/app-preview) puts the bundle at <this repo's address>pr-preview/pr-<number>/, i.e.
 # https://lernapps.net/app-templates/pr-preview/pr-<number>/, on the branch gh-pages, not indexed by search engines,
@@ -12,12 +16,15 @@ name: Preview
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: preview-${{ github.event.pull_request.number }}
+  group: preview-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,10 +35,11 @@ jobs:
 
   bundle:
     needs: changes
-    # a pull request from this repo only (a fork's token may not write to gh-pages); closing removes the preview, builds nothing
+    # main, or a pull request from this repo only (a fork's token may not write to gh-pages); closing removes the
+    # preview, builds nothing
     if: >-
       github.event.action != 'closed' && needs.changes.outputs.code == 'true' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -61,7 +69,8 @@ jobs:
   preview:
     needs: bundle
     if: >-
-      always() && github.event.pull_request.head.repo.full_name == github.repository &&
+      always() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
       (github.event.action == 'closed' || needs.bundle.result == 'success' || needs.bundle.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
@@ -70,3 +79,14 @@ jobs:
       pages: read # the address, for the comment
     steps:
       - uses: lernapps/tooling/actions/app-preview@41bffad2afcc823c19f741a13854d575ee52f282 # main
+
+  deploy:
+    # main only: the bundle of the templates' example apps, published at the repo's address
+    needs: bundle
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.bundle.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+    steps:
+      - uses: lernapps/tooling/actions/app-publish@69fca4b39d295ae30152f755ad3e8554e1df6aae # main
