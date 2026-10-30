@@ -154,7 +154,7 @@ nothing about learners, running costs).
 - `guidance/plan-template.md`: a Code task after the pages (between 163 and 166): write `src/lerngang.md` from the
   material, in own words; scope in and out drafted in Plan.
 - `lernapps-practice-submit/SKILL.md`: the creator checks the points and the learning-path text.
-- Required: `actions/validate` fails a submission without `src/lerngang.md` when the app has an open task or a tutor.
+- Required: `actions/validate` fails a submission without `src/lerngang.md` (every made-to-measure app).
 - `test/guide.test.ts` as the skills change.
 
 **D7. Architecture docs** (with each pull request)
@@ -175,13 +175,20 @@ nothing about learners, running costs).
 
 ### Design: the owner's answers (2026-10-30)
 
-1. Checks: in lernapps/tooling, where all checks are today (owner: app-templates cannot do it). D1's and D4's
-   validation moves to tooling (a check of the project, like `app-content-guide`). Note: the build's `load.ts` already
-   checks content links and self-assessment references; to be settled in the Code phase whether the source reference
-   follows that or the tooling check alone.
+1. Checks: everything runs through `lernapps check` (tooling), in three layers (proposed 2026-10-30, owner to
+   confirm):
+   - **Content validation in the runtime's build**, which `lernapps check` runs as its `build` step (`src/cli.ts`
+     ~503) in the creator's repo, and which practice's build runs too: schema of `open-task`; each point's `source`
+     names an existing page and section (beside the link check in `load.ts`); each part of `src/lerngang.md` names an
+     existing page and each content page has a part. Errors point to the YAML path.
+   - **Rules of tooling on the built app** (`check/rules/`), which also run on a bundle or URL without a repo (listing,
+     practice): `explainer-readable-without-js` also covers an open task (points and "Lösung" visible); a new rule:
+     with tutor pages there is `/lerngang/`, and each tutor page names its absolute address.
+   - **Review rubric** (`review/archetypes/explainer.md`): the points are in the material and cover a good answer; the
+     learning-path text matches the pages and is in own words.
 2. `teilweise` counts half in the self-assessment.
 3. The answer is kept, but not in `localStorage`: in `sessionStorage` through `createStorage` ("new day, new
    exercise"); it is gone when the tab closes. The photo stays in memory (too large to store).
 4. practice suggests open tasks where the question fits (describe, explain, compare, write), with or without a tutor.
-   Open: when practice requires the learning-path text.
+   practice requires the learning-path text for every made-to-measure app (owner, 2026-10-30).
 5. Next: a mock-up of the open task with and without tutor.
