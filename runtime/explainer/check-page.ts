@@ -233,6 +233,24 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
         checkExerciseId(check, block.id, at);
         checkGenerated(check, block, at);
         break;
+      case "open-task":
+        checkExerciseId(check, block.id, at);
+        texts.check(yaml, [...at, "task"], "markdown");
+        texts.check(yaml, [...at, "solution"], "markdown");
+        if (block.hint !== undefined) texts.check(yaml, [...at, "hint"], "markdown");
+        block.points.forEach((point, index) => {
+          texts.check(yaml, [...at, "points", index, "text"], "plain");
+          // a point's source is a link to a section of the app: checked as every link is (load.ts)
+          if (point.source !== undefined)
+            texts.links.push({
+              yaml,
+              path: [...at, "points", index, "source"],
+              lang: texts.languages[0] ?? "de",
+              offset: 0,
+              href: point.source,
+            });
+        });
+        break;
       case "vue-component":
         checkComponent(check, block, at);
         break;

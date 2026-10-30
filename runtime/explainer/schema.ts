@@ -47,6 +47,7 @@ const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
   note: "box",
   section: "section",
   generated: "generated",
+  "open-task": "openTask",
   "vue-component": "vueComponent",
 };
 

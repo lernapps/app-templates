@@ -67,6 +67,7 @@ export const ROOT_ONLY = [
   "AGENTS.md", // what agents in this repo read (CLAUDE.md imports it)
   "CLAUDE.md",
   ".mcp.json", // the MCP servers agents in this repo use
+  ".vibe/", // the development plans of agent work in this repo
 ];
 
 /** Whether a path (relative to the repo root, with "/") is one of the patterns: the path, or below a folder "x/". */

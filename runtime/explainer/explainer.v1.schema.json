@@ -262,6 +262,7 @@
             "ordering",
             "matching",
             "generated",
+            "open-task",
             "vue-component"
           ]
         }
@@ -545,6 +546,20 @@
           },
           "then": {
             "$ref": "#/$defs/generated"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "open-task"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/openTask"
           }
         },
         {
@@ -947,6 +962,86 @@
         }
       },
       "type": "object"
+    },
+    "openTask": {
+      "description": "An open task: the learner answers in their own words, typed or written on paper and photographed, then compares the answer with the points a good answer has and ticks those it has; the result is right (all), partly right (some) or wrong (none), the points it missed named P1, P2, …. The model answer opens only after the learner's own answer. Without JavaScript the page shows the task, the points and the model answer under Lösung. The answer stays on the device; the photo is never stored or sent. The tutor gets the points with their sources and the model answer.",
+      "type": "object",
+      "required": ["id", "task", "points", "solution"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "task": {
+          "description": "The task, restricted Markdown, e.g. Erkläre, warum … Say how long the answer should be.",
+          "$ref": "#/$defs/markdown"
+        },
+        "answer": {
+          "description": "How the learner may answer: typed (text), on paper with a photo (photo), or both, the learner's choice (the default).",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["text", "photo"]
+          }
+        },
+        "points": {
+          "description": "What a good answer has, 2 to 5 points, each one checkable sentence the learner ticks when the answer has it, in the order of a good answer.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": {
+            "$ref": "#/$defs/openTaskPoint"
+          }
+        },
+        "solution": {
+          "description": "The model answer: a good answer in the words a learner of the class would use, with every point of points.",
+          "$ref": "#/$defs/markdown"
+        },
+        "hint": {
+          "description": "Optional: a hint that helps to start, shown before the learner compares.",
+          "$ref": "#/$defs/markdown"
+        }
+      }
+    },
+    "openTaskPoint": {
+      "description": "A point of a good answer: about the content, with the section of the app it comes from, or about the form of the answer (whole sentences, a thread, the words to use), without a source.",
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "text": {
+          "description": "The point as the learner checks it, one sentence.",
+          "$ref": "#/$defs/text"
+        },
+        "kind": {
+          "description": "content (the default) or form.",
+          "enum": ["content", "form"]
+        },
+        "source": {
+          "description": "Where the content of the point is, /<chapter>/<page>/#<section>: the build checks that the page and section exist, and the learner gets a link to look again.",
+          "type": "string",
+          "pattern": "^/[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*/#[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+(-[a-z0-9]+)*)*$"
+        }
+      },
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "form"
+          }
+        },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "source": false
+        }
+      },
+      "else": {
+        "properties": {
+          "source": true
+        },
+        "required": ["source"]
+      },
+      "unevaluatedProperties": false
     },
     "vueComponent": {
       "description": "A Vue single-file component of the app, src/components/<component>.vue, for what no built-in block or generated exercise can express. The build renders it into the page and checks it (what it may do, its test file, and for an exercise, one that emits answer, its logic module <component>.ts); in the browser it hydrates in place. An exercise component is only the input of its task: it emits answer with the learner's answer each time it changes (undefined while there is none) and draws no \"Prüfen\" of its own; the explainer draws \"Prüfen\" under it, checks the answer with check(task, answer) and gives the feedback with reason(task, answer, props, lang), the app's message for a wrong answer, and may set its prop checked: boolean. An exercise component declares the prop seed: number, which the explainer gives it and no block does: its task number. The build numbers its distinct tasks like a generated exercise's (seeds 1, 2, 3, …, tasks compared as the JSON of generate(seed, props), Aufgabe Nr. 1 to N, N at most 67); the page shows \"Aufgabe Nr. <n>\" and \"Neue Aufgabe\", the address ?seed=<n>#<id> opens task number n, and the component gets that task's seed and shows generate(seed, props). Its logic module exports generate(seed, props), check(task, answer), solution(task), wrong(task), reason(task, answer, props, lang), describe(task, props, lang) and about: describe gives { task, solution }, the task as a learner sees it and its solution, each restricted Markdown in the language lang (props come in that language); about = { task, answer, correct, mistakes } says what the learner does, the answer's format, what counts as right and the typical mistakes, each a text (a map by language when the app has more than one). The build checks describe for every task number, and writes the no-JS text of an exercise component from the task of number 1 with its solution folded. Without JavaScript the page shows the nojs text instead of the component.",

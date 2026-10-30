@@ -124,6 +124,33 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click
 :::
 ```
 
+## The Scope Gives the Tutor the Whole Learning Path
+
+To judge an open answer, a tutor needs the exact content of the whole learning path, not only of the page at hand: for
+a test, what the class learnt and what it did not is what counts (lernapps/practice#19). The material, photos of
+worksheets for a made-to-measure app, is seen only while building. So the creator's assistant writes the scope,
+`src/scope.md`: long continuous prose in its own words, one part per chapter and per page, each naming its page, and
+what belongs to it and what does not. It is no page for the learner: the build writes a scope beside each page
+(`<chapter>/<page>/scope/`, the page's part with what belongs to the scope and what does not), combines all of a
+chapter beside the chapter and the whole beside the app, each linking one level up, for no menu and no search engine;
+each tutor page links its page's scope (`scope/` in place of `tutor/`) with a guide: read it before judging an open
+answer, go up when a point's source is on another page;
+if it cannot be fetched (security settings may block it, which an assistant notices itself), give the learner its full
+address and ask them to allow it, and until then judge no open answer and answer nothing about the content from
+general knowledge. This revises `dec-tutor-page`: the tutor page stays the one source of the task, the scope is the
+source of the content. Rejected: a summary page for the learner (a second content page to keep in step); a scope per
+page in the content (no whole text); a list instead of prose (the exact content is missing).
+
+```arc42
+:::decision
+id: dec-scope
+title: The scope, prose of the whole learning path in the creator's own words, gives the tutor the content
+status: accepted
+date: 2026-10-30
+addresses: qg-understandable
+:::
+```
+
 ## An Exercise Component Computes Its Table of Tasks
 
 An exercise component's values and results are in its code (`generate`, `check`, `solution`), not in a declaration
@@ -306,6 +333,52 @@ title: An optional self-assessment checks its exercises only as a whole and says
 status: accepted
 date: 2026-10-28
 addresses: qg-understandable, qg-explainer-readable-without-js
+:::
+```
+
+## A Partly Right Answer Counts Half
+
+An answer may be partly right: an open answer has some, not all, points of a good answer (lernapps/practice#19). It
+counts half, so that a page with one right and one partly right of three is "look at it again", and its result
+`teilweise` names the points it missed (`P2`) as a wrong one names its mistake (`F1`). An exercise component may say so
+as well (`partly`, `missed`). Rejected: counting it as wrong (writing half an answer would count as writing none) or
+as right (a page would be "known" with points missing).
+
+```arc42
+:::decision
+id: dec-self-assessment-partly
+title: A partly right answer counts half and names the points it missed
+status: accepted
+date: 2026-10-30
+addresses: qg-understandable
+:::
+```
+
+## An Open Task Is Answered First, Then Compared With Points
+
+Some subjects need answers in the learner's own words: German, foreign languages, religion (lernapps/practice#19). An
+example with a model answer beside it was only read, tied to nothing in the material, and gave the self-assessment and
+the tutor nothing to work with. So an open task asks for the answer first, typed or written on paper and photographed
+(the choice "Deine Lösung"), and only then shows the points of a good answer, 2 to 5, each about the content with its
+source in the app, linked to read up, or about the form; the learner ticks those the answer has, which makes them read
+each point; the ticks give right, partly right (`dec-self-assessment-partly`) or wrong at once, without a step of
+their own, and comparing opens the model answer.
+Without JavaScript the page shows the task, the points and the model answer under "Lösung", as every exercise has one.
+The tutor page gives the tutor the points as P1, P2 … with their sources, the model answer and how to help; the result
+line carries the ticked points and the answer, a photo only as a note that the learner attaches it. The answer stays on
+the device: the text, the way chosen and the ticks are kept while the tab is open (sessionStorage through the tooling's
+storage, under the app's prefix), so that a reload loses nothing and a new day starts afresh; the photo is shown from
+memory and never stored or sent; a self-assessment keeps nothing of its own. Rejected: grading by a model (no model runs in
+the browser, `dec-tutor-variant`; a server would collect what learners write); a model answer without the learner's own
+answer first (it is only read); a word search over the answer (easy to fool; at most a hint).
+
+```arc42
+:::decision
+id: dec-open-task
+title: An open task is answered first, then compared with points that name their sources
+status: accepted
+date: 2026-10-30
+addresses: qg-understandable, qg-privacy, qg-explainer-readable-without-js
 :::
 ```
 

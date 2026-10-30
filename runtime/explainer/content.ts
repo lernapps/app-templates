@@ -13,8 +13,29 @@ export { inLanguage, type Text };
 
 /** An exercise of one of the question types, with the fields of a question; its texts may be maps by language. */
 export type QuestionBlock = Question<Text>;
-/** An exercise block: one of the question types, or generated. */
-export type Exercise = QuestionBlock | Generated;
+/** A point of a good answer to an open task: about the content, with its source, or about the form. */
+export interface OpenTaskPoint {
+  text: Text;
+  kind?: "content" | "form";
+  /** Where its content is: /<chapter>/<page>/#<section>. */
+  source?: string;
+}
+
+/** An open task: answered in the learner's own words, then compared with the points of a good answer. */
+export interface OpenTask {
+  type: "open-task";
+  id: string;
+  task: Text;
+  /** How the learner may answer; both when not given. */
+  answer?: readonly ("text" | "photo")[];
+  points: readonly OpenTaskPoint[];
+  /** The model answer. */
+  solution: Text;
+  hint?: Text;
+}
+
+/** An exercise block: one of the question types, generated, or an open task. */
+export type Exercise = QuestionBlock | Generated | OpenTask;
 
 export interface Source {
   title: Text;
@@ -101,6 +122,8 @@ export interface Site {
   components: readonly ComponentUse[];
   /** The app's name for what it keeps on the device (its package.json name; @lernapps/tooling/storage). */
   storage?: string;
+  /** The scope for a tutor, src/scope.md as written (scope.ts). */
+  scope?: string;
 }
 
 // What the build reads of a component (components.ts). Declared here, not there: the client module reaches this file,
@@ -226,6 +249,7 @@ export function* allBlocks(blocks: readonly Block[]): Generator<Block> {
 /** Whether a block is an exercise. */
 export const isExercise = (block: Block): block is Exercise =>
   block.type === "generated" ||
+  block.type === "open-task" ||
   ["single-choice", "multiple-choice", "true-false", "number", "ordering", "matching"].includes(block.type);
 
 /** The anchor of a term in the glossary: the German term in lower case, umlauts spelled out, hyphens for the rest. */

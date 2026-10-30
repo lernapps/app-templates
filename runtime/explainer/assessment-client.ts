@@ -11,6 +11,7 @@
 // network but that click.
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
+import { startOpenTask, type OpenTaskResult } from "./open-task.ts";
 import { withLanguage, withNeeds, type NeedsChoice } from "./needs.ts";
 import { readAnswer } from "../shared/questions/engine.ts";
 import { renderQuestion } from "../shared/questions/render.ts";
@@ -128,6 +129,8 @@ function previousNumbers(href: string, items: readonly { key: string; ref: strin
 interface Live {
   question?: Question;
   component?: true;
+  /** What became of an open task so far. */
+  open?: () => OpenTaskResult;
   /** The task number of a generated exercise or an exercise component. */
   number?: number;
   /** The typical mistake a wrong answer makes, from 0. */
@@ -204,6 +207,12 @@ export function startAssessment(root: Document, ways: TutorWays): void {
         live.set(item.key, { question: exercise.question });
         continue;
       }
+      if (exercise.kind === "open") {
+        // a new run starts it afresh: its answer and ticks empty
+        const { result } = startOpenTask(place, { ...exercise, id: item.key }, { assessment: true });
+        live.set(item.key, { open: result });
+        continue;
+      }
       const { seeds } = exercise;
       const used = drawn.get(item.ref) ?? new Set<number>();
       drawn.set(item.ref, used);
@@ -245,15 +254,26 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       const run = live.get(item.key);
       const form = element(item.key)?.querySelector("form");
       const base = { key: item.key, ref: item.ref, ...(run?.number === undefined ? {} : { number: run.number }) };
+      if (run?.open !== undefined) {
+        const answer = run.open();
+        if (answer.state === "offen") return { ...base, state: "offen" };
+        return {
+          ...base,
+          state: answer.state,
+          ...(answer.text === undefined || answer.text === "" ? {} : { input: answer.text }),
+          ...(answer.missed.length === 0 ? {} : { missed: answer.missed.map((point) => point + 1) }),
+        };
+      }
       if (run?.component === true) {
         const answer = answers.get(item.key);
         if (answer === undefined) return { ...base, state: "offen" };
         if (answer.correct) return { ...base, state: "richtig" };
         return {
           ...base,
-          state: "falsch",
+          state: answer.partly === true ? "teilweise" : "falsch",
           ...(answer.answer === undefined ? {} : { input: answer.answer }),
-          ...(answer.mistake === undefined ? {} : { mistake: answer.mistake + 1 }),
+          ...(answer.mistake === undefined || answer.partly === true ? {} : { mistake: answer.mistake + 1 }),
+          ...(answer.missed === undefined ? {} : { missed: answer.missed.map((point) => point + 1) }),
         };
       }
       if (!run?.question || !form) return { ...base, state: "offen" };
@@ -286,7 +306,13 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       results,
     );
     const right = results.filter((one) => one.state === "richtig").length;
-    if (score) score.textContent = t("assessmentScore", { right: String(right), total: String(results.length) });
+    const partly = results.filter((one) => one.state === "teilweise").length;
+    if (score)
+      score.textContent = t(partly > 0 ? "assessmentScorePartly" : "assessmentScore", {
+        right: String(right),
+        partly: String(partly),
+        total: String(results.length),
+      });
     if (advice) {
       const open = pages.some((page) => page.band === "read" || page.band === "partly");
       advice.textContent = t(open ? "assessmentAdvice" : "assessmentAllKnown");
@@ -307,7 +333,11 @@ export function startAssessment(root: Document, ways: TutorWays): void {
           if (page.total > 0) {
             const count = root.createElement("span");
             count.className = "explainer-assessment-count";
-            count.textContent = t("assessmentPageScore", { right: String(page.right), total: String(page.total) });
+            count.textContent = t(page.partly > 0 ? "assessmentPageScorePartly" : "assessmentPageScore", {
+              right: String(page.right),
+              partly: String(page.partly),
+              total: String(page.total),
+            });
             item.append(" ", count);
           }
           return item;

@@ -17,6 +17,7 @@ import {
   type Site,
   type Text,
   type Descriptions,
+  type OpenTask,
 } from "./content.ts";
 import { plainText } from "./generated/texts.ts";
 import { kindOf } from "./generated/comparator.ts";
@@ -47,6 +48,14 @@ interface Words {
   interactive: string;
   video: string;
   exerciseHere: string;
+  /** An open task: its points, the model answer, the ways to answer, how to help. */
+  points: string;
+  pointContent: string;
+  pointForm: string;
+  source: string;
+  modelAnswer: string;
+  answerWays: Record<"text" | "photo" | "both", string>;
+  openGuide: string;
   formats: Record<string, string>;
 }
 
@@ -73,6 +82,18 @@ const WORDS: Readonly<Record<string, Words>> = {
     interactive: "Interaktiv",
     video: "Video",
     exerciseHere: "Übung `{id}` (unten)",
+    points: "Eine gute Antwort enthält (P1, P2 … wie die App sie nennt)",
+    pointContent: "Inhalt",
+    pointForm: "Form",
+    source: "Quelle",
+    modelAnswer: "Musterantwort",
+    answerWays: {
+      text: "in eigenen Worten eintippen",
+      photo: "in eigenen Worten auf Papier schreiben und das Blatt fotografieren",
+      both: "in eigenen Worten eintippen oder auf Papier schreiben und das Blatt fotografieren",
+    },
+    openGuide:
+      "So hilfst du: Die App zeigt die Punkte erst nach der Antwort; das Kind hakt selbst ab, welche seine Antwort enthält, und „es fehlen P2, P4“ nennt die anderen. Fehlt dir die Antwort, bitte das Kind, sie einzufügen oder das Foto seines Blatts anzuhängen. Prüf Punkt für Punkt, auch die abgehakten, und sag zuerst, was gelungen ist. Zu einem fehlenden Punkt stell eine Frage, die dorthin führt, und nenn seine Quelle. Verrate die Musterantwort nicht, bevor das Kind es noch einmal versucht hat. Zu einem Punkt der Form zeig an einem Satz des Kindes, wie es besser geht.",
     formats: {
       "single-choice": "eine Antwort wählen",
       "multiple-choice": "alle richtigen Antworten wählen",
@@ -108,6 +129,18 @@ const WORDS: Readonly<Record<string, Words>> = {
     interactive: "Interactive",
     video: "Video",
     exerciseHere: "Exercise `{id}` (below)",
+    points: "A good answer has (P1, P2 … as the app names them)",
+    pointContent: "content",
+    pointForm: "form",
+    source: "Source",
+    modelAnswer: "Model answer",
+    answerWays: {
+      text: "type it in their own words",
+      photo: "write it in their own words on paper and take a photo of the sheet",
+      both: "type it in their own words, or write it on paper and take a photo of the sheet",
+    },
+    openGuide:
+      "How to help: the app shows the points only after the answer; the child ticks which ones the answer has, and “missing P2, P4” names the others. If you lack the answer, ask the child to paste it or to attach the photo of the sheet. Check point by point, the ticked ones too, and say first what went well. For a missing point, ask a question that leads to it and name its source. Do not give away the model answer before the child has tried again. For a point of form, show with one of the child's sentences how it gets better.",
     formats: {
       "single-choice": "choose one answer",
       "multiple-choice": "choose all right answers",
@@ -172,6 +205,31 @@ function generatedPart(spec: Generated, lang: string, words: Words): string[] {
   const kind = kindOf(spec.answer.compare);
   const unit = kind.kind === "number" && kind.unit !== undefined ? ` (${inLanguage(kind.unit, lang)})` : "";
   return [`- ${words.answerFormat}: ${words.formats[kind.kind === "number" ? "number" : kind.kind]}${unit}`];
+}
+
+/**
+ * An open task in `lang`: the task, how the learner answers, the points of a good answer as P1, P2 … (each with its
+ * kind and, for content, a link to its source from the tutor page, `base` up to the language tree), the model answer,
+ * the hint (their Markdown as written, formulas $…$ kept), and how to help.
+ */
+function openTaskPart(block: OpenTask, lang: string, words: Words, base: string): string[] {
+  const ways = block.answer ?? ["text", "photo"];
+  const way = ways.includes("text") && ways.includes("photo") ? "both" : ways.includes("photo") ? "photo" : "text";
+  const lines = [
+    `- ${words.task}: ${line(inLanguage(block.task, lang))}`,
+    `- ${words.answerFormat}: ${words.answerWays[way]}`,
+    `- ${words.points}:`,
+    ...block.points.map((point, index) => {
+      const kind = point.kind === "form" ? words.pointForm : words.pointContent;
+      const source =
+        point.source === undefined ? "" : ` ${words.source}: [${point.source}](${base}${point.source.slice(1)})`;
+      return `  - P${index + 1} (${kind}) ${line(inLanguage(point.text, lang))}${source}`;
+    }),
+    `- ${words.modelAnswer}: ${line(inLanguage(block.solution, lang))}`,
+  ];
+  if (block.hint !== undefined) lines.push(`- ${words.hint}: ${line(inLanguage(block.hint, lang))}`);
+  lines.push(`- ${words.openGuide}`);
+  return lines;
 }
 
 /**
@@ -332,6 +390,9 @@ export function exercisePart(
         type: `generated, ${kindOf(block.answer.compare).kind}`,
         lines: generatedPart(block, lang, words),
       };
+    case "open-task":
+      // from the tutor page, <chapter>/<page>/tutor/, three levels up is the language tree
+      return { id: block.id, type: "open-task", lines: openTaskPart(block, lang, words, "../../../") };
     case "vue-component": {
       const use = site.components.find((candidate) => candidate.block === block);
       const description = descriptions.get(block);

@@ -105,9 +105,10 @@ describe("the build checks a self-assessment", () => {
     // the app's is the chapter's: no page of its own for the chapter, whose page the app hides
     const [whole] = assessments(site);
     expect(assessments(site).map((assessment) => assessment.local)).toEqual(["einschaetzung/"]);
+    // a3 is the open task between them
     expect(whole?.items.filter((item) => item.block.type === "vue-component").map((item) => item.key)).toEqual([
       "a2",
-      "a3",
+      "a4",
     ]);
     // its page: the component's island in a form of its own, no "Prüfen", and the islands module loads
     const route = routes(site).find((candidate) => candidate.kind === "assessment" && candidate.lang === "de");
@@ -280,15 +281,56 @@ describe("a run in the browser", () => {
     // one task alone is too little to say a page is known
     expect(bandOf(1, 1)).toBe("partly");
     expect(pageResults(["z/a/", "z/b/", "z/c/"], { a1: "z/a/", a2: "z/a/", a3: "z/b/" }, results)).toEqual([
-      { page: "z/a/", right: 1, total: 2, band: "partly" },
-      { page: "z/b/", right: 0, total: 1, band: "read" },
-      { page: "z/c/", right: 0, total: 0, band: "unasked" },
+      { page: "z/a/", right: 1, partly: 0, total: 2, band: "partly" },
+      { page: "z/b/", right: 0, partly: 0, total: 1, band: "read" },
+      { page: "z/c/", right: 0, partly: 0, total: 0, band: "unasked" },
     ]);
   });
 
   test("the tutor page's query has each exercise: its task number, how it went, the mistake", () => {
     expect(resultQuery(results)).toBe("?a1=17-falsch-F1&a2=richtig&a3=3-offen");
     expect(resultQuery([])).toBe("");
+  });
+
+  test("a partly right task counts half: its page's band, its value in the query, its line in the prompt", () => {
+    const partly = [
+      { key: "a1", ref: "/z/a/#x", state: "teilweise" as const, input: "Der Sabbat ist ein Ruhetag.", missed: [2, 4] },
+      { key: "a2", ref: "/z/a/#y", state: "falsch" as const },
+      { key: "a3", ref: "/z/b/#z", state: "teilweise" as const },
+      { key: "a4", ref: "/z/b/#w", state: "falsch" as const },
+      { key: "a5", ref: "/z/b/#v", state: "falsch" as const },
+    ];
+    // half of one of two is not half the page; with one right it is: 1 + 0.5 of 2 and of 3
+    expect([bandOf(0, 2, 1), bandOf(1, 2, 1), bandOf(1, 3, 1), bandOf(0, 3, 1), bandOf(1, 1, 0)]).toEqual([
+      "read",
+      "partly",
+      "partly",
+      "read",
+      "partly",
+    ]);
+    expect(
+      pageResults(["z/a/", "z/b/"], { a1: "z/a/", a2: "z/a/", a3: "z/b/", a4: "z/b/", a5: "z/b/" }, partly),
+    ).toEqual([
+      { page: "z/a/", right: 0, partly: 1, total: 2, band: "read" },
+      { page: "z/b/", right: 0, partly: 1, total: 3, band: "read" },
+    ]);
+    expect(resultQuery(partly.slice(0, 1))).toBe("?a1=teilweise-P2P4");
+    expect(isStoredResult({ version: 1, items: partly })).toBe(true);
+    expect(
+      isStoredResult({ version: 1, items: [{ key: "a1", ref: "/z/a/#x", state: "teilweise", missed: ["P2"] }] }),
+    ).toBe(false);
+    const lines = assessmentPrompt(
+      "https://a.example/einschaetzung/tutor/",
+      [{ key: "a1", page: "Feste", exercise: "x" }],
+      partly.slice(0, 1),
+      "de",
+      [{ page: "z/a/", title: "Feste", right: 1, partly: 1, total: 3, band: "partly" }],
+    ).split("\n");
+    expect(lines.slice(1)).toEqual([
+      "- „Feste“: Schau sie dir noch einmal an (1 von 3 richtig, 1 teilweise).",
+      "Meine Aufgaben:",
+      "- A1 (Feste, Übung x): teilweise richtig. Nicht erreicht: P2, P4. Eingabe: Der Sabbat ist ein Ruhetag.",
+    ]);
   });
 
   test("the prompt names the tutor page first, then each page's result as the learner saw it, then a line per exercise", () => {
@@ -299,9 +341,9 @@ describe("a run in the browser", () => {
     ];
     expect(
       assessmentPrompt("https://a.example/einschaetzung/tutor/?a1=17-falsch-F1", items, results, "de", [
-        { page: "z/a/", title: "Prozentwert", right: 1, total: 2, band: "partly" },
-        { page: "z/b/", title: "Grundwert", right: 0, total: 1, band: "read" },
-        { page: "z/c/", title: "Zinsen", right: 0, total: 0, band: "unasked" },
+        { page: "z/a/", title: "Prozentwert", right: 1, partly: 0, total: 2, band: "partly" },
+        { page: "z/b/", title: "Grundwert", right: 0, partly: 0, total: 1, band: "read" },
+        { page: "z/c/", title: "Zinsen", right: 0, partly: 0, total: 0, band: "unasked" },
       ]),
     ).toBe(
       [
@@ -323,7 +365,7 @@ describe("a run in the browser", () => {
       { key: "a2", page: "Prozentwert", exercise: "y" },
       { key: "a3", page: "Grundwert", exercise: "z" },
     ];
-    const pages = [{ page: "z/a/", title: "Prozentwert", right: 1, total: 2, band: "partly" as const }];
+    const pages = [{ page: "z/a/", title: "Prozentwert", right: 1, partly: 0, total: 2, band: "partly" as const }];
     const lines = assessmentPrompt("https://a.example/einschaetzung/tutor/?a1=x", items, results, "de", pages, "back");
     expect(lines.split("\n")).toEqual([
       "Ich habe die Selbsteinschätzung gemacht. Mein Ergebnis je Seite:",

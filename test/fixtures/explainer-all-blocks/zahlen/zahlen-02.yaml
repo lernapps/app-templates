@@ -176,3 +176,20 @@ blocks:
                 de: "Das ist die Periode, also die Zeile. Die Hauptgruppe ist die Spalte.",
                 en: "That is the period, the row. The main group is the column.",
               }
+      - type: open-task
+        id: erklaeren
+        task:
+          { de: "Erkläre in zwei Sätzen, was diese Seite zeigt.", en: "Explain in two sentences what this page shows." }
+        points:
+          - text: { de: "Nennt die Grundlagen der Seite.", en: "Names the basics of the page." }
+            source: /zahlen/zahlen-02/#grundlagen
+          - text: { de: "Nennt eine Anwendung.", en: "Names an application." }
+            source: /zahlen/zahlen-02/#anwendung
+          - text: { de: "Schreibt ganze Sätze.", en: "Writes whole sentences." }
+            kind: form
+        solution:
+          {
+            de: "Die Seite zeigt die Grundlagen mit einer Formel. Sie wendet sie in einem Beispiel an.",
+            en: "The page shows the basics with a formula. It applies them in an example.",
+          }
+        hint: { de: "Schau dir die Abschnitte der Seite an.", en: "Look at the sections of the page." }

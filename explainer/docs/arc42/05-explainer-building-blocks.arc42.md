@@ -56,6 +56,8 @@ flowchart TB
         bb-shell["Client module"]
         bb-islands["Component islands"]
         bb-generated-exercises["Generated exercises"]
+        bb-open-tasks["Open tasks"]
+        bb-scope["Scope"]
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
         bb-video["Video block"]
@@ -83,6 +85,8 @@ flowchart TB
     bb-islands -->|"if-vue-component"| bb-explainer-components
     bb-islands -->|"if-task-numbers"| bb-task-numbers
     bb-generated-exercises -->|"if-archetype-content"| bb-explainer-content
+    bb-open-tasks -->|"if-archetype-content"| bb-explainer-content
+    bb-scope -->|"if-archetype-content"| bb-explainer-content
     bb-generated-exercises -->|"if-data-files"| bb-explainer-data
     bb-tutor-handoff -->|"if-archetype-content"| bb-explainer-content
     bb-tutor-handoff -->|"if-exercise-logic"| bb-explainer-components
@@ -272,6 +276,46 @@ implements: concept-determinism
 :::
 ```
 
+### Open tasks
+
+Built. An open task (`open-task`) is answered in the learner's own words, typed or written on paper and photographed,
+then compared with the points of a good answer, which the learner ticks: all right, some partly right (`teilweise`),
+none wrong, the missed points named P1, P2 …; the model answer opens after the learner's own answer
+(`dec-open-task`). Each content point names its source, a section of the app, which the build checks as it checks every
+link. The same client part runs on a content page and in a self-assessment, where the ticks are the answer.
+
+```arc42
+:::building-block
+id: bb-open-tasks
+title: Open tasks
+parent: bb-archetype-runtime
+path: runtime/explainer/open-task.ts
+technology: TypeScript, DOM
+requires: if-archetype-content
+:::
+```
+
+### Scope
+
+Built, optional per app, required by lernapps/practice. `src/scope.md` is the whole learning path for a tutor, written
+by the creator's assistant in its own words from the material: one part per chapter and per content page, each naming
+its page by its path, then what belongs to the scope and what does not (`dec-scope`). The build checks that each part
+names a chapter or page and each content page has its part, and writes a scope per content page
+(`<chapter>/<page>/scope/`: its part and the closing parts), per chapter (`<chapter>/scope/`: all its pages) and for the
+whole app (`scope/`), each linking one level up, as Markdown and a page for no menu and no search engine; every tutor
+page links its page's scope.
+
+```arc42
+:::building-block
+id: bb-scope
+title: Scope
+parent: bb-archetype-runtime
+path: runtime/explainer/scope.ts
+technology: TypeScript, Markdown
+requires: if-archetype-content
+:::
+```
+
 ### Tutor handoff
 
 Built, optional per app. No model runs in the browser: after the learner's click the app hands over to the learner's
@@ -426,8 +470,9 @@ implements: concept-tutor
 #### Self-assessment interface
 
 The build step writes the page, the offer and the tutor page of each self-assessment (`assessment-page.ts`); the client
-module starts it (`assessment-client.ts`). Its addresses, the query of its tutor page (`?a1=17-falsch-F1&a2=richtig`:
-each exercise by its key in order, its task number, `richtig`, `falsch` or `offen`, the typical mistake), the lines of
+module starts it (`assessment-client.ts`). Its addresses, the query of its tutor page (`?a1=17-falsch-F1&a2=richtig&a3=teilweise-P2`:
+each exercise by its key in order, its task number, `richtig`, `teilweise`, `falsch` or `offen`, the typical mistake,
+the points a partly right answer missed), the lines of
 its prompt and of "Zurück zum Tutor", and the result kept under `self-assessment` or `self-assessment:<chapter>` are a
 contract with every tutor and with the result kept on a device.
 
@@ -503,7 +548,7 @@ path: runtime/explainer/messages
 ## Content
 
 Built in the template, written by the creator: `src/app.yaml` and a folder per chapter with `chapter.yaml` and its
-pages of blocks, each page with an exercise.
+pages of blocks, each page with an exercise; optionally `src/scope.md`, the scope for the tutor (`bb-scope`).
 
 ```arc42
 :::building-block

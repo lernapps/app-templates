@@ -4,6 +4,7 @@
 import { describe, expect, test } from "vite-plus/test";
 import type { Question } from "../runtime/shared/questions/question.ts";
 import { answerShown, Progress, resultLine, sessionLines } from "../runtime/explainer/result.ts";
+import { openTaskState, pointNames } from "../runtime/explainer/open-task.ts";
 
 const CHAPTER = "https://lernapps.net/mathe-karte/zufall/laplace/tutor/?laplace-zaehlen=6&uebung=laplace-zaehlen";
 
@@ -37,6 +38,20 @@ describe("the result line", () => {
         `Tutor-Seite: ${CHAPTER}`,
       ].join("\n"),
     );
+  });
+
+  test("an open task: partly right with the points missed and the answer; all ticked later is right", () => {
+    const progress = new Progress();
+    progress.compared("erklaeren", 2, 4, "P2, P4", "Weil man tauschen darf.");
+    expect(progress.state("erklaeren", undefined).points).toEqual({ ticked: 2, total: 4, missed: "P2, P4" });
+    expect(sessionLines(CHAPTER, progress.tasks(), progress.session(), "de").split("\n")[1]).toBe(
+      "- erklaeren: teilweise richtig (2 von 4 Punkten, es fehlen P2, P4), Antwort „Weil man tauschen darf.“.",
+    );
+    // a changed answer, evaluated again: all points
+    progress.compared("erklaeren", 4, 4, "", "Ganz neu.");
+    expect(progress.state("erklaeren", undefined)).toMatchObject({ attempts: 2, rightAt: 2, revealed: true });
+    expect(progress.state("erklaeren", undefined).points).toBeUndefined();
+    expect(progress.session()).toEqual({ right: 1, total: 1 });
   });
 
   test("right on the second try; what comes after the right answer does not count", () => {
@@ -178,5 +193,14 @@ describe("what Zurück zum Tutor copies", () => {
     expect(sessionLines(TUTOR, progress.tasks(), progress.session(), "de")).toBe(
       `Ich habe auf ${TUTOR} noch keine Aufgabe gelöst.`,
     );
+  });
+});
+
+describe("an open task's state from its ticks", () => {
+  test("all ticked is right, some partly right, none wrong; the missed points named from P1", () => {
+    expect(openTaskState([0, 1, 2], 3)).toEqual({ state: "richtig", missed: [] });
+    expect(openTaskState([0, 2], 4)).toEqual({ state: "teilweise", missed: [1, 3] });
+    expect(openTaskState([], 2)).toEqual({ state: "falsch", missed: [0, 1] });
+    expect(pointNames([1, 3])).toBe("P2, P4");
   });
 });
