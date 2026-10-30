@@ -2,6 +2,11 @@
 
 title: { de: "Formen 2", en: "Shapes 2" }
 description: { de: "Seite 4 der Fixture mit allen Blöcken.", en: "Page 4 of the fixture with all blocks." }
+scope:
+  {
+    de: "Dieselben Grundlagen an anderen Formen, mit einer Anwendung.",
+    en: "The same basics with other shapes, with an application.",
+  }
 blocks:
   - type: text
     text:

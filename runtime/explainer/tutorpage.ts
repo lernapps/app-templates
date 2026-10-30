@@ -533,7 +533,7 @@ function pageMarkdown(
     "",
     `${words.parents} [${words.toPage}](../)`,
     "",
-    ...(site.scope === undefined ? [] : [words.scope, ""]),
+    ...(site.app.scope === undefined ? [] : [words.scope, ""]),
     `## ${words.guideTitle}`,
     "",
     ...words.guide.map((text) => `- ${text}`),

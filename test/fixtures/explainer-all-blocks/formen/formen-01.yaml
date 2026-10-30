@@ -2,6 +2,11 @@
 
 title: { de: "Formen 1", en: "Shapes 1" }
 description: { de: "Seite 3 der Fixture mit allen Blöcken.", en: "Page 3 of the fixture with all blocks." }
+scope:
+  {
+    de: "Die Grundlagen der Formen mit Formel, Begriff und Bild, dann eine Anwendung.",
+    en: "The basics of shapes with a formula, a term and a picture, then an application.",
+  }
 blocks:
   - type: text
     text:

@@ -15,3 +15,11 @@ tutor:
   rules:
     de: "Gerechnet wird auf Papier, das Ergebnis kommt in die App. Frag nach dem Rechenweg, bevor du einen Fehler erklärst."
     en: "Working goes on paper, the result into the app. Ask for the working before you explain a mistake."
+scope:
+  text:
+    {
+      de: "Eine App mit zwei Kapiteln zu je zwei Seiten. Jede Seite zeigt Grundlagen, eine Anwendung und Übungen.",
+      en: "An app of two chapters of two pages each. Every page shows basics, an application and exercises.",
+    }
+  out:
+    - { de: "alles, was keine Seite zeigt", en: "anything no page shows" }

@@ -128,18 +128,22 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click
 
 To judge an open answer, a tutor needs the exact content of the whole learning path, not only of the page at hand: for
 a test, what the class learnt and what it did not is what counts (lernapps/practice#19). The material, photos of
-worksheets for a made-to-measure app, is seen only while building. So the creator's assistant writes the scope,
-`src/scope.md`: long continuous prose in its own words, one part per chapter and per page, each naming its page, and
-what belongs to it and what does not. It is no page for the learner: the build writes a scope beside each page
-(`<chapter>/<page>/scope/`, the page's part with what belongs to the scope and what does not), combines all of a
+worksheets for a made-to-measure app, is seen only while building. So the creator's assistant writes the scope: long
+continuous prose in its own words, beside the content it describes: `scope` in each page's YAML, optionally in a
+chapter's, and in `src/app.yaml` what the app is about and what does not belong to it (what belongs to it is what the pages
+say); with the app's, every
+page has its own, which the build checks. A scope beside its page is kept in step with it and needs no paths that
+could go wrong (owner, 2026-10-30; first built as one file `src/scope.md`). It is no page for the learner: the build writes a scope beside each page
+(`<chapter>/<page>/scope/`, the page's part with what does not belong to the scope), combines all of a
 chapter beside the chapter and the whole beside the app, each linking one level up, for no menu and no search engine;
 each tutor page links its page's scope (`scope/` in place of `tutor/`) with a guide: read it before judging an open
 answer, go up when a point's source is on another page;
 if it cannot be fetched (security settings may block it, which an assistant notices itself), give the learner its full
 address and ask them to allow it, and until then judge no open answer and answer nothing about the content from
 general knowledge. This revises `dec-tutor-page`: the tutor page stays the one source of the task, the scope is the
-source of the content. Rejected: a summary page for the learner (a second content page to keep in step); a scope per
-page in the content (no whole text); a list instead of prose (the exact content is missing).
+source of the content. Rejected: a summary page for the learner (a second content page to keep in step); one file for
+the whole scope (it drifts from the pages, and each part has to name its page by a path); a list instead of prose (the
+exact content is missing).
 
 ```arc42
 :::decision

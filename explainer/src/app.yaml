@@ -8,3 +8,13 @@ chapters: [prozent]
 sources:
   - title: Prozentrechnung mittels Formeln (Serlo)
     url: https://de.serlo.org/mathe/2193/prozentrechnung-mittels-formeln
+scope:
+  text: |
+    Die App führt in die Prozentrechnung ein. Sie geht von drei Größen aus: dem Grundwert $G$ (das Ganze, 100 %), dem
+    Prozentsatz $p\,\%$ (welcher Anteil gemeint ist) und dem Prozentwert $W$ (der Teil, in der Einheit des Ganzen). Jede
+    Seite nimmt eine der drei Größen als die gesuchte und zeigt, wie man sie aus den beiden anderen ausrechnet. Der Weg
+    über 1 % hilft auf allen drei Seiten: Das Ganze geteilt durch 100 ist 1 %.
+  out:
+    - "Zinsen und Zinseszins"
+    - "Prozentpunkte und die Veränderung eines Prozentsatzes"
+    - "vermehrter und verminderter Grundwert (Preis mit Aufschlag oder nach Rabatt in einem Schritt)"

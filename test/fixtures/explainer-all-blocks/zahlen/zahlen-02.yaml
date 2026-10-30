@@ -2,6 +2,11 @@
 
 title: { de: "Zahlen 2", en: "Numbers 2" }
 description: { de: "Seite 2 der Fixture mit allen Blöcken.", en: "Page 2 of the fixture with all blocks." }
+scope:
+  {
+    de: "Dieselben Grundlagen an anderen Zahlen, mit einer Anwendung.",
+    en: "The same basics with other numbers, with an application.",
+  }
 blocks:
   - type: text
     text:

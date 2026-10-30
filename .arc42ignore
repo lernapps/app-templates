@@ -13,8 +13,6 @@ quiz/src/main.ts
 quiz/src/images
 explainer/src/main.ts
 explainer/src/prozent
-# The explainer's scope for the tutor (bb-scope reads it), content like the example chapter.
-explainer/src/scope.md
 # The explainer's image files: the figures of the example chapter, content like its pages and not a part of their own.
 explainer/src/images
 interactive/src/main.ts
