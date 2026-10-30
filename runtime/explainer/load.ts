@@ -415,7 +415,10 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   // the scope for a tutor: each part names a chapter or page, each content page has its part (scope.ts)
   const scopeFile = join(src, SCOPE_SOURCE);
   const scope = existsSync(scopeFile) ? readFileSync(scopeFile, "utf8") : undefined;
-  if (scope !== undefined) for (const problem of scopeProblems(scope, chapters)) problems.add(problem);
+  // only against content without problems: a chapter that failed to load would make every part of it a problem too
+  if (scope !== undefined && problems.lines.length === 0) {
+    for (const problem of scopeProblems(scope, chapters)) problems.add(problem);
+  }
 
   if (problems.lines.length > 0) return { problems: problems.lines };
   const data: Record<string, DataRecord[]> = {};

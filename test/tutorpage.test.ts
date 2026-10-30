@@ -26,6 +26,7 @@ import { anchorsOf, linkProblems, tutorPageOf } from "../runtime/explainer/tutor
 import { NEEDS } from "../runtime/explainer/needs.ts";
 import * as assignLabels from "./fixtures/explainer-history/components/AssignLabels.ts";
 import type { Props, Task } from "./fixtures/explainer-history/components/AssignLabels.ts";
+import { SCOPE_PAGE, scopeFiles } from "../runtime/explainer/scope.ts";
 
 const fixture = (name: string): Site => {
   const root = mkdtempSync(join(tmpdir(), "explainer-tutorpage-"));
@@ -59,6 +60,8 @@ function tree(site: Site, lang: string) {
       .filter((route) => route.lang === lang)
       .map((route) => route.local),
     ...contentPages(site).map((page) => tutorPageOf(page)),
+    // the scopes beside the app, each chapter and each page, as the build writes them (plugin.ts)
+    ...(site.scope === undefined ? [] : [...scopeFiles(site.scope).keys()].map((folder) => `${folder}${SCOPE_PAGE}`)),
   ]);
   const anchors = new Map(contentPages(site).map((page) => [`${page.chapter}/${page.id}/`, anchorsOf(site, page)]));
   return { files, anchors };
