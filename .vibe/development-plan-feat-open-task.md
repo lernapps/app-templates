@@ -121,18 +121,18 @@ nothing about learners, running costs).
   by point, give feedback on content and form, never give the model answer before the learner tried; when the text
   or photo is missing, ask the learner for it (KD-02).
 
-**D4. Learning-path text** (KD-03)
+**D4. Scope** (KD-03)
 
-- Source: `src/lerngang.md` (Markdown, allowed in practice's zip). One `##` part per chapter, one `###` per page,
+- Source: `src/scope.md` (Markdown, allowed in practice's zip). One `##` part per chapter, one `###` per page,
   each heading with the page's path, e.g. `### Der Jahreskreis (/feste/jahreskreis/)`; at the end `## Gehört dazu` and
   `## Gehört nicht dazu`.
-- Built only when the tutor is on: `/lerngang/` as HTML and `index.md`, like the tutor pages (`tutorAssets`, the
+- Built only when the tutor is on: `/scope/` as HTML and `index.md`, like the tutor pages (`tutorAssets`, the
   `files` set, the dev server). Every tutor page links it in its head as background; it is reachable from the tutor
   pages, so tooling's `pages-reachable` passes.
 - Validation in the build: each part names an existing page; each content page has a part; a warning beyond 64 kB.
 - **When the tutor cannot fetch it** (owner, 2026-10-30): an assistant's security settings may block the address; the
-  assistant notices this itself. The tutor page tells it: if you could not fetch the learning-path text, ask the
-  learner to allow this address explicitly, naming it in full (`https://…/lerngang/`), and fetch it again; until then,
+  assistant notices this itself. The tutor page tells it: if you could not fetch the scope, ask the
+  learner to allow this address explicitly, naming it in full (`https://…/scope/`), and fetch it again; until then,
   judge no open answer and answer nothing about the content from general knowledge. So the tutor page names the
   absolute address, not only the relative link. Note `dec-tutor-page`: links in a fetched file were not always
   followed; this guide covers that case, too.
@@ -143,7 +143,7 @@ nothing about learners, running costs).
 - Content checks live in the app-templates build, not in tooling (tooling checks the built app and has no content
   rules). tooling's part: move the `appTemplates` pin; skills `lernapps-explainer` (`references/exercises.md`,
   `runtime.md`), `lernapps-content-questions` (`question-types.md`); review rubric `review/archetypes/explainer.md`:
-  "points cover what a good answer needs and are in the material", "the learning-path text matches the pages and is in
+  "points cover what a good answer needs and are in the material", "the scope matches the pages and is in
   own words"; rule page via `scripts/rules.ts`.
 
 **D6. practice**
@@ -152,10 +152,10 @@ nothing about learners, running costs).
   (line 12); the self-test line (20) points to the self-assessment.
 - `lernapps-practice-plan/SKILL.md`: open task among the rich forms (55-64); remove the outdated self-assessment box
   (42-43).
-- `guidance/plan-template.md`: a Code task after the pages (between 163 and 166): write `src/lerngang.md` from the
+- `guidance/plan-template.md`: a Code task after the pages (between 163 and 166): write `src/scope.md` from the
   material, in own words; scope in and out drafted in Plan.
-- `lernapps-practice-submit/SKILL.md`: the creator checks the points and the learning-path text.
-- Required: `actions/validate` fails a submission without `src/lerngang.md` (every made-to-measure app).
+- `lernapps-practice-submit/SKILL.md`: the creator checks the points and the scope.
+- Required: `actions/validate` fails a submission without `src/scope.md` (every made-to-measure app).
 - `test/guide.test.ts` as the skills change.
 
 **D7. Architecture docs** (with each pull request)
@@ -163,14 +163,14 @@ nothing about learners, running costs).
 - explainer arc42: `bb-render`, `bb-validation`, `bb-islands`, `bb-tutor-handoff`/`if-tutor-files`,
   `bb-self-assessment`, `concept-tutor`; revise `dec-tutor-page` (KD-03); new decision for `open-task` and for
   `teilweise`; scenarios `scenario-tutor`, `scenario-explainer-self-assessment`; glossary: open task, point,
-  learning-path text.
+  scope.
 - app-templates arc42: `concept-device-storage` (photo in memory only), `architecture-evidence.md`.
 
 **D8. Order of the pull requests**
 
 1. app-templates: result `teilweise` (D2 without the open task).
 2. app-templates: block `open-task` (D1, D3).
-3. app-templates: learning-path text (D4).
+3. app-templates: scope (D4).
 4. tooling: pin, skills, rubric (D5).
 5. practice: skills, plan template, validation (D6); takes effect once tooling's pin has moved.
 
@@ -180,18 +180,18 @@ nothing about learners, running costs).
    on to Code without objection):
    - **Content validation in the runtime's build**, which `lernapps check` runs as its `build` step (`src/cli.ts`
      ~503) in the creator's repo, and which practice's build runs too: schema of `open-task`; each point's `source`
-     names an existing page and section (beside the link check in `load.ts`); each part of `src/lerngang.md` names an
+     names an existing page and section (beside the link check in `load.ts`); each part of `src/scope.md` names an
      existing page and each content page has a part. Errors point to the YAML path.
    - **Rules of tooling on the built app** (`check/rules/`), which also run on a bundle or URL without a repo (listing,
      practice): `explainer-readable-without-js` also covers an open task (points and "Lösung" visible); a new rule:
-     with tutor pages there is `/lerngang/`, and each tutor page names its absolute address.
+     with tutor pages there is `/scope/`, and each tutor page names its absolute address.
    - **Review rubric** (`review/archetypes/explainer.md`): the points are in the material and cover a good answer; the
-     learning-path text matches the pages and is in own words.
+     scope matches the pages and is in own words.
 2. `teilweise` counts half in the self-assessment.
 3. The answer is kept, but not in `localStorage`: in `sessionStorage` through `createStorage` ("new day, new
    exercise"); it is gone when the tab closes. The photo stays in memory (too large to store).
 4. practice suggests open tasks where the question fits (describe, explain, compare, write), with or without a tutor.
-   practice requires the learning-path text for every made-to-measure app (owner, 2026-10-30).
+   practice requires the scope for every made-to-measure app (owner, 2026-10-30).
 5. Next: a mock-up of the open task with and without tutor.
 
 ## Code
@@ -211,7 +211,9 @@ Step 2, app-templates: block `open-task` (D1, D3), on this branch (owner: B, 202
 - [ ] note for step 4: `lernapps check` measures `fitness.storage` by visiting pages without typing, so an app whose
       only storage is an open task's answer is measured `none`; to decide whether the measurement should type
 
-Step 3, app-templates: learning-path text (D4)
+Step 3, app-templates: the scope (D4, KD-03; named "scope" by the owner, 2026-10-30), on this branch: done (see
+Completed)
+
 Step 4, tooling: pin, rules, skills, rubric (D5)
 Step 5, practice: skills, plan template, validation (D6)
 
@@ -233,6 +235,13 @@ Step 5, practice: skills, plan template, validation (D6)
 - [x] `scripts/pre-push.ts`: `.mcp.json` and `.vibe/` in the positive list (the test failed on main already for
       `.mcp.json`)
 
+- [x] Step 3: the scope: `src/scope.md` (prose per chapter and page, each naming its path, then "Gehört dazu" /
+      "Gehört nicht dazu"), checked by the build (`scope.ts`, `load.ts`: each path a chapter or page, each content
+      page a part, the closing parts); written at `scope/` of each language tree as index.md and an index.html with
+      noindex; every tutor page links it with the guide to ask for the full address and not to answer from general
+      knowledge; `scope` is a reserved chapter id; the example explainer has its scope; unit tests; arc42 `dec-scope`
+      (revises `dec-tutor-page`), `bb-scope`, glossary. `lernapps check` on the example: ok
+
 ## Commit
 
 ### Tasks
@@ -253,7 +262,7 @@ Step 5, practice: skills, plan template, validation (D6)
 - **Out of scope** (owner, 2026-10-30): a direct handoff of the photo to the learner's chat (Web Share API, chat
   APIs). A first search found no documented link or API to open a chat with an image attached.
 
-### KD-03: A learning-path text for the tutor, at an address of its own
+### KD-03: A scope for the tutor, at an address of its own
 - **Decision** (owner, 2026-10-30): the creator's assistant writes the whole learning path as long, continuous prose
   in its own words, from the material: the exact content (facts, terms, reasons, examples), because for a test the
   exact content matters. It is structured by the app's chapters and pages (each part names its page) and ends with
@@ -261,7 +270,7 @@ Step 5, practice: skills, plan template, validation (D6)
 - No new visible page or content type: chapters and pages stay as they are. The build publishes the text at an
   address of its own, not linked in the navigation, like the tutor pages; every tutor page links it as background.
 - This revises `dec-tutor-page` (one source of what the tutor gets): the tutor page stays the source for the task,
-  the learning-path text is the source for the content.
+  the scope is the source for the content.
 - lernapps/practice requires it for made-to-measure apps (the material is seen only while building); lernapps/tooling
   checks that each part names an existing page and each content page has its part.
 
@@ -284,7 +293,7 @@ Step 5, practice: skills, plan template, validation (D6)
   a core relationship). The open task makes that session better; it adds no new transaction or role.
 - Experience `x-tailor-made-app` ("Practise a given scope, made to measure"): lernapps/practice#19 is one. Its steps
   `s-building-guidance` and `t-build-with-assistant` are where the creator's assistant writes the checklist, the
-  sources, the model answer and the learning-path summary. So the guidance in lernapps/practice and the checks in
+  sources, the model answer and the scope. So the guidance in lernapps/practice and the checks in
   lernapps/tooling are part of the feature, not only the runtime.
 - KD-18, no hidden data collection: the apps collect nothing. The learner's text and photo must stay on the device;
   they leave it only with the learner's click, to the learner's own assistant (as input and message do today).
@@ -300,7 +309,7 @@ Step 5, practice: skills, plan template, validation (D6)
 - Tutor (`concept-tutor`, `dec-tutor-variant`, `dec-tutor-page`): no model in the browser; a handoff to the
   learner's own assistant through one static tutor page per content page, the one source of what the tutor gets.
   Rejected there: one tutor page per chapter (long, the tutor answered at length), `llms.txt`, a second file beside
-  the tutor page, rules in the prompt. The learning-path summary (proposal 8) must fit into this or revise it.
+  the tutor page, rules in the prompt. The scope (proposal 8) must fit into this or revise it.
 - Quality goals: `qg-privacy` and `qg-checkable` high.
 
 ### Open questions for the owner

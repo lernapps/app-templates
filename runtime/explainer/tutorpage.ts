@@ -56,6 +56,8 @@ interface Words {
   intro: string;
   parents: string;
   toPage: string;
+  /** The link to the scope and what to do when it cannot be fetched; {page} is the page's path. */
+  scope: string;
   guideTitle: string;
   guide: string[];
   startTitle: string;
@@ -88,6 +90,8 @@ const WORDS: Readonly<Record<string, Words>> = {
       "Du hilfst einem Kind beim Lernen. Es arbeitet mit der Lern-App „{app}“ von lernapps.net, gerade auf der Seite „{page}“, und steckt dort in einer Übung. Gelöst wird in der App, sie prüft die Antworten. Du erklärst.",
     parents: "Eltern und Lehrkräfte sehen hier, was der Tutor bekommt.",
     toPage: "Zur Seite",
+    scope:
+      "Der ganze Lernumfang, mit dem, was dazugehört und was nicht: [Scope](../../../scope/). Lies ihn, bevor du eine offene Antwort beurteilst. Seine volle Adresse ist die dieser Tutor-Seite mit `scope/` statt `{page}tutor/`. Konntest du ihn nicht abrufen, etwa wegen Sicherheitseinstellungen, nenn dem Kind genau diese volle Adresse und bitte es, sie freizugeben; ruf sie danach noch einmal ab. Bis dahin beurteilst du keine offene Antwort und antwortest nichts zum Inhalt aus Allgemeinwissen.",
     guideTitle: "So leitest du an",
     guide: [
       "Antworte kurz: höchstens drei Sätze und eine Frage. Keine Überschriften, keine Listen.",
@@ -135,6 +139,8 @@ const WORDS: Readonly<Record<string, Words>> = {
       "You help a child learn. It works with the learning app “{app}” of lernapps.net, right now on the page “{page}”, and is in an exercise there. Tasks are solved in the app, which checks the answers. You explain.",
     parents: "Parents and teachers see here what the tutor gets.",
     toPage: "To the page",
+    scope:
+      "The whole learning path, with what belongs to it and what does not: [scope](../../../scope/). Read it before you judge an open answer. Its full address is the one of this tutor page with `scope/` in place of `{page}tutor/`. If you could not fetch it, for example because of security settings, give the child exactly this full address and ask them to allow it; then fetch it again. Until then, judge no open answer and answer nothing about the content from general knowledge.",
     guideTitle: "How you guide",
     guide: [
       "Answer briefly: three sentences and one question at most. No headings, no lists.",
@@ -471,6 +477,7 @@ function pageMarkdown(
     "",
     `${words.parents} [${words.toPage}](../)`,
     "",
+    ...(site.scope === undefined ? [] : [words.scope.replace("{page}", `${page.chapter}/${page.id}/`), ""]),
     `## ${words.guideTitle}`,
     "",
     ...words.guide.map((text) => `- ${text}`),

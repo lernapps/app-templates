@@ -124,6 +124,30 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click
 :::
 ```
 
+## The Scope Gives the Tutor the Whole Learning Path
+
+To judge an open answer, a tutor needs the exact content of the whole learning path, not only of the page at hand: for
+a test, what the class learnt and what it did not is what counts (lernapps/practice#19). The material, photos of
+worksheets for a made-to-measure app, is seen only while building. So the creator's assistant writes the scope,
+`src/scope.md`: long continuous prose in its own words, one part per chapter and per page, each naming its page, and
+what belongs to it and what does not. It is no page for the learner: the build writes it at `scope/` beside the pages,
+for no menu and no search engine, and each tutor page links it with a guide: read it before judging an open answer;
+if it cannot be fetched (security settings may block it, which an assistant notices itself), give the learner its full
+address and ask them to allow it, and until then judge no open answer and answer nothing about the content from
+general knowledge. This revises `dec-tutor-page`: the tutor page stays the one source of the task, the scope is the
+source of the content. Rejected: a summary page for the learner (a second content page to keep in step); a scope per
+page in the content (no whole text); a list instead of prose (the exact content is missing).
+
+```arc42
+:::decision
+id: dec-scope
+title: The scope, prose of the whole learning path in the creator's own words, gives the tutor the content
+status: accepted
+date: 2026-10-30
+addresses: qg-understandable
+:::
+```
+
 ## An Exercise Component Computes Its Table of Tasks
 
 An exercise component's values and results are in its code (`generate`, `check`, `solution`), not in a declaration

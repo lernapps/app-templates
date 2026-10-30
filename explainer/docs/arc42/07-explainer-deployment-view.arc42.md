@@ -13,7 +13,7 @@ id: dn-explainer-build
 title: Explainer build
 type: container
 parent: dn-ci-runner
-hosts: bb-generated-exercises, bb-tutor-handoff, bb-task-numbers, bb-self-assessment, bb-explainer-content, bb-explainer-data, bb-explainer-components
+hosts: bb-generated-exercises, bb-tutor-handoff, bb-scope, bb-task-numbers, bb-self-assessment, bb-explainer-content, bb-explainer-data, bb-explainer-components
 :::
 ```
 

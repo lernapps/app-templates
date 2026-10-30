@@ -122,6 +122,8 @@ export interface Site {
   components: readonly ComponentUse[];
   /** The app's name for what it keeps on the device (its package.json name; @lernapps/tooling/storage). */
   storage?: string;
+  /** The scope for a tutor, src/scope.md as written (scope.ts). */
+  scope?: string;
 }
 
 // What the build reads of a component (components.ts). Declared here, not there: the client module reaches this file,

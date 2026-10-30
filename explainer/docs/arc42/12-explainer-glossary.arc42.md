@@ -74,6 +74,18 @@ definition: One checkable sentence a good answer to an open task has, about its 
 :::
 ```
 
+## Scope
+
+`src/scope.md`, written at `scope/` for the tutor.
+
+```arc42
+:::glossary-term
+id: term-scope
+title: Scope
+definition: The whole learning path of an explainer in the creator's own words, page by page, with what belongs to it and what does not; for the tutor, never shown to the learner.
+:::
+```
+
 ## Tutor Page
 
 `<chapter>/<page>/tutor/`, the address a tutor's prompt names for a page.
