@@ -129,6 +129,12 @@ nothing about learners, running costs).
   `files` set, the dev server). Every tutor page links it in its head as background; it is reachable from the tutor
   pages, so tooling's `pages-reachable` passes.
 - Validation in the build: each part names an existing page; each content page has a part; a warning beyond 64 kB.
+- **When the tutor cannot fetch it** (owner, 2026-10-30): an assistant's security settings may block the address; the
+  assistant notices this itself. The tutor page tells it: if you could not fetch the learning-path text, ask the
+  learner to allow this address explicitly, naming it in full (`https://…/lerngang/`), and fetch it again; until then,
+  judge no open answer and answer nothing about the content from general knowledge. So the tutor page names the
+  absolute address, not only the relative link. Note `dec-tutor-page`: links in a fetched file were not always
+  followed; this guide covers that case, too.
 - Optional in the explainer; required in practice (D6).
 
 **D5. tooling**
