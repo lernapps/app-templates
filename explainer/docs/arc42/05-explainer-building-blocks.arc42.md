@@ -300,8 +300,10 @@ requires: if-archetype-content
 Built, optional per app, required by lernapps/practice. `src/scope.md` is the whole learning path for a tutor, written
 by the creator's assistant in its own words from the material: one part per chapter and per content page, each naming
 its page by its path, then what belongs to the scope and what does not (`dec-scope`). The build checks that each part
-names a chapter or page and each content page has its part, and writes it at `scope/` of each language tree as its
-Markdown and a page for no menu and no search engine; every tutor page links it.
+names a chapter or page and each content page has its part, and writes a scope per content page
+(`<chapter>/<page>/scope/`: its part and the closing parts), per chapter (`<chapter>/scope/`: all its pages) and for the
+whole app (`scope/`), each linking one level up, as Markdown and a page for no menu and no search engine; every tutor
+page links its page's scope.
 
 ```arc42
 :::building-block

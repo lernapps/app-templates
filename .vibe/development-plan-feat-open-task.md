@@ -285,6 +285,13 @@ Step 5, practice: skills, plan template, validation (D6)
   "Auswerten" and no result text that repeats the points: "Vergleichen" opens the model answer, the ticks count at once
   for the result line and the self-assessment. "Antwort ändern" shuts the model answer again until the next comparing.
 
+### KD-06: A scope per page, combined above
+- **Decision** (owner, 2026-10-30): beside each content page `<chapter>/<page>/scope/` with the page's part and what
+  belongs to the scope and what does not; the parent combines: `<chapter>/scope/` all pages of the chapter, `scope/`
+  the whole app; each links one level up. The tutor page links `../scope/` ("scope/ in place of tutor/"). The creator
+  still writes one `src/scope.md`. The self-assessment's tutor page gets no scope link (the pages' prompts bring it).
+  Several languages: ignored for now.
+
 ## Notes
 
 ### Platform fit (pdt42, lernapps/docs, read 2026-10-30)

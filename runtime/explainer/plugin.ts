@@ -41,7 +41,7 @@ import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";
 import { anchorsOf, linkProblems, tutorPageOf } from "./tutor.ts";
 import { assessments, stepHint } from "./assessment.ts";
-import { SCOPE_PAGE, scopeDocument } from "./scope.ts";
+import { SCOPE_PAGE, scopeDocument, scopeFiles } from "./scope.ts";
 import { assessmentTutorDocument, assessmentTutorMarkdown, assessmentTutorOf } from "./assessment-page.ts";
 import {
   bytesOf,
@@ -301,7 +301,9 @@ export function explainer(): Plugin[] {
             .map((route) => route.local),
           ...contentPages(content).map((page) => tutorPageOf(page)),
           ...assessments(content).map((assessment) => assessmentTutorOf(assessment)),
-          ...(content.scope === undefined ? [] : [SCOPE_PAGE]),
+          ...(content.scope === undefined
+            ? []
+            : [...scopeFiles(content.scope).keys()].map((folder) => `${folder}${SCOPE_PAGE}`)),
         ]);
         const anchors = new Map(
           contentPages(content).map((page) => [`${page.chapter}/${page.id}/`, anchorsOf(content, page)]),
@@ -325,16 +327,19 @@ export function explainer(): Plugin[] {
           });
         }
       }
-      // the scope beside the pages of each language tree, for the tutor only: its Markdown and a page for no menu
+      // the scopes beside the app, each chapter and each page of each language tree, for the tutor only: their
+      // Markdown and a page for no menu
       if (content.scope !== undefined) {
         for (const lang of content.app.languages) {
-          const folder = `${languageRoot(lang)}${SCOPE_PAGE}`;
-          this.emitFile({ type: "asset", fileName: `${folder}${TUTOR_MARKDOWN}`, source: content.scope });
-          this.emitFile({
-            type: "asset",
-            fileName: `${folder}index.html`,
-            source: scopeDocument(content.scope, inLanguage(content.app.title, lang), lang),
-          });
+          for (const [folder, markdown] of scopeFiles(content.scope)) {
+            const at = `${languageRoot(lang)}${folder}${SCOPE_PAGE}`;
+            this.emitFile({ type: "asset", fileName: `${at}${TUTOR_MARKDOWN}`, source: markdown });
+            this.emitFile({
+              type: "asset",
+              fileName: `${at}index.html`,
+              source: scopeDocument(markdown, inLanguage(content.app.title, lang), lang, folder),
+            });
+          }
         }
         if (bytesOf(content.scope) > TUTOR_PAGE_BUDGET) {
           this.info(
@@ -447,10 +452,14 @@ export function explainer(): Plugin[] {
                 content.app.languages.find((one) => languageRoot(one) !== "" && path.startsWith(languageRoot(one))) ??
                 content.app.languages[0] ??
                 "de";
+              // the folder within the language tree whose scope this is
+              const folder = path
+                .slice(languageRoot(lang).length)
+                .replace(new RegExp(`${SCOPE_PAGE}(${TUTOR_MARKDOWN.replace(".", "\\.")})?$`), "");
+              const scope = scopeFiles(content.scope).get(folder);
+              if (scope === undefined) return next();
               response.setHeader("content-type", `text/${markdown ? "markdown" : "html"}; charset=utf-8`);
-              response.end(
-                markdown ? content.scope : scopeDocument(content.scope, inLanguage(content.app.title, lang), lang),
-              );
+              response.end(markdown ? scope : scopeDocument(scope, inLanguage(content.app.title, lang), lang, folder));
               return undefined;
             }
             if (forTutor) {

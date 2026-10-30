@@ -130,8 +130,11 @@ To judge an open answer, a tutor needs the exact content of the whole learning p
 a test, what the class learnt and what it did not is what counts (lernapps/practice#19). The material, photos of
 worksheets for a made-to-measure app, is seen only while building. So the creator's assistant writes the scope,
 `src/scope.md`: long continuous prose in its own words, one part per chapter and per page, each naming its page, and
-what belongs to it and what does not. It is no page for the learner: the build writes it at `scope/` beside the pages,
-for no menu and no search engine, and each tutor page links it with a guide: read it before judging an open answer;
+what belongs to it and what does not. It is no page for the learner: the build writes a scope beside each page
+(`<chapter>/<page>/scope/`, the page's part with what belongs to the scope and what does not), combines all of a
+chapter beside the chapter and the whole beside the app, each linking one level up, for no menu and no search engine;
+each tutor page links its page's scope (`scope/` in place of `tutor/`) with a guide: read it before judging an open
+answer, go up when a point's source is on another page;
 if it cannot be fetched (security settings may block it, which an assistant notices itself), give the learner its full
 address and ask them to allow it, and until then judge no open answer and answer nothing about the content from
 general knowledge. This revises `dec-tutor-page`: the tutor page stays the one source of the task, the scope is the

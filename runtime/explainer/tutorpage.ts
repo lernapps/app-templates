@@ -56,7 +56,7 @@ interface Words {
   intro: string;
   parents: string;
   toPage: string;
-  /** The link to the scope and what to do when it cannot be fetched; {page} is the page's path. */
+  /** The link to the page's scope and what to do when it cannot be fetched. */
   scope: string;
   guideTitle: string;
   guide: string[];
@@ -91,7 +91,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     parents: "Eltern und Lehrkräfte sehen hier, was der Tutor bekommt.",
     toPage: "Zur Seite",
     scope:
-      "Der ganze Lernumfang, mit dem, was dazugehört und was nicht: [Scope](../../../scope/). Lies ihn, bevor du eine offene Antwort beurteilst. Seine volle Adresse ist die dieser Tutor-Seite mit `scope/` statt `{page}tutor/`. Konntest du ihn nicht abrufen, etwa wegen Sicherheitseinstellungen, nenn dem Kind genau diese volle Adresse und bitte es, sie freizugeben; ruf sie danach noch einmal ab. Bis dahin beurteilst du keine offene Antwort und antwortest nichts zum Inhalt aus Allgemeinwissen.",
+      "Der Lernumfang dieser Seite, mit dem, was dazugehört und was nicht: [Scope](../scope/). Lies ihn, bevor du eine offene Antwort beurteilst; liegt die Quelle eines Punkts auf einer anderen Seite, führt er zum Scope des Kapitels. Seine volle Adresse ist die dieser Tutor-Seite mit `scope/` statt `tutor/`. Konntest du ihn nicht abrufen, etwa wegen Sicherheitseinstellungen, nenn dem Kind genau diese volle Adresse und bitte es, sie freizugeben; ruf sie danach noch einmal ab. Bis dahin beurteilst du keine offene Antwort und antwortest nichts zum Inhalt aus Allgemeinwissen.",
     guideTitle: "So leitest du an",
     guide: [
       "Antworte kurz: höchstens drei Sätze und eine Frage. Keine Überschriften, keine Listen.",
@@ -140,7 +140,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     parents: "Parents and teachers see here what the tutor gets.",
     toPage: "To the page",
     scope:
-      "The whole learning path, with what belongs to it and what does not: [scope](../../../scope/). Read it before you judge an open answer. Its full address is the one of this tutor page with `scope/` in place of `{page}tutor/`. If you could not fetch it, for example because of security settings, give the child exactly this full address and ask them to allow it; then fetch it again. Until then, judge no open answer and answer nothing about the content from general knowledge.",
+      "The learning path of this page, with what belongs to it and what does not: [scope](../scope/). Read it before you judge an open answer; if the source of a point is on another page, it leads to the chapter's scope. Its full address is the one of this tutor page with `scope/` in place of `tutor/`. If you could not fetch it, for example because of security settings, give the child exactly this full address and ask them to allow it; then fetch it again. Until then, judge no open answer and answer nothing about the content from general knowledge.",
     guideTitle: "How you guide",
     guide: [
       "Answer briefly: three sentences and one question at most. No headings, no lists.",
@@ -477,7 +477,7 @@ function pageMarkdown(
     "",
     `${words.parents} [${words.toPage}](../)`,
     "",
-    ...(site.scope === undefined ? [] : [words.scope.replace("{page}", `${page.chapter}/${page.id}/`), ""]),
+    ...(site.scope === undefined ? [] : [words.scope, ""]),
     `## ${words.guideTitle}`,
     "",
     ...words.guide.map((text) => `- ${text}`),

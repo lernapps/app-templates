@@ -2,7 +2,7 @@
 // page has its part, and it ends with what belongs to it and what does not; its page is for no menu and no search.
 import { describe, expect, test } from "vite-plus/test";
 import type { Chapter } from "../runtime/explainer/content.ts";
-import { scopeDocument, scopeProblems } from "../runtime/explainer/scope.ts";
+import { scopeDocument, scopeFiles, scopeProblems } from "../runtime/explainer/scope.ts";
 
 const chapters = [
   {
@@ -57,9 +57,37 @@ describe("the scope", () => {
     ]);
   });
 
-  test("its page: for no search engine, links within the language tree", () => {
-    const html = scopeDocument("Siehe [Jahreskreis](/feste/jahreskreis/).", "Judentum", "de");
+  test("a scope per page and per chapter, each with the closing parts and a link one level up; the whole at the root", () => {
+    const whole = scope(
+      "## Feste (/feste/)\n\nDas Jahr.\n\n### Jahreskreis (/feste/jahreskreis/)\n\nSabbat.\n\n### Chanukka (/feste/chanukka/)\n\nLichter.",
+    );
+    const files = scopeFiles(whole);
+    expect([...files.keys()]).toEqual(["", "feste/", "feste/jahreskreis/", "feste/chanukka/"]);
+    expect(files.get("")).toBe(whole);
+    expect(files.get("feste/jahreskreis/")?.split("\n")).toEqual([
+      "# Jahreskreis (/feste/jahreskreis/)",
+      "",
+      "Sabbat.",
+      "",
+      "## Gehört dazu",
+      "",
+      "- Feste",
+      "",
+      "## Gehört nicht dazu",
+      "",
+      "- Geschichte",
+      "",
+      "Alle Seiten des Kapitels: [Scope des Kapitels](../../scope/)",
+      "",
+    ]);
+    expect(files.get("feste/")).toContain("# Feste (/feste/)");
+    expect(files.get("feste/")).toContain("Lichter.");
+    expect(files.get("feste/")).toContain("Die ganze App: [Scope der App](../../scope/)");
+  });
+
+  test("its page: for no search engine, links within the language tree from its folder", () => {
+    const html = scopeDocument("Siehe [Jahreskreis](/feste/jahreskreis/).", "Judentum", "de", "feste/chanukka/");
     expect(html).toContain('<meta name="robots" content="noindex">');
-    expect(html).toContain('<a href="../feste/jahreskreis/">Jahreskreis</a>');
+    expect(html).toContain('<a href="../../../feste/jahreskreis/">Jahreskreis</a>');
   });
 });
