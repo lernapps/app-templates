@@ -86,10 +86,17 @@ nothing about learners, running costs).
 - **Out of scope** (owner, 2026-10-30): a direct handoff of the photo to the learner's chat (Web Share API, chat
   APIs). A first search found no documented link or API to open a chat with an image attached.
 
-### KD-03: A learning-path summary for the tutor
-- **Decision** (owner, 2026-10-30): the creator's assistant writes a short summary of the whole learning path in the
-  app's own words, from the material; every tutor page links it as background. This revises `dec-tutor-page` (one
-  source of what the tutor gets): the tutor page stays the source for the task, the summary is background only.
+### KD-03: A learning-path text for the tutor, at an address of its own
+- **Decision** (owner, 2026-10-30): the creator's assistant writes the whole learning path as long, continuous prose
+  in its own words, from the material: the exact content (facts, terms, reasons, examples), because for a test the
+  exact content matters. It is structured by the app's chapters and pages (each part names its page) and ends with
+  what belongs to the scope and what explicitly does not.
+- No new visible page or content type: chapters and pages stay as they are. The build publishes the text at an
+  address of its own, not linked in the navigation, like the tutor pages; every tutor page links it as background.
+- This revises `dec-tutor-page` (one source of what the tutor gets): the tutor page stays the source for the task,
+  the learning-path text is the source for the content.
+- lernapps/practice requires it for made-to-measure apps (the material is seen only while building); lernapps/tooling
+  checks that each part names an existing page and each content page has its part.
 
 ### KD-04: Scope: explainer, practice guidance, tooling checks
 - **Decision** (owner, 2026-10-30): the open task is built for the explainer, not for the quiz. The same increment
