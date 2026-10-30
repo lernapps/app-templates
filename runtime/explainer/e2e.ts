@@ -568,7 +568,6 @@ async function checkOpenTask(
   await expect(item.locator(".explainer-open-need"), `${exercise.id}: compare waits for an answer`).toHaveText(
     messageOf("de", "openTaskWriteFirst"),
   );
-  const total = String(exercise.points.length);
   // a reload loses no answer: the tab keeps it
   await item.getByRole("textbox", { name: messageOf("de", "openTaskAnswer") }).fill(OPEN_ANSWER);
   await page.reload();
@@ -577,19 +576,10 @@ async function checkOpenTask(
     `${exercise.id}: kept`,
   ).toHaveValue(OPEN_ANSWER);
   await answerOpenTask(item, exercise, exercise.points.length);
-  await item.getByRole("button", { name: messageOf("de", "openTaskEvaluate") }).click();
-  await expect(item.locator(".explainer-open-result"), `${exercise.id}: all points ticked`).toHaveText(
-    messageOf("de", "openTaskRight", { total }),
-  );
   await expect(item.locator("details.explainer-solution"), `${exercise.id}: the Lösung after the answer`).toBeVisible();
   await item.getByRole("button", { name: messageOf("de", "openTaskChange") }).click();
+  await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung while writing`).toBeHidden();
   await item.getByRole("button", { name: messageOf("de", "openTaskCompare") }).click();
-  await item.getByRole("checkbox").last().uncheck();
-  await item.getByRole("button", { name: messageOf("de", "openTaskEvaluate") }).click();
-  const result = item.locator(".explainer-open-result");
-  await expect(result, `${exercise.id}: one point not ticked`).toContainText(
-    messageOf("de", "openTaskPartly", { n: String(exercise.points.length - 1), total }),
-  );
   // each point of the content links its source while the learner compares
   await expect(
     item.locator(".explainer-open-check").getByRole("link", { name: messageOf("de", "openTaskSource") }),

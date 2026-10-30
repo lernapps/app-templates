@@ -72,15 +72,15 @@ export class Progress {
   }
 
   /**
-   * The learner evaluated the open task `id`: `ticked` of `total` points, the `missed` ones named (P2, P4), the answer
-   * as text (or that it is a photo). Its model answer shows then; a new evaluation after a changed answer counts again.
+   * The open task `id` as the learner compared it: `ticked` of `total` points, the `missed` ones named (P2, P4), the
+   * answer as text (or that it is a photo). `attempt`: a new comparing, which counts as a try; a changed tick changes
+   * the same try. Its model answer shows once compared.
    */
-  compared(id: string, ticked: number, total: number, missed: string, input: string): void {
+  compared(id: string, ticked: number, total: number, missed: string, input: string, attempt = true): void {
     this.#last = id;
     const state = this.state(id, undefined);
-    if (state.rightAt !== undefined) return;
-    const attempts = state.attempts + 1;
-    const { points: _points, input: _input, ...rest } = state;
+    const attempts = attempt ? state.attempts + 1 : Math.max(state.attempts, 1);
+    const { points: _points, input: _input, rightAt: _rightAt, ...rest } = state;
     this.#set(id, undefined, {
       ...rest,
       attempts,

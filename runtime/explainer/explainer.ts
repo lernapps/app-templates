@@ -745,13 +745,14 @@ export function startExplainer(root: Document = document): void {
     } else if (data.kind === "open") {
       const { id, lang, points } = data;
       startOpenTask(element, data, {
-        onResult: (result) =>
+        onResult: (result, attempt) =>
           progress.compared(
             id,
             result.ticked.length,
             points.length,
             pointNames(result.missed),
             result.photo ? message(lang, "resultPhoto") : shortened(result.text ?? ""),
+            attempt,
           ),
       });
     } else startGenerated(element, data, progress);

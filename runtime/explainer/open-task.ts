@@ -1,9 +1,10 @@
 // An open task in the browser (explainer.ts, assessment-client.ts): the learner answers first, then compares. "Deine
 // Lösung" offers the ways the task allows: typing into a text field, or writing on paper and taking a photo of the
 // sheet. "Vergleichen" opens once there is text or a photo; it shows the points of a good answer as tick boxes ("Was
-// steht in deiner Antwort?"), each point of the content with its link to read up: ticking makes the learner read each
-// point. On a content page "Auswerten" then says right (all ticked), partly right (some) or not yet (none), without
-// repeating the points, and opens the model answer ("Lösung"), which stays shut before the learner's own answer. In a self-assessment there is no result and no model answer: the ticks are the
+// steht in deiner Antwort?"), each point of the content with its link to read up, and on a content page it opens the
+// model answer ("Lösung"), which stays shut before the learner's own answer. Ticking makes the learner read each point;
+// the ticks give right (all), partly right (some) or wrong (none) for the result line, at once, without a step of
+// their own. In a self-assessment there is no model answer: the ticks are the
 // answer, read at "Auswerten" of the whole run. The photo is shown from memory (an object URL), never stored or sent.
 // On a content page the text, the way chosen and the ticks are kept while the tab is open (sessionStorage through
 // @lernapps/tooling/storage, under the app's prefix), so that a reload loses no answer and a new day starts afresh; a
@@ -45,10 +46,10 @@ const isKept = (value: unknown): value is Kept => {
 };
 
 export interface OpenTaskOptions {
-  /** In a self-assessment: no "Auswerten" of its own, no result, no model answer. */
+  /** In a self-assessment: no model answer. */
   assessment?: boolean;
-  /** The learner evaluated it (on a page), or changed a tick (in a self-assessment). */
-  onResult?: (result: OpenTaskResult) => void;
+  /** The learner compared (`attempt`: a new try) or changed a tick (the same try). */
+  onResult?: (result: OpenTaskResult, attempt: boolean) => void;
 }
 
 /** The state of an open task as `ticked` of `total` points give it, and the points missed. */
@@ -124,12 +125,8 @@ export function startOpenTask(
       )
       .join(""),
     `</fieldset>`,
-    `<div class="explainer-open-result" role="status" hidden></div>`,
     `<p class="question-actions">`,
     `<button type="button" class="explainer-open-compare">${t("openTaskCompare")}</button>`,
-    options.assessment
-      ? ""
-      : ` <button type="button" class="explainer-open-evaluate" hidden>${t("openTaskEvaluate")}</button>`,
     ` <button type="button" class="explainer-open-change" hidden>${t("openTaskChange")}</button>`,
     `</p>`,
   ].join("");
@@ -147,9 +144,7 @@ export function startOpenTask(
   const shoot = part<HTMLElement>(".explainer-open-shoot span");
   const need = part<HTMLElement>(".explainer-open-need");
   const check = part<HTMLFieldSetElement>(".explainer-open-check");
-  const result = part<HTMLElement>(".explainer-open-result");
   const compare = part<HTMLButtonElement>(".explainer-open-compare");
-  const evaluate = part<HTMLButtonElement>(".explainer-open-evaluate");
   const change = part<HTMLButtonElement>(".explainer-open-change");
 
   const ready = () => (way === "text" ? text.trim() !== "" : photo !== undefined);
@@ -166,12 +161,12 @@ export function startOpenTask(
     if (write) write.hidden = compared;
     if (check) check.hidden = !compared;
     if (compare) compare.hidden = compared;
-    if (evaluate) evaluate.hidden = !compared;
+    // the model answer opens with the comparing, after the learner's own answer
+    if (solution) solution.hidden = !compared;
     if (change) change.hidden = !compared;
     if (need)
       need.textContent =
         compared || ready() ? "" : message(lang, way === "text" ? "openTaskWriteFirst" : "openTaskPhotoFirst");
-    if (!compared && result) result.hidden = true;
   };
 
   for (const radio of live.querySelectorAll<HTMLInputElement>(".explainer-open-choice input")) {
@@ -210,7 +205,7 @@ export function startOpenTask(
     show();
     const legend = check?.querySelector<HTMLElement>("legend");
     if (legend) moveFocus(legend);
-    if (options.assessment) options.onResult?.(current());
+    options.onResult?.(current(), true);
   });
   change?.addEventListener("click", () => {
     compared = false;
@@ -223,24 +218,9 @@ export function startOpenTask(
       const index = Number(box.value);
       ticked = box.checked ? [...ticked, index].sort((a, b) => a - b) : ticked.filter((one) => one !== index);
       keep();
-      if (options.assessment) options.onResult?.(current());
+      options.onResult?.(current(), false);
     });
   }
-  evaluate?.addEventListener("click", () => {
-    const now = current();
-    if (result) {
-      const total = String(points.length);
-      const key =
-        now.state === "richtig" ? "openTaskRight" : now.state === "teilweise" ? "openTaskPartly" : "openTaskWrong";
-      // the points stay above with their sources: the result does not repeat them
-      result.innerHTML = `<p><strong>${t(key, { n: String(now.ticked.length), total })}</strong></p>`;
-      result.hidden = false;
-      result.dataset["state"] = now.state;
-    }
-    // the model answer opens after the learner's own answer
-    if (solution) solution.hidden = false;
-    options.onResult?.(now);
-  });
   // what the tab kept: the way, the text and the ticks
   for (const radio of live.querySelectorAll<HTMLInputElement>(".explainer-open-choice input"))
     radio.checked = radio.value === way;
