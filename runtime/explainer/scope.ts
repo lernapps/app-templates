@@ -1,9 +1,9 @@
 // The scope of an explainer, for the tutor: the whole learning path in the creator's own words, from the material, as
 // continuous prose. Each content page says what it teaches (`scope` in its YAML), a chapter may say what it is about as
-// a whole, and src/app.yaml says what the app is about and what belongs to the scope and what does not (`scope: { text,
-// in, out }`); with the app's, every page has its own (load.ts checks it). The build writes, in each language tree, a
-// scope beside each content page, <chapter>/<page>/scope/: the page's text and what belongs to the scope and what does
-// not, with a link to its chapter's; beside each chapter, <chapter>/scope/: its text and its pages', with a link to
+// a whole, and src/app.yaml says what the app is about and what does not belong to the scope (`scope: { text, out }`;
+// what belongs to it is what the pages say); with the app's, every page has its own (load.ts checks it). The build
+// writes, in each language tree, a scope beside each content page, <chapter>/<page>/scope/: the page's text and what
+// does not belong to the scope, with a link to its chapter's; beside each chapter, <chapter>/scope/: its text and its pages', with a link to
 // the app's; and the whole at scope/. Each as its Markdown (index.md) and a page that no menu links (index.html,
 // noindex). Each tutor page links its page's scope (../scope/), so that a tutor judges an open answer by the material,
 // not by general knowledge, and goes up to the chapter or the app when a point's source is on another page. The
@@ -15,16 +15,14 @@ import { inLanguage, type Site, type Text } from "./content.ts";
 /** The folder of a scope, below the app's root, a chapter's folder or a page's folder in each language tree. */
 export const SCOPE_PAGE = "scope/";
 
-/** The words of a scope by language: its closing parts and the links one level up. */
+/** The words of a scope by language: its closing part and the links one level up. */
 const WORDS = {
   de: {
-    in: "Gehört dazu",
     out: "Gehört nicht dazu",
     chapter: "Alle Seiten des Kapitels: [Scope des Kapitels](../../scope/)",
     app: "Die ganze App: [Scope der App](../../scope/)",
   },
   en: {
-    in: "In scope",
     out: "Out of scope",
     chapter: "All pages of the chapter: [scope of the chapter](../../scope/)",
     app: "The whole app: [scope of the app](../../scope/)",
@@ -42,12 +40,7 @@ export function scopeFiles(site: Site, lang: string): Map<string, string> {
   if (scope === undefined) return files;
   const words = lang === "de" ? WORDS.de : WORDS.en;
   const own = (text: Text | undefined) => (text === undefined ? "" : inLanguage(text, lang).trim());
-  const closing = [
-    `## ${words.in}`,
-    scope.in.map((item) => `- ${own(item)}`).join("\n"),
-    `## ${words.out}`,
-    scope.out.map((item) => `- ${own(item)}`).join("\n"),
-  ];
+  const closing = [`## ${words.out}`, scope.out.map((item) => `- ${own(item)}`).join("\n")];
   const join = (...parts: string[]) => `${parts.filter((part) => part !== "").join("\n\n")}\n`;
   const whole: string[] = [`# ${own(site.app.title)}`, own(scope.text)];
   for (const chapter of site.chapters) {

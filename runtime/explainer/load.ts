@@ -423,7 +423,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       } else if (app.scope === undefined && page.scope !== undefined) {
         problems.file(
           page.file,
-          "has a scope, but src/app.yaml has none; add scope: { in: [...], out: [...] } to src/app.yaml, what belongs to the scope and what does not",
+          "has a scope, but src/app.yaml has none; add scope: { out: [...] } to src/app.yaml, what does not belong to the scope",
         );
       }
     }

@@ -14,10 +14,6 @@ scope:
     Prozentsatz $p\,\%$ (welcher Anteil gemeint ist) und dem Prozentwert $W$ (der Teil, in der Einheit des Ganzen). Jede
     Seite nimmt eine der drei Größen als die gesuchte und zeigt, wie man sie aus den beiden anderen ausrechnet. Der Weg
     über 1 % hilft auf allen drei Seiten: Das Ganze geteilt durch 100 ist 1 %.
-  in:
-    - "die drei Größen Grundwert, Prozentsatz und Prozentwert und was sie bedeuten"
-    - "die drei Formeln und der Weg über 1 %"
-    - "Sachaufgaben zu Rabatt, Anteilen in einer Klasse und dem Akku eines Handys"
   out:
     - "Zinsen und Zinseszins"
     - "Prozentpunkte und die Veränderung eines Prozentsatzes"

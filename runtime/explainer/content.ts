@@ -52,10 +52,9 @@ export interface App {
   tutor?: {
     rules?: Text;
   };
-  /** The scope for the tutor: what the app is about, what belongs to it and what does not (scope.ts). */
+  /** The scope for the tutor: what the app is about, and what does not belong to it (scope.ts). */
   scope?: {
     text?: Text;
-    in: readonly Text[];
     out: readonly Text[];
   };
 }

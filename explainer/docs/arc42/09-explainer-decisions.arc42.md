@@ -130,10 +130,11 @@ To judge an open answer, a tutor needs the exact content of the whole learning p
 a test, what the class learnt and what it did not is what counts (lernapps/practice#19). The material, photos of
 worksheets for a made-to-measure app, is seen only while building. So the creator's assistant writes the scope: long
 continuous prose in its own words, beside the content it describes: `scope` in each page's YAML, optionally in a
-chapter's, and in `src/app.yaml` what the app is about and what belongs to it and what does not; with the app's, every
+chapter's, and in `src/app.yaml` what the app is about and what does not belong to it (what belongs to it is what the pages
+say); with the app's, every
 page has its own, which the build checks. A scope beside its page is kept in step with it and needs no paths that
 could go wrong (owner, 2026-10-30; first built as one file `src/scope.md`). It is no page for the learner: the build writes a scope beside each page
-(`<chapter>/<page>/scope/`, the page's part with what belongs to the scope and what does not), combines all of a
+(`<chapter>/<page>/scope/`, the page's part with what does not belong to the scope), combines all of a
 chapter beside the chapter and the whole beside the app, each linking one level up, for no menu and no search engine;
 each tutor page links its page's scope (`scope/` in place of `tutor/`) with a guide: read it before judging an open
 answer, go up when a point's source is on another page;

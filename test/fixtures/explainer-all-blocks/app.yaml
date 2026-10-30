@@ -21,7 +21,5 @@ scope:
       de: "Eine App mit zwei Kapiteln zu je zwei Seiten. Jede Seite zeigt Grundlagen, eine Anwendung und Übungen.",
       en: "An app of two chapters of two pages each. Every page shows basics, an application and exercises.",
     }
-  in:
-    - { de: "die Grundlagen und Anwendungen jeder Seite", en: "the basics and applications of every page" }
   out:
     - { de: "alles, was keine Seite zeigt", en: "anything no page shows" }

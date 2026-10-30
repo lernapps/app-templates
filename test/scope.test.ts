@@ -21,7 +21,7 @@ const edit = (root: string, file: string, from: RegExp, to: string) => {
 };
 
 describe("the scope", () => {
-  test("a scope per page and per chapter, each with the closing parts and a link one level up; the whole at the root", () => {
+  test("a scope per page and per chapter, each with what does not belong to it and a link one level up; the whole at the root", () => {
     const files = scopeFiles(loadSite(example(), 5), "de");
     expect([...files.keys()]).toEqual([
       "prozent/",
@@ -33,7 +33,6 @@ describe("the scope", () => {
     const page = files.get("prozent/prozentsatz/") ?? "";
     expect(page.split("\n")[0]).toBe("# Prozentsatz");
     expect(page).toContain("Gesucht ist, welcher Anteil der Teil vom Ganzen ist");
-    expect(page).toContain("## Gehört dazu\n\n- die drei Größen");
     expect(page).toContain("## Gehört nicht dazu\n\n- Zinsen und Zinseszins");
     expect(page.trimEnd().split("\n").at(-1)).toBe("Alle Seiten des Kapitels: [Scope des Kapitels](../../scope/)");
     const chapter = files.get("prozent/") ?? "";

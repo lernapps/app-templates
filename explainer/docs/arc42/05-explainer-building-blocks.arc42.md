@@ -300,8 +300,8 @@ requires: if-archetype-content
 Built, optional per app, required by lernapps/practice. The scope is the whole learning path for a tutor, written by
 the creator's assistant in its own words from the material: `scope` in each page's YAML says what the page teaches,
 optionally `scope` in a chapter's what it is about, and `scope` in `src/app.yaml` what the app is about and what
-belongs to the scope and what does not (`dec-scope`). With the app's, the build requires a page's on every page, and
-writes a scope per content page (`<chapter>/<page>/scope/`: its text and the closing parts), per chapter
+does not belong to the scope (`dec-scope`). With the app's, the build requires a page's on every page, and
+writes a scope per content page (`<chapter>/<page>/scope/`: its text and what does not belong to the scope), per chapter
 (`<chapter>/scope/`: all its pages) and for the whole app (`scope/`), in each language, each linking one level up, as
 Markdown and a page for no menu and no search engine; every tutor page links its page's scope.
 

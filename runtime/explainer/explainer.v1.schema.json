@@ -141,19 +141,11 @@
           "description": "The scope for the tutor, never shown to the learner: with it every page has its scope, and the build writes the scope beside each page, chapter and the app, linked from every tutor page. The tutor judges open answers by it, not by general knowledge.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["in", "out"],
+          "required": ["out"],
           "properties": {
             "text": {
-              "description": "Optional: what the app is about as a whole, in your own words.",
+              "description": "Optional: what the app is about as a whole, in your own words, and where its weight lies (what a test asks most). What belongs to the scope is what the pages' scopes say.",
               "$ref": "#/$defs/markdown"
-            },
-            "in": {
-              "description": "What belongs to the scope, one item each.",
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "$ref": "#/$defs/text"
-              }
             },
             "out": {
               "description": "What does not belong to it, one item each: what a learner or tutor might expect but the material does not teach.",
