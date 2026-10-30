@@ -270,6 +270,12 @@ Step 5, practice: skills, plan template, validation (D6)
   promotes it in the practice skills (instead of `example` + `note` "Musterlösung") and checks its consistency in
   lernapps/tooling (each point's source exists, the model answer is present, the summary exists).
 
+### KD-05: Comparing is the only step; the points link their sources
+- **Decision** (owner, 2026-10-30, from two click paths): while comparing, the learner sees the expected points, each
+  point of the content with its link "Nachlesen"; the ticks serve to make the learner read each point. No step
+  "Auswerten" and no result text that repeats the points: "Vergleichen" opens the model answer, the ticks count at once
+  for the result line and the self-assessment. "Antwort ändern" shuts the model answer again until the next comparing.
+
 ## Notes
 
 ### Platform fit (pdt42, lernapps/docs, read 2026-10-30)
