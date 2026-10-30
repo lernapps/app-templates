@@ -216,8 +216,9 @@ Completed)
 Step 4, tooling (D5), branch lernapps/tooling `feat/open-task`
 - [x] skill `lernapps-explainer`: open task (`exercises.md`), runtime, scope, tutor (`runtime.md`), `structure.md`
 - [x] rules and rubric items `explainer-open-points`, `explainer-scope-matches` (warning)
-- [ ] `fitness.storage`: measured by visiting pages without input, so storage that starts with input (an open task's
-      answer, the tutor's assistant once chosen) is measured `none`: open question to the owner
+- [x] `fitness.storage`: a page whose scripts read stored data while loading counts as `device` (owner: "Tutor
+      impliziert device", no extra marker; `measure` in check/check.ts). All catalog entries checked:
+      anorganische-chemie measured `device` and was fixed (lernapps/apps#131); naturwunder-quiz stays `none`
 - [ ] move tooling's `appTemplates` pin once app-templates' feat/open-task is merged
 
 Step 5, practice: skills, plan template, validation (D6)
@@ -250,6 +251,10 @@ Step 5, practice: skills, plan template, validation (D6)
 ## Commit
 
 ### Tasks
+
+- [ ] app-templates: pull request of feat/open-task, squashed, merged (owner: "Alles fertig machen", 2026-10-30)
+- [ ] tooling: `appTemplates` pin at app-templates' merge; pull request of feat/open-task, squashed, merged
+- [ ] practice: step 5 on a branch of its own, merged
 
 ### Completed
 
