@@ -97,7 +97,8 @@ nothing about learners, running costs).
   content point's `source` names an existing page and section. `parseRef` learns nested anchors (`#a/b`).
 - **Without JavaScript**: task, points and the model answer in a `<details>` "Lösung", as every exercise has; this
   satisfies tooling's `explainer-readable-without-js`. No gate without JavaScript.
-- **With JavaScript**: a text field, or "Foto aufnehmen" (`<input type="file" accept="image/*" capture>`, shown as an
+- **With JavaScript**: first the learner chooses how to answer, two equal options "Hier tippen" and "Auf Papier,
+  dann Foto" (owner, 2026-10-30: the photo is an alternative to typing, not an extra). Then a text field, or "Foto aufnehmen" (`<input type="file" accept="image/*" capture>`, shown as an
   object URL, kept in memory only). "Vergleichen" opens once there is text or a photo; then the checklist (tick
   boxes) and "Lösung" (the model answer). Nothing is stored (KD-02); a reload loses the answer.
 
