@@ -198,13 +198,9 @@ nothing about learners, running costs).
 
 ### Tasks
 
-Step 1, app-templates: result `teilweise` (D2), on this branch
-- [ ] `assessment.ts`: state `teilweise`, `P<n>` for missed points, query, prompt, old stored results stay valid
-- [ ] `assessment-client.ts`: evaluate and score; `pageResults`/`bandOf`: `teilweise` counts half
-- [ ] `tasks.ts`: `AssessmentAnswer` may say `partly`
-- [ ] `result.ts`: state and status line for a partly right task
-- [ ] messages `de.json`/`en.json`, tutor wording (`assessment-page.ts`, `tutorpage.ts`)
-- [ ] tests; arc42 (`dec-self-assessment-result`, glossary)
+Step 1, app-templates: result `teilweise` (D2), on this branch: done (see Completed)
+- [ ] `result.ts` (the page's result line, `TaskState`): moved to step 2, since only the open task gives a partly
+      right answer on a page
 
 Step 2, app-templates: block `open-task` (D1, D3)
 Step 3, app-templates: learning-path text (D4)
@@ -212,6 +208,13 @@ Step 4, tooling: pin, rules, skills, rubric (D5)
 Step 5, practice: skills, plan template, validation (D6)
 
 ### Completed
+
+- [x] Step 1: result `teilweise` in the self-assessment (`assessment.ts`: state, `missed` as `P<n>`, query, prompt,
+      stored results; `assessment-client.ts`: evaluate, score; `bandOf`/`pageResults`: counts half; `tasks.ts`:
+      `AssessmentAnswer.partly`/`missed`; messages de/en; the tutor's reading guide on the self-assessment's tutor
+      page; tests; arc42 `dec-self-assessment-partly` and the self-assessment interface)
+- [x] `scripts/pre-push.ts`: `.mcp.json` and `.vibe/` in the positive list (the test failed on main already for
+      `.mcp.json`)
 
 ## Commit
 

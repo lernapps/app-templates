@@ -158,18 +158,23 @@ export function stepHint(site: Site): string | undefined {
 
 // What the browser keeps and shows of one run.
 
-/** What became of one exercise of a run: its task number, right, wrong or open (not answered), the input and the mistake. */
+/**
+ * What became of one exercise of a run: its task number, right, partly right, wrong or open (not answered), the input,
+ * the mistake and the points it missed.
+ */
 export interface ItemResult {
   key: string;
   /** The exercise it was, /<chapter>/<page>/#<exercise>: a kept result whose exercise moved does not count. */
   ref: string;
   /** The task number of a generated exercise. */
   number?: number;
-  state: "richtig" | "falsch" | "offen";
-  /** The input as text, for a wrong answer. */
+  state: "richtig" | "teilweise" | "falsch" | "offen";
+  /** The input as text, for a wrong or partly right answer. */
   input?: string;
   /** The typical mistake it matches, from 1 (F1), for a wrong answer of a generated exercise. */
   mistake?: number;
+  /** The points of a good answer it missed, each from 1 (P1), for a partly right or wrong answer. */
+  missed?: number[];
 }
 
 /** The last run of a self-assessment, as it stays on the device. */
@@ -178,7 +183,7 @@ export interface StoredResult {
   items: ItemResult[];
 }
 
-const STATES: readonly string[] = ["richtig", "falsch", "offen"];
+const STATES: readonly string[] = ["richtig", "teilweise", "falsch", "offen"];
 
 /** Whether `value` is a result as the device keeps it. */
 export function isStoredResult(value: unknown): value is StoredResult {
@@ -195,7 +200,9 @@ export function isStoredResult(value: unknown): value is StoredResult {
         STATES.includes(String(item.state)) &&
         (item.number === undefined || Number.isInteger(item.number)) &&
         (item.input === undefined || typeof item.input === "string") &&
-        (item.mistake === undefined || Number.isInteger(item.mistake)),
+        (item.mistake === undefined || Number.isInteger(item.mistake)) &&
+        (item.missed === undefined ||
+          (Array.isArray(item.missed) && item.missed.every((point) => Number.isInteger(point)))),
     )
   );
 }
@@ -203,11 +210,12 @@ export function isStoredResult(value: unknown): value is StoredResult {
 /** How a content page did: known, partly, to read; not asked when no exercise of it was in the self-assessment. */
 export type Band = "known" | "partly" | "read" | "unasked";
 
-/** A content page in the result: the exercises of it that were asked, and how many of them were right. */
+/** A content page in the result: the exercises of it that were asked, and how many of them were right or partly right. */
 export interface PageResult {
   /** <chapter>/<page>/, within the language tree. */
   page: string;
   right: number;
+  partly: number;
   total: number;
   band: Band;
 }
@@ -221,13 +229,13 @@ export const BAND_MESSAGES = {
 } as const;
 
 /**
- * The band of `right` of `total`: all right of two or more, at least half, less; not asked for none. One task alone is
- * too little to say a page is known: right, it is "partly".
+ * The band of `right` and `partly` of `total`: all right of two or more, at least half, less; not asked for none. A
+ * partly right task counts half. One task alone is too little to say a page is known: right, it is "partly".
  */
-export function bandOf(right: number, total: number): Band {
+export function bandOf(right: number, total: number, partly = 0): Band {
   if (total === 0) return "unasked";
   if (right === total && total >= 2) return "known";
-  return right * 2 >= total ? "partly" : "read";
+  return right * 2 + partly >= total ? "partly" : "read";
 }
 
 /**
@@ -242,16 +250,20 @@ export function pageResults(
   return pages.map((page) => {
     const asked = results.filter((result) => pageOf[result.key] === page);
     const right = asked.filter((result) => result.state === "richtig").length;
-    return { page, right, total: asked.length, band: bandOf(right, asked.length) };
+    const partly = asked.filter((result) => result.state === "teilweise").length;
+    return { page, right, partly, total: asked.length, band: bandOf(right, asked.length, partly) };
   });
 }
 
-/** The value of one exercise in the query of the tutor page: 17-falsch-F1, richtig, 3-offen. */
+/** The value of one exercise in the query of the tutor page: 17-falsch-F1, richtig, 3-offen, teilweise-P2P3. */
 export function resultValue(result: ItemResult): string {
   return [
     ...(result.number === undefined ? [] : [String(result.number)]),
     result.state,
     ...(result.state === "falsch" && result.mistake !== undefined ? [`F${result.mistake}`] : []),
+    ...(result.missed !== undefined && result.missed.length > 0
+      ? [result.missed.map((point) => `P${point}`).join("")]
+      : []),
   ].join("-");
 }
 
@@ -272,6 +284,14 @@ export interface PromptItem {
 
 const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
 
+/** The words of each state in a line of the prompt. */
+const STATE_MESSAGES = {
+  richtig: "assessmentRight",
+  teilweise: "assessmentPartlyRight",
+  falsch: "assessmentWrong",
+  offen: "assessmentOpen",
+} as const;
+
 /**
  * The prompt that takes a run to a tutor, in `lang`, in the learner's voice: the tutor page with the results in its
  * address first, then the result of each content page as the learner saw it (its title in `pages`), so that the tutor
@@ -291,21 +311,23 @@ export function assessmentPrompt(
   const bands = pages.map((page) =>
     page.band === "unasked"
       ? `- ${message(lang, "assessmentPageUnasked", { page: oneLine(page.title) })}`
-      : `- ${message(lang, "assessmentPageLine", {
+      : `- ${message(lang, page.partly > 0 ? "assessmentPageLinePartly" : "assessmentPageLine", {
           page: oneLine(page.title),
           band: message(lang, BAND_MESSAGES[page.band]),
           right: String(page.right),
+          partly: String(page.partly),
           total: String(page.total),
         })}`,
   );
   const lines = results.map((result) => {
     const item = items.find((candidate) => candidate.key === result.key);
-    const state = message(
-      lang,
-      result.state === "richtig" ? "assessmentRight" : result.state === "falsch" ? "assessmentWrong" : "assessmentOpen",
-    );
+    const state = message(lang, STATE_MESSAGES[result.state]);
+    const missed =
+      result.missed !== undefined && result.missed.length > 0
+        ? ` ${message(lang, "assessmentMissed", { points: result.missed.map((point) => `P${point}`).join(", ") })}`
+        : "";
     const input =
-      result.state === "falsch" && result.input !== undefined
+      (result.state === "falsch" || result.state === "teilweise") && result.input !== undefined
         ? ` ${message(lang, "assessmentInput", { input: oneLine(result.input) })}`
         : "";
     return `- ${message(lang, "assessmentLine", {
@@ -314,7 +336,7 @@ export function assessmentPrompt(
       exercise: item?.exercise ?? "",
       number: result.number === undefined ? "" : message(lang, "resultNumber", { n: String(result.number) }),
       state,
-    })}${input}`;
+    })}${missed}${input}`;
   });
   // back to a running chat: the result first, the tutor page last, as the result line of a page has it
   if (opening === "back") {

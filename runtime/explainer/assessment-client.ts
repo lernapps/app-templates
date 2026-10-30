@@ -248,9 +248,10 @@ export function startAssessment(root: Document, ways: TutorWays): void {
         if (answer.correct) return { ...base, state: "richtig" };
         return {
           ...base,
-          state: "falsch",
+          state: answer.partly === true ? "teilweise" : "falsch",
           ...(answer.answer === undefined ? {} : { input: answer.answer }),
-          ...(answer.mistake === undefined ? {} : { mistake: answer.mistake + 1 }),
+          ...(answer.mistake === undefined || answer.partly === true ? {} : { mistake: answer.mistake + 1 }),
+          ...(answer.missed === undefined ? {} : { missed: answer.missed.map((point) => point + 1) }),
         };
       }
       if (!run?.question || !form) return { ...base, state: "offen" };
@@ -283,7 +284,13 @@ export function startAssessment(root: Document, ways: TutorWays): void {
       results,
     );
     const right = results.filter((one) => one.state === "richtig").length;
-    if (score) score.textContent = t("assessmentScore", { right: String(right), total: String(results.length) });
+    const partly = results.filter((one) => one.state === "teilweise").length;
+    if (score)
+      score.textContent = t(partly > 0 ? "assessmentScorePartly" : "assessmentScore", {
+        right: String(right),
+        partly: String(partly),
+        total: String(results.length),
+      });
     if (advice) {
       const open = pages.some((page) => page.band === "read" || page.band === "partly");
       advice.textContent = t(open ? "assessmentAdvice" : "assessmentAllKnown");
@@ -304,7 +311,11 @@ export function startAssessment(root: Document, ways: TutorWays): void {
           if (page.total > 0) {
             const count = root.createElement("span");
             count.className = "explainer-assessment-count";
-            count.textContent = t("assessmentPageScore", { right: String(page.right), total: String(page.total) });
+            count.textContent = t(page.partly > 0 ? "assessmentPageScorePartly" : "assessmentPageScore", {
+              right: String(page.right),
+              partly: String(page.partly),
+              total: String(page.total),
+            });
             item.append(" ", count);
           }
           return item;

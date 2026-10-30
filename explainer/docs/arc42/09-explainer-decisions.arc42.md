@@ -275,6 +275,24 @@ addresses: qg-understandable, qg-explainer-readable-without-js
 :::
 ```
 
+## A Partly Right Answer Counts Half
+
+An answer may be partly right: an open answer has some, not all, points of a good answer (lernapps/practice#19). It
+counts half, so that a page with one right and one partly right of three is "look at it again", and its result
+`teilweise` names the points it missed (`P2`) as a wrong one names its mistake (`F1`). An exercise component may say so
+as well (`partly`, `missed`). Rejected: counting it as wrong (writing half an answer would count as writing none) or
+as right (a page would be "known" with points missing).
+
+```arc42
+:::decision
+id: dec-self-assessment-partly
+title: A partly right answer counts half and names the points it missed
+status: accepted
+date: 2026-10-30
+addresses: qg-understandable
+:::
+```
+
 ## The Last Result of a Self-Assessment Stays on the Device
 
 The learner should find their result again, and a tutor should be able to accompany them from it. So the result of

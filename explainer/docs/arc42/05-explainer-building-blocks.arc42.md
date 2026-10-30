@@ -423,8 +423,9 @@ implements: concept-tutor
 #### Self-assessment interface
 
 The build step writes the page, the offer and the tutor page of each self-assessment (`assessment-page.ts`); the client
-module starts it (`assessment-client.ts`). Its addresses, the query of its tutor page (`?a1=17-falsch-F1&a2=richtig`:
-each exercise by its key in order, its task number, `richtig`, `falsch` or `offen`, the typical mistake), the lines of
+module starts it (`assessment-client.ts`). Its addresses, the query of its tutor page (`?a1=17-falsch-F1&a2=richtig&a3=teilweise-P2`:
+each exercise by its key in order, its task number, `richtig`, `teilweise`, `falsch` or `offen`, the typical mistake,
+the points a partly right answer missed), the lines of
 its prompt and of "Zurück zum Tutor", and the result kept under `self-assessment` or `self-assessment:<chapter>` are a
 contract with every tutor and with the result kept on a device.
 

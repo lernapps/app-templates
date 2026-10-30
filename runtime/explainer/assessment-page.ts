@@ -285,8 +285,8 @@ const WORDS: Readonly<Record<string, Words>> = {
     toAssessment: "Zur Selbsteinschätzung",
     readTitle: "So liest du ein Ergebnis",
     read: [
-      "Nach einer Runde fügt das Kind ein: das Ergebnis je Seite, eine Zeile je Aufgabe, diese Seite mit dem Ergebnis in der Adresse (z. B. `?a1=17-falsch-F1&a2=richtig&a3=offen`) und den „Link für eine neue Runde“. Nimm das Ergebnis je Seite, wie es dasteht; rechne es nicht nach.",
-      "Eine Seite mit allen Aufgaben richtig, und mindestens zwei, kann das Kind wahrscheinlich schon. Mit mindestens der Hälfte richtig soll es sie noch einmal ansehen, mit weniger genau lesen. Eine offene Aufgabe zählt als nicht richtig. Eine Seite ohne Aufgabe wurde nicht abgefragt.",
+      "Nach einer Runde fügt das Kind ein: das Ergebnis je Seite, eine Zeile je Aufgabe, diese Seite mit dem Ergebnis in der Adresse (z. B. `?a1=17-falsch-F1&a2=richtig&a3=offen&a4=teilweise-P2`) und den „Link für eine neue Runde“. Nimm das Ergebnis je Seite, wie es dasteht; rechne es nicht nach.",
+      "Eine Seite mit allen Aufgaben richtig, und mindestens zwei, kann das Kind wahrscheinlich schon. Mit mindestens der Hälfte richtig soll es sie noch einmal ansehen, mit weniger genau lesen. Eine teilweise richtige Aufgabe zählt halb; `P2` nennt einen Punkt einer guten Antwort, der ihr fehlte. Eine nicht beantwortete Aufgabe (`offen`) zählt als nicht richtig. Eine Seite ohne Aufgabe wurde nicht abgefragt.",
       "Für jedes Kapitel gilt sein letztes Ergebnis: aus der letzten Runde dieses Kapitels, sonst aus der ersten Selbsteinschätzung. Merk es dir für die Kapitel, die noch kommen.",
       "„Ich habe auf … geübt:“ kommt von „Zurück zum Tutor“ auf einer Seite: deren Tutor-Seite mit den Nummern, dann je geübter Aufgabe, wie es lief, bei einer falschen mit Eingabe und Meldung der App.",
     ],
@@ -330,8 +330,8 @@ const WORDS: Readonly<Record<string, Words>> = {
     toAssessment: "To the self-assessment",
     readTitle: "How you read a result",
     read: [
-      "After a round the child pastes: the result per page, a line per task, this page with the result in its address (e.g. `?a1=17-falsch-F1&a2=richtig&a3=offen`) and the “Link for a new round”. Take the result per page as it stands; do not work it out again.",
-      "A page with all its tasks right, and two at least, the child probably knows already. With at least half of them right it should look at it again, with fewer read it closely. An open task counts as not right. A page without a task was not asked.",
+      "After a round the child pastes: the result per page, a line per task, this page with the result in its address (e.g. `?a1=17-falsch-F1&a2=richtig&a3=offen&a4=teilweise-P2`) and the “Link for a new round”. Take the result per page as it stands; do not work it out again.",
+      "A page with all its tasks right, and two at least, the child probably knows already. With at least half of them right it should look at it again, with fewer read it closely. A partly right task (`teilweise`) counts half; `P2` names a point of a good answer it lacked. A task not answered (`offen`) counts as not right. A page without a task was not asked.",
       "For each chapter its last result holds: of the last round of this chapter, else of the first self-assessment. Keep it in mind for the chapters still to come.",
       "“I practised on …:” comes from “Back to the tutor” on a page: its tutor page with the numbers, then for each task practised how it went, a wrong one with the input and the app's message.",
     ],
