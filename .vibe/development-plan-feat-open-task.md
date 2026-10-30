@@ -58,10 +58,10 @@ nothing about learners, running costs).
 
 ### Tasks
 
-- [ ] Final order of the pull requests
 
 ### Completed
 
+- [x] Order of the pull requests: D8
 - [x] Mapped where the feature touches app-templates, tooling and practice (two read-only searches, 2026-10-30)
 - [x] Measured lernapps/practice#19: its content pages show about 35 kB of text, exercises included; a learning-path
       text of 10 to 25 kB is expected
@@ -98,7 +98,7 @@ nothing about learners, running costs).
 - **Without JavaScript**: task, points and the model answer in a `<details>` "Lösung", as every exercise has; this
   satisfies tooling's `explainer-readable-without-js`. No gate without JavaScript.
 - **With JavaScript**: first the learner chooses how to answer, two equal options "Hier tippen" and "Auf Papier,
-  dann Foto" (owner, 2026-10-30: the photo is an alternative to typing, not an extra). Then a text field, or "Foto aufnehmen" (`<input type="file" accept="image/*" capture>`, shown as an
+  dann Foto" (owner, 2026-10-30: the photo is an alternative to typing, not an extra; the choice is headed "Deine Lösung"). Then a text field, or "Foto aufnehmen" (`<input type="file" accept="image/*" capture>`, shown as an
   object URL, kept in memory only). "Vergleichen" opens once there is text or a photo; then the checklist (tick
   boxes) and "Lösung" (the model answer). Nothing is stored (KD-02); a reload loses the answer.
 
@@ -176,8 +176,8 @@ nothing about learners, running costs).
 
 ### Design: the owner's answers (2026-10-30)
 
-1. Checks: everything runs through `lernapps check` (tooling), in three layers (proposed 2026-10-30, owner to
-   confirm):
+1. Checks: everything runs through `lernapps check` (tooling), in three layers (proposed 2026-10-30; the owner moved
+   on to Code without objection):
    - **Content validation in the runtime's build**, which `lernapps check` runs as its `build` step (`src/cli.ts`
      ~503) in the creator's repo, and which practice's build runs too: schema of `open-task`; each point's `source`
      names an existing page and section (beside the link check in `load.ts`); each part of `src/lerngang.md` names an
@@ -193,3 +193,90 @@ nothing about learners, running costs).
 4. practice suggests open tasks where the question fits (describe, explain, compare, write), with or without a tutor.
    practice requires the learning-path text for every made-to-measure app (owner, 2026-10-30).
 5. Next: a mock-up of the open task with and without tutor.
+
+## Code
+
+### Tasks
+
+Step 1, app-templates: result `teilweise` (D2), on this branch
+- [ ] `assessment.ts`: state `teilweise`, `P<n>` for missed points, query, prompt, old stored results stay valid
+- [ ] `assessment-client.ts`: evaluate and score; `pageResults`/`bandOf`: `teilweise` counts half
+- [ ] `tasks.ts`: `AssessmentAnswer` may say `partly`
+- [ ] `result.ts`: state and status line for a partly right task
+- [ ] messages `de.json`/`en.json`, tutor wording (`assessment-page.ts`, `tutorpage.ts`)
+- [ ] tests; arc42 (`dec-self-assessment-result`, glossary)
+
+Step 2, app-templates: block `open-task` (D1, D3)
+Step 3, app-templates: learning-path text (D4)
+Step 4, tooling: pin, rules, skills, rubric (D5)
+Step 5, practice: skills, plan template, validation (D6)
+
+### Completed
+
+## Commit
+
+### Tasks
+
+### Completed
+
+## Key Decisions
+
+### KD-01: A third result, `teilweise`
+- **Decision** (owner, 2026-10-30): an exercise's result is `richtig`, `teilweise`, `falsch` or `offen`. An open task
+  gives `teilweise` when some, not all, points of its checklist are ticked; the unticked points are named like a
+  typical mistake. Self-assessment, result line and tutor query know the new state for every exercise type.
+
+### KD-02: The answer stays on the device
+- **Decision** (owner, 2026-10-30): the learner's text and photo stay local. The photo is only shown, kept in memory,
+  never stored or sent by the app. The text goes with the result line, as inputs do today, only on the learner's
+  click; the text and the ticks are kept in `sessionStorage` until the tab closes (owner, 2026-10-30). The tutor page tells the tutor to ask the learner for the photo or text of an open task when it lacks it.
+- **Out of scope** (owner, 2026-10-30): a direct handoff of the photo to the learner's chat (Web Share API, chat
+  APIs). A first search found no documented link or API to open a chat with an image attached.
+
+### KD-03: A learning-path text for the tutor, at an address of its own
+- **Decision** (owner, 2026-10-30): the creator's assistant writes the whole learning path as long, continuous prose
+  in its own words, from the material: the exact content (facts, terms, reasons, examples), because for a test the
+  exact content matters. It is structured by the app's chapters and pages (each part names its page) and ends with
+  what belongs to the scope and what explicitly does not.
+- No new visible page or content type: chapters and pages stay as they are. The build publishes the text at an
+  address of its own, not linked in the navigation, like the tutor pages; every tutor page links it as background.
+- This revises `dec-tutor-page` (one source of what the tutor gets): the tutor page stays the source for the task,
+  the learning-path text is the source for the content.
+- lernapps/practice requires it for made-to-measure apps (the material is seen only while building); lernapps/tooling
+  checks that each part names an existing page and each content page has its part.
+
+### KD-04: Scope: explainer, practice guidance, tooling checks
+- **Decision** (owner, 2026-10-30): the open task is built for the explainer, not for the quiz. The same increment
+  promotes it in the practice skills (instead of `example` + `note` "Musterlösung") and checks its consistency in
+  lernapps/tooling (each point's source exists, the model answer is present, the summary exists).
+
+## Notes
+
+### Platform fit (pdt42, lernapps/docs, read 2026-10-30)
+
+- Transaction `t-learn-with-app` (creators give students "a learning session on one topic", `r-creators-students`,
+  a core relationship). The open task makes that session better; it adds no new transaction or role.
+- Experience `x-tailor-made-app` ("Practise a given scope, made to measure"): lernapps/practice#19 is one. Its steps
+  `s-building-guidance` and `t-build-with-assistant` are where the creator's assistant writes the checklist, the
+  sources, the model answer and the learning-path summary. So the guidance in lernapps/practice and the checks in
+  lernapps/tooling are part of the feature, not only the runtime.
+- KD-18, no hidden data collection: the apps collect nothing. The learner's text and photo must stay on the device;
+  they leave it only with the learner's click, to the learner's own assistant (as input and message do today).
+- No change to the platform design is needed.
+
+### Architecture today (app-templates, explainer, read 2026-10-30)
+
+- Block types (`explainer.v1.schema.json`): exercises are `single-choice`, `multiple-choice`, `true-false`,
+  `number`, `ordering`, `matching`, `generated`, `vue-component`. No open type.
+- Result of an exercise (`runtime/explainer/assessment.ts`, `ItemResult`): `richtig`, `falsch` or `offen`
+  (= not answered), the input as text for a wrong answer, a typical mistake `F<n>`. The self-assessment keeps the
+  last run in `localStorage`; the tutor page gets it in its query, e.g. `?a1=17-falsch-F1&a2=richtig`.
+- Tutor (`concept-tutor`, `dec-tutor-variant`, `dec-tutor-page`): no model in the browser; a handoff to the
+  learner's own assistant through one static tutor page per content page, the one source of what the tutor gets.
+  Rejected there: one tutor page per chapter (long, the tutor answered at length), `llms.txt`, a second file beside
+  the tutor page, rules in the prompt. The learning-path summary (proposal 8) must fit into this or revise it.
+- Quality goals: `qg-privacy` and `qg-checkable` high.
+
+### Open questions for the owner
+
+Answered 2026-10-30, see KD-01 to KD-04.
