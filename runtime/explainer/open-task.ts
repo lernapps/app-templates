@@ -84,7 +84,7 @@ export function startOpenTask(
   // kept while the tab is open, by the page and the exercise; a self-assessment keeps nothing
   const storage = options.assessment
     ? undefined
-    : createStorage(element.dataset["storage"] ?? "explainer", { session: true });
+    : createStorage(element.dataset["storage"] ?? "explainer", { type: "sessionStorage" });
   const key = `antwort:${element.ownerDocument.location.pathname}#${id}`;
   const kept = storage?.load(key, isKept);
   if (kept !== undefined && data.answer.includes(kept.way)) {

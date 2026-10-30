@@ -204,9 +204,9 @@ Step 1, app-templates: result `teilweise` (D2), on this branch: done (see Comple
 
 Step 2, app-templates: block `open-task` (D1, D3), on this branch (owner: B, 2026-10-30): done (see Completed), except
 - [x] keeping text and ticks until the tab closes (owner: "nichts ist frustrierender, als Eingaben zu verlieren",
-      2026-10-30): first lernapps/tooling branch `feat/session-storage` (283e67f): `createStorage(app, { session: true })`;
+      2026-10-30): first lernapps/tooling branch `feat/session-storage` (088d473): `createStorage(app, { type: "sessionStorage" })`;
       (PR lernapps/tooling#210); then the open task keeps way, text and ticks under `antwort:<path>#<id>` in sessionStorage; the e2e tests check a
-      reload and allow only that key. The templates pin tooling at 283e67f: **move the pin to tooling's main once
+      reload and allow only that key. The templates pin tooling at 088d473: **move the pin to tooling's main once
       feat/session-storage is merged, before this branch merges**
 - [ ] note for step 4: `lernapps check` measures `fitness.storage` by visiting pages without typing, so an app whose
       only storage is an open task's answer is measured `none`; to decide whether the measurement should type
