@@ -461,7 +461,7 @@ function tutorAbout(context: Context): string {
     `<h2 id="ki-tutor">${plain(context.t("tutorTitle"))}</h2>`,
     `<p>${plain(context.t("tutorAbout"))}</p>`,
     `<p>${plain(context.t("tutorAboutStart"))}</p>`,
-    `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label> <button type="button" class="explainer-tutor-needs-open" aria-haspopup="dialog">${plain(context.t("needsOpen"))}</button></p>`,
+    `<p class="explainer-tutor-choice" hidden><label>${plain(context.t("tutorChoose"))} <select class="explainer-tutor-choose" data-storage="${plain(site.storage ?? "explainer")}"><option value="">${plain(context.t("tutorNone"))}</option>${wayOptions(context)}</select></label> <button type="button" class="explainer-tutor-needs-open" aria-haspopup="dialog" aria-label="${plain(context.t("needsOpen"))}" title="${plain(context.t("needsOpen"))}">${SETTINGS_ICON}</button></p>`,
     `<p class="explainer-tutor-hint" role="status" aria-live="polite" hidden></p>`,
     `<p>${plain(context.t("tutorAccount"))}</p>`,
     `<p>${plain(context.t("tutorAboutPrivacy"))}</p>`,
@@ -469,6 +469,10 @@ function tutorAbout(context: Context): string {
     needsChoice(context),
   ].join("\n");
 }
+
+/** The symbol of "Einstellungen", which opens the dialog of the learner's needs: a gear, its name in aria-label. */
+const SETTINGS_ICON =
+  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
 
 /** The name and the description of each need on the start page. */
 const NEED_TEXTS: Readonly<Record<Need, readonly [keyof Messages, keyof Messages]>> = {
