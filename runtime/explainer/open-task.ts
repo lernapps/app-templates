@@ -62,8 +62,8 @@ export function startOpenTask(
   const choice = both
     ? [
         `<fieldset class="explainer-open-choice"><legend>${t("openTaskChoice")}</legend>`,
-        `<label><input type="radio" name="${id}-way" value="text" checked> ${t("openTaskType")}</label>`,
-        `<label><input type="radio" name="${id}-way" value="photo"> ${t("openTaskPaper")}</label>`,
+        `<label><input type="radio" name="${id}-way" value="text" checked> <span>${t("openTaskType")}</span></label>`,
+        `<label><input type="radio" name="${id}-way" value="photo"> <span>${t("openTaskPaper")}</span></label>`,
         `</fieldset>`,
       ].join("")
     : "";
@@ -84,7 +84,7 @@ export function startOpenTask(
     points
       .map(
         (point, index) =>
-          `<label><input type="checkbox" value="${index}"> ${escape(point.text)}${point.kind === "form" ? ` <small>(${t("openTaskForm")})</small>` : ""}</label>`,
+          `<label><input type="checkbox" value="${index}"> <span>${escape(point.text)}${point.kind === "form" ? ` <small>(${t("openTaskForm")})</small>` : ""}</span></label>`,
       )
       .join(""),
     `</fieldset>`,
