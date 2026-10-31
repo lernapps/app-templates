@@ -10,9 +10,9 @@
   "devDependencies": {
     "@lernapps/app-templates": "file:..",
     "@lernapps/tooling": "github:lernapps/tooling#7354ffe7ae7d8079ba5f714d5b402666d27df066",
-    "vite-plus": "1.0.0"
+    "vite-plus": "1.4.0"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0"
   }
 }
