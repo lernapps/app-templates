@@ -41,7 +41,8 @@ jobs:
           cache: npm
       - run: npm ci
       # @lernapps/tooling is an optional peer (apps have it); the type check needs it: the version the quiz pins.
-      - run: npm install --no-save --no-audit --no-fund "$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"
+      # --save-dev: npm 11 installs a package that package.json names as an optional peer as that peer, so not at all.
+      - run: npm install --no-save --save-dev --no-audit --no-fund "$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"
       - run: npx vp check
       # the .vue files of the fixtures, which the type check of vp check does not read
       - run: npm run check:vue
