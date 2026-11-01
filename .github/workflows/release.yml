@@ -44,6 +44,9 @@ jobs:
           node-version: 26
       # npm ci runs `prepare`, which builds what the package ships
       - run: npm ci
+      # npm ci installed the repository's git hooks (the prepare script), which are for contributors: the pre-push hook
+      # would check the tag semantic-release pushes. The release pushes with no hook.
+      - run: git config --local core.hooksPath /dev/null
       - run: npx --yes semantic-release@25.0.9
         env:
           GITHUB_TOKEN: ${{ steps.app.outputs.token }}
