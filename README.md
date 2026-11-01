@@ -24,7 +24,7 @@ feature: assistants read it before they choose an archetype.
 | [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes, code and YouTube videos behind two clicks, and an exercise on every page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages; an optional self-assessment of the app or a chapter, checked as a whole; Vue components for what no block can express | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/`, and `components/` ([schema](runtime/explainer/explainer.v1.schema.json)) |
 | [`interactive/`](interactive/) | an interactive app whose doing is the content (a game, a trainer): a static start page, readable without JavaScript, and an app page with the app's own Vue components, its routes as `app/#<id>`; the build plays its playthroughs against its core | `src/app.yaml` ([schema](runtime/interactive/interactive.v1.schema.json)), the core `src/core/index.ts` (`start(seed, route)`, `step(state, input)` with a key or an action of its root component, optional `tick(state, dt)`), its components in `src/ui/`, data in `src/data/`, and `src/playthroughs/*.yaml` ([schema](runtime/interactive/playthrough.v1.schema.json)) |
 
-- [`runtime/`](runtime/): the runtime of each archetype, published from git as `@lernapps/app-templates`; its exports
+- [`runtime/`](runtime/): the runtime of each archetype, published to npm as `@lernapps/app-templates` (with the template folders, which `lernapps create` of `@lernapps/tooling` copies out of the installed package); its exports
   are in [`package.json`](package.json), what each does in the comments of its source. The quiz's questions also work
   one by one, for other archetypes that embed them as exercises: `@lernapps/app-templates/quiz/question` (schema,
   validation, rendering, checker, messages; a question's texts may be maps by language), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of
@@ -144,8 +144,8 @@ feature: assistants read it before they choose an archetype.
   have, and its script finds the app's root (the nearest folder upwards with a `404.html`, so a preview below
   `pr-preview/pr-<n>/` finds its own) and moves on to its start page
   ([`pages.ts`](runtime/shared/pages.ts)).
-- Which commit of this repo a new app gets and what the generator adds to the template:
-  `npx --yes github:lernapps/tooling#main create --help`.
+- Which version of this package a new app gets and what the generator adds to the template:
+  `npx --yes @lernapps/tooling create --help`.
 - What an archetype is and how the parts fit: the [architecture of the tooling](https://lernapps.net/tooling/architecture/).
 - A template has no `prepare` script of its own, so `npm install` in its folder leaves this repo's git hooks alone;
   the generator gives the app the one that installs them.
@@ -187,8 +187,9 @@ Install a template's folder (`npm install` in it) to push a change to it. Which 
 positive list, `TEMPLATE_PATHS`: a path on no list runs the root checks only, and CI, which gates every job on the
 change scope and runs all of them for any code change, catches the rest; when it catches what the hook let through, add
 the path to the list. The fixture jobs run only in CI. The job `check` reports the overall result and is the check to
-require. A change reaches new apps once the pin in lernapps/tooling moves to its commit on `main`; Renovate moves
-existing apps.
+require. A change reaches new apps once it is released (tag `v<version>`, [`release.yml`](.github/workflows/release.yml) publishes
+to npm with provenance) and lernapps/tooling depends on that version; Renovate moves existing apps. The package leaves out
+each template's `.gitignore`, which npm never ships: `prepack` stages it as `_gitignore` ([`scripts/pack-dotfiles.ts`](scripts/pack-dotfiles.ts)), and `lernapps create` writes it back.
 
 ## License
 
