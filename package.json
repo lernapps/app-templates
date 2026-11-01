@@ -1,6 +1,6 @@
 {
   "name": "@lernapps/app-templates",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "The templates of the archetypes of lernapps.net apps, and the runtime of each archetype that apps depend on (the quiz: engine, build step, styles, end-to-end tests, the schema of the question bank, the questions it shares with the explainer are in ./questions; the explainer: build step, client module with its exercises, the islands of its Vue components, styles, end-to-end tests, the schema of its content; the interactive archetype: build step, the start page and the app page around the app's own Vue components and core, its playthroughs, styles, end-to-end tests, the schemas of its start page and its playthroughs)",
   "license": "MIT",
   "repository": {
@@ -82,6 +82,10 @@
     "./interactive/style.css": "./runtime/interactive/interactive.css",
     "./interactive/interactive.v1.schema.json": "./runtime/interactive/interactive.v1.schema.json",
     "./interactive/playthrough.v1.schema.json": "./runtime/interactive/playthrough.v1.schema.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "prepare": "vp pack && vp config --no-agent",

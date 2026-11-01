@@ -1,27 +1,49 @@
 name: Release
 
-# Publishes @lernapps/app-templates to npm, with provenance, when a version tag is pushed (git tag v0.1.0 && git push
-# origin v0.1.0). npm trusts this workflow by its file name and this repository (npm trust github), so the file must stay
-# named release.yml and needs no token: the job proves its identity with an OIDC token (id-token: write).
-# The tag must name the version in package.json, so a release is never published under another version.
+# Publishes @lernapps/app-templates to npm with provenance after every merge to main that carries a release: semantic-release
+# reads the conventional commits since the last tag (feat: minor, fix and perf: patch, a breaking change: major; chore,
+# docs, ci and the like release nothing), pushes the tag v<version> and the GitHub release, and publishes. The version
+# lives in the tag; package.json keeps 0.0.0, so the release writes nothing to main.
+# - npm trusts this workflow by its file name and this repository (npm trust github): the file must stay named
+#   release.yml and needs no npm token, the job proves its identity with an OIDC token (id-token: write).
+# - main allows only pull requests, and tags v* only admins: the tag is pushed with the token of the GitHub App
+#   push-to-protected-mrsimpson (organisation variable VERSION_BUMPER_APPID, secret VERSION_BUMPER_SECRET), which is on
+#   the bypass list of the rulesets.
+# - The checks ran on the pull request (they are required); the release builds and publishes only.
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
+
+# one release at a time: a second push waits instead of racing for the same tag
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app
+        with:
+          app-id: ${{ vars.VERSION_BUMPER_APPID }}
+          private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app.outputs.token }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
-      - name: The tag names the version in package.json
-        run: test "$GITHUB_REF_NAME" = "v$(node -p 'require("./package.json").version')"
-      # npm ci runs `prepare`, which builds dist/ (vp pack)
+      # npm ci runs `prepare`, which builds what the package ships
       - run: npm ci
-      - run: npm publish --provenance --access public
+      - run: npx --yes semantic-release@25.0.9
+        env:
+          GITHUB_TOKEN: ${{ steps.app.outputs.token }}

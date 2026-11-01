@@ -187,8 +187,8 @@ Install a template's folder (`npm install` in it) to push a change to it. Which 
 positive list, `TEMPLATE_PATHS`: a path on no list runs the root checks only, and CI, which gates every job on the
 change scope and runs all of them for any code change, catches the rest; when it catches what the hook let through, add
 the path to the list. The fixture jobs run only in CI. The job `check` reports the overall result and is the check to
-require. A change reaches new apps once it is released (tag `v<version>`, [`release.yml`](.github/workflows/release.yml) publishes
-to npm with provenance) and lernapps/tooling depends on that version; Renovate moves existing apps. The package leaves out
+require. A change reaches new apps once it is released ([`release.yml`](.github/workflows/release.yml): after a merge to `main`,
+semantic-release takes the version from the conventional commits, tags `v<version>` and publishes to npm with provenance) and lernapps/tooling depends on that version; Renovate moves existing apps. The package leaves out
 each template's `.gitignore`, which npm never ships: `prepack` stages it as `_gitignore` ([`scripts/pack-dotfiles.ts`](scripts/pack-dotfiles.ts)), and `lernapps create` writes it back.
 
 ## License
