@@ -61,6 +61,7 @@ export const ROOT_ONLY = [
   "LICENSE",
   ".gitignore",
   "renovate.json",
+  ".releaserc.json", // the release of the package (release.yml), read by semantic-release only
   ".agents/", // the skills agents load in this repo (skills-lock.json), not part of a template
   ".claude/",
   "skills-lock.json",
