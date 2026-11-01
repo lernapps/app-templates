@@ -200,7 +200,7 @@ function classifier(): string | undefined {
 }
 
 /** The installation of the tooling the root's type check needs, as check.yml's job runtime runs it. */
-const INSTALL_TOOLING = `npm install --no-save "$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"`;
+const INSTALL_TOOLING = `npm install --no-save "@lernapps/tooling@$(node -p 'require("./quiz/package.json").devDependencies["@lernapps/tooling"]')"`;
 
 /** Runs the lanes, each step's output into the log; on the first failure stops the other steps. */
 function runLogged(cwd: string, log: string): Run {
