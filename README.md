@@ -7,7 +7,7 @@ with which a creator and their AI assistant build a learning app.
 ## Who it is for
 
 - **Creators and their assistants** never open this repo: the generator of
-  [lernapps/tooling](https://github.com/lernapps/tooling) copies a template folder into a new app. Start at
+  [lernapps/tooling](https://github.com/lernapps/tooling) writes a template's scaffold into a new app. Start at
   [lernapps.net/apps/eintragen/](https://lernapps.net/apps/eintragen/), or, as an assistant, at
   [lernapps.net/tooling/llms.txt](https://lernapps.net/tooling/llms.txt).
 - **Maintainers of an archetype** change its template and its runtime here.
@@ -24,7 +24,7 @@ feature: assistants read it before they choose an archetype.
 | [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes, code and YouTube videos behind two clicks, and an exercise on every page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages; an optional self-assessment of the app or a chapter, checked as a whole; Vue components for what no block can express | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/`, and `components/` ([schema](runtime/explainer/explainer.v1.schema.json)) |
 | [`interactive/`](interactive/) | an interactive app whose doing is the content (a game, a trainer): a static start page, readable without JavaScript, and an app page with the app's own Vue components, its routes as `app/#<id>`; the build plays its playthroughs against its core | `src/app.yaml` ([schema](runtime/interactive/interactive.v1.schema.json)), the core `src/core/index.ts` (`start(seed, route)`, `step(state, input)` with a key or an action of its root component, optional `tick(state, dt)`), its components in `src/ui/`, data in `src/data/`, and `src/playthroughs/*.yaml` ([schema](runtime/interactive/playthrough.v1.schema.json)) |
 
-- [`runtime/`](runtime/): the runtime of each archetype, published to npm as `@lernapps/app-templates` (with the template folders, which `lernapps create` of `@lernapps/tooling` copies out of the installed package); its exports
+- [`runtime/`](runtime/): the runtime of each archetype, published to npm as `@lernapps/app-templates` (with the template folders, complete example apps, and the scaffold of each archetype: `lernapps create` of `@lernapps/tooling` copies the paths `lernapps.scaffold.<archetype>` in [`package.json`](package.json) lists and the placeholder in [`scaffold/<archetype>/`](scaffold/), and leaves the example in the installed package; [`scripts/scaffold.ts`](scripts/scaffold.ts) writes the same for the CI job `scaffold`); its exports
   are in [`package.json`](package.json), what each does in the comments of its source. The quiz's questions also work
   one by one, for other archetypes that embed them as exercises: `@lernapps/app-templates/quiz/question` (schema,
   validation, rendering, checker, messages; a question's texts may be maps by language), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of

@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title: Thema
+summary: Ersetze dieses Kapitel durch das erste geplante.
+pages: [einstieg]

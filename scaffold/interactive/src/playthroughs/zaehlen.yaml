@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/interactive/playthrough.v1.schema.json
+# Three times "weiter": the count reaches three and the app is done; a fourth press changes nothing.
+seed: 1
+steps:
+  - inputs: [{ kind: action, name: weiter }]
+    state: { count: 1, done: false }
+    announce: 1 von 3
+  - inputs: [{ kind: action, name: weiter }, { kind: action, name: weiter }]
+    state: { count: 3, done: true }
+    announce: "Fertig: bis drei gezählt."
+  - inputs: [{ kind: action, name: weiter }]
+    state: { count: 3, done: true }

@@ -17,3 +17,6 @@ explainer/src/prozent
 explainer/src/images
 interactive/src/main.ts
 interactive/src/env.d.ts
+# The start content of a new app (scripts/scaffold.ts), a placeholder that create writes and the creator replaces:
+# content like the templates' examples, claimed by the app's own architecture once it is an app.
+scaffold

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/interactive/interactive.v1.schema.json
+title: Platzhalter
+description: Ein Knopf, der bis drei zählt. Er hält den Platz frei, bis die geplante App da ist.
+howto: |
+  - Drücke „Weiter“, bis du bei drei bist.
+competencies:
+  - Ich kann bis drei zählen.
+languages: [de]

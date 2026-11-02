@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+title: Einstieg
+description: Eine Seite, die den Platz frei hält.
+blocks:
+  - type: section
+    id: worum-es-geht
+    title: Worum es geht
+    blocks:
+      - type: text
+        text: Ersetze diese Seite durch die erste geplante.
+  - type: section
+    id: uebung
+    title: Übung
+    blocks:
+      - type: single-choice
+        id: platzhalter
+        text: Welche Antwort ist richtig?
+        explanation: Diese Übung ist ein Platzhalter. Ersetze sie durch die erste geplante.
+        links:
+          - title: lernapps.net
+            url: https://lernapps.net/
+        options:
+          - text: Diese
+            correct: true
+            info: "Richtig: Diese Antwort ist als richtig markiert."
+          - text: Diese nicht
+            correct: false
+            info: "Falsch: Diese Antwort ist als falsch markiert."
