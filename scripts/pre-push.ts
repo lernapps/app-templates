@@ -69,6 +69,7 @@ export const ROOT_ONLY = [
   "CLAUDE.md",
   ".mcp.json", // the MCP servers agents in this repo use
   ".vibe/", // the development plans of agent work in this repo
+  "scaffold/", // the start content of a new app, which the CI job scaffold checks (scripts/scaffold.ts)
 ];
 
 /** Whether a path (relative to the repo root, with "/") is one of the patterns: the path, or below a folder "x/". */

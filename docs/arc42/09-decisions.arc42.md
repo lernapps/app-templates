@@ -228,6 +228,30 @@ addresses: qg-understandable
 :::
 ```
 
+## A New App Gets the Scaffold, Not the Example
+
+`lernapps create` copies only the scaffold of the archetype into a new app: the paths that `lernapps.scaffold.<archetype>`
+in this package's `package.json` lists (the entry, the configuration, the e2e entry) and a placeholder as start content
+(`scaffold/<archetype>/`: one question, one page with one exercise, or a counter as the core). The template folder
+stays a complete example app, which this repo checks; an app does not copy it, the creator's assistant looks it up in
+`node_modules/@lernapps/app-templates/<archetype>/`. A copied example shaped the new app too much: its structure,
+its topic and its tone stayed long after the plan said otherwise. The list is data in this package, which alone knows
+what is configuration and what is example; the tooling only reads it. The CI job `scaffold` checks the scaffold as an
+app, so that a new app passes `lernapps check` from its first commit. `lernapps update` never writes the scaffold
+again: it moves libraries, not content. Rejected: a function `scaffold()` exported by the package, which would need the
+built package even in a clone given to `create --templates`; start content inside the template folder, which the
+template's own checks would read as part of the example.
+
+```arc42
+:::decision
+id: dec-scaffold
+title: A new app gets the scaffold and a placeholder, not the example app
+status: accepted
+date: 2026-11-02
+addresses: qg-understandable
+:::
+```
+
 ## Tutor Variant
 
 The optional tutor is a handoff to the learner's own assistant: after a click, a prompt (copied or passed to a chosen

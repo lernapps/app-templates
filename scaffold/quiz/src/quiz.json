@@ -1,0 +1,31 @@
+{
+  "$schema": "../node_modules/@lernapps/app-templates/runtime/quiz/quiz.v1.schema.json",
+  "title": "Platzhalter",
+  "intro": "Diese Frage hält den Platz frei, bis die geplanten Fragen da sind.",
+  "questions": [
+    {
+      "id": "platzhalter",
+      "type": "single-choice",
+      "text": "Welche Antwort ist richtig?",
+      "options": [
+        {
+          "text": "Diese",
+          "correct": true,
+          "info": "Richtig: Diese Antwort ist als richtig markiert."
+        },
+        {
+          "text": "Diese nicht",
+          "correct": false,
+          "info": "Falsch: Diese Antwort ist als falsch markiert."
+        }
+      ],
+      "explanation": "Diese Frage ist ein Platzhalter. Sie zeigt, wie eine Frage aufgebaut ist, und wird durch die erste geplante ersetzt.",
+      "links": [
+        {
+          "title": "lernapps.net",
+          "url": "https://lernapps.net/"
+        }
+      ]
+    }
+  ]
+}

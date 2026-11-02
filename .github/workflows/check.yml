@@ -76,6 +76,31 @@ jobs:
       - run: npx lernapps check
         working-directory: ${{ matrix.template }}
 
+  # The scaffold of each archetype as `lernapps create` writes it (scripts/scaffold.ts): the paths lernapps.scaffold
+  # lists, copied from the template folder, and the start content of scaffold/<archetype>/. `lernapps check` passes
+  # on it, so that a new app passes from its first commit, before the creator's content replaces the placeholder.
+  scaffold:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        archetype: [quiz, explainer, interactive]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci # the runtime's build tools, for file:..
+      # outside the repo, like a new app: its own folder, not one the repo's .gitignore and formatter rules cover
+      - run: node scripts/scaffold.ts "${{ matrix.archetype }}" "$RUNNER_TEMP/scaffold-app"
+      - run: git init --quiet && npm install --no-audit --no-fund
+        working-directory: ${{ runner.temp }}/scaffold-app
+      - run: npx lernapps check
+        working-directory: ${{ runner.temp }}/scaffold-app
+
   # The quiz template as an app with a large question bank (test/fixtures/quiz-many-questions.json, 64 questions of
   # every type) in place of its own: the end-to-end tests of every quiz must pass however many questions an app has.
   quiz-many-questions:
@@ -220,6 +245,7 @@ jobs:
         changes,
         runtime,
         template,
+        scaffold,
         quiz-many-questions,
         quiz-bilingual,
         quiz-material,

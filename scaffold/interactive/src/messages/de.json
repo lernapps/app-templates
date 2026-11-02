@@ -1,0 +1,6 @@
+{
+  "app": "Zähler",
+  "count": "{count} von {goal}",
+  "next": "Weiter",
+  "done": "Fertig: bis drei gezählt."
+}
