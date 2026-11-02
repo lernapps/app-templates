@@ -72,8 +72,6 @@ Comparison problem: stripping tags from the rendered formula gives "27" (`plainT
 ### Entrance criteria
 - Root cause identified for both symptoms.
 ### Tasks
-- [ ] Verify phase: run the explainer template's end-to-end test (browser, axe) with a formula option, if the sandbox allows
-- [ ] Document the new `alt` field and the `speech-rule-engine` dependency where the guidance/docs mention formulas in options (README/docs/skills), if any
 
 ### Completed
 - [x] Dependency `speech-rule-engine` 4.1.5 (exact pin, as the others), types written in `speech.ts` (package ships none)
@@ -86,10 +84,14 @@ Comparison problem: stripping tags from the rendered formula gives "27" (`plainT
 ### Entrance criteria
 - Fix implemented; regression test added.
 ### Tasks
-- [ ] To be added when this phase becomes active
+- [ ] (for Finalize) the template lockfiles (`quiz/`, `explainer/`, `interactive/`) pin the published runtime 0.1.0 from npm, so they do not yet carry `speech-rule-engine`; they follow with the next release of the runtime, not in this change
 
 ### Completed
-*None yet*
+- [x] Browser check (`lernapps check`: axe rule `accessible`, generic Playwright tests, 11 rules) in `explainer/` with formulas in the right option, in the `info` of a wrong option and in the `explanation` of its choice question (temporary content change, reverted):
+  - with the local runtime (overlaid onto the installed copy): ok, no findings
+  - negative control, published runtime 0.1.0: axe `label` on `input[value="0"]`, "Lösung 1 shows $10 \div …$" (the reported failure), and the reason of a wrong answer (`info`) mismatch: reproduces the issue and the 2nd comment exactly
+- [x] Full unit suite (441), lint, `check:vue`, `vp pack`, pre-push hook all green
+- [x] Docs: no guidance in this repo advises avoiding formulas in options; the `alt` field is documented in the question schema. The workaround guidance the issue mentions lives outside this repo (published docs/skills) and should be updated after release.
 
 ## Finalize
 ### Entrance criteria
