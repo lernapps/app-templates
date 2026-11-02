@@ -3,7 +3,7 @@
 // template folder; the list holds the template's entry, its configuration and its e2e entry, but no content of the
 // example app; every archetype has start content in scaffold/<archetype>/, and the package ships it. That the scaffold
 // passes `lernapps check` as an app is the CI job scaffold of check.yml.
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
 import { scaffoldPaths } from "../scripts/scaffold.ts";
@@ -59,4 +59,20 @@ describe.each(manifest.lernapps.archetypes)("the scaffold of %s", (archetype) =>
       expect(path === "src/main.ts" || path === "src/env.d.ts" || !path.startsWith("src/"), path).toBe(true);
     }
   });
+});
+
+test("the interactive scaffold has every path its architecture claims: an app gets the architecture with them", () => {
+  const dir = join(root, "interactive/docs/arc42");
+  const claimed = readdirSync(dir)
+    .filter((file) => file.endsWith(".md"))
+    .flatMap((file) => [...readFileSync(join(dir, file), "utf8").matchAll(/^path: interactive\/(\S+)$/gm)])
+    .map((match) => match[1] ?? "");
+  expect(claimed.length).toBeGreaterThan(0);
+  const app = [...scaffoldPaths("interactive"), ...files(join(root, "scaffold/interactive"))];
+  for (const path of new Set(claimed)) {
+    expect(
+      app.some((file) => file === path || file.startsWith(`${path}/`)),
+      path,
+    ).toBe(true);
+  }
 });
