@@ -1,4 +1,4 @@
-# Development Plan: app-templates (main branch)
+# Development Plan: app-templates (fix/120-formula-option-accessible-name)
 
 *Generated on 2026-11-02 by Vibe Feature MCP*
 *Workflow: [bugfix](https://codemcp.github.io/workflows/workflows/bugfix)*
@@ -22,7 +22,10 @@ Expected: a formula in an option works like one in a table or prose: the radio h
 ### Entrance criteria
 - Issue read and understood.
 ### Tasks
-- [ ] (optional, not done) full browser run of `lernapps check` with axe; the HTML-level cause is already visible
+- [x] Add failing test 1 to `test/explainer-formulas.test.ts`: option `$2^7$` has a text alternative in its label
+- [x] Add failing test 2: outline's expected answer for a formula option equals the rendered text, not the raw source
+- [x] Run both, confirm red (both red for the reasons in the issue: no text alternative in the label; outline answer is raw `$2^7$`), commit
+- [ ] (optional) full browser run of `lernapps check` with axe
 
 ### Completed
 - [x] Created development plan file
