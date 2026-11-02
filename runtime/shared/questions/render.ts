@@ -44,17 +44,22 @@ export function questionWords(lang = "de"): Words {
 /** How a learner text becomes HTML. */
 export type Format = (text: string) => string;
 
-function controls(question: Question, { t }: Words, format: Format): string {
+/** A text as words for a name, where the text itself has none (a formula); undefined where it has. */
+export type Describe = (text: string) => string | undefined;
+
+function controls(question: Question, { t }: Words, format: Format, describe?: Describe): string {
   const name = questionId(question);
   switch (question.type) {
     case "single-choice":
     case "multiple-choice": {
       const type = question.type === "single-choice" ? "radio" : "checkbox";
       return question.options
-        .map(
-          (option, index) =>
-            `<label class="question-option"><input type="${type}" name="${name}" value="${index}"> <span>${format(option.text)}</span></label>`,
-        )
+        .map((option, index) => {
+          // an option that is only a formula has no text to name its control; the page says in words what it shows
+          const spoken = option.alt ?? describe?.(option.text);
+          const label = spoken === undefined ? "" : ` aria-label="${escape(spoken)}"`;
+          return `<label class="question-option"><input type="${type}" name="${name}" value="${index}"${label}> <span>${format(option.text)}</span></label>`;
+        })
         .join("\n");
     }
     case "true-false":
@@ -111,6 +116,8 @@ function controls(question: Question, { t }: Words, format: Format): string {
 export interface RenderQuestionOptions {
   /** How a learner text becomes HTML, e.g. with its formulas; escaped as plain text by default. */
   format?: (text: string) => string;
+  /** The words a screen reader names the control of an option by, when its text is only a formula. */
+  describe?: Describe;
   element?: "div" | "li";
   next?: boolean;
   lang?: string;
@@ -142,6 +149,7 @@ export function renderQuestion(
     materialHtml,
     explanationHtml,
     format = escape,
+    describe,
   }: RenderQuestionOptions = {},
 ): string {
   const words = questionWords(lang);
@@ -156,7 +164,7 @@ export function renderQuestion(
     ...(materialHtml === undefined || materialHtml === ""
       ? []
       : [`<div class="question-material">${materialHtml}</div>`]),
-    controls(question, words, format),
+    controls(question, words, format, describe),
     `</fieldset>`,
     `<div class="question-feedback" role="status"></div>`,
     `<div class="question-reveal" hidden>`,

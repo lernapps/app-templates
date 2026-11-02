@@ -41,7 +41,7 @@ Expected: a formula in an option works like one in a table or prose: the radio h
 - Both symptoms reproduced (or reproduction limits documented).
 ### Tasks
 - [x] Trace both symptoms to root cause (see Analysis)
-- [ ] Decide the text alternative with the user
+- [x] Decide the text alternative with the user (SRE + optional alt text)
 
 ### Completed
 *None yet*
@@ -62,18 +62,25 @@ Fix space:
 - `shared/questions/e2e.ts:53,57` `expectBackground` uses raw `info`/`explanation` (used by quiz e2e only, where formulas are not rendered; explainer unaffected).
 Comparison problem: stripping tags from the rendered formula gives "27" (`plainText`), the browser's `innerText` gives "2 7" (issue). A plain substring match fails either way; compare with all whitespace removed on both sides, or compare against `textContent`.
 
-## Key Decisions (open)
-- Which text alternative (1/2 × a/b/c above): needs the user's decision.
-- Scope of the test fix: option text (reported), plus question text, `info`, `explanation` (same defect, same helper).
+## Key Decisions
+- DECIDED (user): text alternative from MathML via `speech-rule-engine` (Apache-2.0, locales de/en/… verified: `2^7` → "2 hoch 7"), in the page's language, at build time; plus an optional author-supplied alt text as override. New dependency `speech-rule-engine` approved.
+- Placement: `aria-label` on the radio only when the option text is only formula(s) (open to confirm: user answered "accepted" to this proposal).
+- Scope of the test fix: option text (reported), plus question text, `info`, `explanation` (same defect, same helper); compare with whitespace removed.
+- Open for Fix: syntax and schema place of the optional alt text (to be derived from the existing option schema).
 
 ## Fix
 ### Entrance criteria
 - Root cause identified for both symptoms.
 ### Tasks
-- [ ] To be added when this phase becomes active
+- [ ] Verify phase: run the explainer template's end-to-end test (browser, axe) with a formula option, if the sandbox allows
+- [ ] Document the new `alt` field and the `speech-rule-engine` dependency where the guidance/docs mention formulas in options (README/docs/skills), if any
 
 ### Completed
-*None yet*
+- [x] Dependency `speech-rule-engine` 4.1.5 (exact pin, as the others), types written in `speech.ts` (package ships none)
+- [x] `runtime/shared/text/speech.ts`: `formulaAlternative(text, lang)`: words for a text that is only formulas (SRE, clearspeak, rules of all `LANGUAGES` loaded once so speaking is synchronous); undefined when the text has words
+- [x] Option gets optional `alt` (type, `questionIn`, `question.v1.schema.json`); `renderQuestion` takes `describe` and writes `aria-label` on the radio/checkbox: `alt` first, else `describe(text)`; explainer (`exercises.ts`, `assessment-page.ts`) passes `formulaAlternative`
+- [x] Test side: `outline.ts` `shownText` (rendered, as text) for question text and right options; `e2e.ts` compares without whitespace (`squash`) for texts, "Lösung" and the reason of a wrong answer (`info`/`explanation` of #120 comment)
+- [x] Red tests are green; whole suite 441 passed; lint, `check:vue` and `vp pack` clean
 
 ## Verify
 ### Entrance criteria

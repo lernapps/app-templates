@@ -67,6 +67,7 @@ import { message as messageOf } from "./messages.ts";
 import { ASSESSMENT_TASK_EVENT, nextTaskNumber, taskNumber } from "./tasks.ts";
 import {
   outline,
+  shownText,
   type AssessmentOutline,
   type ComponentOutline,
   type ExerciseOutline,
@@ -157,6 +158,12 @@ const BAND_WORDS = {
   unasked: "assessmentUnasked",
 } as const;
 
+/**
+ * `text` without space. A browser's text of a formula has space between its parts ("2 7" for 2⁷) where the content's
+ * has none, so texts with formulas are compared without it (in the order of their characters, which is what counts).
+ */
+const squash = (text: string): string => text.replace(/\s+/g, "");
+
 /** The task number of the deep link the tests open a generated exercise with. */
 const SEED = 7;
 
@@ -169,7 +176,7 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
   const main = page.locator("main");
   const expected = item.exercises.map((exercise) =>
     exercise.kind === "question"
-      ? { id: exercise.id, texts: [exercise.question.text], answers: [exercise.answers] }
+      ? { id: exercise.id, texts: [shownText(exercise.question.text)], answers: [exercise.answers] }
       : exercise.kind === "open"
         ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solution] }
         : {
@@ -178,29 +185,31 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
             answers: exercise.worked.map((worked) => [worked.answer]),
           },
   );
-  const read = () =>
-    main.locator(".explainer-exercise").evaluateAll((elements) =>
-      elements.map((element) => {
-        const fold = (text: string | null) => (text ?? "").replace(/\s+/g, " ").trim();
-        const own = element.classList.contains("explainer-question")
-          ? [...element.querySelectorAll("legend")]
-          : element.classList.contains("explainer-open-task")
-            ? [...element.querySelectorAll(":scope > .explainer-open-task-text")]
-            : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
-        const solutions = [...element.querySelectorAll<HTMLDetailsElement>("details.explainer-solution")];
-        return {
-          id: element.id,
-          texts: own.map((text) => fold(text.textContent)),
-          // what a learner sees of each "Lösung": nothing while it is closed
-          shown: solutions.map((details) => (details.open ? fold((details as HTMLElement).innerText) : "")),
-        };
-      }),
-    );
+  const read = async () =>
+    (
+      await main.locator(".explainer-exercise").evaluateAll((elements) =>
+        elements.map((element) => {
+          const fold = (text: string | null) => (text ?? "").replace(/\s+/g, " ").trim();
+          const own = element.classList.contains("explainer-question")
+            ? [...element.querySelectorAll("legend")]
+            : element.classList.contains("explainer-open-task")
+              ? [...element.querySelectorAll(":scope > .explainer-open-task-text")]
+              : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
+          const solutions = [...element.querySelectorAll<HTMLDetailsElement>("details.explainer-solution")];
+          return {
+            id: element.id,
+            texts: own.map((text) => fold(text.textContent)),
+            // what a learner sees of each "Lösung": nothing while it is closed
+            shown: solutions.map((details) => (details.open ? fold((details as HTMLElement).innerText) : "")),
+          };
+        }),
+      )
+    ).map((item) => ({ ...item, texts: item.texts.map(squash), shown: item.shown.map(squash) }));
   const before = await read();
   expect(
     before.map(({ id, texts }) => ({ id, texts })),
     `${item.url}: each exercise with its text`,
-  ).toEqual(expected.map(({ id, texts }) => ({ id, texts })));
+  ).toEqual(expected.map(({ id, texts }) => ({ id, texts: texts.map(squash) })));
   // a click on each summary, as a learner opens a <details> (its own behaviour, no script of the page)
   await main
     .locator(".explainer-exercise details.explainer-solution > summary")
@@ -212,7 +221,7 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
         expect(
           after[index]?.shown[at] ?? "",
           `${item.url}: ${exercise.id}, Lösung ${at + 1} shows ${answer}`,
-        ).toContain(answer);
+        ).toContain(squash(answer));
       }
     });
   }
@@ -484,7 +493,9 @@ const feedback = (page: Page, id: string) => page.locator(`[id="${id}"] .questio
 function reasonFor(question: Question, answer: Answer): string {
   const quiz = questionMessagesIn("de");
   const [first] = wrongReasons(question, answer);
-  if (first !== undefined) return first.option === undefined ? first.text : `${first.option}: ${first.text}`;
+  if (first !== undefined) {
+    return first.option === undefined ? shownText(first.text) : `${shownText(first.option)}: ${shownText(first.text)}`;
+  }
   return missesRight(question, answer) ? quiz.missingRight : quiz.lookAgain;
 }
 
@@ -495,9 +506,12 @@ function reasonFor(question: Question, answer: Answer): string {
 async function wrongThenSolution(page: Page, exercise: string, question: Question, reason: string): Promise<void> {
   const item = page.locator(`[id="${questionId(question)}"]`);
   await expect(feedback(page, questionId(question))).toContainText(questionMessagesIn("de").wrong);
-  await expect(item.locator(".question-diagnosis").first(), `${exercise}: the reason of the wrong answer`).toHaveText(
-    reason,
-  );
+  await expect
+    .poll(
+      async () => squash((await item.locator(".question-diagnosis").first().textContent()) ?? ""),
+      `${exercise}: the reason of the wrong answer`,
+    )
+    .toBe(squash(reason));
   await expectFeedbackInView(page, question);
   await expect(item.locator(".question-reveal"), `${exercise}: no solution after a wrong answer`).toBeHidden();
   await expect(item.locator("input, select").first(), `${exercise}: another try`).toBeEnabled();

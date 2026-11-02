@@ -84,17 +84,31 @@ describe("a formula as the text of an option (#120)", () => {
     links: [],
   };
 
-  test("the label of its radio holds a text alternative of the formula, so the radio has an accessible name", () => {
-    const html = renderExercise(power, "de", {}, (href) => href, { lang: "de", href: (image) => image });
-    const label = /<label class="question-option"><input[^>]*value="0"[^>]*>(.*?)<\/label>/s.exec(html)?.[1] ?? "";
-    expect(label).toContain("<math");
-    // text outside the <math> elements, or an attribute of them, that a name can be computed from
-    const named =
-      label
-        .replace(/<math[\s\S]*?<\/math>/g, "")
-        .replace(/<[^>]*>/g, "")
-        .trim() !== "";
-    expect(named || /<math[^>]*(alttext|aria-label)="[^"]+"/.test(label)).toBe(true);
+  const radio = (question: Exercise, lang: string, value: number): string => {
+    const html = renderExercise(question, lang, {}, (href) => href, { lang, href: (image) => image });
+    return new RegExp(`<input type="radio"[^>]*value="${value}"[^>]*>`).exec(html)?.[0] ?? "";
+  };
+
+  test("the radio of an option that is only a formula is named in words, in the page's language", () => {
+    expect(radio(power, "de", 0)).toContain('aria-label="2 hoch 7"');
+    expect(radio(power, "en", 0)).toContain('aria-label="2 to the seventh power"');
+  });
+
+  test("an option with words needs no extra name, and nor does a plain text", () => {
+    expect(radio(power, "de", 1)).not.toContain("aria-label");
+    const mixed: Exercise = {
+      ...power,
+      options: [{ text: "Es ist $2^7$.", correct: true, info: "" }, ...power.options],
+    };
+    expect(radio(mixed, "de", 0)).not.toContain("aria-label");
+  });
+
+  test("an alt text of the author names the radio instead", () => {
+    const own: Exercise = {
+      ...power,
+      options: [{ text: "$2^7$", alt: "zwei hoch sieben", correct: true, info: "" }, ...power.options],
+    };
+    expect(radio(own, "de", 0)).toContain('aria-label="zwei hoch sieben"');
   });
 
   test("the outline expects the answer as the page shows it, not as the source $…$", () => {

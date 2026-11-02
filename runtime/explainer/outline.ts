@@ -8,6 +8,7 @@ import { answerText } from "../shared/questions/render.ts";
 import { inLanguage, timelineEvents, type Block, type ComponentExample, type Site, type Text } from "./content.ts";
 import { dataOf, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
 import { kindOf } from "./generated/comparator.ts";
+import { renderWithFormulas } from "../shared/text/markdown.ts";
 import { plainText } from "./generated/texts.ts";
 import { type Data, type Generated, type Templates } from "./generated/types.ts";
 import { loadSite } from "./load.ts";
@@ -47,6 +48,12 @@ export interface ComponentOutline {
   /** For an exercise component: its block's first accepted and first rejected example, for "Prüfen". */
   examples?: { accepted?: ComponentExample; rejected?: ComponentExample };
 }
+
+/**
+ * A learner text of a question as the page shows it, as text: its formulas $…$ rendered (a formula has no space the
+ * tests could rely on in a browser's text, see squash in e2e.ts), the rest as written.
+ */
+export const shownText = (text: string): string => plainText(renderWithFormulas(text));
 
 /** An exercise of a page, in the page's language: what it shows and what it accepts. */
 export type ExerciseOutline =
@@ -244,7 +251,7 @@ function walk(
           question,
           answers:
             question.type === "single-choice" || question.type === "multiple-choice"
-              ? question.options.filter((option) => option.correct).map((option) => option.text)
+              ? question.options.filter((option) => option.correct).map((option) => shownText(option.text))
               : [plainText(answerText(question, lang))],
         });
       }
