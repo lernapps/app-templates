@@ -121,6 +121,9 @@ Gefunden unterwegs: Seit #121 installierten die Vorlagen die veröffentlichte Ru
 - tooling: Branch `feat/scaffold` mit Commit 1 (tooling-Teil); `@lernapps/app-templates` auf das neue Release heben. Commit 2 braucht in tooling nichts.
 - Bestehende Apps: `lernapps update` hebt die Runtime; damit prüfen sie nur noch Inhalt. Ihre kopierten Beispieldateien bleiben, update ersetzt keine Inhalte.
 
+### Nachtrag nach dem Merge (#126, Release 0.2.0)
+- Die e2e-Tests von create in tooling fanden: Die Architektur einer Interactive-App beansprucht `src/data` (bb-interactive-data), der Scaffold hatte den Ordner nicht. Korrektur: `scaffold/interactive/src/data/count.json` (das Ziel des Zählers) und ein Test, dass der Scaffold jeden beanspruchten Pfad hat.
+
 ### Risiken
 - tooling-Tests, die den Beispielinhalt einer erzeugten App erwarten, müssen auf den Startinhalt umgestellt werden.
 - Bis zum Release von app-templates kann tooling nur gegen einen Klon testen (`--templates`, `LERNAPPS_TEMPLATES`).
