@@ -488,8 +488,12 @@ path: runtime/explainer/assessment.ts
 
 ### End-to-end tests
 
-Built. `explainerTests()` derives from the content what every page must show, checks it without JavaScript in every
-language, and with JavaScript one exercise per type and page and every component.
+Built, in two parts. `explainerTests()` checks the app's content: it derives from the content what every page must
+show and checks it without JavaScript in every language, previous and next, and with JavaScript the app's own
+components and the checks of its exercise components. `explainerRuntimeTests()` checks the runtime, the same in every
+app: one exercise per type and page, the videos, the tutor ways, the start page, the self-assessments, what is stored.
+Only this repo runs the second part, on the template and its fixtures (`explainer/e2e/runtime.e2e.ts`, not in the
+scaffold).
 
 ```arc42
 :::building-block
@@ -504,7 +508,7 @@ requires: if-archetype-content, if-runtime-texts, if-questions
 
 #### Tests interface
 
-The app's `e2e/explainer.e2e.ts` only calls `explainerTests()`.
+The app's `e2e/explainer.e2e.ts`, part of the scaffold, only calls `explainerTests()`.
 
 ```arc42
 :::interface

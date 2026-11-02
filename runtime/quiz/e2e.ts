@@ -1,9 +1,14 @@
-// The end-to-end tests of every quiz (@lernapps/app-templates/quiz/e2e), run by `lernapps check --pre-push` on the built
-// app with the app's own question bank. An app's e2e/quiz.e2e.ts is
+// The end-to-end tests of the quiz (@lernapps/app-templates/quiz/e2e), run by `lernapps check --pre-push` on the built
+// app with its own question bank, in two parts. quizTests() tests the app's content, and every app runs it: its
+// e2e/quiz.e2e.ts, part of the scaffold, is
 //
 //   import { quizTests } from "@lernapps/app-templates/quiz/e2e";
 //   quizTests();
 //
+// Each question's link opens it with its text and what it shows, its images loaded; without JavaScript every question
+// and its solution can be read; each other language has its page, its switch, and what a question shows there.
+// quizRuntimeTests() tests the runtime, the same in every app; only this repo runs it, on the template and its
+// fixtures (quiz/e2e/runtime.e2e.ts, not in the scaffold). What follows is what the two parts check together.
 // For each question: its deep link opens it, the right answer counts and a wrong one does not; after either, the
 // background of every option, the explanation and the links for further reading show, the learner's choice marked.
 // The feedback then has the focus and its top is in view, and the button to the next question comes after it.
@@ -37,8 +42,29 @@ const de = QUIZ_MESSAGES.de;
 /** The quiz's own texts in `lang`. */
 const messagesOf = messagesIn;
 
-/** The quiz's tests, for the question bank in `bank` (relative to the app's root). */
+/**
+ * The tests of a quiz's content, for the question bank in `bank` (relative to the app's root): what every app runs
+ * (e2e/quiz.e2e.ts). Each question's link opens it with what it shows; without JavaScript every question and its
+ * solution can be read; each other language has its page. What the runtime does the same in every app is
+ * quizRuntimeTests.
+ */
 export function quizTests(bank = "src/quiz.json"): void {
+  quizSuite(bank, "content");
+}
+
+/**
+ * The tests of the quiz's runtime on the question bank in `bank`: the right answer counts and a wrong one does not, with
+ * the feedback in view; the seed and the order; a run through every question to the full score; how many questions
+ * the learner chooses; what is stored. The template folder and the fixtures of lernapps/app-templates run them
+ * (e2e/runtime.e2e.ts); an app does not, its scaffold has no such file: they test the runtime, which is the same in
+ * every app, and their time grows with the bank (lernapps/app-templates#125).
+ */
+export function quizRuntimeTests(bank = "src/quiz.json"): void {
+  quizSuite(bank, "runtime");
+}
+
+function quizSuite(bank: string, part: "content" | "runtime"): void {
+  const content = part === "content";
   const all = JSON.parse(readFileSync(bank, "utf8")) as Quiz<Text>;
   const languages = quizLanguages(all);
   const quiz = quizIn(all, "de");
@@ -48,94 +74,115 @@ export function quizTests(bank = "src/quiz.json"): void {
     // answer: with motion, every click would wait for a scroll to settle, the run through a quiz grow with its size.
     test.use({ reducedMotion: "reduce" });
 
-    for (const item of quiz.questions) {
-      test(`${item.id} (${item.type}): its link opens it and the right answer counts`, async ({ page }) => {
-        await page.goto(`./#${questionId(item)}`);
-        await expect(question(page, item)).toBeVisible();
-        await expect(page.locator(".question:visible")).toHaveCount(1);
-        await answerQuestion(page, item, rightAnswer(item));
-        await expect(question(page, item).locator(".question-feedback")).toContainText(de.right);
-        await expectFeedbackInView(page, item);
-        // from the feedback, the keyboard reaches the next question (past the links of the background)
-        const next = question(page, item).locator(".question-next");
-        for (let tab = 0; tab < 30 && !(await next.evaluate((button) => button === document.activeElement)); tab++) {
-          await page.keyboard.press("Tab");
-        }
-        await expect(next).toBeFocused();
-        const reveal = question(page, item).locator(".question-reveal");
-        await expectBackground(reveal, item);
-        if (item.type === "single-choice" || item.type === "multiple-choice") {
-          const right = item.options.filter((option) => option.correct).length;
-          await expect(reveal.locator(".question-badge-right")).toHaveCount(right);
-          await expect(reveal.locator(".question-badge-right").first()).toHaveText(de.rightOption);
-        } else {
-          await expect(reveal).toContainText(de.rightAnswer);
-        }
-      });
-
-      if (item.material !== undefined) {
-        test(`${item.id} (${item.type}): what it shows is there, and its images load`, async ({ page }) => {
+    if (content) {
+      for (const item of quiz.questions) {
+        test(`${item.id} (${item.type}): its link opens it, with what it shows`, async ({ page }) => {
           await page.goto(`./#${questionId(item)}`);
-          await expectMaterial(page, item);
+          await expect(question(page, item)).toBeVisible();
+          await expect(page.locator(".question:visible")).toHaveCount(1);
+          await expect(question(page, item).locator("legend")).toHaveText(item.text);
+          if (item.material !== undefined) await expectMaterial(page, item);
         });
       }
 
-      test(`${item.id} (${item.type}): a wrong answer does not count`, async ({ page }) => {
-        await page.goto(`./#${questionId(item)}`);
-        await answerQuestion(page, item, wrongAnswer(item));
-        await expect(question(page, item).locator(".question-feedback")).toContainText(de.wrong);
-        await expectFeedbackInView(page, item);
-        await expectBackground(question(page, item).locator(".question-reveal"), item);
-        if (item.type === "single-choice" || item.type === "multiple-choice") {
-          await expect(question(page, item).locator(".question-badge-chosen").first()).toHaveText(de.yourChoice);
-        }
+      test.describe("without JavaScript", () => {
+        test.use({ javaScriptEnabled: false });
+
+        test("every question and its solution can be read", async ({ page }) => {
+          await page.goto("./");
+          for (const item of quiz.questions) {
+            await expect(question(page, item).locator("legend")).toHaveText(item.text);
+            await expectMaterial(page, item, { loaded: false });
+            await expectBackground(page.locator(`#loesung-${item.id}`), item);
+          }
+        });
       });
     }
 
-    test("the seed in the address gives the order; without one, the address gets one", async ({ page }) => {
-      const everything = `&n=${quiz.questions.length}`;
-      const order = async (address: string) => {
-        await page.goto(address);
-        return page.locator(".question").evaluateAll((items) => items.map((item) => item.id).join());
-      };
-      const first = await order(`./?seed=11${everything}`);
-      expect(await order(`./?seed=11${everything}`)).toBe(first);
-      if (quiz.questions.length > 2) {
-        const others = [];
-        for (const seed of [12, 13, 14, 15, 16]) others.push(await order(`./?seed=${seed}${everything}`));
-        expect(others.some((other) => other !== first)).toBe(true);
-      }
-      await page.goto("./");
-      await expect.poll(() => new URL(page.url()).searchParams.get("seed")).toMatch(/^\d+$/);
-    });
+    if (!content)
+      for (const item of quiz.questions) {
+        test(`${item.id} (${item.type}): its link opens it and the right answer counts`, async ({ page }) => {
+          await page.goto(`./#${questionId(item)}`);
+          await expect(question(page, item)).toBeVisible();
+          await expect(page.locator(".question:visible")).toHaveCount(1);
+          await answerQuestion(page, item, rightAnswer(item));
+          await expect(question(page, item).locator(".question-feedback")).toContainText(de.right);
+          await expectFeedbackInView(page, item);
+          // from the feedback, the keyboard reaches the next question (past the links of the background)
+          const next = question(page, item).locator(".question-next");
+          for (let tab = 0; tab < 30 && !(await next.evaluate((button) => button === document.activeElement)); tab++) {
+            await page.keyboard.press("Tab");
+          }
+          await expect(next).toBeFocused();
+          const reveal = question(page, item).locator(".question-reveal");
+          await expectBackground(reveal, item);
+          if (item.type === "single-choice" || item.type === "multiple-choice") {
+            const right = item.options.filter((option) => option.correct).length;
+            await expect(reveal.locator(".question-badge-right")).toHaveCount(right);
+            await expect(reveal.locator(".question-badge-right").first()).toHaveText(de.rightOption);
+          } else {
+            await expect(reveal).toContainText(de.rightAnswer);
+          }
+        });
 
-    test("all right answers give the full score, then the solutions show", async ({ page }) => {
-      await page.goto("./");
-      if (quiz.questions.length > 1) await page.locator(".quiz-start button").click();
-      expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
-      for (let step = 0; step < quiz.questions.length; step++) {
-        const id = await page.locator(".question:visible").getAttribute("data-id");
-        const item = quiz.questions.find((candidate) => candidate.id === id);
-        if (item === undefined) throw new Error(`no visible question at step ${step + 1}`);
-        await answerQuestion(page, item, rightAnswer(item));
-        await question(page, item).locator(".question-next").click();
+        test(`${item.id} (${item.type}): a wrong answer does not count`, async ({ page }) => {
+          await page.goto(`./#${questionId(item)}`);
+          await answerQuestion(page, item, wrongAnswer(item));
+          await expect(question(page, item).locator(".question-feedback")).toContainText(de.wrong);
+          await expectFeedbackInView(page, item);
+          await expectBackground(question(page, item).locator(".question-reveal"), item);
+          if (item.type === "single-choice" || item.type === "multiple-choice") {
+            await expect(question(page, item).locator(".question-badge-chosen").first()).toHaveText(de.yourChoice);
+          }
+        });
       }
-      const total = String(quiz.questions.length);
-      await expect(page.locator(".quiz-score")).toHaveText(
-        de.score.replace("{score}", total).replace("{total}", total),
-      );
-      await expect(page.locator("#loesungen")).toBeVisible();
-      // only the last result, and only when the bank asks for it, under the app's own prefix
-      const stored = await page.evaluate(() => Object.keys(localStorage));
-      if (quiz.rememberLastResult === true) {
-        expect(stored).toHaveLength(1);
-        expect(stored[0]).toMatch(/^lernapps:.+:last-result$/);
-      } else {
-        expect(stored).toEqual([]);
-      }
-    });
 
-    if (quiz.questions.length > 1) {
+    if (!content)
+      test("the seed in the address gives the order; without one, the address gets one", async ({ page }) => {
+        const everything = `&n=${quiz.questions.length}`;
+        const order = async (address: string) => {
+          await page.goto(address);
+          return page.locator(".question").evaluateAll((items) => items.map((item) => item.id).join());
+        };
+        const first = await order(`./?seed=11${everything}`);
+        expect(await order(`./?seed=11${everything}`)).toBe(first);
+        if (quiz.questions.length > 2) {
+          const others = [];
+          for (const seed of [12, 13, 14, 15, 16]) others.push(await order(`./?seed=${seed}${everything}`));
+          expect(others.some((other) => other !== first)).toBe(true);
+        }
+        await page.goto("./");
+        await expect.poll(() => new URL(page.url()).searchParams.get("seed")).toMatch(/^\d+$/);
+      });
+
+    if (!content)
+      test("all right answers give the full score, then the solutions show", async ({ page }) => {
+        await page.goto("./");
+        if (quiz.questions.length > 1) await page.locator(".quiz-start button").click();
+        expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+        for (let step = 0; step < quiz.questions.length; step++) {
+          const id = await page.locator(".question:visible").getAttribute("data-id");
+          const item = quiz.questions.find((candidate) => candidate.id === id);
+          if (item === undefined) throw new Error(`no visible question at step ${step + 1}`);
+          await answerQuestion(page, item, rightAnswer(item));
+          await question(page, item).locator(".question-next").click();
+        }
+        const total = String(quiz.questions.length);
+        await expect(page.locator(".quiz-score")).toHaveText(
+          de.score.replace("{score}", total).replace("{total}", total),
+        );
+        await expect(page.locator("#loesungen")).toBeVisible();
+        // only the last result, and only when the bank asks for it, under the app's own prefix
+        const stored = await page.evaluate(() => Object.keys(localStorage));
+        if (quiz.rememberLastResult === true) {
+          expect(stored).toHaveLength(1);
+          expect(stored[0]).toMatch(/^lernapps:.+:last-result$/);
+        } else {
+          expect(stored).toEqual([]);
+        }
+      });
+
+    if (!content && quiz.questions.length > 1) {
       test("the learner chooses how many questions to answer; the address keeps the choice", async ({ page }) => {
         await page.goto("./?seed=11");
         await expect(page.locator(".quiz-start")).toBeVisible();
@@ -163,70 +210,60 @@ export function quizTests(bank = "src/quiz.json"): void {
       });
     }
 
-    test.describe("without JavaScript", () => {
-      test.use({ javaScriptEnabled: false });
-
-      test("every question and its solution can be read", async ({ page }) => {
-        await page.goto("./");
-        for (const item of quiz.questions) {
-          await expect(question(page, item).locator("legend")).toHaveText(item.text);
-          await expectMaterial(page, item, { loaded: false });
-          await expectBackground(page.locator(`#loesung-${item.id}`), item);
-        }
-      });
-    });
-
     for (const lang of languages.slice(1)) {
       const local = quizIn(all, lang);
       const words = messagesOf(lang);
       const address = `./${lang}/`;
 
       test.describe(`in ${lang}`, () => {
-        test.describe("without JavaScript", () => {
-          test.use({ javaScriptEnabled: false });
+        if (content)
+          test.describe("without JavaScript", () => {
+            test.use({ javaScriptEnabled: false });
 
-          test(`the page is in ${lang}, every question and its solution can be read, the switch leads to every language`, async ({
-            page,
-          }) => {
-            await page.goto(address);
-            await expect(page.locator("html")).toHaveAttribute("lang", lang);
-            await expect(page.locator("h1")).toHaveText(local.title);
-            await expect(page.locator("#loesungen h2")).toHaveText(words.solutions);
-            for (const item of local.questions) {
-              await expect(question(page, item).locator("legend")).toHaveText(item.text);
-              await expectMaterial(page, item, { loaded: false });
-              await expectBackground(page.locator(`#loesung-${item.id}`), item);
-            }
-            for (const other of languages) {
-              await expect(page.locator(`link[rel="alternate"][hreflang="${other}"]`)).toHaveCount(1);
-            }
-            for (const other of languages.filter((candidate) => candidate !== lang)) {
+            test(`the page is in ${lang}, every question and its solution can be read, the switch leads to every language`, async ({
+              page,
+            }) => {
               await page.goto(address);
-              await page.locator(`.page-languages a[hreflang="${other}"]`).click();
-              await expect(page.locator("html")).toHaveAttribute("lang", other);
-              await expect(page.locator("h1")).toHaveText(quizIn(all, other).title);
-              await expect(page.locator('.page-languages a[aria-current="page"]')).toHaveAttribute("hreflang", other);
-            }
+              await expect(page.locator("html")).toHaveAttribute("lang", lang);
+              await expect(page.locator("h1")).toHaveText(local.title);
+              await expect(page.locator("#loesungen h2")).toHaveText(words.solutions);
+              for (const item of local.questions) {
+                await expect(question(page, item).locator("legend")).toHaveText(item.text);
+                await expectMaterial(page, item, { loaded: false });
+                await expectBackground(page.locator(`#loesung-${item.id}`), item);
+              }
+              for (const other of languages) {
+                await expect(page.locator(`link[rel="alternate"][hreflang="${other}"]`)).toHaveCount(1);
+              }
+              for (const other of languages.filter((candidate) => candidate !== lang)) {
+                await page.goto(address);
+                await page.locator(`.page-languages a[hreflang="${other}"]`).click();
+                await expect(page.locator("html")).toHaveAttribute("lang", other);
+                await expect(page.locator("h1")).toHaveText(quizIn(all, other).title);
+                await expect(page.locator('.page-languages a[aria-current="page"]')).toHaveAttribute("hreflang", other);
+              }
+            });
           });
-        });
 
-        test(`what a question shows, in ${lang}`, async ({ page }) => {
-          const item = local.questions.find((candidate) => candidate.material !== undefined);
-          test.skip(item === undefined, "no question shows content");
-          if (item === undefined) return;
-          await page.goto(`${address}#${questionId(item)}`);
-          await expectMaterial(page, item);
-        });
+        if (content)
+          test(`what a question shows, in ${lang}`, async ({ page }) => {
+            const item = local.questions.find((candidate) => candidate.material !== undefined);
+            test.skip(item === undefined, "no question shows content");
+            if (item === undefined) return;
+            await page.goto(`${address}#${questionId(item)}`);
+            await expectMaterial(page, item);
+          });
 
-        test(`one question, answered in ${lang}`, async ({ page }) => {
-          const item = local.questions[0];
-          if (item === undefined) throw new Error("the quiz has no questions");
-          await page.goto(`${address}#${questionId(item)}`);
-          await expect(question(page, item)).toBeVisible();
-          await answerQuestion(page, item, rightAnswer(item), lang);
-          await expect(question(page, item).locator(".question-feedback")).toContainText(words.right);
-          await expectBackground(question(page, item).locator(".question-reveal"), item);
-        });
+        if (!content)
+          test(`one question, answered in ${lang}`, async ({ page }) => {
+            const item = local.questions[0];
+            if (item === undefined) throw new Error("the quiz has no questions");
+            await page.goto(`${address}#${questionId(item)}`);
+            await expect(question(page, item)).toBeVisible();
+            await answerQuestion(page, item, rightAnswer(item), lang);
+            await expect(question(page, item).locator(".question-feedback")).toContainText(words.right);
+            await expectBackground(question(page, item).locator(".question-reveal"), item);
+          });
       });
     }
   });

@@ -196,8 +196,12 @@ path: runtime/quiz/engine.ts
 
 ### End-to-end tests
 
-Built. `quizTests()` checks every question of the bank in the browser (deep link, right and wrong answer, feedback in
-view with the focus), the full score, the page without JavaScript, and each further language.
+Built, in two parts. `quizTests()` checks the app's content: each question's deep link with what it shows, the page
+without JavaScript with every question and its solution, and each further language. `quizRuntimeTests()` checks the
+runtime, the same in every app: right and wrong answer with the feedback in view and the focus, the seed and the order,
+the run to the full score, the number of questions, what is stored. Only this repo runs the second part, on the
+template and its fixtures (`quiz/e2e/runtime.e2e.ts`, not in the scaffold): its time grows with the bank, and it tests
+nothing an app writes.
 
 ```arc42
 :::building-block
@@ -212,7 +216,7 @@ requires: if-archetype-content, if-runtime-texts
 
 #### Tests interface
 
-The app's `e2e/quiz.e2e.ts` only calls `quizTests()`.
+The app's `e2e/quiz.e2e.ts`, part of the scaffold, only calls `quizTests()`.
 
 ```arc42
 :::interface
