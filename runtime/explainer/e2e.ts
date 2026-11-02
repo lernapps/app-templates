@@ -1,9 +1,15 @@
-// The end-to-end tests of every explainer (@lernapps/app-templates/explainer/e2e), run by `lernapps check --pre-push`
-// on the built app with the app's own content. An app's e2e/explainer.e2e.ts is
+// The end-to-end tests of the explainer (@lernapps/app-templates/explainer/e2e), run by `lernapps check --pre-push` on
+// the built app with its own content, in two parts. explainerTests() tests the app's content, and every app runs it:
+// its e2e/explainer.e2e.ts, part of the scaffold, is
 //
 //   import { explainerTests } from "@lernapps/app-templates/explainer/e2e";
 //   explainerTests();
 //
+// Without JavaScript every page as its content says, in every language; previous and next (at desktop width); the
+// app's own components and the checks of its exercise components. explainerRuntimeTests() tests the runtime, the same
+// in every app: the exercises of each type, the videos, the tutor ways, the start page, the self-assessments and what
+// is stored. Only this repo runs it, on the template and its fixtures (explainer/e2e/runtime.e2e.ts, not in the
+// scaffold). What follows is what the two parts check together.
 // What they expect comes from the content in src/ (outline.ts), not from the rendered pages. Without JavaScript, for
 // every page in every language: the heading levels follow the nesting (page h1, section h2, subsection h3, a box one
 // below its place), every section heading is visible, the number of <math> elements is the number of formulas in the
@@ -827,147 +833,182 @@ async function expectResultLine(
   expect(await response.text(), "the tutor page has the exercise").toContain(id);
 }
 
-/** The explainer's tests, for the content in `root`/src. */
+/**
+ * The tests of an explainer's content, for the content in `root`/src: what every app runs (e2e/explainer.e2e.ts).
+ * Without JavaScript every page as its content says, previous and next, the app's own components and the checks of
+ * its exercise components. What the runtime does the same in every app is explainerRuntimeTests.
+ */
 export function explainerTests(root = "."): void {
+  explainerSuite(root, "content");
+}
+
+/**
+ * The tests of the explainer's runtime on the content in `root`/src: the exercises of each type, the videos, the tutor
+ * ways, the start page, the self-assessments, what is stored. The template folder and the fixtures of
+ * lernapps/app-templates run them (e2e/runtime.e2e.ts); an app does not, its scaffold has no such file: they test the
+ * runtime, which is the same in every app, not the app's content.
+ */
+export function explainerRuntimeTests(root = "."): void {
+  explainerSuite(root, "runtime");
+}
+
+/** Only at desktop width, in a test of what does not depend on the width; what a page shows is tested at 360 px too. */
+const desktopOnly = (page: Page) => test.skip((page.viewportSize()?.width ?? 0) <= 400, "only at desktop width");
+
+function explainerSuite(root: string, part: "content" | "runtime"): void {
   const app = outline(root);
+  const content = part === "content";
 
   test.describe("explainer", () => {
     test.describe.configure({ mode: "parallel" });
     test.use({ reducedMotion: "reduce" });
 
-    test.describe("without JavaScript", () => {
-      test.use({ javaScriptEnabled: false });
+    if (content)
+      test.describe("without JavaScript", () => {
+        test.use({ javaScriptEnabled: false });
 
-      for (const lang of app.languages) {
-        for (const item of app.pages[lang] ?? []) {
-          test(`${item.url || "./"}: headings, sections, formulas, figures and anchors as in the content`, async ({
-            page,
-          }) => {
-            await page.goto(`./${item.url}`);
-            const main = page.locator("main");
-            const headings = await main.locator("h1, h2, h3, h4, h5, h6").evaluateAll((elements) =>
-              elements.map((element) => ({
-                level: Number(element.tagName.slice(1)),
-                text: (element.textContent ?? "").replace(/\s+/g, " ").trim(),
-              })),
-            );
-            expect(headings, "the heading levels follow the nesting").toEqual(item.headings);
-            for (const section of item.sections) {
-              const heading = page.locator(`[id="${section.id}"]`);
-              await expect(heading, `section ${section.id}`).toBeVisible();
-              await expect(heading).toHaveText(section.title);
+        for (const lang of app.languages) {
+          for (const item of app.pages[lang] ?? []) {
+            test(`${item.url || "./"}: headings, sections, formulas, figures and anchors as in the content`, async ({
+              page,
+            }) => {
+              await page.goto(`./${item.url}`);
+              const main = page.locator("main");
+              const headings = await main.locator("h1, h2, h3, h4, h5, h6").evaluateAll((elements) =>
+                elements.map((element) => ({
+                  level: Number(element.tagName.slice(1)),
+                  text: (element.textContent ?? "").replace(/\s+/g, " ").trim(),
+                })),
+              );
+              expect(headings, "the heading levels follow the nesting").toEqual(item.headings);
+              for (const section of item.sections) {
+                const heading = page.locator(`[id="${section.id}"]`);
+                await expect(heading, `section ${section.id}`).toBeVisible();
+                await expect(heading).toHaveText(section.title);
+              }
+              // the formulas of the content; an exercise component's no-JS task, from its describe, is not content
+              const formulas = await main
+                .locator("math")
+                .evaluateAll((elements) => elements.filter((math) => !math.closest(".explainer-described")).length);
+              expect(formulas, "one <math> per formula").toBe(item.formulas);
+              for (const name of item.figures) {
+                await expect(
+                  main.getByRole("img", { name, exact: true }).first(),
+                  `the figure "${name}"`,
+                ).toBeVisible();
+              }
+              await expectAnchors(page);
+              await expectLanguages(page, item, app.languages);
+              await expectExercises(page, item);
+              await expectNojs(page, item);
+              await expectVideos(page, item);
+            });
+          }
+
+          for (const item of app.others[lang] ?? []) {
+            test(`${item.url || "./"}: its heading, its links and anchors, its languages`, async ({ page }) => {
+              await page.goto(`./${item.url}`);
+              await expect(page.locator("main h1")).toHaveText(item.title);
+              await expectAnchors(page);
+              await expectLanguages(page, item, app.languages);
+              // only a content page starts a tutor; the start page says what it is
+              await expect(page.locator(".explainer-tutor"), "no way to the tutor here").toHaveCount(0);
+              if (item.kind === "start") {
+                await expect(page.locator(".explainer-tutor-about h2")).toHaveText(messageOf(item.lang, "tutorTitle"));
+              }
+            });
+          }
+
+          test(`${lang}: previous and next form one chain over all pages`, async ({ page }) => {
+            desktopOnly(page);
+            const order = (app.pages[lang] ?? []).map((item) => item.url);
+            const first = order[0];
+            if (first === undefined) throw new Error(`no page in ${lang}`);
+            const relative = (url: string) => {
+              const path = new URL(url).pathname;
+              const at = order.find((candidate) => path.endsWith(`/${candidate}`));
+              return at ?? path;
+            };
+            const forward: string[] = [];
+            await page.goto(`./${first}`);
+            for (let step = 0; step <= order.length; step++) {
+              forward.push(relative(page.url()));
+              const next = page.locator('a[rel="next"]');
+              if ((await next.count()) === 0) break;
+              // the next page before its links count: a large page may still load when the loop looks again
+              const here = page.url();
+              await next.click();
+              await page.waitForURL((url) => url.href !== here);
             }
-            // the formulas of the content; an exercise component's no-JS task, from its describe, is not content
-            const formulas = await main
-              .locator("math")
-              .evaluateAll((elements) => elements.filter((math) => !math.closest(".explainer-described")).length);
-            expect(formulas, "one <math> per formula").toBe(item.formulas);
-            for (const name of item.figures) {
-              await expect(main.getByRole("img", { name, exact: true }).first(), `the figure "${name}"`).toBeVisible();
+            expect(forward, "next leads through every page in order").toEqual(order);
+            const backward: string[] = [];
+            for (let step = 0; step <= order.length; step++) {
+              backward.push(relative(page.url()));
+              const previous = page.locator('a[rel="prev"]');
+              if ((await previous.count()) === 0) break;
+              const here = page.url();
+              await previous.click();
+              await page.waitForURL((url) => url.href !== here);
             }
-            await expectAnchors(page);
-            await expectLanguages(page, item, app.languages);
-            await expectExercises(page, item);
-            await expectNojs(page, item);
-            await expectVideos(page, item);
+            expect(backward, "previous leads back through every page").toEqual([...order].reverse());
           });
         }
-
-        for (const item of app.others[lang] ?? []) {
-          test(`${item.url || "./"}: its heading, its links and anchors, its languages`, async ({ page }) => {
-            await page.goto(`./${item.url}`);
-            await expect(page.locator("main h1")).toHaveText(item.title);
-            await expectAnchors(page);
-            await expectLanguages(page, item, app.languages);
-            // only a content page starts a tutor; the start page says what it is
-            await expect(page.locator(".explainer-tutor"), "no way to the tutor here").toHaveCount(0);
-            if (item.kind === "start") {
-              await expect(page.locator(".explainer-tutor-about h2")).toHaveText(messageOf(item.lang, "tutorTitle"));
-            }
-          });
-        }
-
-        test(`${lang}: previous and next form one chain over all pages`, async ({ page }) => {
-          const order = (app.pages[lang] ?? []).map((item) => item.url);
-          const first = order[0];
-          if (first === undefined) throw new Error(`no page in ${lang}`);
-          const relative = (url: string) => {
-            const path = new URL(url).pathname;
-            const at = order.find((candidate) => path.endsWith(`/${candidate}`));
-            return at ?? path;
-          };
-          const forward: string[] = [];
-          await page.goto(`./${first}`);
-          for (let step = 0; step <= order.length; step++) {
-            forward.push(relative(page.url()));
-            const next = page.locator('a[rel="next"]');
-            if ((await next.count()) === 0) break;
-            // the next page before its links count: a large page may still load when the loop looks again
-            const here = page.url();
-            await next.click();
-            await page.waitForURL((url) => url.href !== here);
-          }
-          expect(forward, "next leads through every page in order").toEqual(order);
-          const backward: string[] = [];
-          for (let step = 0; step <= order.length; step++) {
-            backward.push(relative(page.url()));
-            const previous = page.locator('a[rel="prev"]');
-            if ((await previous.count()) === 0) break;
-            const here = page.url();
-            await previous.click();
-            await page.waitForURL((url) => url.href !== here);
-          }
-          expect(backward, "previous leads back through every page").toEqual([...order].reverse());
-        });
-      }
-    });
+      });
 
     // with JavaScript in German, one exercise of each type per page; the other languages render the same code
     test.describe("with JavaScript", () => {
       // at the narrowest width only, where the feedback is hardest to keep in view: the exercises' logic is the same
       // at every width, and the hooks stay fast
       test.skip(({ viewport }) => (viewport?.width ?? 0) > 400, "the exercises run at 360 px");
-      for (const item of app.pages["de"] ?? []) {
-        const types = new Map<string, ExerciseOutline>();
-        for (const exercise of item.exercises) if (!types.has(exercise.type)) types.set(exercise.type, exercise);
-        if (types.size === 0) continue;
-        test(`${item.url}: one exercise of each type checks its answers (${[...types.keys()].join(", ")})`, async ({
-          page,
-        }) => {
-          for (const exercise of types.values()) {
-            if (exercise.kind === "question") await checkQuestion(page, item.url, exercise);
-            else if (exercise.kind === "open") await checkOpenTask(page, item.url, exercise);
-            else await checkGenerated(page, item.url, exercise);
-          }
-          // only an open task keeps something, its answer, and only while the tab is open
-          expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
-          const kept = await page.evaluate(() => Object.keys(sessionStorage));
-          expect(
-            kept.filter((key) => !/^lernapps:[^:]+:antwort:/.test(key)),
-            "nothing else in the tab",
-          ).toEqual([]);
-          expect(kept.length, "an answer per open task").toBe(types.has("open-task") ? 1 : 0);
-        });
-      }
-      for (const item of app.pages["de"] ?? []) {
-        if (item.videos.length === 0) continue;
-        test(`${item.url}: the videos load nothing before a click, the player after it, directly once chosen`, async ({
-          page,
-          baseURL,
-        }) => {
-          await checkVideos(page, item, new URL(baseURL ?? page.url()).origin);
-        });
-      }
-      for (const item of app.pages["de"] ?? []) {
-        if (item.components.length === 0) continue;
-        test(`${item.url}: each component hydrates without a console error (${item.components.map((component) => component.name).join(", ")})`, async ({
-          page,
-        }) => {
-          await checkComponents(page, item);
-          expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual([]);
-        });
-      }
+      if (!content)
+        for (const item of app.pages["de"] ?? []) {
+          const types = new Map<string, ExerciseOutline>();
+          for (const exercise of item.exercises) if (!types.has(exercise.type)) types.set(exercise.type, exercise);
+          if (types.size === 0) continue;
+          test(`${item.url}: one exercise of each type checks its answers (${[...types.keys()].join(", ")})`, async ({
+            page,
+          }) => {
+            for (const exercise of types.values()) {
+              if (exercise.kind === "question") await checkQuestion(page, item.url, exercise);
+              else if (exercise.kind === "open") await checkOpenTask(page, item.url, exercise);
+              else await checkGenerated(page, item.url, exercise);
+            }
+            // only an open task keeps something, its answer, and only while the tab is open
+            expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+            const kept = await page.evaluate(() => Object.keys(sessionStorage));
+            expect(
+              kept.filter((key) => !/^lernapps:[^:]+:antwort:/.test(key)),
+              "nothing else in the tab",
+            ).toEqual([]);
+            expect(kept.length, "an answer per open task").toBe(types.has("open-task") ? 1 : 0);
+          });
+        }
+      if (!content)
+        for (const item of app.pages["de"] ?? []) {
+          if (item.videos.length === 0) continue;
+          test(`${item.url}: the videos load nothing before a click, the player after it, directly once chosen`, async ({
+            page,
+            baseURL,
+          }) => {
+            await checkVideos(page, item, new URL(baseURL ?? page.url()).origin);
+          });
+        }
+      if (content)
+        for (const item of app.pages["de"] ?? []) {
+          if (item.components.length === 0) continue;
+          test(`${item.url}: each component hydrates without a console error (${item.components.map((component) => component.name).join(", ")})`, async ({
+            page,
+          }) => {
+            await checkComponents(page, item);
+            expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual(
+              [],
+            );
+          });
+        }
     });
+
+    // everything below tests the runtime
+    if (content) return;
 
     for (const item of (app.pages["de"] ?? []).filter((candidate) =>
       candidate.exercises.some((exercise) => exercise.kind === "generated"),
