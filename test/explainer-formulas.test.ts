@@ -1,6 +1,6 @@
 // The texts of an explainer's exercises: formulas $…$ in the texts of a quiz question (question, options, background,
 // explanation), the sentence above a generated exercise's live task, and its worked tasks with JavaScript.
-import { cpSync, mkdtempSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
@@ -68,6 +68,70 @@ describe("formulas in the texts of a question", () => {
     const json = JSON.parse(/class="explainer-exercise-data">(.*?)<\/script>/s.exec(html)?.[1] ?? "{}");
     expect(Object.keys(json.rendered)).toContain("Rechts fehlt ein $\\ce{O}$.");
     expect(json.rendered["Rechts fehlt ein $\\ce{O}$."]).toContain("<math");
+  });
+});
+
+describe("a formula as the text of an option (#120)", () => {
+  const power: Exercise = {
+    type: "single-choice",
+    id: "linke-stelle",
+    text: "Welche Zweierpotenz gehört zur linken Stelle?",
+    options: [
+      { text: "$2^7$", correct: true, info: "Die linke Stelle hat den Stellenwert 128." },
+      { text: "2^8", correct: false, info: "" },
+    ],
+    explanation: "",
+    links: [],
+  };
+
+  const radio = (question: Exercise, lang: string, value: number): string => {
+    const html = renderExercise(question, lang, {}, (href) => href, { lang, href: (image) => image });
+    return new RegExp(`<input type="radio"[^>]*value="${value}"[^>]*>`).exec(html)?.[0] ?? "";
+  };
+
+  test("the radio of an option that is only a formula is named in words, in the page's language", () => {
+    expect(radio(power, "de", 0)).toContain('aria-label="2 hoch 7"');
+    expect(radio(power, "en", 0)).toContain('aria-label="2 to the seventh power"');
+  });
+
+  test("an option with words needs no extra name, and nor does a plain text", () => {
+    expect(radio(power, "de", 1)).not.toContain("aria-label");
+    const mixed: Exercise = {
+      ...power,
+      options: [{ text: "Es ist $2^7$.", correct: true, info: "" }, ...power.options],
+    };
+    expect(radio(mixed, "de", 0)).not.toContain("aria-label");
+  });
+
+  test("an alt text of the author names the radio instead", () => {
+    const own: Exercise = {
+      ...power,
+      options: [{ text: "$2^7$", alt: "zwei hoch sieben", correct: true, info: "" }, ...power.options],
+    };
+    expect(radio(own, "de", 0)).toContain('aria-label="zwei hoch sieben"');
+  });
+
+  test("the outline expects the answer as the page shows it, not as the source $…$", () => {
+    const root = mkdtempSync(join(tmpdir(), "explainer-outline-"));
+    cpSync(join(import.meta.dirname, "fixtures/explainer-all-blocks"), join(root, "src"), { recursive: true });
+    // the right option of "prozent-von-200" becomes a formula
+    const file = join(root, "src/zahlen/zahlen-01.yaml");
+    const yaml = readFileSync(file, "utf8");
+    expect(yaml).toContain('- text: { de: "2", en: "2" }');
+    writeFileSync(
+      file,
+      yaml
+        .replace('- text: { de: "2", en: "2" }', '- text: { de: "$2^7$", en: "$2^7$" }')
+        .replace('examples: { accepted: ["2"], rejected: [1] }', "examples: { accepted: [0], rejected: [1] }"),
+    );
+    const answers = Object.values(outline(root).pages)
+      .flat()
+      .flatMap((item) => item.exercises)
+      .filter((exercise) => exercise.kind === "question" && exercise.id === "prozent-von-200")
+      .flatMap((exercise) => (exercise.kind === "question" ? exercise.answers : []));
+    expect(answers.length).toBeGreaterThan(0);
+    // what a learner reads in "Lösung": the rendered formula's text, which the test compares with innerText
+    for (const answer of answers) expect(answer).not.toContain("$");
   });
 });
 
