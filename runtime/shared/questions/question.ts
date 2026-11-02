@@ -20,6 +20,8 @@ export interface Option<T extends Text = string> {
   text: T;
   correct: boolean;
   info: T;
+  /** The option spoken, as its radio or checkbox is named: for an option that is only a formula; else made from it. */
+  alt?: T;
   link?: Link<T>;
 }
 
@@ -209,6 +211,7 @@ export function questionIn(question: Question<Text>, lang: string): Question {
           text: t(option.text),
           correct: option.correct,
           info: t(option.info),
+          ...(option.alt === undefined ? {} : { alt: t(option.alt) }),
           ...(option.link === undefined ? {} : { link: link(option.link) }),
         })),
       };

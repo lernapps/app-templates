@@ -12,6 +12,7 @@
 import { renderQuestion } from "../shared/questions/render.ts";
 import { type MaterialContext, renderMaterial } from "../shared/blocks/index.ts";
 import { plain, renderWithFormulas } from "../shared/text/markdown.ts";
+import { formulaAlternative } from "../shared/text/speech.ts";
 import {
   assessments,
   drawsTasks,
@@ -117,6 +118,7 @@ function itemHtml(context: AssessmentContext, data: AssessmentItemData, n: numbe
   return `${label}${renderQuestion(question, {
     lang,
     format: (text) => rendered[text] ?? renderWithFormulas(text),
+    describe: (text) => formulaAlternative(text, lang),
     ...(question.material === undefined ? {} : { materialHtml: renderMaterial(question.material, context.material) }),
   })}`;
 }

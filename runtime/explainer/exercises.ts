@@ -16,6 +16,7 @@ import { questionFor, taskKey } from "./generated/question.ts";
 import { WORKED_TASKS } from "./tasks.ts";
 import { type Data, type Generated, type LanguageTemplates, type Templates } from "./generated/types.ts";
 import { plain, renderInline, renderMarkdown, renderWithFormulas } from "../shared/text/markdown.ts";
+import { formulaAlternative } from "../shared/text/speech.ts";
 import { distinctSeeds } from "./tasks.ts";
 import { message } from "./messages.ts";
 
@@ -166,6 +167,7 @@ function questionExercise(block: QuestionBlock, lang: string, material: Material
     renderQuestion(question, {
       lang,
       format: renderWithFormulas,
+      describe: (text) => formulaAlternative(text, lang),
       ...(question.material === undefined ? {} : { materialHtml: renderMaterial(question.material, material) }),
     }),
     `<details class="explainer-solution"><summary>${plain(questionMessagesIn(lang).solution)}</summary>`,

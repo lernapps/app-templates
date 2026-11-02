@@ -190,6 +190,10 @@
                 "description": "One to three sentences of background on this option itself, true whether or not it is the right answer, e.g. \"Der Uluru ist ein Inselberg in der Wüste Zentralaustraliens ...\". After an answer it shows for every option. For a wrong option it is also the reason a learner who chose it reads with the feedback, so say there why it does not fit.",
                 "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
               },
+              "alt": {
+                "description": "Optional: the option as it is spoken, for the name of its radio button or checkbox, when its text is only a formula, e.g. \"zwei hoch sieben\" for \"$2^7$\". Without it the name is made from the formula in the page's language (\"2 hoch 7\"); write it where that reads badly, e.g. for a chemical formula. Not needed when the text has words.",
+                "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
+              },
               "link": {
                 "description": "Further reading on this option.",
                 "$ref": "#/$defs/link"

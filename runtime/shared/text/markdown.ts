@@ -158,7 +158,7 @@ export function renderInline(source: string, resolve: (href: string) => string):
 /** A plain text as HTML. */
 export const plain = escape;
 
-const FORMULA = /\$((?:\\.|[^\\$\n])+?)\$/g;
+export const FORMULA = /\$((?:\\.|[^\\$\n])+?)\$/g;
 
 /** A plain text as HTML in which only $…$ is a formula (MathML); everything else stays text, as in a quiz. */
 export function renderWithFormulas(text: string): string {
