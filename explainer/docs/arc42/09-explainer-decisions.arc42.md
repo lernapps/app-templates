@@ -441,3 +441,27 @@ date: 2026-10-28
 addresses: qg-understandable, qg-privacy, con-no-request-before-click
 :::
 ```
+
+## Format 2 Places the App on the Learning Map
+
+The catalog's learning map shows per subject its strands and competencies, and which apps practise them. An explainer
+says where it belongs by its structure: `src/app.yaml` names one strand, `<subject>/<strand>`, or `none` so that every
+app decides and none forgets; then every page names the competencies it practises, and the app's are those of its
+pages. The build writes them with the pages' addresses and titles to `lernapps-pages.json` (`if-page-list`), which the
+catalog reads instead of hand-written topics, so no page is listed twice. The fields are required, so this is a new
+format: `format: 2` with `explainer.v2.schema.json`, which refers to format 1 for everything else. Format 1, an
+`app.yaml` without `format`, stays valid and behaves as before, for apps that do not move; they are not on the map.
+That the competencies of a page belong to the subject of the app's strand cannot be checked by the app, which does not
+know the subject's ids; the catalog checks them when the app is listed. Rejected: the strand and competencies in the
+catalog entry for explainers (the pages would be listed by hand twice); optional fields in format 1 (an app could
+forget them).
+
+```arc42
+:::decision
+id: dec-explainer-format-2
+title: Explainer format 2 names the app's strand and each page's competencies, and the build lists the pages
+status: accepted
+date: 2026-11-03
+addresses: qg-checkable, con-runtime-unchanged
+:::
+```

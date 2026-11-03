@@ -68,6 +68,7 @@
     },
     "./explainer/style.css": "./runtime/explainer/explainer.css",
     "./explainer/explainer.v1.schema.json": "./runtime/explainer/explainer.v1.schema.json",
+    "./explainer/explainer.v2.schema.json": "./runtime/explainer/explainer.v2.schema.json",
     "./interactive": {
       "types": "./runtime/interactive/interactive.ts",
       "default": "./dist/interactive.mjs"

@@ -1,4 +1,5 @@
-// The content of an explainer, as the YAML files in src/ give it (explainer.v1.schema.json) and the build reads it
+// The content of an explainer, as the YAML files in src/ give it (explainer.v1.schema.json, or in format 2
+// explainer.v2.schema.json) and the build reads it
 // (load.ts): the app, its chapters in order, their pages in order, the data files, the bundled images and the
 // components (src/components/, components.ts) with the blocks that use them.
 
@@ -43,6 +44,10 @@ export interface Source {
 }
 
 export interface App {
+  /** The format of the content: 2, or none for format 1. */
+  format?: 2;
+  /** Format 2: the strand of the learning map the app stays in, <subject>/<strand>, or none. */
+  strand?: string;
   title: Text;
   intro: Text;
   languages: readonly string[];
@@ -102,6 +107,8 @@ export interface Page {
   file: string;
   title: Text;
   description?: Text;
+  /** Format 2: the ids of the competencies of the learning map that the page practises. */
+  competencies?: readonly string[];
   /** What the page teaches, for the tutor's scope (scope.ts). */
   scope?: Text;
   blocks: readonly Block[];

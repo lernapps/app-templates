@@ -1,25 +1,35 @@
-// The explainer's content schema (explainer.v1.schema.json) at build time: the validators of its files (the app, a
-// chapter, a page, a data file), and the explainer's own words for the errors of the schema (what a quote or a bundled
+// The explainer's content schemas at build time: format 1 (explainer.v1.schema.json) and format 2
+// (explainer.v2.schema.json, which adds the strand of the app and the competencies of each page and refers to format 1
+// for everything else); the validators of their files (the app, a chapter, a page, a data file) by format, and the explainer's own words for the errors of the schema (what a quote or a bundled
 // image lacks, which fields a block type has, which an exercise of a question type); the general messages are
 // shared/content.ts's.
 import { Ajv2020, type ValidateFunction } from "ajv/dist/2020.js";
 import schema from "./explainer.v1.schema.json" with { type: "json" };
+import schemaV2 from "./explainer.v2.schema.json" with { type: "json" };
 import questionSchema from "../shared/questions/question.v1.schema.json" with { type: "json" };
 import { knownProperties, schemasById } from "../shared/schema.ts";
 import { addressProblem, QUESTION_BRANCH, questionSchemas } from "../shared/questions/validate.ts";
 import { isObject, schemaProblems, type DescribeError, type Problems, type YamlFile } from "../shared/content.ts";
 
 export const SCHEMA_ID = schema.$id;
-/** Where an app finds the schema of its content, for the message that names it. */
-export const SCHEMA_FILE = "node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json";
+export const SCHEMA_ID_V2 = schemaV2.$id;
+/** The formats of the content: 1 without `format` in src/app.yaml, 2 with `format: 2`. */
+export type Format = 1 | 2;
+/** Where an app finds the schema of its content, by format, for the message that names it. */
+export const SCHEMA_FILES: Readonly<Record<Format, string>> = {
+  1: "node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json",
+  2: "node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json",
+};
+export const SCHEMA_FILE = SCHEMA_FILES[1];
 
 // union types ("type": ["string", "object"]) keep the messages of the comparator and the lists plain
 const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true });
 for (const each of questionSchemas) ajv.addSchema(each);
 ajv.addSchema(schema);
-const validator = (name: string): ValidateFunction => {
-  const validate = ajv.getSchema(`${SCHEMA_ID}#/$defs/${name}`);
-  if (validate === undefined) throw new Error(`the schema has no $defs/${name}`);
+ajv.addSchema(schemaV2);
+const validator = (name: string, id = SCHEMA_ID): ValidateFunction => {
+  const validate = ajv.getSchema(`${id}#/$defs/${name}`);
+  if (validate === undefined) throw new Error(`the schema ${id} has no $defs/${name}`);
   return validate;
 };
 export const validators = {
@@ -29,6 +39,18 @@ export const validators = {
   data: validator("data"),
   event: validator("event"),
 };
+/** The validators of format 2: its own app and page; chapters, data files and events are those of format 1. */
+const validatorsV2: typeof validators = {
+  ...validators,
+  app: validator("app", SCHEMA_ID_V2),
+  page: validator("page", SCHEMA_ID_V2),
+};
+
+/** The format of the app `app` (src/app.yaml as read): 2 when it names any format, which its schema then checks. */
+export const formatOf = (app: unknown): Format => (isObject(app) && app["format"] !== undefined ? 2 : 1);
+
+/** The fields of format 2, which format 1 does not know. */
+const FORMAT_2_FIELDS = new Set(["format", "strand", "competencies"]);
 
 const schemas = schemasById(...questionSchemas, schema);
 
@@ -61,6 +83,9 @@ const questionFields = (type: string): Set<string> => {
 /** What `required` names as missing, with why it is needed. */
 function missing(property: string, object: unknown): string {
   const type = isObject(object) ? object["type"] : undefined;
+  if (property === "strand") {
+    return "strand is missing; name the strand of the learning map the app stays in, <subject>/<strand> (e.g. mathematik/stochastik), or none when the app is on no strand";
+  }
   if (property === "origin") return "origin is missing; a quote names who said or wrote it, where and when";
   if ((property === "licence" || property === "source") && type === "quote") {
     return `${property} is missing; a quote names its source and its licence`;
@@ -80,7 +105,45 @@ const describe: DescribeError = (error, path, value) => {
       const { lang, message } = addressProblem(value);
       return { message, ...(lang === undefined ? {} : { lang }) };
     }
+    case "const":
+      // the format of the content: 2, or none at all for format 1
+      if (path.length !== 1 || path[0] !== "format") return undefined;
+      return { message: `${String(value)} is not a format; write format: 2, or leave format out for format 1` };
+    case "uniqueItems":
+      if (path.at(-1) !== "competencies") return undefined;
+      return { message: "names a competency twice; name each competency once" };
+    case "additionalProperties": {
+      // a field of format 2 in an app of format 1
+      const property = String(error.params["additionalProperty"]);
+      if (path.length !== 0 || !FORMAT_2_FIELDS.has(property) || !isObject(value)) return undefined;
+      if (property === "competencies" && "blocks" in value) {
+        return {
+          path: [property],
+          message:
+            "competencies is a field of format 2; add format: 2 and the app's strand to src/app.yaml, or remove it",
+        };
+      }
+      if (property !== "competencies" && "chapters" in value) {
+        return {
+          path: [property],
+          message: `${property} is a field of format 2; add format: 2 to src/app.yaml, with the app's strand`,
+        };
+      }
+      return undefined;
+    }
     case "pattern":
+      // the strand of the app: <subject>/<strand> or none
+      if (path.length === 1 && path[0] === "strand") {
+        return {
+          message: `${String(value)} is no strand; write <subject>/<strand> with the ids of the learning map, e.g. mathematik/stochastik, or none`,
+        };
+      }
+      // a competency of a page: an id of the learning map
+      if (path.at(-2) === "competencies") {
+        return {
+          message: `${String(value)} is no competency id; use the competency's id in the learning map: lower-case letters, digits and hyphens, e.g. laplace`,
+        };
+      }
       // an exercise of a self-assessment: by its page and id
       if (path.at(-2) === "exercises" && path[0] === "selfAssessment") {
         return { message: `${String(value)} is no exercise's address; write /<chapter>/<page>/#<exercise>` };
@@ -129,8 +192,13 @@ const describe: DescribeError = (error, path, value) => {
   return undefined;
 };
 
-export function validate(yaml: YamlFile, kind: keyof typeof validators, problems: Problems): boolean {
-  const check = validators[kind];
+export function validate(
+  yaml: YamlFile,
+  kind: keyof typeof validators,
+  problems: Problems,
+  format: Format = 1,
+): boolean {
+  const check = (format === 2 ? validatorsV2 : validators)[kind];
   if (check(yaml.value)) return true;
   const before = problems.lines.length;
   schemaProblems(yaml, check.errors ?? [], problems, describe);

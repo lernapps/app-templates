@@ -124,7 +124,8 @@ implements: concept-archetype-extension
 
 Built. The plugin `explainer()` reads and validates the content, runs the component rules and the property test of
 each generated exercise and exercise component over fixed seeds, and only then writes every page in each language,
-the tutor pages where the tutor is on, and the 404 page; `vp dev` serves the same pages.
+the tutor pages where the tutor is on, and the 404 page; for an app of format 2 also the list of its pages for the
+catalog (`if-page-list`); `vp dev` serves the same pages.
 
 ```arc42
 :::building-block
@@ -134,6 +135,25 @@ parent: bb-archetype-runtime
 path: runtime/explainer/plugin.ts
 technology: Vite plugin
 requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-files, if-self-assessment
+:::
+```
+
+#### Page list for the catalog
+
+An app of format 2 (`format: 2` in `src/app.yaml`) gets `lernapps-pages.json` at the root of the bundle, beside
+`index.html`: the version of the list (`format: 1`), the app's strand of the learning map (`<subject>/<strand>`, or
+`none`), and its content pages in the order of the app, each with its address relative to the app's root as the app
+links it (`<chapter>/<page>/`), its title as a text, and, unless the strand is `none`, the competencies it practises.
+The catalog reads it instead of hand-written topics to place the app and its pages on the learning map, and checks the
+ids there; the app cannot know the subject's ids. An app of format 1 gets no list.
+
+```arc42
+:::interface
+id: if-page-list
+title: Page list lernapps-pages.json (format 2)
+provider: bb-build
+protocol: JSON file over HTTPS, beside index.html
+path: runtime/explainer/page-list.ts
 :::
 ```
 
@@ -153,10 +173,11 @@ path: runtime/explainer/plugin.ts
 
 ### Content validation
 
-Built. Validates every content file against its part of the schema, then what a schema cannot say (complete order
-lists, depth, unique ids, complete languages, restricted Markdown, formulas in the command list, sources and
-licences, links to pages and sections, an exercise on every page, components and their props), one line per problem
-with file and line.
+Built. Validates every content file against its part of the schema of its format (format 1 without `format` in
+`src/app.yaml`, format 2 with `format: 2`), then what a schema cannot say (complete order lists, depth, unique ids,
+complete languages, restricted Markdown, formulas in the command list, sources and licences, links to pages and
+sections, an exercise on every page, components and their props, and in format 2 the competencies of every page when
+the app has a strand and none when its strand is `none`), one line per problem with file and line.
 
 ```arc42
 :::building-block
@@ -567,15 +588,18 @@ path: explainer/src/app.yaml
 ### Content interface
 
 The explainer's content: build, validation, rendering, generated exercises, tutor pages and tests read it only through
-its schema.
+its schema, in one of two formats (`dec-explainer-format-2`). Format 1 (`explainer.v1.schema.json`) is an `app.yaml`
+without `format`. Format 2 (`explainer.v2.schema.json`) adds `format: 2` and `strand` (`<subject>/<strand>` or
+`none`) to `app.yaml` and `competencies` (ids of the subject) to each page, and refers to format 1 for everything
+else. The template and new apps are format 2.
 
 ```arc42
 :::interface
 id: if-archetype-content
-title: Content YAML (explainer.v1 schema)
+title: Content YAML (explainer.v1 and v2 schemas)
 provider: bb-explainer-content
 protocol: YAML, JSON Schema
-path: runtime/explainer/explainer.v1.schema.json
+path: runtime/explainer/explainer.v2.schema.json
 :::
 ```
 

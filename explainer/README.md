@@ -50,5 +50,11 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 ## What the app supplies
 
 - The content as YAML in `src/`: the app, a folder per chapter with its pages, data files and images
-  ([schema](../runtime/explainer/explainer.v1.schema.json)); Vue components in `src/components/` where
+  ([schema](../runtime/explainer/explainer.v2.schema.json), format 2); Vue components in `src/components/` where
   no block fits.
+- Its place on the learning map of the catalog (format 2): `format: 2` and `strand` in `src/app.yaml`, the strand
+  `<subject>/<strand>` (e.g. `mathematik/stochastik`) or `none`; with a strand, every page names the competencies it
+  practises, `competencies: [<id>, …]`, ids of the subject; with `none`, no page names any. The build writes
+  `lernapps-pages.json` beside `index.html`: the strand and each page's address, title and competencies, which the
+  catalog reads. An `app.yaml` without `format` is format 1
+  ([schema](../runtime/explainer/explainer.v1.schema.json)): no strand, no competencies, no page list.

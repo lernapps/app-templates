@@ -12,7 +12,8 @@
 // depth. The bundled images go to images/, the tutor page of each content page to <chapter>/<page>/tutor/ with its
 // Markdown beside it (index.md; tutorpage.ts), and of each self-assessment to <assessment>/tutor/ (assessment-page.ts),
 // every link of them checked, and 404.html, which leads every address the
-// app does not have to its start page (notFoundPage of ../shared/pages.ts). `vp dev` serves the same pages and tutor pages, rendered on each request.
+// app does not have to its start page (notFoundPage of ../shared/pages.ts). An app of format 2 also gets
+// lernapps-pages.json at the root, the list of its pages with their competencies for the catalog (page-list.ts). `vp dev` serves the same pages and tutor pages, rendered on each request.
 //
 // Components (src/components/<Name>.vue, components.ts): only when the app has them, the plugin compiles them with
 // @vitejs/plugin-vue and resolves vue to the copy this runtime depends on, so that the components and the islands
@@ -53,6 +54,7 @@ import {
   tutorPageDocument,
 } from "./tutorpage.ts";
 import { imageType } from "../shared/blocks/image.ts";
+import { PAGE_LIST, pageList } from "./page-list.ts";
 
 const MARKER = "<!-- explainer -->";
 const ISLANDS = "\0lernapps-explainer-islands";
@@ -263,7 +265,9 @@ export function explainer(): Plugin[] {
       }
       if (command !== "build" || content.components.length === 0) return;
       const rendered = await withServer(root, (loader) => renderComponents(content, loader, true));
-      if (rendered.problems.length > 0) this.error(new ContentError(rendered.problems).message);
+      if (rendered.problems.length > 0) {
+        this.error(new ContentError(rendered.problems, content.app.format ?? 1).message);
+      }
       islands = rendered.islands;
       descriptions = rendered.descriptions;
       islandsChunk = this.emitFile({ type: "chunk", id: ISLANDS, name: "islands" });
@@ -289,6 +293,11 @@ export function explainer(): Plugin[] {
         else this.emitFile({ type: "asset", fileName: `${page.route.path}index.html`, source: html });
       }
       this.emitFile({ type: "asset", fileName: "404.html", source: notFoundPage() });
+      // format 2: the list of the pages for the catalog
+      const list = pageList(content);
+      if (list !== undefined) {
+        this.emitFile({ type: "asset", fileName: PAGE_LIST, source: `${JSON.stringify(list, null, 2)}\n` });
+      }
       for (const [image, file] of content.images) {
         this.emitFile({ type: "asset", fileName: image, source: readFileSync(file) });
       }
@@ -404,7 +413,7 @@ export function explainer(): Plugin[] {
           );
         }
       }
-      if (problems.length > 0) this.error(new ContentError(problems).message);
+      if (problems.length > 0) this.error(new ContentError(problems, content.app.format ?? 1).message);
     },
     configureServer(server) {
       devServer = server;
@@ -442,7 +451,7 @@ export function explainer(): Plugin[] {
         if (dev === undefined) return next();
         renderComponents(content, (id) => dev.ssrLoadModule(id), false)
           .then(({ islands: rendered, descriptions: described, problems }) => {
-            if (problems.length > 0) throw new ContentError(problems);
+            if (problems.length > 0) throw new ContentError(problems, content.app.format ?? 1);
             if (forScope) {
               const markdown = path.endsWith(TUTOR_MARKDOWN);
               const lang =

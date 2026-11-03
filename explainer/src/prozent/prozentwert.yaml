@@ -1,6 +1,7 @@
-# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
 title: Prozentwert
 description: "Den Prozentwert berechnen: W = G · p : 100, mit einem Beispiel und dem Hunderterfeld."
+competencies: [prozent-prozentwert]
 scope: |
   Gesucht ist der Teil des Ganzen, etwa wie viel Euro man bei 20 % Rabatt auf 80 € spart. Man rechnet
   $W = \frac{G \cdot p}{100}$: erst 1 % des Grundwerts ($G$ geteilt durch 100), dann mal $p$. Der Prozentwert hat die

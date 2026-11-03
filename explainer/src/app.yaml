@@ -1,4 +1,6 @@
-# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
+format: 2
+strand: mathematik/arithmetik
 title: Prozentrechnung
 intro: |
   Prozentwert, Prozentsatz und Grundwert: Was sie bedeuten, wie du sie ausrechnest, und je ein Beispiel dazu.
