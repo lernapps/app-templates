@@ -27,6 +27,7 @@ import { escape } from "../shared/html.ts";
 import { answerText } from "../shared/questions/render.ts";
 import {
   inLanguage,
+  mapUrl,
   type Block,
   type ComponentExercise,
   type Descriptions,
@@ -72,6 +73,8 @@ interface Words {
   needsIntro: string;
   needs: Readonly<Record<Need, string>>;
   contextTitle: string;
+  /** On a recap page: that it has no exercise, and where the competency is practised ({url}). */
+  recap: string;
   exercise: string;
   steps: string;
   link: string;
@@ -139,6 +142,8 @@ const WORDS: Readonly<Record<string, Words>> = {
         "Zeig Zahlen der Seite als Menge, z. B. „37 sind 3 Zehner und 7 Einer“, aber nie das Ergebnis einer Aufgabe. Ein Schritt pro Nachricht, nie Zeitdruck.",
     },
     contextTitle: "Kontext: die Seite „{page}“",
+    recap:
+      "Diese Seite ist eine Wiederholung: Sie wiederholt etwas, das das Kind schon können sollte, und hat keine Übung. Erklär mit dem Inhalt der Seite und frag nach, ob das Kind ihn verstanden hat. Üben kann es das in anderen Apps; welche das sind, steht hier: {url}",
     exercise: "Übung",
     steps: "Lösungsweg",
     link: "Link",
@@ -205,6 +210,8 @@ const WORDS: Readonly<Record<string, Words>> = {
         "Show numbers of the page as amounts, e.g. “37 is 3 tens and 7 ones”, but never the result of a task. One step per message, never time pressure.",
     },
     contextTitle: "Context: the page “{page}”",
+    recap:
+      "This page is a recap: it goes over something the child should already know, and has no exercise. Explain with the content of the page and ask whether the child has understood it. It can practise it in other apps; which ones, it says here: {url}",
     exercise: "Exercise",
     steps: "Steps of the solution",
     link: "Link",
@@ -569,6 +576,7 @@ function pageMarkdown(
     `## ${fill(words.contextTitle)}`,
     "",
   );
+  if (page.recap !== undefined) lines.push(words.recap.replace("{url}", mapUrl(page.recap)), "");
   if (page.description !== undefined) lines.push(own(page.description), "");
   lines.push(
     ...contentLines(

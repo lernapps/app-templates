@@ -1,5 +1,5 @@
 // The explainer's content schemas at build time: format 1 (explainer.v1.schema.json) and format 2
-// (explainer.v2.schema.json, which adds the strand of the app and the competencies of each page and refers to format 1
+// (explainer.v2.schema.json, which adds the strand of the app, the competencies of each page and recap pages, and refers to format 1
 // for everything else); the validators of their files (the app, a chapter, a page, a data file) by format, and the explainer's own words for the errors of the schema (what a quote or a bundled
 // image lacks, which fields a block type has, which an exercise of a question type); the general messages are
 // shared/content.ts's.
@@ -50,7 +50,9 @@ const validatorsV2: typeof validators = {
 export const formatOf = (app: unknown): Format => (isObject(app) && app["format"] !== undefined ? 2 : 1);
 
 /** The fields of format 2, which format 1 does not know. */
-const FORMAT_2_FIELDS = new Set(["format", "strand", "competencies"]);
+const FORMAT_2_FIELDS = new Set(["format", "strand", "competencies", "recap"]);
+/** The fields of format 2 on a page. */
+const PAGE_FIELDS = new Set(["competencies", "recap"]);
 
 const schemas = schemasById(...questionSchemas, schema);
 
@@ -105,6 +107,14 @@ const describe: DescribeError = (error, path, value) => {
       const { lang, message } = addressProblem(value);
       return { message, ...(lang === undefined ? {} : { lang }) };
     }
+    case "not":
+      // a page with both: it practises competencies of the app's strand, or it repeats one of another strand
+      if (path.length !== 0 || !isObject(value) || !("recap" in value) || !("competencies" in value)) return undefined;
+      return {
+        path: ["recap"],
+        message:
+          "a page has competencies or recap, never both: a page practises competencies of the app's strand, a recap page only repeats a competency of another strand; remove one of them",
+      };
     case "const":
       // the format of the content: 2, or none at all for format 1
       if (path.length !== 1 || path[0] !== "format") return undefined;
@@ -116,14 +126,13 @@ const describe: DescribeError = (error, path, value) => {
       // a field of format 2 in an app of format 1
       const property = String(error.params["additionalProperty"]);
       if (path.length !== 0 || !FORMAT_2_FIELDS.has(property) || !isObject(value)) return undefined;
-      if (property === "competencies" && "blocks" in value) {
+      if (PAGE_FIELDS.has(property) && "blocks" in value) {
         return {
           path: [property],
-          message:
-            "competencies is a field of format 2; add format: 2 and the app's strand to src/app.yaml, or remove it",
+          message: `${property} is a field of format 2; add format: 2 and the app's strand to src/app.yaml, or remove it`,
         };
       }
-      if (property !== "competencies" && "chapters" in value) {
+      if (!PAGE_FIELDS.has(property) && "chapters" in value) {
         return {
           path: [property],
           message: `${property} is a field of format 2; add format: 2 to src/app.yaml, with the app's strand`,
@@ -136,6 +145,12 @@ const describe: DescribeError = (error, path, value) => {
       if (path.length === 1 && path[0] === "strand") {
         return {
           message: `${String(value)} is no strand; write <subject>/<strand> with the ids of the learning map, e.g. mathematik/stochastik, or none`,
+        };
+      }
+      // the competency a recap page repeats: <subject>/<competency>
+      if (path.length === 1 && path[0] === "recap") {
+        return {
+          message: `${String(value)} is no competency of the learning map; write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen`,
         };
       }
       // a competency of a page: an id of the learning map

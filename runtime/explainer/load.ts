@@ -1,11 +1,12 @@
 // Reads an explainer's content from src/ at build time and validates it: each file against its part of the schema of
 // its format (explainer.v1.schema.json without `format` in src/app.yaml, explainer.v2.schema.json with `format: 2`),
-// then what a schema cannot say. In format 2, every page names its competencies when the app has a strand, and none
-// when its strand is none. The order lists are complete and unique, the depth is
+// then what a schema cannot say. In format 2, every page names its competencies when the app has a strand (or is a
+// recap page, recap: <subject>/<competency>), and none when its strand is none; a recap page has no exercise, and
+// every other page at least one. The order lists are complete and unique, the depth is
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
 // list, bundled images and quotes name source and licence, links to pages of the app find their page and section,
-// every page has an exercise, a question of the question types passes the validation of a question in every declared language,
+// every page but a recap page has an exercise, a question of the question types passes the validation of a question in every declared language,
 // a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), the check
 // of each exercise judges its examples as they are listed, a vue-component block names a component of src/components/
 // that passes its checks (components.ts), its props match the component's prop types, it has its nojs text (an exercise
@@ -19,6 +20,7 @@ import { readComponents } from "./components/read.ts";
 import {
   isExercise,
   type App,
+  type Block,
   type BlockOf,
   type Chapter,
   type ComponentUse,
@@ -125,6 +127,14 @@ function checkAssessment(
         problems.at(yaml, path, `${ref} names no page of the app; write /<chapter>/<page>/#<exercise>`);
         return;
       }
+      if (page.recap !== undefined) {
+        problems.at(
+          yaml,
+          path,
+          `${ref} is on a recap page, which has no exercise and is left out of the self-assessment; choose an exercise of a page of the app's own competencies`,
+        );
+        return;
+      }
       const exercise = exerciseOf(components, page, parts.exercise);
       // a generated exercise or an exercise component may be listed again: each listing draws a task of its own
       if (twice && exercise !== undefined && !drawsTasks(exercise)) {
@@ -148,6 +158,16 @@ function checkAssessment(
       );
     });
   });
+}
+
+/** Each block of `blocks` and the blocks inside them, with its path in the page's file. */
+function* blockPaths(blocks: readonly Block[], path: Path): Generator<[Block, Path]> {
+  for (const [index, block] of blocks.entries()) {
+    yield [block, [...path, index]];
+    if (block.type === "section" || block.type === "example" || block.type === "note") {
+      yield* blockPaths(block.blocks, [...path, index, "blocks"]);
+    }
+  }
 }
 
 /** How many seeds the property test of each generated exercise draws at build time. */
@@ -327,11 +347,16 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
           ["competencies"],
           "competencies is not allowed: src/app.yaml has strand: none, so the app is on no strand; remove it, or name the app's strand in src/app.yaml",
         );
-      } else if (app.strand !== undefined && app.strand !== "none" && page.competencies === undefined) {
+      } else if (
+        app.strand !== undefined &&
+        app.strand !== "none" &&
+        page.competencies === undefined &&
+        page.recap === undefined
+      ) {
         problems.at(
           yaml,
           [],
-          `competencies is missing; src/app.yaml names the strand ${app.strand}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]`,
+          `competencies is missing; src/app.yaml names the strand ${app.strand}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency of another strand says recap: <subject>/<competency> instead`,
         );
       }
       texts.check(yaml, ["title"], "plain");
@@ -358,7 +383,18 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         ["blocks"],
         0,
       );
-      if (![...allBlocks(page.blocks)].some(isExercise)) {
+      if (page.recap !== undefined) {
+        // a recap page repeats a competency the app does not practise: no exercise, not even a component's
+        for (const [block, path] of blockPaths(page.blocks, ["blocks"])) {
+          const component = uses.find((use) => use.block === block && use.component.exercise);
+          if (!isExercise(block) && component === undefined) continue;
+          problems.at(
+            yaml,
+            path,
+            `${component === undefined ? `the exercise ${block.type}` : `the exercise component ${component.component.name}`} is not allowed on a recap page: it repeats ${page.recap} with descriptive blocks only, and the apps of that competency's strand practise it; remove the exercise, or make it a page of the app's own competencies`,
+          );
+        }
+      } else if (![...allBlocks(page.blocks)].some(isExercise)) {
         problems.at(
           yaml,
           ["blocks"],

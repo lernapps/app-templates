@@ -9,6 +9,15 @@ import { build } from "vite-plus";
 import { explainer } from "../runtime/explainer/plugin.ts";
 
 const FIXTURE = join(import.meta.dirname, "fixtures/explainer-broken");
+/** The Greek letters of the formula command list, at its end. */
+const GREEK = [
+  ..."alpha beta gamma delta varepsilon epsilon zeta eta theta vartheta iota kappa lambda mu nu xi pi rho sigma tau".split(
+    " ",
+  ),
+  ..."upsilon varphi phi chi psi omega Gamma Delta Theta Lambda Xi Pi Sigma Phi Psi Omega".split(" "),
+]
+  .map((letter) => `\\${letter}`)
+  .join(", ");
 
 /** A copy of the fixture as an app: index.html, src/main.ts and the content in src/. */
 function app(): string {
@@ -77,7 +86,7 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "an unknown LaTeX command",
     (root) => edit(root, "kapitel/eins.yaml", `"a^2 + b^2 = c^2"`, `'\\foo{a} + b'`),
-    "src/kapitel/eins.yaml:10: blocks[0].blocks[1].formula: \\foo is not in the formula command list; write the formula with the commands the schema lists ($defs/latex)",
+    `src/kapitel/eins.yaml:10: blocks[0].blocks[1].formula: \\foo is not in the formula command list; use only these commands, besides ^, _, braces and parentheses: \\frac, \\cdot, \\times, \\div, \\%, \\text, \\sqrt, \\approx, \\pm, \\le, \\ge, \\neq, \\,, \\{, \\}, \\ce, \\pu, \\  (a space), \\quad, \\qquad, \\Rightarrow, \\Leftrightarrow, \\left, \\right, \\sin, \\cos, \\tan, \\arcsin, \\arccos, \\arctan, \\circ, ${GREEK}`,
   ],
   [
     "raw HTML",

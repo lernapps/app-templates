@@ -74,6 +74,77 @@ describe("expressions", () => {
   });
 });
 
+describe("roots, powers and trigonometry in degrees", () => {
+  test("sqrt and pow are exact where the result is rational", () => {
+    expect(number("sqrt(9 / 4)")).toBe("3/2");
+    expect(number("sqrt(0)")).toBe("0");
+    expect(number("pow(2, 10)")).toBe("1024");
+    expect(number("pow(2 / 3, 2)")).toBe("4/9");
+    expect(number("pow(2, -2)")).toBe("1/4");
+    expect(number("pow(5, 0)")).toBe("1");
+  });
+
+  test("an irrational result has 12 decimal places, which round(x, n) rounds", () => {
+    expect(number("round(sqrt(2), 3)")).toBe("707/500");
+    expect(run("decimals(sqrt(2))")).toEqual(Fraction.of(12));
+    expect(number("round(pow(2, 0.5), 2)")).toBe("141/100");
+  });
+
+  test("sin, cos and tan take degrees, exact at the angles with a rational value", () => {
+    expect(number("sin(30)")).toBe("1/2");
+    expect(number("sin(90)")).toBe("1");
+    expect(number("sin(-30)")).toBe("-1/2");
+    expect(number("sin(390)")).toBe("1/2");
+    expect(number("cos(60)")).toBe("1/2");
+    expect(number("cos(90)")).toBe("0");
+    expect(number("cos(180)")).toBe("-1");
+    expect(number("tan(45)")).toBe("1");
+    expect(number("tan(135)")).toBe("-1");
+    expect(number("tan(180)")).toBe("0");
+    expect(number("round(sin(60), 4)")).toBe("433/500");
+    expect(number("round(tan(30), 3)")).toBe("577/1000");
+  });
+
+  test("asin, acos and atan give degrees, exact at the values of those angles", () => {
+    expect(number("asin(1 / 2)")).toBe("30");
+    expect(number("acos(1 / 2)")).toBe("60");
+    expect(number("acos(-1)")).toBe("180");
+    expect(number("atan(1)")).toBe("45");
+    expect(number("atan(-1)")).toBe("-45");
+    expect(number("round(asin(0.6), 2)")).toBe("3687/100");
+    expect(number("round(atan(2), 1)")).toBe("317/5");
+  });
+
+  // property tests over every whole angle and a fixed list of values
+  const close = (value: Value, expected: number, places = 9) =>
+    expect((value as Fraction).toNumber()).toBeCloseTo(expected, places);
+
+  test("sin² + cos² is 1, and tan is sin / cos, for every whole angle", () => {
+    for (let angle = -360; angle <= 720; angle++) {
+      const env = { x: Fraction.of(angle) };
+      close(run("pow(sin(x), 2) + pow(cos(x), 2)", env), 1);
+      if (angle % 180 !== 90 && angle % 180 !== -90) close(run("tan(x) - sin(x) / cos(x)", env), 0, 6);
+      close(run("sin(x)", env), Math.sin((angle * Math.PI) / 180));
+    }
+  });
+
+  test("asin, acos and atan undo sin, cos and tan within their range", () => {
+    for (let angle = -90; angle <= 90; angle++) {
+      close(run("asin(sin(x))", { x: Fraction.of(angle) }), angle, 6);
+      if (angle > -90 && angle < 90) close(run("atan(tan(x))", { x: Fraction.of(angle) }), angle, 6);
+    }
+    for (let angle = 0; angle <= 180; angle++) close(run("acos(cos(x))", { x: Fraction.of(angle) }), angle, 6);
+  });
+
+  test("sqrt undoes pow(x, 2) for x ≥ 0", () => {
+    for (let tenth = 0; tenth <= 1000; tenth += 7) {
+      const x = Fraction.of(tenth, 10);
+      expect(run("sqrt(pow(x, 2))", { x })).toEqual(x);
+      close(run("pow(sqrt(x), 2)", { x }), x.toNumber());
+    }
+  });
+});
+
 describe("errors name what to change", () => {
   const fails = (source: string, message: string, env: Record<string, Value> = {}) =>
     expect(() => run(source, env)).toThrow(message);
@@ -92,5 +163,11 @@ describe("errors name what to change", () => {
     fails("[1, 2][5]", "no element 5");
     fails('1 + "a"', "+ needs numbers");
     fails("round(1.5)", "round takes 2 arguments");
+    fails("sqrt(-1)", "sqrt needs a number ≥ 0");
+    fails("asin(2)", "asin needs a number from -1 to 1");
+    fails("tan(90)", "tan(90) has no value");
+    fails("pow(0, -1)", "pow(0, n) needs n ≥ 0");
+    fails("pow(-8, 1 / 3)", "needs a whole exponent");
+    fails('sin("a")', "sin needs numbers");
   });
 });

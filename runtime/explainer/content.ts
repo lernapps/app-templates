@@ -109,6 +109,12 @@ export interface Page {
   description?: Text;
   /** Format 2: the ids of the competencies of the learning map that the page practises. */
   competencies?: readonly string[];
+  /**
+   * Format 2: makes the page a recap page, which repeats this competency of another strand, <subject>/<competency>,
+   * instead of practising competencies of its own: no exercise, a link to the competency on the learning map, left
+   * out of the self-assessment.
+   */
+  recap?: string;
   /** What the page teaches, for the tutor's scope (scope.ts). */
   scope?: Text;
   blocks: readonly Block[];
@@ -258,6 +264,12 @@ export function* allBlocks(blocks: readonly Block[]): Generator<Block> {
     yield block;
     if (block.type === "section" || block.type === "example" || block.type === "note") yield* allBlocks(block.blocks);
   }
+}
+
+/** The page of a competency on the learning map of lernapps.net, from <subject>/<competency> (a recap page's recap). */
+export function mapUrl(recap: string): string {
+  const [subject = "", competency = ""] = recap.split("/");
+  return `https://lernapps.net/apps/map/${subject}/c/${competency}/`;
 }
 
 /** Whether a block is an exercise. */

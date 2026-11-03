@@ -92,9 +92,7 @@
   "scripts": {
     "prepare": "vp pack && vp config --no-agent",
     "test": "vp test",
-    "check:vue": "vue-tsc --noEmit -p tsconfig.vue.json",
-    "prepack": "node scripts/pack-dotfiles.ts stage",
-    "postpack": "node scripts/pack-dotfiles.ts clean"
+    "check:vue": "vue-tsc --noEmit -p tsconfig.vue.json"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "6.0.10",

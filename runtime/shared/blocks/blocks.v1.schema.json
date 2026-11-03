@@ -328,7 +328,7 @@
       "type": "object"
     },
     "latex": {
-      "description": "One formula in the LaTeX subset of the formula command list: \\frac, \\cdot, \\times, \\div, \\%, \\text, ^, _, \\sqrt, \\approx, \\pm, \\le, \\ge, \\neq, \\, (thin space), parentheses and braces; \\ce{…} for chemical equations and \\pu{…} for units (mhchem). Written without the $ signs. A map by language only when it has \\text{…} that differs by language.",
+      "description": "One formula in the LaTeX subset of the formula command list: \\frac, \\cdot, \\times, \\div, \\%, \\text, ^, _, \\sqrt, \\approx, \\pm, \\le, \\ge, \\neq, \\, (thin space), \\  (space), \\quad, \\qquad, \\Rightarrow, \\Leftrightarrow, \\left( … \\right), parentheses and braces; \\sin, \\cos, \\tan, \\arcsin, \\arccos, \\arctan (or \\sin^{-1}), \\circ for degrees (30^\\circ); the Greek letters \\alpha to \\omega (also \\varepsilon, \\vartheta, \\varphi) and the capitals \\Gamma, \\Delta, \\Theta, \\Lambda, \\Xi, \\Pi, \\Sigma, \\Phi, \\Psi, \\Omega; \\ce{…} for chemical equations and \\pu{…} for units (mhchem). The build names any other command and lists these. Written without the $ signs. A map by language only when it has \\text{…} that differs by language.",
       "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
     },
     "table": {

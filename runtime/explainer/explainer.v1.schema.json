@@ -748,7 +748,7 @@
       "type": "object"
     },
     "expression": {
-      "description": "An expression of the expression language, e.g. \"G * p / 100\": numbers (exact fractions), + - * /, parentheses, == != < <= > >=, and, or, not, strings in quotes, record fields (e.year), list index (xs[0]), lists ([1, 2]), and the functions round(x, n), decimals, map(xs, field), sortBy(xs, field), reverse. It may use the variables of given.",
+      "description": "An expression of the expression language, e.g. \"G * p / 100\": numbers (exact fractions), + - * /, parentheses, == != < <= > >=, and, or, not, strings in quotes, record fields (e.year), list index (xs[0]), lists ([1, 2]), and the functions round(x, n), decimals, map(xs, field), sortBy(xs, field), reverse, sqrt(x), pow(x, n), sin(x), cos(x), tan(x), asin(x), acos(x), atan(x). Angles are in degrees, as in school: sin(30) is 1/2, asin(1/2) is 30. A result is exact where it is rational (sqrt(9/4), sin(30), tan(45)); otherwise it has 12 decimal places, so round it with round(x, n) before it is an answer or a value of a task. It may use the variables of given.",
       "type": "string",
       "minLength": 1,
       "pattern": "\\S"

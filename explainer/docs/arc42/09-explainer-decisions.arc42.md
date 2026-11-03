@@ -465,3 +465,25 @@ date: 2026-11-03
 addresses: qg-checkable, con-runtime-unchanged
 :::
 ```
+
+## A Recap Page Repeats a Competency of Another Strand
+
+A competency may require one of another strand; one app stays in one strand, so it does not practise that one, but its
+learners may need it again. A page may therefore say `recap: <subject>/<competency>` instead of `competencies`: a
+recap page, with descriptive blocks only. It has no exercise, so the rule that every page has one does not apply to it,
+and the self-assessment leaves it out; it counts as nothing on the map, and `lernapps-pages.json` names it with `recap`.
+The runtime writes at its top "Wiederholung" and the link to the competency's page on the learning map, where the apps
+are that practise it, so the link cannot be missing; the contents mark it. A plain link: nothing is loaded before a
+click. That the recapped competency exists and is of another strand the app cannot check; `lernapps check` and the
+listing do. Rejected: exercises on a recap page (the app would practise a competency of another strand, and the map
+would not show it); a link the author writes (it could be missing or wrong).
+
+```arc42
+:::decision
+id: dec-explainer-recap-page
+title: A recap page repeats a competency of another strand without exercises and links it on the learning map
+status: accepted
+date: 2026-11-03
+addresses: qg-understandable, qg-checkable, con-no-request-before-click
+:::
+```

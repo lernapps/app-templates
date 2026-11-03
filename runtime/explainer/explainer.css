@@ -162,6 +162,27 @@
   font-size: 0.9375rem;
 }
 
+/* a recap page: what it is, and where the competency is practised */
+.explainer-recap {
+  margin: 1rem 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--page-border);
+  background: var(--page-surface);
+}
+
+.explainer-recap p {
+  margin: 0.25rem 0;
+}
+
+.explainer-recap-label {
+  font-weight: 600;
+}
+
+.explainer-recap-note {
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
 .explainer-glossary dt {
   margin-top: 1rem;
   font-weight: 600;
