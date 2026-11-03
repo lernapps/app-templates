@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:lernapps:schema:explainer.v2",
   "title": "Content of a lernapps explainer, format 2",
-  "description": "Format 2 of the content of an app built from the archetype explainer (runtime @lernapps/app-templates), as YAML in src/: the app (src/app.yaml), each chapter (src/<chapter>/chapter.yaml), each page (src/<chapter>/<page>.yaml) and data files (src/data/<name>.yaml). Format 2 places the app on the learning map of the catalog: src/app.yaml says format: 2 and names the app's strand (or none), and every page names the competencies it practises, or, as a recap page, a competency it repeats that the app does not practise. Everything else is as in format 1 (explainer.v1.schema.json), whose parts this schema refers to; an app.yaml without format is format 1. The build validates every file against this schema, then what a schema cannot say (among it: competencies or recap on every page when the app has a strand, no competencies when its strand is none, no exercise on a recap page), and writes lernapps-pages.json, the list of the app's pages for the catalog.",
+  "description": "Format 2 of an explainer's content, as YAML in src/: src/app.yaml, src/<chapter>/chapter.yaml, src/<chapter>/<page>.yaml and src/data/<name>.yaml. It is format 1 (explainer.v1.schema.json) plus the app's place on the learning map: format: 2 and strand in src/app.yaml, and on each page the competencies it practises, or recap on a page that repeats a competency from elsewhere. An app.yaml without format is format 1.",
   "allOf": [
     {
       "if": {
@@ -54,23 +54,23 @@
       "$ref": "urn:lernapps:schema:explainer.v1#/$defs/id"
     },
     "strand": {
-      "description": "The strand (Strang) of the learning map the app stays in: <subject>/<strand>, the ids of a subject of the catalog and of one of its strands, e.g. mathematik/stochastik; or none, when the app is on no strand (then it is not on the map). One app, one strand.",
+      "description": "The one strand (Strang) of the learning map the app belongs to, <subject>/<strand>, e.g. mathematik/stochastik; or none if it belongs to none (then it is not on the map).",
       "type": "string",
       "pattern": "^(none|[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*)$"
     },
     "competency": {
-      "description": "A competency the app does not practise itself, which a recap page repeats: <subject>/<competency>, the ids of a subject of the catalog and of one of its competencies, e.g. physik/gewichtskraft-berechnen.",
+      "description": "A competency of the learning map, <subject>/<competency>, e.g. physik/gewichtskraft-berechnen.",
       "type": "string",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$"
     },
     "app": {
-      "description": "src/app.yaml in format 2: format: 2, the app's strand, then everything as in format 1: its title, intro, languages and the order of its chapters.",
+      "description": "src/app.yaml in format 2: format: 2 and strand, everything else as in format 1.",
       "type": "object",
       "additionalProperties": false,
       "required": ["format", "strand", "title", "intro", "languages", "chapters"],
       "properties": {
         "format": {
-          "description": "The format of the content: 2. Required in format 2; an app.yaml without it is format 1 (explainer.v1.schema.json), which has no strand and no competencies.",
+          "description": "Always 2. Without it, the content is format 1 (explainer.v1.schema.json).",
           "const": 2
         },
         "strand": {
@@ -103,7 +103,7 @@
       "$ref": "urn:lernapps:schema:explainer.v1#/$defs/chapter"
     },
     "page": {
-      "description": "src/<chapter>/<page>.yaml in format 2: a page as in format 1, and the competencies it practises; or a recap page, which repeats a competency the app does not practise (recap) instead of practising competencies of its own.",
+      "description": "src/<chapter>/<page>.yaml in format 2: a page as in format 1, plus competencies, or recap on a recap page.",
       "type": "object",
       "additionalProperties": false,
       "required": ["title", "blocks"],
@@ -115,7 +115,7 @@
           "$ref": "urn:lernapps:schema:explainer.v1#/$defs/page/properties/description"
         },
         "competencies": {
-          "description": "The competencies (Bausteine) of the learning map that the page practises: ids of the subject of the app's strand, at least one, each once; as a rule one. Required on every page but a recap page when src/app.yaml names a strand; not allowed when its strand is none, and not on a recap page. The app cannot know the subject's ids; the catalog checks them when the app is listed.",
+          "description": "The competencies (Bausteine) the page practises, ids of the subject of the app's strand; as a rule one. Required when the app has a strand; leave it out with strand: none and on a recap page. The catalog checks the ids when it lists the app.",
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
@@ -124,7 +124,7 @@
           }
         },
         "recap": {
-          "description": "Makes the page a recap page: it repeats a competency the app does not practise itself (of another strand, or of its own strand outside its scope) that a competency of the app requires, <subject>/<competency>, e.g. physik/gewichtskraft-berechnen. The app does not practise it: a recap page has descriptive blocks only, no exercise (no question type, no generated, no open-task, no exercise component), and needs none. Instead of competencies, never with them; allowed with strand: none too. The page shows at its top that it is a recap, with a link to the competency's page on the learning map of lernapps.net, where the apps are that practise it; the navigation marks it, the self-assessment leaves it out, and lernapps-pages.json names it with recap instead of competencies. It counts as nothing on the map.",
+          "description": "Makes the page a recap page: it repeats a competency that the app's competencies require but the app does not practise, e.g. physik/gewichtskraft-berechnen. Use it instead of competencies, also with strand: none. A recap page has descriptive blocks only, no exercise; the link to the competency on the learning map is added for you.",
           "$ref": "#/$defs/competency"
         },
         "blocks": {

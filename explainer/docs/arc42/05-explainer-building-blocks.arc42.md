@@ -140,12 +140,9 @@ requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-
 
 #### Page list for the catalog
 
-An app of format 2 (`format: 2` in `src/app.yaml`) gets `lernapps-pages.json` at the root of the bundle, beside
-`index.html`: the version of the list (`format: 1`), the app's strand of the learning map (`<subject>/<strand>`, or
-`none`), and its content pages in the order of the app, each with its address relative to the app's root as the app
-links it (`<chapter>/<page>/`), its title as a text, and, unless the strand is `none`, the competencies it practises;
-a recap page has `recap` (`<subject>/<competency>`) instead of competencies, with any strand. The catalog reads it instead of hand-written topics to place the app and its pages on the learning map, and checks the
-ids there; the app cannot know the subject's ids. An app of format 1 gets no list.
+The build provides the catalog with the app's place on the learning map: its strand and its pages with their
+competencies. The catalog consumes it to place the app and checks the ids, which the app cannot know. Only format 2
+apps have one.
 
 ```arc42
 :::interface
@@ -173,13 +170,10 @@ path: runtime/explainer/plugin.ts
 
 ### Content validation
 
-Built. Validates every content file against its part of the schema of its format (format 1 without `format` in
-`src/app.yaml`, format 2 with `format: 2`), then what a schema cannot say (complete order lists, depth, unique ids,
-complete languages, restricted Markdown, formulas in the command list, sources and licences, links to pages and
-sections, an exercise on every page but a recap page, components and their props, and in format 2 the competencies of
-every page but a recap page when the app has a strand and none when its strand is `none`, and no exercise on a recap
-page: no question type, no generated exercise, no open task, no exercise component), one line per problem with file
-and line.
+Built. Validates every content file against its part of the schema of its format, then what a schema cannot say
+(complete order lists, depth, unique ids, complete languages, restricted Markdown, formulas in the command list,
+sources and licences, links to pages and sections, the exercises a page needs, components and their props, and in
+format 2 the competencies of the pages), one line per problem with file and line.
 
 ```arc42
 :::building-block
@@ -283,9 +277,7 @@ requires: if-vue-component, if-task-numbers
 
 Built. Exercises drawn from a seed (`generated`), the explainer's own notation: the same code gives three worked tasks
 at build, runs the property test over fixed seeds and draws a live task in the browser, so both agree; their answers
-are checked through the question types' checker. Their expressions compute on exact fractions; the functions sqrt,
-pow, sin, cos, tan, asin, acos and atan (angles in degrees, as in school) stay exact where the result is rational and
-give 12 decimal places otherwise, which an exercise rounds.
+are checked through the question types' checker.
 The texts of a quiz-type exercise are plain text in which `$…$` is a formula, rendered as MathML at build and checked
 like every formula.
 
@@ -592,11 +584,8 @@ path: explainer/src/app.yaml
 ### Content interface
 
 The explainer's content: build, validation, rendering, generated exercises, tutor pages and tests read it only through
-its schema, in one of two formats (`dec-explainer-format-2`). Format 1 (`explainer.v1.schema.json`) is an `app.yaml`
-without `format`. Format 2 (`explainer.v2.schema.json`) adds `format: 2` and `strand` (`<subject>/<strand>` or
-`none`) to `app.yaml` and `competencies` (ids of the subject) to each page, or `recap` (`<subject>/<competency>`) to
-a recap page, which repeats a competency the app does not practise with descriptive blocks only (`dec-explainer-recap-page`),
-and refers to format 1 for everything else. The template and new apps are format 2.
+its schema: format 2 for the template and new apps, which adds the app's place on the learning map to format 1; format
+1 stays valid (`dec-explainer-format-2`).
 
 ```arc42
 :::interface

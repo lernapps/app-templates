@@ -11,20 +11,8 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   videos directly from then on. The catalog entry of an app with a video says `fitness.thirdParty: on-click`.
 - Exercises of the six question types, with feedback, hints and typical mistakes; a question can show content (`material`: the figures, tables, quotes and code of the page's blocks) between its text and its answers.
 - Generated exercises: each task draws new numbers or records, up to 67 numbered tasks per exercise, with typical
-  mistakes, a hint and the way to the solution. The build tests them over fixed seeds. Their expressions compute on
-  exact fractions, with `round(x, n)`, `decimals(x)`, `sqrt(x)`, `pow(x, n)`, `sin(x)`, `cos(x)`, `tan(x)`, `asin(x)`,
-  `acos(x)`, `atan(x)` and the list functions `map`, `sortBy`, `reverse`. Angles are in degrees, as in school:
-  `sin(30)` is `1/2`, `asin(0.5)` is `30`. A result that is not rational (`sqrt(2)`, `sin(10)`) has 12 decimal
-  places: round it with `round(x, n)`.
-- A chemical formula from a data file in a generated exercise: `$\ce{{{r.gl}}}$`, with the whole formula in one
-  field in mhchem's notation (`gl: "2H2 + O2 -> 2H2O"`), drawn with `pick: 1` from a list or data file, or with
-  `oneOf`. The build sets the formula of every value with its subscripts. It fails on a placeholder among other text
-  in `\ce` (`\ce{{{e.x}}2O}`), on any placeholder in `\pu` (write `{{m}}\,\pu{g}`), on `\ce{{{answer}}}`, on a
-  number range, and on a value mhchem cannot read.
-- Formulas in the LaTeX subset of the command list, rendered as MathML: besides fractions, roots, powers and
-  relations also `\sin`, `\cos`, `\tan`, `\arcsin` (or `\sin^{-1}`), `\arccos`, `\arctan`, Greek letters (`\alpha`,
-  `\varphi`, `\pi`, `\Delta`, …), degrees (`30^\circ`), spaces (`\ `, `\quad`, `\qquad`), `\Rightarrow`,
-  `\Leftrightarrow` and `\left( … \right)`. The build names any other command, with the list.
+  mistakes, a hint and the way to the solution, also with roots, powers and trigonometry, and with chemical formulas
+  from a data file. The build tests them over fixed seeds.
 - Vue components for what no block can show or check, such as reading a scale, labelling a figure or dragging into
   place; an exercise component draws its own tasks. A component needs its logic module, a test and a text for readers
   without JavaScript. An exercise component also declares its exercise for the tutor (`template`, `params`,
@@ -65,15 +53,6 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - The content as YAML in `src/`: the app, a folder per chapter with its pages, data files and images
   ([schema](../runtime/explainer/explainer.v2.schema.json), format 2); Vue components in `src/components/` where
   no block fits.
-- Its place on the learning map of the catalog (format 2): `format: 2` and `strand` in `src/app.yaml`, the strand
-  `<subject>/<strand>` (e.g. `mathematik/stochastik`) or `none`; with a strand, every page names the competencies it
-  practises, `competencies: [<id>, …]`, ids of the subject; with `none`, no page names any. The build writes
-  `lernapps-pages.json` beside `index.html`: the strand and each page's address, title and competencies, which the
-  catalog reads. An `app.yaml` without `format` is format 1
-  ([schema](../runtime/explainer/explainer.v1.schema.json)): no strand, no competencies, no page list.
-- Recap pages (format 2): a page with `recap: <subject>/<competency>` instead of `competencies` repeats a competency
-  the app does not practise itself (of another strand, or of its own strand outside the app's scope) that the app's competencies require, e.g. `recap: physik/gewichtskraft-berechnen`. It has
-  descriptive blocks only, no exercise (no question type, `generated`, `open-task` or exercise component), also with
-  `strand: none`. The page shows "Wiederholung" at its top and a link to the competency on the learning map of
-  lernapps.net (`https://lernapps.net/apps/map/<subject>/c/<competency>/`), the contents mark it, the self-assessment
-  leaves it out, and `lernapps-pages.json` names it with `recap`.
+- Its place on the catalog's learning map (format 2): the app's strand, and the competencies each page practises. A
+  recap page repeats a competency from elsewhere that the app needs, without exercises. Format 1
+  ([schema](../runtime/explainer/explainer.v1.schema.json)) stays valid, without a place on the map.

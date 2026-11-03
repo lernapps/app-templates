@@ -449,17 +449,12 @@ addresses: qg-understandable, qg-privacy, con-no-request-before-click
 
 ## Format 2 Places the App on the Learning Map
 
-The catalog's learning map shows per subject its strands and competencies, and which apps practise them. An explainer
-says where it belongs by its structure: `src/app.yaml` names one strand, `<subject>/<strand>`, or `none` so that every
-app decides and none forgets; then every page names the competencies it practises, and the app's are those of its
-pages. The build writes them with the pages' addresses and titles to `lernapps-pages.json` (`if-page-list`), which the
-catalog reads instead of hand-written topics, so no page is listed twice. The fields are required, so this is a new
-format: `format: 2` with `explainer.v2.schema.json`, which refers to format 1 for everything else. Format 1, an
-`app.yaml` without `format`, stays valid and behaves as before, for apps that do not move; they are not on the map.
-That the competencies of a page belong to the subject of the app's strand cannot be checked by the app, which does not
-know the subject's ids; the catalog checks them when the app is listed. Rejected: the strand and competencies in the
-catalog entry for explainers (the pages would be listed by hand twice); optional fields in format 1 (an app could
-forget them).
+The catalog's learning map shows which apps practise which competencies. The app owns where it belongs: it names one
+strand (or `none`, so that none forgets), and each page the competencies it practises. The build hands this to the
+catalog (`if-page-list`); the catalog owns the subjects' ids and checks them. The fields are required, so this is a
+new format; format 1 stays valid for apps that do not move, and they are not on the map. Rejected: strand and
+competencies in the catalog entry (the pages would be listed twice); optional fields in format 1 (an app could forget
+them).
 
 ```arc42
 :::decision
@@ -473,15 +468,11 @@ addresses: qg-checkable, con-runtime-unchanged
 
 ## A Recap Page Repeats a Competency the App Does Not Practise
 
-A competency may require one the app does not practise: of another strand (one app stays in one strand), or of its own
-strand outside the app's scope; its learners may need it again. A page may therefore say `recap: <subject>/<competency>` instead of `competencies`: a
-recap page, with descriptive blocks only. It has no exercise, so the rule that every page has one does not apply to it,
-and the self-assessment leaves it out; it counts as nothing on the map, and `lernapps-pages.json` names it with `recap`.
-The runtime writes at its top "Wiederholung" and the link to the competency's page on the learning map, where the apps
-are that practise it, so the link cannot be missing; the contents mark it. A plain link: nothing is loaded before a
-click. That the recapped competency exists and is of another strand the app cannot check; `lernapps check` and the
-listing do. Rejected: exercises on a recap page (the app would practise a competency of another strand, and the map
-would not show it); a link the author writes (it could be missing or wrong).
+A competency may require one the app does not practise; its learners may need it again. A recap page repeats it with
+descriptive blocks only: practising stays the job of the apps the map lists for it. The runtime, not the author, links
+the competency on the map, so the link cannot be missing; the catalog checks that the competency exists. Rejected:
+exercises on a recap page (the app would practise a competency the map does not show for it); a link the author writes
+(it could be missing or wrong).
 
 ```arc42
 :::decision
