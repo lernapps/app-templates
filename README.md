@@ -29,14 +29,8 @@ feature: assistants read it before they choose an archetype.
   one by one, for other archetypes that embed them as exercises: `@lernapps/app-templates/quiz/question` (schema,
   validation, rendering, checker, messages; a question's texts may be maps by language), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of
   `@lernapps/app-templates/quiz/e2e`; [`test/fixtures/question-page/`](test/fixtures/question-page/) is a page built so.
-- The placeholders of the explainer's `generated` exercises are always two braces around a declared name or its
-  field, nothing else inside: `{{G}}`, `{{e.name}}`, `{{answer}}`, in prose and in formulas alike
-  (`$\frac{{{W}}}{{{G}}} \cdot 100 = {{answer}}$`). One brace is never a placeholder, so in a formula `G`, `{G}` and
-  `\frac{W}{G}` are letters; the only LaTeX form this reserves, a double group around a lone name, means the same as
-  the name alone. The build fails on a placeholder whose name `given` does not declare, on one brace or spaces where a
-  placeholder was meant in prose (`{G}`, `{{ G }}`), on a variable of `given` that nothing uses (no placeholder, and
-  no expression of the figure, answer or mistakes; `where` does not count), and on a placeholder left after filling in
-  ([`generated.ts`](runtime/explainer/generated.ts)).
+- How to write the explainer's `generated` exercises, with their placeholders, is in its
+  [schema](runtime/explainer/explainer.v1.schema.json) (`$defs/generated`).
 - An explainer's components are Vue single-file components in `src/components/<Name>.vue`, each with
   `<script setup lang="ts">`, typed props and its test `<Name>.test.ts`, used by a `vue-component` block with its
   `props` and a `nojs` text. The build renders each with Vue's server renderer into its island, `hidden` until it
