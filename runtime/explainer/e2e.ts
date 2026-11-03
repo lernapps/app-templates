@@ -852,6 +852,19 @@ export function explainerRuntimeTests(root = "."): void {
   explainerSuite(root, "runtime");
 }
 
+/** The contrast ratio (WCAG 2.1) of two computed `rgb(…)` colours. */
+function contrastOf(foreground: string, background: string): number {
+  const luminance = (colour: string) => {
+    const [red, green, blue] = (colour.match(/[\d.]+/g) ?? ["0", "0", "0"]).slice(0, 3).map((value) => {
+      const channel = Number(value) / 255;
+      return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * red! + 0.7152 * green! + 0.0722 * blue!;
+  };
+  const [light, dark] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+  return (light! + 0.05) / (dark! + 0.05);
+}
+
 /** Only at desktop width, in a test of what does not depend on the width; what a page shows is tested at 360 px too. */
 const desktopOnly = (page: Page) => test.skip((page.viewportSize()?.width ?? 0) <= 400, "only at desktop width");
 
@@ -902,6 +915,33 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
               await expectExercises(page, item);
               await expectNojs(page, item);
               await expectVideos(page, item);
+            });
+          }
+
+          for (const scheme of ["light", "dark"] as const) {
+            test.describe(`${scheme} mode`, () => {
+              test.use({ colorScheme: scheme });
+              for (const item of (app.pages[lang] ?? []).filter((entry) => entry.figures.length > 0)) {
+                test(`${item.url || "./"}: the text of the drawn figures has 4.5:1 against the page`, async ({
+                  page,
+                }) => {
+                  await page.goto(`./${item.url}`);
+                  const colours = await page.evaluate(() => {
+                    const background = getComputedStyle(document.body).backgroundColor;
+                    return [...document.querySelectorAll(".block-drawing text")].map((text) => ({
+                      text: text.textContent ?? "",
+                      fill: getComputedStyle(text).fill,
+                      background,
+                    }));
+                  });
+                  for (const { text, fill, background } of colours) {
+                    expect(
+                      contrastOf(fill, background),
+                      `"${text}" (${fill} on ${background}) in ${scheme} mode`,
+                    ).toBeGreaterThanOrEqual(4.5);
+                  }
+                });
+              }
             });
           }
 
