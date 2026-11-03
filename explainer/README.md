@@ -67,7 +67,7 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   catalog reads. An `app.yaml` without `format` is format 1
   ([schema](../runtime/explainer/explainer.v1.schema.json)): no strand, no competencies, no page list.
 - Recap pages (format 2): a page with `recap: <subject>/<competency>` instead of `competencies` repeats a competency
-  of another strand that the app's competencies require, e.g. `recap: physik/gewichtskraft-berechnen`. It has
+  the app does not practise itself (of another strand, or of its own strand outside the app's scope) that the app's competencies require, e.g. `recap: physik/gewichtskraft-berechnen`. It has
   descriptive blocks only, no exercise (no question type, `generated`, `open-task` or exercise component), also with
   `strand: none`. The page shows "Wiederholung" at its top and a link to the competency on the learning map of
   lernapps.net (`https://lernapps.net/apps/map/<subject>/c/<competency>/`), the contents mark it, the self-assessment

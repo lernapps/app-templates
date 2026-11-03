@@ -356,7 +356,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         problems.at(
           yaml,
           [],
-          `competencies is missing; src/app.yaml names the strand ${app.strand}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency of another strand says recap: <subject>/<competency> instead`,
+          `competencies is missing; src/app.yaml names the strand ${app.strand}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead`,
         );
       }
       texts.check(yaml, ["title"], "plain");

@@ -466,10 +466,10 @@ addresses: qg-checkable, con-runtime-unchanged
 :::
 ```
 
-## A Recap Page Repeats a Competency of Another Strand
+## A Recap Page Repeats a Competency the App Does Not Practise
 
-A competency may require one of another strand; one app stays in one strand, so it does not practise that one, but its
-learners may need it again. A page may therefore say `recap: <subject>/<competency>` instead of `competencies`: a
+A competency may require one the app does not practise: of another strand (one app stays in one strand), or of its own
+strand outside the app's scope; its learners may need it again. A page may therefore say `recap: <subject>/<competency>` instead of `competencies`: a
 recap page, with descriptive blocks only. It has no exercise, so the rule that every page has one does not apply to it,
 and the self-assessment leaves it out; it counts as nothing on the map, and `lernapps-pages.json` names it with `recap`.
 The runtime writes at its top "Wiederholung" and the link to the competency's page on the learning map, where the apps

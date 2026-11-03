@@ -110,7 +110,7 @@ export interface Page {
   /** Format 2: the ids of the competencies of the learning map that the page practises. */
   competencies?: readonly string[];
   /**
-   * Format 2: makes the page a recap page, which repeats this competency of another strand, <subject>/<competency>,
+   * Format 2: makes the page a recap page, which repeats this competency (one the app does not practise), <subject>/<competency>,
    * instead of practising competencies of its own: no exercise, a link to the competency on the learning map, left
    * out of the self-assessment.
    */

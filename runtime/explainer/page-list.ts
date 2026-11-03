@@ -4,7 +4,7 @@
 // the list itself (format 1), the app's strand (<subject>/<strand>, or none), and the content pages in the order of the
 // app, each with its address relative to the app's root as the app links it, its title as a text (a string, or by
 // language) and, unless the strand is none, the competencies it practises; a recap page names instead the competency
-// of another strand it repeats (recap: <subject>/<competency>), with any strand.
+// it repeats (recap: <subject>/<competency>), with any strand.
 import { contentPages } from "./routes.ts";
 import type { Site, Text } from "./content.ts";
 

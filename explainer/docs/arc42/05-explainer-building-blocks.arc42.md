@@ -595,7 +595,7 @@ The explainer's content: build, validation, rendering, generated exercises, tuto
 its schema, in one of two formats (`dec-explainer-format-2`). Format 1 (`explainer.v1.schema.json`) is an `app.yaml`
 without `format`. Format 2 (`explainer.v2.schema.json`) adds `format: 2` and `strand` (`<subject>/<strand>` or
 `none`) to `app.yaml` and `competencies` (ids of the subject) to each page, or `recap` (`<subject>/<competency>`) to
-a recap page, which repeats a competency of another strand with descriptive blocks only (`dec-explainer-recap-page`),
+a recap page, which repeats a competency the app does not practise with descriptive blocks only (`dec-explainer-recap-page`),
 and refers to format 1 for everything else. The template and new apps are format 2.
 
 ```arc42

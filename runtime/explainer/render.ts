@@ -324,7 +324,7 @@ function pageList(context: Context, pages: readonly NonNullable<Route["page"]>[]
         page.description === undefined
           ? ""
           : ` <span class="explainer-description">${context.text(page.description)}</span>`;
-      // a recap page repeats a competency of another strand: marked, so that no one takes it for the app's own
+      // a recap page repeats a competency the app does not practise: marked, so that no one takes it for the app's own
       const recap =
         page.recap === undefined ? "" : ` <span class="explainer-recap-note">(${plain(context.t("recapNote"))})</span>`;
       return `<li><a href="${context.to(`${page.chapter}/${page.id}/`)}">${context.text(page.title)}</a>${recap}${description}</li>`;

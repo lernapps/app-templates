@@ -108,12 +108,12 @@ const describe: DescribeError = (error, path, value) => {
       return { message, ...(lang === undefined ? {} : { lang }) };
     }
     case "not":
-      // a page with both: it practises competencies of the app's strand, or it repeats one of another strand
+      // a page with both: it practises competencies of the app's strand, or it repeats one the app does not practise
       if (path.length !== 0 || !isObject(value) || !("recap" in value) || !("competencies" in value)) return undefined;
       return {
         path: ["recap"],
         message:
-          "a page has competencies or recap, never both: a page practises competencies of the app's strand, a recap page only repeats a competency of another strand; remove one of them",
+          "a page has competencies or recap, never both: a page practises competencies of the app's strand, a recap page only repeats a competency the app does not practise; remove one of them",
       };
     case "const":
       // the format of the content: 2, or none at all for format 1

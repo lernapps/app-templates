@@ -3,7 +3,7 @@
 // the app on the learning map of the catalog: src/app.yaml names the app's strand (<subject>/<strand>, or none), each
 // page the competencies it practises (required with a strand, not allowed with none), and the build writes
 // lernapps-pages.json at the root of the bundle, the list of the pages for the catalog. A recap page (recap:
-// <subject>/<competency>) repeats a competency of another strand instead: no exercise, a notice with the link to the
+// <subject>/<competency>) repeats a competency the app does not practise instead: no exercise, a notice with the link to the
 // learning map at its top, marked in the contents, left out of the self-assessment. Each broken case fails with
 // exactly one problem line.
 import { cpSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -190,7 +190,7 @@ describe("format 2: format: 2 and the strand in app.yaml, competencies on the pa
     [
       "a page without competencies while the app has a strand",
       (root) => edit(root, "kapitel/zwei.yaml", "competencies: [laplace, baumdiagramm]\n", ""),
-      "src/kapitel/zwei.yaml:1: competencies is missing; src/app.yaml names the strand mathematik/stochastik, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency of another strand says recap: <subject>/<competency> instead",
+      "src/kapitel/zwei.yaml:1: competencies is missing; src/app.yaml names the strand mathematik/stochastik, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead",
     ],
     [
       "a page with competencies while the strand is none",
@@ -238,7 +238,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     [
       "competencies and recap both",
       (root) => edit(root, "kapitel/wdh.yaml", "recap:", "competencies: [laplace]\nrecap:"),
-      "src/kapitel/wdh.yaml:3: recap: a page has competencies or recap, never both: a page practises competencies of the app's strand, a recap page only repeats a competency of another strand; remove one of them",
+      "src/kapitel/wdh.yaml:3: recap: a page has competencies or recap, never both: a page practises competencies of the app's strand, a recap page only repeats a competency the app does not practise; remove one of them",
     ],
     [
       "a recap that is no <subject>/<competency>",
