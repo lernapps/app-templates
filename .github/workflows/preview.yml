@@ -29,9 +29,9 @@ concurrency:
 
 jobs:
   changes:
-    uses: lernapps/tooling/.github/workflows/changes.yml@cc6e8c12e1ce8ed83cc457f3156fd9795f303137 # main
+    uses: lernapps/tooling/.github/workflows/changes.yml@f4162377831ad50fcfbcdfe0b9d278efb4354a4b # main
     with:
-      tooling-ref: cc6e8c12e1ce8ed83cc457f3156fd9795f303137
+      tooling-ref: f4162377831ad50fcfbcdfe0b9d278efb4354a4b
 
   bundle:
     needs: changes
@@ -78,7 +78,7 @@ jobs:
       pull-requests: write
       pages: read # the address, for the comment
     steps:
-      - uses: lernapps/tooling/actions/app-preview@cc6e8c12e1ce8ed83cc457f3156fd9795f303137 # main
+      - uses: lernapps/tooling/actions/app-preview@f4162377831ad50fcfbcdfe0b9d278efb4354a4b # main
 
   deploy:
     # main only: the bundle of the templates' example apps, published at the repo's address
@@ -89,4 +89,4 @@ jobs:
       contents: write
       pages: write
     steps:
-      - uses: lernapps/tooling/actions/app-publish@cc6e8c12e1ce8ed83cc457f3156fd9795f303137 # main
+      - uses: lernapps/tooling/actions/app-publish@f4162377831ad50fcfbcdfe0b9d278efb4354a4b # main
