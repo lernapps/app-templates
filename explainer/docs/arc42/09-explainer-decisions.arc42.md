@@ -28,6 +28,11 @@ only adds. `lernapps check` opens every explainer page a second time with JavaSc
 inside a component or a live exercise. The one exception is the optional self-assessment (`dec-self-assessment`),
 which needs a run in the browser and is no content of its own.
 
+Formulas, too, are set at build; the browser has no formula renderer. Trade-off for a generated exercise: the build
+sets a chemical formula of a drawn value (`\ce{{{r.gl}}}`) once for every value of its list. That makes the page
+larger and allows only values from a list, and only as the whole formula. Rejected: Temml in the client, which would
+make every page with an exercise larger.
+
 ```arc42
 :::decision
 id: dec-explainer-complete-without-js
