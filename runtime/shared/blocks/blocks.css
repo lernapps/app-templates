@@ -30,6 +30,24 @@
   height: auto;
 }
 
+/* The drawings take the page's colours, so they follow the dark mode too (the attributes in figures.ts are the fallback
+   for an SVG outside a page) */
+.block-drawing .fig-on {
+  fill: var(--page-accent);
+}
+
+.block-drawing .fig-off {
+  fill: var(--page-background);
+}
+
+.block-drawing .fig-line {
+  stroke: var(--page-muted);
+}
+
+.block-drawing .fig-text {
+  fill: var(--page-text);
+}
+
 .block-hundred-grid {
   width: 16rem;
 }

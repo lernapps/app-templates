@@ -759,22 +759,6 @@ button.explainer-help:focus-visible {
   border-bottom: 0;
 }
 
-.explainer-drawing .fig-on {
-  fill: var(--page-accent);
-}
-
-.explainer-drawing .fig-off {
-  fill: var(--page-background);
-}
-
-.explainer-drawing .fig-line {
-  stroke: var(--page-muted);
-}
-
-.explainer-drawing .fig-text {
-  fill: var(--page-text);
-}
-
 /* The choice of the learner's assistant on the start page, shown once the client module runs */
 .explainer-tutor-choice[hidden] {
   display: none;
