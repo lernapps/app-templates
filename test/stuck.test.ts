@@ -8,7 +8,7 @@ import { stuckLines, stuckPrompt } from "../runtime/explainer/stuck.ts";
 
 const TASK = "Übung prozentwert-ueben, Nr. 27:";
 const CHAPTER =
-  "https://lernapps.net/mathe-karte/prozent/prozentwert/tutor/?prozentwert-ueben=27&uebung=prozentwert-ueben";
+  "https://lernapps.net/mathe-arithmetik/prozent/prozentwert/tutor/?prozentwert-ueben=27&uebung=prozentwert-ueben";
 const STUCK = { exercise: "prozentwert-ueben", number: 27, tutor: CHAPTER };
 const MESSAGE = "Das ist der neue Preis, nicht der Rabatt. Gefragt ist, wie viel du sparst.";
 

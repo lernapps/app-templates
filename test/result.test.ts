@@ -6,7 +6,7 @@ import type { Question } from "../runtime/shared/questions/question.ts";
 import { answerShown, Progress, resultLine, sessionLines } from "../runtime/explainer/result.ts";
 import { openTaskState, pointNames } from "../runtime/explainer/open-task.ts";
 
-const CHAPTER = "https://lernapps.net/mathe-karte/zufall/laplace/tutor/?laplace-zaehlen=6&uebung=laplace-zaehlen";
+const CHAPTER = "https://lernapps.net/mathe-stochastik/zufall/laplace/tutor/?laplace-zaehlen=6&uebung=laplace-zaehlen";
 
 /** The line of the exercise laplace-zaehlen, task number 6, after `steps` on the progress. */
 function line(steps: (progress: Progress) => void, lang = "de"): string {
@@ -172,7 +172,7 @@ describe("the last answer as text", () => {
 });
 
 describe("what Zurück zum Tutor copies", () => {
-  const TUTOR = "https://lernapps.net/mathe-karte/zufall/laplace/tutor/?laplace-zaehlen=6&wuerfel=2";
+  const TUTOR = "https://lernapps.net/mathe-stochastik/zufall/laplace/tutor/?laplace-zaehlen=6&wuerfel=2";
 
   test("the tutor page with the page's task numbers, a line per task of the session, the count last", () => {
     const progress = new Progress();
