@@ -33,7 +33,8 @@ feature: assistants read it before they choose an archetype.
   field, nothing else inside: `{{G}}`, `{{e.name}}`, `{{answer}}`, in prose and in formulas alike
   (`$\frac{{{W}}}{{{G}}} \cdot 100 = {{answer}}$`). One brace is never a placeholder, so in a formula `G`, `{G}` and
   `\frac{W}{G}` are letters; the only LaTeX form this reserves, a double group around a lone name, means the same as
-  the name alone. The build fails on a placeholder whose name `given` does not declare, on one brace or spaces where a
+  the name alone. In `\ce` a placeholder is the whole argument (`$\ce{{{r.gl}}}$`, drawn from a list or data file);
+  the build sets the formula of each value with its subscripts. The build fails on a placeholder whose name `given` does not declare, on one brace or spaces where a
   placeholder was meant in prose (`{G}`, `{{ G }}`), on a variable of `given` that nothing uses (no placeholder, and
   no expression of the figure, answer or mistakes; `where` does not count), and on a placeholder left after filling in
   ([`generated.ts`](runtime/explainer/generated.ts)).

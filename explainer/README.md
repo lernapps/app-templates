@@ -16,6 +16,11 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   `acos(x)`, `atan(x)` and the list functions `map`, `sortBy`, `reverse`. Angles are in degrees, as in school:
   `sin(30)` is `1/2`, `asin(0.5)` is `30`. A result that is not rational (`sqrt(2)`, `sin(10)`) has 12 decimal
   places: round it with `round(x, n)`.
+- A chemical formula from a data file in a generated exercise: `$\ce{{{r.gl}}}$`, with the whole formula in one
+  field in mhchem's notation (`gl: "2H2 + O2 -> 2H2O"`), drawn with `pick: 1` from a list or data file, or with
+  `oneOf`. The build sets the formula of every value with its subscripts. It fails on a placeholder among other text
+  in `\ce` (`\ce{{{e.x}}2O}`), on any placeholder in `\pu` (write `{{m}}\,\pu{g}`), on `\ce{{{answer}}}`, on a
+  number range, and on a value mhchem cannot read.
 - Formulas in the LaTeX subset of the command list, rendered as MathML: besides fractions, roots, powers and
   relations also `\sin`, `\cos`, `\tan`, `\arcsin` (or `\sin^{-1}`), `\arccos`, `\arctan`, Greek letters (`\alpha`,
   `\varphi`, `\pi`, `\Delta`, …), degrees (`30^\circ`), spaces (`\ `, `\quad`, `\qquad`), `\Rightarrow`,

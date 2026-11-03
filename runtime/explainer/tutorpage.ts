@@ -348,7 +348,7 @@ export function generatedLines(spec: Generated, site: Site, lang: string, format
   lines.push(`- ${words.linkNumber}: \`${page}?${spec.id}=n&via=tutor#${spec.id}\``);
   const { paths, answer } = placeholdersOf(spec, lang);
   const data = dataOf(spec, site.data);
-  const templates = templatesOf(spec, [lang]);
+  const templates = templatesOf(spec, [lang], data);
   let choices = false;
   const rows = taskSeeds(spec, data).map((seed, index) => {
     const task = generate(spec, seed, data);

@@ -5,7 +5,15 @@ import { describe, expect, test } from "vite-plus/test";
 import { answerFor, diagnose, questionFor } from "../runtime/explainer/generated/question.ts";
 import { generate, record } from "../runtime/explainer/generated/values.ts";
 import { soundness } from "../runtime/explainer/generated/soundness.ts";
-import { placeholderProblems, taskText, templateProblems, tokenize } from "../runtime/explainer/generated/texts.ts";
+import {
+  chemPlaceholdersIn,
+  chemProblems,
+  placeholderProblems,
+  taskText,
+  templateProblems,
+  tokenize,
+} from "../runtime/explainer/generated/texts.ts";
+import { ChemError, templatesOf } from "../runtime/explainer/exercises.ts";
 import { type Generated, type Templates } from "../runtime/explainer/generated/types.ts";
 import { isCorrect, rightAnswer, wrongAnswer } from "../runtime/shared/questions/question.ts";
 import type { DataRecord } from "../runtime/explainer/content.ts";
@@ -298,5 +306,65 @@ describe("the placeholders of a template", () => {
       [["hint"], undefined],
       [["mistakes", 0, "message"], undefined],
     ]);
+  });
+});
+
+describe("a chemical formula from a record: \\ce{{{e.gl}}}", () => {
+  const reaktionen: DataRecord[] = [
+    { gl: "2H2 + O2 -> 2H2O", anzahl: 2 },
+    { gl: "C + O2 -> CO2", anzahl: 1 },
+  ];
+  const reaktion: Generated = {
+    type: "generated",
+    id: "reaktion",
+    given: { r: { pick: 1, from: { data: "reaktionen" } } },
+    task: { text: "Wie viele Teilchen entstehen bei $\\ce{{{r.gl}}}$?" },
+    answer: { value: "r.anzahl", compare: "number" },
+    steps: ["$\\ce{{{r.gl}}}$: {{answer}}"],
+  };
+  const data = { reaktionen };
+
+  test("is a token of its own, not text in \\ce", () => {
+    expect(tokenize("bei $\\ce{{{r.gl}}}$ und $x = {{r.anzahl}}$")).toBe(
+      "bei ${\\text{⟦ce:r.gl⟧}}$ und $x = {\\text{⟦r.anzahl⟧}}$",
+    );
+    expect(chemPlaceholdersIn("bei $\\ce{{{r.gl}}}$, nicht \\ce{{{r.x}}}")).toEqual(["r.gl"]);
+  });
+
+  test("the build sets the formula of each value, and the task shows it with its subscripts", () => {
+    const templates = templatesOf(reaktion, ["de"], data);
+    expect(Object.keys(templates["de"]?.chem ?? {})).toEqual(["2H2 + O2 -> 2H2O", "C + O2 -> CO2"]);
+    const task = generate(reaktion, 1, data);
+    const text = taskText(reaktion, task, "de", templates);
+    expect(text).toMatch(/^Wie viele Teilchen entstehen bei <math><mrow>.*<msub><mrow><\/mrow><mn>2<\/mn><\/msub>/);
+    expect(text).not.toContain("<mtext>");
+    expect(text).not.toContain("⟦");
+    expect(soundness(reaktion, data, templates, ["de"], 20)).toEqual([]);
+  });
+
+  test("a value mhchem cannot read is an error of the build", () => {
+    const broken = { reaktionen: [{ gl: "H2O}", anzahl: 1 }] };
+    expect(() => templatesOf(reaktion, ["de"], broken)).toThrow(ChemError);
+    expect(() => templatesOf(reaktion, ["de"], broken)).toThrow(
+      '\\ce{{{r.gl}}}: the value "H2O}" is no chemical formula mhchem can set (its braces are not balanced)',
+    );
+  });
+
+  test("a combination that cannot work is reported", () => {
+    const given = { r: { pick: 1, from: { data: "reaktionen" } }, n: { int: [1, 3] } } as const;
+    expect(chemProblems("$\\ce{{{r.gl}}}$ und $\\ce{H2O}$", given)).toEqual([]);
+    expect(chemProblems("$\\ce{{{n}}H2O}$", given)).toEqual([
+      '\\ce{{{n}}H2O} has a placeholder among other text; in \\ce a placeholder is the whole argument, \\ce{{{e.gl}}}: put the whole formula into one field of the data (gl: "2H2 + O2 -> 2H2O")',
+    ]);
+    expect(chemProblems("$\\pu{{{n}} g}$", given)).toEqual([
+      "\\pu{{{n}} g} has a placeholder inside; \\pu takes none: write the number before it, e.g. {{m}}\\,\\pu{g}",
+    ]);
+    expect(chemProblems("$\\ce{{{n}}}$", given)).toEqual([
+      "\\ce{{{n}}} needs one value from a list: draw n with oneOf, or with pick: 1 from a list or a data file, so that the build can set the formula of each value",
+    ]);
+    expect(chemProblems("$\\ce{{{answer}}}$", given)).toEqual([
+      "\\ce{{{answer}}} is not possible: the build sets only the formulas of values drawn from a list; show the formula of a value of given",
+    ]);
+    expect(templateProblems({ ...reaktion, given } as Generated).map(({ message }) => message)).toEqual([]);
   });
 });

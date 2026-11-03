@@ -18,6 +18,10 @@ const PATH_ONLY = new RegExp(String.raw`^${PATH}$`);
 const SPACED = new RegExp(String.raw`\{\{\s*(${PATH})\s*\}\}`, "g");
 /** A formula ($…$) or a run of prose, in a template. */
 const SEGMENT = /\$((?:\\.|[^\\$\n])+?)\$|([^$]+)/g;
+/** A chemical formula whose whole argument is one placeholder: \ce{{{e.gl}}}. */
+const CHEM = new RegExp(String.raw`\\ce\{\{\{(${PATH})\}\}\}`, "g");
+/** The start of the token of a placeholder that is the whole argument of \ce: ⟦ce:e.gl⟧. */
+const CHEM_TOKEN = "ce:";
 
 const formats = new Map<string, Intl.NumberFormat>();
 /** A number as the page shows it: up to six decimals, no grouping (a learner would type 1500, not 1.500). */
@@ -54,13 +58,87 @@ export function answerLabel(spec: Generated, task: Task, lang: string): string {
   return label(task.answer, lang);
 }
 
-/** A template's placeholders as tokens: {{G}} becomes ⟦G⟧, inside a formula ($…$) {\text{⟦G⟧}}. */
+/**
+ * A template's placeholders as tokens: {{G}} becomes ⟦G⟧, inside a formula ($…$) {\text{⟦G⟧}}; a chemical formula
+ * whose whole argument is a placeholder, \ce{{{e.gl}}}, becomes {\text{⟦ce:e.gl⟧}}, which fill() replaces by the
+ * formula the build set for the task's value (LanguageTemplates.chem).
+ */
 export function tokenize(text: string): string {
   return text.replace(SEGMENT, (whole, math: string | undefined, prose: string | undefined) =>
     math !== undefined
-      ? `$${math.replace(PLACEHOLDER, (_placeholder, path: string) => `{\\text{⟦${path}⟧}}`)}$`
+      ? `$${math
+          .replace(CHEM, (_chem, path: string) => `{\\text{⟦${CHEM_TOKEN}${path}⟧}}`)
+          .replace(PLACEHOLDER, (_placeholder, path: string) => `{\\text{⟦${path}⟧}}`)}$`
       : (prose ?? whole).replace(PLACEHOLDER, (_placeholder, path: string) => `⟦${path}⟧`),
   );
+}
+
+/** The formulas of a template ($…$), as written. */
+const formulasIn = (text: string): string[] =>
+  [...text.matchAll(SEGMENT)].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
+
+/** The placeholders that are the whole argument of a \ce in a formula of a template (\ce{{{e.gl}}}), by their path. */
+export function chemPlaceholdersIn(text: string): string[] {
+  return formulasIn(text).flatMap((math) => [...math.matchAll(CHEM)].map((match) => match[1] ?? ""));
+}
+
+/** The argument of each \ce and \pu of a formula, with its command; braces balanced. */
+function mhchemArguments(math: string): { command: string; argument: string }[] {
+  const found: { command: string; argument: string }[] = [];
+  for (const match of math.matchAll(/\\(ce|pu)\s*\{/g)) {
+    const start = (match.index ?? 0) + match[0].length;
+    let depth = 1;
+    for (let at = start; at < math.length; at++) {
+      if (math[at] === "{") depth++;
+      else if (math[at] === "}" && --depth === 0) {
+        found.push({ command: `\\${match[1] ?? ""}`, argument: math.slice(start, at) });
+        break;
+      }
+    }
+  }
+  return found;
+}
+
+const WHOLE_PLACEHOLDER = new RegExp(String.raw`^\{\{${PATH}\}\}$`);
+
+/**
+ * The problems of the placeholders in \ce and \pu of one template. A placeholder in \ce is its whole argument,
+ * \ce{{{e.gl}}}, drawn from a finite list (oneOf, or pick: 1 from a list or a data file), so that the build can set
+ * the formula of every value; \pu takes none.
+ */
+export function chemProblems(text: string, given: Generated["given"]): string[] {
+  const problems: string[] = [];
+  for (const math of formulasIn(text)) {
+    for (const { command, argument } of mhchemArguments(math)) {
+      if (placeholdersIn(argument).length === 0) continue;
+      if (command === "\\pu") {
+        problems.push(
+          `\\pu{${argument}} has a placeholder inside; \\pu takes none: write the number before it, e.g. {{m}}\\,\\pu{g}`,
+        );
+      } else if (!WHOLE_PLACEHOLDER.test(argument)) {
+        problems.push(
+          `\\ce{${argument}} has a placeholder among other text; in \\ce a placeholder is the whole argument, \\ce{{{e.gl}}}: put the whole formula into one field of the data (gl: "2H2 + O2 -> 2H2O")`,
+        );
+      }
+    }
+  }
+  for (const path of chemPlaceholdersIn(text)) {
+    const root = path.split(".")[0] ?? "";
+    if (root === "answer") {
+      problems.push(
+        "\\ce{{{answer}}} is not possible: the build sets only the formulas of values drawn from a list; show the formula of a value of given",
+      );
+      continue;
+    }
+    const arbitrary = given[root];
+    if (arbitrary === undefined) continue; // reported as an unknown placeholder
+    if (arbitrary.oneOf === undefined && !(arbitrary.from !== undefined && arbitrary.pick === 1)) {
+      problems.push(
+        `\\ce{{{${path}}}} needs one value from a list: draw ${root} with oneOf, or with pick: 1 from a list or a data file, so that the build can set the formula of each value`,
+      );
+    }
+  }
+  return problems;
 }
 
 /** The placeholders of a template, by their path (G, e.name, answer). */
@@ -136,7 +214,7 @@ export function templateProblems(spec: Generated): { path: (string | number)[]; 
   const declared = [...Object.keys(spec.given), "answer"];
   return writtenTemplates(spec).flatMap(({ path, lang, text }) => {
     const known = new Set(declared);
-    return placeholderProblems(text, known).map((message) => ({
+    return [...placeholderProblems(text, known), ...chemProblems(text, spec.given)].map((message) => ({
       path,
       ...(lang === undefined ? {} : { lang }),
       message,
@@ -194,10 +272,18 @@ export function fill(
   task: Task,
   lang: string,
   mode: "html" | "text" = "html",
+  chem: Readonly<Record<string, string>> = {},
 ): string {
   const withMath =
     mode === "html"
-      ? template.replace(/<mtext>⟦([^⟧]+)⟧<\/mtext>/g, (_whole, path: string) => {
+      ? template.replace(/<mtext>⟦([^⟧]+)⟧<\/mtext>/g, (_whole, token: string) => {
+          if (token.startsWith(CHEM_TOKEN)) {
+            const path = token.slice(CHEM_TOKEN.length);
+            const value = placeholderValue(spec, task, path, lang);
+            if (value === undefined) return `<mtext>{{${escape(path)}}}</mtext>`;
+            return chem[value.text] ?? `<mtext>${escape(value.text)}</mtext>`;
+          }
+          const path = token;
           const value = placeholderValue(spec, task, path, lang);
           if (value === undefined) return `<mtext>{{${escape(path)}}}</mtext>`;
           if (value.number === undefined) return `<mtext>${escape(value.text)}</mtext>`;
@@ -206,7 +292,8 @@ export function fill(
           return negative ? `<mo>−</mo><mn>${digits}</mn>` : `<mn>${digits}</mn>`;
         })
       : template;
-  return withMath.replace(/⟦([^⟧]+)⟧/g, (_whole, path: string) => {
+  return withMath.replace(/⟦([^⟧]+)⟧/g, (_whole, token: string) => {
+    const path = token.startsWith(CHEM_TOKEN) ? token.slice(CHEM_TOKEN.length) : token;
     const value = placeholderValue(spec, task, path, lang);
     if (value === undefined) return `{{${path}}}`;
     return mode === "html" ? escape(value.text) : value.text;
@@ -229,18 +316,20 @@ export const templatesIn = (templates: Templates, lang: string): LanguageTemplat
 
 /** The task's text as HTML, in `lang`. */
 export function taskText(spec: Generated, task: Task, lang: string, templates: Templates): string {
-  return fill(templatesIn(templates, lang).task, spec, task, lang);
+  const { task: text, chem } = templatesIn(templates, lang);
+  return fill(text, spec, task, lang, "html", chem);
 }
 
 /** The steps of the solution as HTML, in `lang`. */
 export function stepsOf(spec: Generated, task: Task, lang: string, templates: Templates): string[] {
-  return templatesIn(templates, lang).steps.map((step) => fill(step, spec, task, lang));
+  const { steps, chem } = templatesIn(templates, lang);
+  return steps.map((step) => fill(step, spec, task, lang, "html", chem));
 }
 
 /** The hint as HTML, in `lang`, if the exercise has one. */
 export function hintOf(spec: Generated, task: Task, lang: string, templates: Templates): string | undefined {
-  const hint = templatesIn(templates, lang).hint;
-  return hint === undefined ? undefined : fill(hint, spec, task, lang);
+  const { hint, chem } = templatesIn(templates, lang);
+  return hint === undefined ? undefined : fill(hint, spec, task, lang, "html", chem);
 }
 
 /** The text of HTML, as a learner reads it: tags left out, entities resolved, white space folded. */

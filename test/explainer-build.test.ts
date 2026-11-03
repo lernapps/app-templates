@@ -252,6 +252,32 @@ describe("one build writes every page", () => {
   );
 });
 
+test("a generated exercise sets a chemical formula of a data file, \\ce{{{r.gl}}}, with its subscripts", async () => {
+  // the all-blocks fixture: data/reaktionen.yaml ({ gl: "2H2 + O2 -> 2H2O", … }) and the exercise reaktion
+  const root = app(join(import.meta.dirname, "fixtures/explainer-all-blocks"));
+  await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [explainer()] });
+  for (const [path, part] of [
+    ["zahlen/zahlen-02/index.html", "Wie viele Teilchen"],
+    ["en/zahlen/zahlen-02/index.html", "How many particles"],
+  ] as const) {
+    const html = readFileSync(join(root, "dist", path), "utf8");
+    const exercise = html.split('id="reaktion"')[1]?.split('class="explainer-exercise-data"')[0] ?? "";
+    const tasks = exercise.split('class="explainer-worked-task"').slice(1);
+    expect(tasks, path).toHaveLength(3);
+    for (const task of tasks) {
+      expect(task).toContain(part);
+      // each formula is MathML with subscripts, never the record's text in <mtext> or a placeholder left
+      expect(task).toMatch(/<math><mrow>.*<msub><mrow><\/mrow><mn>\d<\/mn><\/msub>/);
+      expect(task).not.toMatch(/<mtext>|⟦|\{\{/);
+    }
+    // the browser gets the formula of every value of the data file, to set the live task's
+    const data =
+      (html.split('id="reaktion"')[1] ?? "").split('class="explainer-exercise-data"')[1]?.split("</script>")[0] ?? "";
+    expect(data).toContain('"chem":{');
+    expect(data).toContain('"2H2 + O2 -> 2H2O":"\\u003cmrow>\\u003cmn>2\\u003c/mn>');
+  }
+}, 60_000);
+
 test("each language's page has its own credits and the addresses of its links", () => {
   const site = loadSite(app(join(import.meta.dirname, "fixtures/explainer-all-blocks")));
   const page = (lang: string) => {

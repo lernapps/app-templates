@@ -20,7 +20,7 @@ import {
   type Text,
 } from "./content.ts";
 import { ExpressionError, parse, variables } from "./expression.ts";
-import { dataOf, templatesOf } from "./exercises.ts";
+import { ChemError, dataOf, templatesOf } from "./exercises.ts";
 import { exampleProblems, soundness } from "./generated/soundness.ts";
 import { templateProblems, unusedVariables } from "./generated/texts.ts";
 import { type Generated, type Templates } from "./generated/types.ts";
@@ -501,8 +501,12 @@ function checkGenerated(check: PageCheck, block: Generated, at: Path): void {
   for (const [name, file] of check.dataFiles) records[name] = file.value as DataRecord[];
   let templates: Templates;
   try {
-    templates = templatesOf(block, texts.languages);
+    templates = templatesOf(block, texts.languages, dataOf(block, records));
   } catch (error) {
+    if (error instanceof ChemError) {
+      problems.at(yaml, at, error.message);
+      return;
+    }
     const reason = (error instanceof Error ? error.message : String(error)).split("\n")[0] ?? "";
     problems.at(
       yaml,
