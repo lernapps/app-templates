@@ -9,6 +9,15 @@ import { build } from "vite-plus";
 import { explainer } from "../runtime/explainer/plugin.ts";
 
 const FIXTURE = join(import.meta.dirname, "fixtures/explainer-broken");
+/** The Greek letters of the formula command list, at its end. */
+const GREEK = [
+  ..."alpha beta gamma delta varepsilon epsilon zeta eta theta vartheta iota kappa lambda mu nu xi pi rho sigma tau".split(
+    " ",
+  ),
+  ..."upsilon varphi phi chi psi omega Gamma Delta Theta Lambda Xi Pi Sigma Phi Psi Omega".split(" "),
+]
+  .map((letter) => `\\${letter}`)
+  .join(", ");
 
 /** A copy of the fixture as an app: index.html, src/main.ts and the content in src/. */
 function app(): string {
@@ -77,7 +86,7 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "an unknown LaTeX command",
     (root) => edit(root, "kapitel/eins.yaml", `"a^2 + b^2 = c^2"`, `'\\foo{a} + b'`),
-    "src/kapitel/eins.yaml:10: blocks[0].blocks[1].formula: \\foo is not in the formula command list; write the formula with the commands the schema lists ($defs/latex)",
+    `src/kapitel/eins.yaml:10: blocks[0].blocks[1].formula: \\foo is not in the formula command list; use only these commands, besides ^, _, braces and parentheses: \\frac, \\cdot, \\times, \\div, \\%, \\text, \\sqrt, \\approx, \\pm, \\le, \\ge, \\neq, \\,, \\{, \\}, \\ce, \\pu, \\  (a space), \\quad, \\qquad, \\Rightarrow, \\Leftrightarrow, \\left, \\right, \\sin, \\cos, \\tan, \\arcsin, \\arccos, \\arctan, \\circ, ${GREEK}`,
   ],
   [
     "raw HTML",
@@ -216,6 +225,36 @@ const cases: [string, (root: string) => void, string][] = [
     "a placeholder with an index",
     (root) => edit(root, "kapitel/eins.yaml", `de: "Was ist {{a}} + {{b}}?"`, `de: "Was ist {{a}} + {{b[0].x}}?"`),
     "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): {{b[0].x}} is no placeholder: a placeholder is a name or a name's field ({{e.brauch}}); to show one record, pick it on its own (given: { e: { pick: 1, from: { data: feste } } }) and write {{e.brauch}}; a literal {{ in a formula is written { {",
+  ],
+  [
+    "a placeholder among other text in \\ce",
+    (root) =>
+      edit(
+        root,
+        "kapitel/eins.yaml",
+        `de: "Was ist {{a}} + {{b}}?"`,
+        `de: "Was ist {{a}} + {{b}}? $\\\\ce{{{b}}H2O}$"`,
+      ),
+    `src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): \\ce{{{b}}H2O} has a placeholder among other text; in \\ce a placeholder is the whole argument, \\ce{{{e.gl}}}: put the whole formula into one field of the data (gl: "2H2 + O2 -> 2H2O")`,
+  ],
+  [
+    "a number range in \\ce",
+    (root) => edit(root, "kapitel/eins.yaml", `de: "Was ist {{a}} + {{b}}?"`, `de: "Was ist {{a}} + $\\\\ce{{{b}}}$?"`),
+    "src/kapitel/eins.yaml:28: blocks[1].blocks[0].task.text (de): \\ce{{{b}}} needs one value from a list: draw b with oneOf, or with pick: 1 from a list or a data file, so that the build can set the formula of each value",
+  ],
+  [
+    "a value in \\ce that mhchem cannot read",
+    (root) => {
+      edit(
+        root,
+        "kapitel/eins.yaml",
+        "b: { int: [1, 9] }",
+        'b: { int: [1, 9] }\n          c: { oneOf: ["H2O", "H2O}"] }',
+      );
+      edit(root, "kapitel/eins.yaml", `de: "Was ist {{a}} + {{b}}?"`, `de: "Was ist {{a}} + {{b}}? $\\\\ce{{{c}}}$"`);
+      edit(root, "kapitel/eins.yaml", `en: "What is {{a}} + {{b}}?"`, `en: "What is {{a}} + {{b}}? $\\\\ce{{{c}}}$"`);
+    },
+    'src/kapitel/eins.yaml:21: blocks[1].blocks[0]: \\ce{{{c}}}: the value "H2O}" is no chemical formula mhchem can set (its braces are not balanced); write it in mhchem\'s notation, e.g. 2H2 + O2 -> 2H2O',
   ],
   [
     "an unused variable",

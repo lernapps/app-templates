@@ -4,7 +4,10 @@
 // - arithmetic on exact fractions: + - * /, parentheses, unary minus; numbers as written (0.1 is 1/10);
 // - comparisons == != < <= > >=, and, or, not; true, false; strings in quotes;
 // - record fields (e.year), list index (xs[0]), list literals ([1, 2, 3]);
-// - the functions round(x, n), decimals(x), map(xs, field), sortBy(xs, field), reverse(xs).
+// - the functions round(x, n), decimals(x), map(xs, field), sortBy(xs, field), reverse(xs);
+// - the functions sqrt(x), pow(x, n), sin(x), cos(x), tan(x) and asin(x), acos(x), atan(x), with angles in degrees as
+//   in school (sin(30) is 1/2). A result is exact where it is rational (sqrt(9/4), pow(2, 10), sin(30), cos(60),
+//   tan(45), asin(1/2)); otherwise it is the value to 12 decimal places, which an exercise rounds with round(x, n).
 // Errors are ExpressionErrors whose message says what to change.
 import { Fraction } from "./fraction.ts";
 
@@ -49,6 +52,14 @@ const FUNCTIONS: Readonly<Record<string, { arity: number; field?: number }>> = {
   map: { arity: 2, field: 1 },
   sortBy: { arity: 2, field: 1 },
   reverse: { arity: 1 },
+  sqrt: { arity: 1 },
+  pow: { arity: 2 },
+  sin: { arity: 1 },
+  cos: { arity: 1 },
+  tan: { arity: 1 },
+  asin: { arity: 1 },
+  acos: { arity: 1 },
+  atan: { arity: 1 },
 };
 const KEYWORDS = new Set(["and", "or", "not", "true", "false"]);
 
@@ -322,6 +333,107 @@ function integer(value: Fraction, what: string): number {
   return Number(value.n);
 }
 
+/** The decimal places of a result that is not rational (sqrt(2), sin(10)): enough for any rounding of an exercise. */
+export const APPROXIMATION_PLACES = 12;
+
+/** A real number that is no fraction, as the fraction of its first APPROXIMATION_PLACES decimals. */
+function approximate(value: number, what: string): Fraction {
+  if (!Number.isFinite(value)) throw new ExpressionError(`${what} has no result here`);
+  return Fraction.from(Number(value.toFixed(APPROXIMATION_PLACES)));
+}
+
+/** The square root of a whole number ≥ 0, if it is whole. */
+function wholeRoot(n: bigint): bigint | undefined {
+  if (n < 2n) return n;
+  let x = BigInt(Math.floor(Math.sqrt(Number(n))));
+  while (x * x > n) x--;
+  while ((x + 1n) * (x + 1n) <= n) x++;
+  return x * x === n ? x : undefined;
+}
+
+function sqrt(x: Fraction): Fraction {
+  if (x.n < 0n) throw new ExpressionError(`sqrt needs a number ≥ 0, not ${x.toNumber()}`);
+  const n = wholeRoot(x.n);
+  const d = wholeRoot(x.d);
+  return n !== undefined && d !== undefined ? Fraction.of(n, d) : approximate(Math.sqrt(x.toNumber()), "sqrt");
+}
+
+/** The largest exponent of pow: beyond it, a number has more digits than any exercise shows. */
+const MAX_EXPONENT = 1000;
+
+function pow(x: Fraction, n: Fraction): Fraction {
+  if (n.isInteger()) {
+    const e = Number(n.n);
+    if (Math.abs(e) > MAX_EXPONENT)
+      throw new ExpressionError(`pow takes an exponent from -${MAX_EXPONENT} to ${MAX_EXPONENT}`);
+    if (x.n === 0n && e < 0) throw new ExpressionError("pow(0, n) needs n ≥ 0: division by zero");
+    const power = Fraction.of(x.n ** BigInt(Math.abs(e)), x.d ** BigInt(Math.abs(e)));
+    return e < 0 ? Fraction.of(1).div(power) : power;
+  }
+  if (x.n < 0n) throw new ExpressionError("pow of a negative number needs a whole exponent");
+  return approximate(x.toNumber() ** n.toNumber(), "pow");
+}
+
+/** The angle `x` in degrees, brought into 0 ≤ x < 360 exactly. */
+function turn(x: Fraction): Fraction {
+  const full = Fraction.of(360);
+  const quotient = x.div(full);
+  // floor of the quotient
+  let floor = quotient.n / quotient.d;
+  if (quotient.n < 0n && quotient.n % quotient.d !== 0n) floor -= 1n;
+  return x.sub(full.mul(Fraction.of(floor)));
+}
+
+/** The sine of the angles 0°, 30°, 90°, … whose sine is rational, in degrees. */
+const EXACT_SINE: ReadonlyMap<number, Fraction> = new Map([
+  [0, Fraction.of(0)],
+  [30, Fraction.of(1, 2)],
+  [90, Fraction.of(1)],
+  [150, Fraction.of(1, 2)],
+  [180, Fraction.of(0)],
+  [210, Fraction.of(-1, 2)],
+  [270, Fraction.of(-1)],
+  [330, Fraction.of(-1, 2)],
+]);
+const RADIANS = Math.PI / 180;
+
+function sine(degrees: Fraction): Fraction {
+  const angle = turn(degrees);
+  const exact = angle.isInteger() ? EXACT_SINE.get(Number(angle.n)) : undefined;
+  return exact ?? approximate(Math.sin(angle.toNumber() * RADIANS), "sin");
+}
+
+const cosine = (degrees: Fraction): Fraction => sine(degrees.add(Fraction.of(90)));
+
+function tangent(degrees: Fraction): Fraction {
+  const angle = turn(degrees);
+  const cos = cosine(angle);
+  if (cos.n === 0n) throw new ExpressionError(`tan(${degrees.toNumber()}) has no value: the cosine of the angle is 0`);
+  if (angle.isInteger() && [45, 135, 225, 315].includes(Number(angle.n))) {
+    return Fraction.of(Number(angle.n) % 180 === 45 ? 1 : -1);
+  }
+  const sin = sine(angle);
+  return sin.n === 0n ? sin : approximate(Math.tan(angle.toNumber() * RADIANS), "tan");
+}
+
+/** The inverse of sin, cos or tan in degrees: exact for the values of the angles of EXACT_SINE and of 45°. */
+function inverse(fn: "asin" | "acos" | "atan", x: Fraction): Fraction {
+  if (fn !== "atan" && (x.compare(Fraction.of(-1)) < 0 || x.compare(Fraction.of(1)) > 0)) {
+    throw new ExpressionError(`${fn} needs a number from -1 to 1, not ${x.toNumber()}`);
+  }
+  const exact: Readonly<Record<string, number>> =
+    fn === "asin"
+      ? { "-1": -90, "-1/2": -30, "0": 0, "1/2": 30, "1": 90 }
+      : fn === "acos"
+        ? { "-1": 180, "-1/2": 120, "0": 90, "1/2": 60, "1": 0 }
+        : { "-1": -45, "0": 0, "1": 45 };
+  const known = exact[x.toString()];
+  if (known !== undefined) return Fraction.of(known);
+  const radians =
+    fn === "asin" ? Math.asin(x.toNumber()) : fn === "acos" ? Math.acos(x.toNumber()) : Math.atan(x.toNumber());
+  return approximate(radians / RADIANS, fn);
+}
+
 function call(fn: string, args: readonly Node[], env: Readonly<Record<string, Value>>): Value {
   const value = (index: number) => evaluate(args[index] as Node, env);
   const field = () => (args[1] as Extract<Node, { kind: "name" }>).name;
@@ -341,6 +453,20 @@ function call(fn: string, args: readonly Node[], env: Readonly<Record<string, Va
     }
     case "reverse":
       return [...asList(value(0), "reverse")].reverse();
+    case "sqrt":
+      return sqrt(asNumber(value(0), "sqrt"));
+    case "pow":
+      return pow(asNumber(value(0), "pow"), asNumber(value(1), "pow"));
+    case "sin":
+      return sine(asNumber(value(0), "sin"));
+    case "cos":
+      return cosine(asNumber(value(0), "cos"));
+    case "tan":
+      return tangent(asNumber(value(0), "tan"));
+    case "asin":
+    case "acos":
+    case "atan":
+      return inverse(fn, asNumber(value(0), fn));
     default:
       throw new ExpressionError(`${fn} is not a function of the expression language`);
   }

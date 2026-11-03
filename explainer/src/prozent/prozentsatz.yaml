@@ -1,6 +1,7 @@
-# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
 title: Prozentsatz
 description: "Den Prozentsatz berechnen: p = W : G · 100, mit einem Beispiel und dem Prozentstreifen."
+competencies: [prozent-prozentsatz]
 scope: |
   Gesucht ist, welcher Anteil der Teil vom Ganzen ist, etwa „18 von 24 Schülern“. Man rechnet
   $p = \frac{W}{G} \cdot 100$: Teil durch Ganzes gibt den Anteil, mal 100 die Prozent. Erst der Prozentsatz macht

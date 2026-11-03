@@ -34,7 +34,7 @@ export function writeScaffold(archetype: string, dir: string): void {
   if (existsSync(dir) && readdirSync(dir).length > 0) throw new Error(`${dir} is not empty`);
   const template = join(root, archetype);
   for (const path of scaffoldPaths(archetype)) {
-    // npm ships a .gitignore as _gitignore (scripts/pack-dotfiles.ts); this checkout has the .gitignore itself
+    // npm ships a .gitignore only as its tracked copy _gitignore; this checkout has the .gitignore itself
     const source = join(template, path);
     const target = join(dir, path);
     mkdirSync(dirname(target), { recursive: true });

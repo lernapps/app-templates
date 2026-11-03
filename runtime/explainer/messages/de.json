@@ -196,5 +196,9 @@
   "openTaskLocked": "Die Lösung öffnet sich nach deiner Antwort.",
   "resultPartly": "teilweise richtig ({n} von {total} Punkten, es fehlen {missed})",
   "resultPhoto": "Antwort als Foto",
-  "resultAnswer": "Antwort „{input}“"
+  "resultAnswer": "Antwort „{input}“",
+  "recap": "Wiederholung",
+  "recapText": "Diese Seite wiederholt etwas, das du schon können solltest. Üben kannst du es in anderen Apps: {link}",
+  "recapLink": "Baustein auf der Lernlandkarte von lernapps.net",
+  "recapNote": "Wiederholung"
 }

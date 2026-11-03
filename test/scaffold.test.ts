@@ -5,6 +5,7 @@
 // passes `lernapps check` as an app is the CI job scaffold of check.yml.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { execFileSync } from "node:child_process";
 import { describe, expect, test } from "vite-plus/test";
 import { scaffoldPaths } from "../scripts/scaffold.ts";
 
@@ -49,6 +50,18 @@ describe.each(manifest.lernapps.archetypes)("the scaffold of %s", (archetype) =>
         `e2e/${archetype}.e2e.ts`,
       ]),
     );
+  });
+
+  test("ships its .gitignore as _gitignore, the same file, tracked, so that a git install has it too", () => {
+    // npm drops every .gitignore from a package, by `npm pack` and by the install of a git commit alike, and a git
+    // install runs no prepack: so the copy is in the repository, and `lernapps create` writes it back as .gitignore
+    const shipped = join(root, archetype, "_gitignore");
+    expect(existsSync(shipped)).toBe(true);
+    expect(readFileSync(shipped, "utf8"), "copy .gitignore to _gitignore").toBe(
+      readFileSync(join(root, archetype, ".gitignore"), "utf8"),
+    );
+    const tracked = execFileSync("git", ["ls-files", "--", `${archetype}/_gitignore`], { cwd: root, encoding: "utf8" });
+    expect(tracked.trim()).toBe(`${archetype}/_gitignore`);
   });
 
   test("copies no content of the example app: the start content comes from scaffold/", () => {

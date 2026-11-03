@@ -1,4 +1,5 @@
-// The content of an explainer, as the YAML files in src/ give it (explainer.v1.schema.json) and the build reads it
+// The content of an explainer, as the YAML files in src/ give it (explainer.v1.schema.json, or in format 2
+// explainer.v2.schema.json) and the build reads it
 // (load.ts): the app, its chapters in order, their pages in order, the data files, the bundled images and the
 // components (src/components/, components.ts) with the blocks that use them.
 
@@ -43,6 +44,10 @@ export interface Source {
 }
 
 export interface App {
+  /** The format of the content: 2, or none for format 1. */
+  format?: 2;
+  /** Format 2: the strand of the learning map the app stays in, <subject>/<strand>, or none. */
+  strand?: string;
   title: Text;
   intro: Text;
   languages: readonly string[];
@@ -102,6 +107,14 @@ export interface Page {
   file: string;
   title: Text;
   description?: Text;
+  /** Format 2: the ids of the competencies of the learning map that the page practises. */
+  competencies?: readonly string[];
+  /**
+   * Format 2: makes the page a recap page, which repeats this competency (one the app does not practise), <subject>/<competency>,
+   * instead of practising competencies of its own: no exercise, a link to the competency on the learning map, left
+   * out of the self-assessment.
+   */
+  recap?: string;
   /** What the page teaches, for the tutor's scope (scope.ts). */
   scope?: Text;
   blocks: readonly Block[];
@@ -251,6 +264,12 @@ export function* allBlocks(blocks: readonly Block[]): Generator<Block> {
     yield block;
     if (block.type === "section" || block.type === "example" || block.type === "note") yield* allBlocks(block.blocks);
   }
+}
+
+/** The page of a competency on the learning map of lernapps.net, from <subject>/<competency> (a recap page's recap). */
+export function mapUrl(recap: string): string {
+  const [subject = "", competency = ""] = recap.split("/");
+  return `https://lernapps.net/apps/map/${subject}/c/${competency}/`;
 }
 
 /** Whether a block is an exercise. */

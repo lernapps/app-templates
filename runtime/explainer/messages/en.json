@@ -196,5 +196,9 @@
   "openTaskLocked": "The solution opens after your answer.",
   "resultPartly": "partly right ({n} of {total} points, missing {missed})",
   "resultPhoto": "answer as a photo",
-  "resultAnswer": "answer “{input}”"
+  "resultAnswer": "answer “{input}”",
+  "recap": "Recap",
+  "recapText": "This page goes over something you should already know. You can practise it in other apps: {link}",
+  "recapLink": "building block on the learning map of lernapps.net",
+  "recapNote": "recap"
 }

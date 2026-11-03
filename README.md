@@ -21,7 +21,7 @@ feature: assistants read it before they choose an archetype.
 | Folder | Archetype | What the app supplies |
 |---|---|---|
 | [`quiz/`](quiz/) | a quiz about things to know: questions with options, feedback on every option, score and solutions, in one or more languages (a page per language) | the question bank `src/quiz.json` ([schema](runtime/quiz/quiz.v1.schema.json)) |
-| [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes, code and YouTube videos behind two clicks, and an exercise on every page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages; an optional self-assessment of the app or a chapter, checked as a whole; Vue components for what no block can express | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/`, and `components/` ([schema](runtime/explainer/explainer.v1.schema.json)) |
+| [`explainer/`](explainer/) | an explainer: chapters of pages with sections, formulas, figures, tables, timelines, definitions with a glossary, quotes, code and YouTube videos behind two clicks, and an exercise on every page but a recap page (the quiz's question types, and `generated` exercises drawn from a seed and property-tested at build), readable without JavaScript, in one or more languages; an optional self-assessment of the app or a chapter, checked as a whole; Vue components for what no block can express | the content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and `images/`, and `components/` ([schema](runtime/explainer/explainer.v2.schema.json); format 1: [schema](runtime/explainer/explainer.v1.schema.json)) |
 | [`interactive/`](interactive/) | an interactive app whose doing is the content (a game, a trainer): a static start page, readable without JavaScript, and an app page with the app's own Vue components, its routes as `app/#<id>`; the build plays its playthroughs against its core | `src/app.yaml` ([schema](runtime/interactive/interactive.v1.schema.json)), the core `src/core/index.ts` (`start(seed, route)`, `step(state, input)` with a key or an action of its root component, optional `tick(state, dt)`), its components in `src/ui/`, data in `src/data/`, and `src/playthroughs/*.yaml` ([schema](runtime/interactive/playthrough.v1.schema.json)) |
 
 - [`runtime/`](runtime/): the runtime of each archetype, published to npm as `@lernapps/app-templates` (with the template folders, complete example apps, and the scaffold of each archetype: `lernapps create` of `@lernapps/tooling` copies the paths `lernapps.scaffold.<archetype>` in [`package.json`](package.json) lists and the placeholder in [`scaffold/<archetype>/`](scaffold/), and leaves the example in the installed package; [`scripts/scaffold.ts`](scripts/scaffold.ts) writes the same for the CI job `scaffold`); its exports
@@ -29,14 +29,8 @@ feature: assistants read it before they choose an archetype.
   one by one, for other archetypes that embed them as exercises: `@lernapps/app-templates/quiz/question` (schema,
   validation, rendering, checker, messages; a question's texts may be maps by language), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of
   `@lernapps/app-templates/quiz/e2e`; [`test/fixtures/question-page/`](test/fixtures/question-page/) is a page built so.
-- The placeholders of the explainer's `generated` exercises are always two braces around a declared name or its
-  field, nothing else inside: `{{G}}`, `{{e.name}}`, `{{answer}}`, in prose and in formulas alike
-  (`$\frac{{{W}}}{{{G}}} \cdot 100 = {{answer}}$`). One brace is never a placeholder, so in a formula `G`, `{G}` and
-  `\frac{W}{G}` are letters; the only LaTeX form this reserves, a double group around a lone name, means the same as
-  the name alone. The build fails on a placeholder whose name `given` does not declare, on one brace or spaces where a
-  placeholder was meant in prose (`{G}`, `{{ G }}`), on a variable of `given` that nothing uses (no placeholder, and
-  no expression of the figure, answer or mistakes; `where` does not count), and on a placeholder left after filling in
-  ([`generated.ts`](runtime/explainer/generated.ts)).
+- How to write the explainer's `generated` exercises, with their placeholders, is in its
+  [schema](runtime/explainer/explainer.v1.schema.json) (`$defs/generated`).
 - An explainer's components are Vue single-file components in `src/components/<Name>.vue`, each with
   `<script setup lang="ts">`, typed props and its test `<Name>.test.ts`, used by a `vue-component` block with its
   `props` and a `nojs` text. The build renders each with Vue's server renderer into its island, `hidden` until it
@@ -188,8 +182,8 @@ positive list, `TEMPLATE_PATHS`: a path on no list runs the root checks only, an
 change scope and runs all of them for any code change, catches the rest; when it catches what the hook let through, add
 the path to the list. The fixture jobs run only in CI. The job `check` reports the overall result and is the check to
 require. A change reaches new apps once it is released ([`release.yml`](.github/workflows/release.yml): after a merge to `main`,
-semantic-release takes the version from the conventional commits, tags `v<version>` and publishes to npm with provenance) and lernapps/tooling depends on that version; Renovate moves existing apps. The package leaves out
-each template's `.gitignore`, which npm never ships: `prepack` stages it as `_gitignore` ([`scripts/pack-dotfiles.ts`](scripts/pack-dotfiles.ts)), and `lernapps create` writes it back.
+semantic-release takes the version from the conventional commits, tags `v<version>` and publishes to npm with provenance) and lernapps/tooling depends on that version; Renovate moves existing apps. Each template folder has
+its `.gitignore` also as `_gitignore`, because npm never ships a `.gitignore`; change both together.
 
 ## License
 

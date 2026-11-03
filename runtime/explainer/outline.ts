@@ -196,7 +196,7 @@ function walk(
       }
       case "generated": {
         const data = dataOf(block, site.data);
-        const templates = templatesOf(block, [lang]);
+        const templates = templatesOf(block, [lang], data);
         const worked = workedTasks(block, data, templates, lang);
         for (const item of worked) {
           for (const html of [item.task, item.hint ?? "", ...item.steps])

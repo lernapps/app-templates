@@ -1,9 +1,12 @@
-// Reads an explainer's content from src/ at build time and validates it: each file against its part of the schema
-// (explainer.v1.schema.json), then what a schema cannot say. The order lists are complete and unique, the depth is
+// Reads an explainer's content from src/ at build time and validates it: each file against its part of the schema of
+// its format (explainer.v1.schema.json without `format` in src/app.yaml, explainer.v2.schema.json with `format: 2`),
+// then what a schema cannot say. In format 2, every page names its competencies when the app has a strand (or is a
+// recap page, recap: <subject>/<competency>), and none when its strand is none; a recap page has no exercise, and
+// every other page at least one. The order lists are complete and unique, the depth is
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
 // list, bundled images and quotes name source and licence, links to pages of the app find their page and section,
-// every page has an exercise, a question of the question types passes the validation of a question in every declared language,
+// every page but a recap page has an exercise, a question of the question types passes the validation of a question in every declared language,
 // a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), the check
 // of each exercise judges its examples as they are listed, a vue-component block names a component of src/components/
 // that passes its checks (components.ts), its props match the component's prop types, it has its nojs text (an exercise
@@ -17,6 +20,7 @@ import { readComponents } from "./components/read.ts";
 import {
   isExercise,
   type App,
+  type Block,
   type BlockOf,
   type Chapter,
   type ComponentUse,
@@ -27,12 +31,12 @@ import {
 } from "./content.ts";
 import { allBlocks } from "./routes.ts";
 import { ASSESSMENT, drawsTasks, exerciseOf, parseRef } from "./assessment.ts";
-import { SCHEMA_FILE, validate } from "./schema.ts";
+import { formatOf, SCHEMA_FILES, validate, type Format } from "./schema.ts";
 import { appName } from "../shared/appname.ts";
 import { isObject, Problems, readYaml, Texts, type Path, type YamlFile } from "../shared/content.ts";
 import { isLanguage, LANGUAGES, languageListProblems } from "../shared/languages.ts";
 
-export { SCHEMA_ID } from "./schema.ts";
+export { SCHEMA_ID, SCHEMA_ID_V2, type Format } from "./schema.ts";
 export const RULE_URL = "https://lernapps.net/tooling/rules/#explainer-content-valid";
 
 /** What src/ may hold besides the chapter folders. */
@@ -45,12 +49,12 @@ const IMAGE = /^[a-z0-9]+(-[a-z0-9]+)*\.(svg|png|jpg|webp)$/;
 /** The content could not be read: one problem per line in `problems`. */
 export class ContentError extends Error {
   readonly problems: readonly string[];
-  constructor(problems: readonly string[]) {
+  constructor(problems: readonly string[], format: Format = 1) {
     super(
       [
         `the explainer's content in src/ is not valid (${RULE_URL}):`,
         ...problems.map((problem) => `  - ${problem}`),
-        `Fix the content as its schema says: ${SCHEMA_FILE}`,
+        `Fix the content as its schema says: ${SCHEMA_FILES[format]}`,
       ].join("\n"),
     );
     this.problems = problems;
@@ -123,6 +127,14 @@ function checkAssessment(
         problems.at(yaml, path, `${ref} names no page of the app; write /<chapter>/<page>/#<exercise>`);
         return;
       }
+      if (page.recap !== undefined) {
+        problems.at(
+          yaml,
+          path,
+          `${ref} is on a recap page, which has no exercise and is left out of the self-assessment; choose an exercise of a page of the app's own competencies`,
+        );
+        return;
+      }
       const exercise = exerciseOf(components, page, parts.exercise);
       // a generated exercise or an exercise component may be listed again: each listing draws a task of its own
       if (twice && exercise !== undefined && !drawsTasks(exercise)) {
@@ -148,11 +160,21 @@ function checkAssessment(
   });
 }
 
+/** Each block of `blocks` and the blocks inside them, with its path in the page's file. */
+function* blockPaths(blocks: readonly Block[], path: Path): Generator<[Block, Path]> {
+  for (const [index, block] of blocks.entries()) {
+    yield [block, [...path, index]];
+    if (block.type === "section" || block.type === "example" || block.type === "note") {
+      yield* blockPaths(block.blocks, [...path, index, "blocks"]);
+    }
+  }
+}
+
 /** How many seeds the property test of each generated exercise draws at build time. */
 export const SEEDS = 200;
 
 /** The problems of the content in `root`/src, and the content when there are none. */
-export function check(root: string, seeds = SEEDS): { site?: Site; problems: string[] } {
+export function check(root: string, seeds = SEEDS): { site?: Site; problems: string[]; format: Format } {
   const problems = new Problems();
   const src = join(root, "src");
   if (!existsSync(join(src, "app.yaml"))) {
@@ -160,7 +182,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       "src/app.yaml",
       "is missing: the app's title, intro, languages and the order of its chapters belong there",
     );
-    return { problems: problems.lines };
+    return { problems: problems.lines, format: 1 };
   }
 
   // what src/ holds
@@ -213,13 +235,14 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
 
   // the app
   const appYaml = readYaml(root, "src/app.yaml", problems);
-  if (appYaml === undefined || !validate(appYaml, "app", problems)) return { problems: problems.lines };
+  const format = formatOf(appYaml?.value);
+  if (appYaml === undefined || !validate(appYaml, "app", problems, format)) return { problems: problems.lines, format };
   const app = appYaml.value as App;
   const languageList = languageListProblems(app.languages, LANGUAGES);
   for (const problem of languageList) {
     problems.at(appYaml, ["languages", Math.max(app.languages.lastIndexOf(problem.lang), 0)], problem.message);
   }
-  if (languageList.length > 0) return { problems: problems.lines };
+  if (languageList.length > 0) return { problems: problems.lines, format };
   const texts = new Texts(app.languages, problems);
   texts.check(appYaml, ["title"], "plain");
   texts.check(appYaml, ["intro"], "markdown");
@@ -312,11 +335,30 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
     for (const pageId of pagesOk ? chapter.pages : pageIds) {
       const file = `src/${chapterId}/${pageId}.yaml`;
       const yaml = readYaml(root, file, problems);
-      if (yaml === undefined || !validate(yaml, "page", problems)) {
+      if (yaml === undefined || !validate(yaml, "page", problems, format)) {
         complete = false;
         continue;
       }
       const page = yaml.value as Omit<Page, "id" | "chapter" | "file">;
+      // format 2: the competencies a page practises, by the app's strand
+      if (app.strand === "none" && page.competencies !== undefined) {
+        problems.at(
+          yaml,
+          ["competencies"],
+          "competencies is not allowed: src/app.yaml has strand: none, so the app is on no strand; remove it, or name the app's strand in src/app.yaml",
+        );
+      } else if (
+        app.strand !== undefined &&
+        app.strand !== "none" &&
+        page.competencies === undefined &&
+        page.recap === undefined
+      ) {
+        problems.at(
+          yaml,
+          [],
+          `competencies is missing; src/app.yaml names the strand ${app.strand}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead`,
+        );
+      }
       texts.check(yaml, ["title"], "plain");
       texts.check(yaml, ["description"], "plain");
       const pageAnchors = new Set<string>();
@@ -341,7 +383,18 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         ["blocks"],
         0,
       );
-      if (![...allBlocks(page.blocks)].some(isExercise)) {
+      if (page.recap !== undefined) {
+        // a recap page repeats a competency the app does not practise: no exercise, not even a component's
+        for (const [block, path] of blockPaths(page.blocks, ["blocks"])) {
+          const component = uses.find((use) => use.block === block && use.component.exercise);
+          if (!isExercise(block) && component === undefined) continue;
+          problems.at(
+            yaml,
+            path,
+            `${component === undefined ? `the exercise ${block.type}` : `the exercise component ${component.component.name}`} is not allowed on a recap page: it repeats ${page.recap} with descriptive blocks only, and the apps of that competency's strand practise it; remove the exercise, or make it a page of the app's own competencies`,
+          );
+        }
+      } else if (![...allBlocks(page.blocks)].some(isExercise)) {
         problems.at(
           yaml,
           ["blocks"],
@@ -429,7 +482,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
     }
   }
 
-  if (problems.lines.length > 0) return { problems: problems.lines };
+  if (problems.lines.length > 0) return { problems: problems.lines, format };
   const data: Record<string, DataRecord[]> = {};
   for (const [id, yaml] of dataFiles) data[id] = yaml.value as DataRecord[];
   return {
@@ -442,6 +495,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       storage: appName(root, "explainer"),
     },
     problems: [],
+    format,
   };
 }
 
@@ -449,8 +503,8 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
  * The content in `root`/src, its generated exercises tested over `seeds` seeds (0: not at all, for a reader of content
  * the build has checked); throws a ContentError with every problem when it is not valid. */
 export function loadSite(root: string, seeds = SEEDS): Site {
-  const { site, problems } = check(root, seeds);
-  if (site === undefined) throw new ContentError(problems);
+  const { site, problems, format } = check(root, seeds);
+  if (site === undefined) throw new ContentError(problems, format);
   return site;
 }
 

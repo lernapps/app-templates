@@ -2,7 +2,8 @@
 // as inline SVG or an image, tables, timelines, definitions, quotes, highlighted code, the exercises (exercises.ts:
 // each with its solution in a <details>, a generated one with three worked tasks), and the navigation (contents,
 // breadcrumbs, previous and next, the contents of a page with three or more sections, the glossary, the language
-// switch). Without JavaScript the page is complete; the client module only adds. A vue-component block is its island:
+// switch; a recap page marked in the contents, and at its top its notice with the link to the learning map). Without
+// JavaScript the page is complete; the client module only adds. A vue-component block is its island:
 // the component's markup as the build rendered it (`hidden` until it hydrates), its nojs text, its props in the page's
 // language, and for an exercise its anchor, its task number with "Neue Aufgabe", the task of number 1 as its describe
 // states it with the solution folded, and the place of its feedback. Links to other sites are plain links with rel="noopener":
@@ -13,6 +14,7 @@ import { questionMessagesIn } from "../shared/questions/render.ts";
 import { propsIn } from "./components/props.ts";
 import {
   inLanguage,
+  mapUrl,
   termId as termIdOf,
   timelineEvents,
   type Block,
@@ -322,7 +324,10 @@ function pageList(context: Context, pages: readonly NonNullable<Route["page"]>[]
         page.description === undefined
           ? ""
           : ` <span class="explainer-description">${context.text(page.description)}</span>`;
-      return `<li><a href="${context.to(`${page.chapter}/${page.id}/`)}">${context.text(page.title)}</a>${description}</li>`;
+      // a recap page repeats a competency the app does not practise: marked, so that no one takes it for the app's own
+      const recap =
+        page.recap === undefined ? "" : ` <span class="explainer-recap-note">(${plain(context.t("recapNote"))})</span>`;
+      return `<li><a href="${context.to(`${page.chapter}/${page.id}/`)}">${context.text(page.title)}</a>${recap}${description}</li>`;
     })
     .join("")}</ol>`;
 }
@@ -407,11 +412,30 @@ function main(context: Context): string {
         title,
         tutorSection(context),
         `</div>`,
+        page.recap === undefined ? "" : recapNotice(context, page.recap),
         pageContents(context, page.blocks),
         renderBlocks(context, page.blocks, 1),
       ].join("\n");
     }
   }
+}
+
+/**
+ * At the top of a recap page: that it is a recap, and the link to the competency's page on the learning map, where the
+ * apps are that practise it. The runtime writes it, so that it cannot be missing; a plain link, nothing loaded before
+ * a click.
+ */
+function recapNotice(context: Context, recap: string): string {
+  const link = external(mapUrl(recap), context.t("recapLink"));
+  // the message keeps its placeholder {link} unfilled: the link goes in its place as markup
+  const [before = "", after = ""] = context.t("recapText").split("{link}");
+  const label = plain(context.t("recap"));
+  return [
+    `<aside class="explainer-recap" aria-label="${label}">`,
+    `<p class="explainer-recap-label">${label}</p>`,
+    `<p>${plain(before)}${link}${plain(after)}</p>`,
+    `</aside>`,
+  ].join("\n");
 }
 
 /** What a part of a self-assessment needs of the page it is on (assessment-page.ts). */

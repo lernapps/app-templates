@@ -28,6 +28,11 @@ only adds. `lernapps check` opens every explainer page a second time with JavaSc
 inside a component or a live exercise. The one exception is the optional self-assessment (`dec-self-assessment`),
 which needs a run in the browser and is no content of its own.
 
+Formulas, too, are set at build; the browser has no formula renderer. Trade-off for a generated exercise: the build
+sets a chemical formula of a drawn value (`\ce{{{r.gl}}}`) once for every value of its list. That makes the page
+larger and allows only values from a list, and only as the whole formula. Rejected: Temml in the client, which would
+make every page with an exercise larger.
+
 ```arc42
 :::decision
 id: dec-explainer-complete-without-js
@@ -439,5 +444,42 @@ title: After a self-assessment the tutor guides chapter by chapter, with rounds 
 status: accepted
 date: 2026-10-28
 addresses: qg-understandable, qg-privacy, con-no-request-before-click
+:::
+```
+
+## Format 2 Places the App on the Learning Map
+
+The catalog's learning map shows which apps practise which competencies. The app owns where it belongs: it names one
+strand (or `none`, so that none forgets), and each page the competencies it practises. The build hands this to the
+catalog (`if-page-list`); the catalog owns the subjects' ids and checks them. The fields are required, so this is a
+new format; format 1 stays valid for apps that do not move, and they are not on the map. Rejected: strand and
+competencies in the catalog entry (the pages would be listed twice); optional fields in format 1 (an app could forget
+them).
+
+```arc42
+:::decision
+id: dec-explainer-format-2
+title: Explainer format 2 names the app's strand and each page's competencies, and the build lists the pages
+status: accepted
+date: 2026-11-03
+addresses: qg-checkable, con-runtime-unchanged
+:::
+```
+
+## A Recap Page Repeats a Competency the App Does Not Practise
+
+A competency may require one the app does not practise; its learners may need it again. A recap page repeats it with
+descriptive blocks only: practising stays the job of the apps the map lists for it. The runtime, not the author, links
+the competency on the map, so the link cannot be missing; the catalog checks that the competency exists. Rejected:
+exercises on a recap page (the app would practise a competency the map does not show for it); a link the author writes
+(it could be missing or wrong).
+
+```arc42
+:::decision
+id: dec-explainer-recap-page
+title: A recap page repeats a competency of another strand without exercises and links it on the learning map
+status: accepted
+date: 2026-11-03
+addresses: qg-understandable, qg-checkable, con-no-request-before-click
 :::
 ```

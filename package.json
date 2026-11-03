@@ -68,6 +68,7 @@
     },
     "./explainer/style.css": "./runtime/explainer/explainer.css",
     "./explainer/explainer.v1.schema.json": "./runtime/explainer/explainer.v1.schema.json",
+    "./explainer/explainer.v2.schema.json": "./runtime/explainer/explainer.v2.schema.json",
     "./interactive": {
       "types": "./runtime/interactive/interactive.ts",
       "default": "./dist/interactive.mjs"
@@ -91,9 +92,7 @@
   "scripts": {
     "prepare": "vp pack && vp config --no-agent",
     "test": "vp test",
-    "check:vue": "vue-tsc --noEmit -p tsconfig.vue.json",
-    "prepack": "node scripts/pack-dotfiles.ts stage",
-    "postpack": "node scripts/pack-dotfiles.ts clean"
+    "check:vue": "vue-tsc --noEmit -p tsconfig.vue.json"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "6.0.10",

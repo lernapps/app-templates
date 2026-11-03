@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+- { gl: "2H2 + O2 -> 2H2O", produkt: H2O, anzahl: 2 }
+- { gl: "N2 + 3H2 -> 2NH3", produkt: NH3, anzahl: 2 }
+- { gl: "C + O2 -> CO2", produkt: CO2, anzahl: 1 }
+- { gl: "4Al + 3O2 -> 2Al2O3", produkt: Al2O3, anzahl: 2 }

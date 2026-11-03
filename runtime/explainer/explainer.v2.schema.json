@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:lernapps:schema:explainer.v2",
+  "title": "Content of a lernapps explainer, format 2",
+  "description": "Format 2 of an explainer's content, as YAML in src/: src/app.yaml, src/<chapter>/chapter.yaml, src/<chapter>/<page>.yaml and src/data/<name>.yaml. It is format 1 (explainer.v1.schema.json) plus the app's place on the learning map: format: 2 and strand in src/app.yaml, and on each page the competencies it practises, or recap on a page that repeats a competency from elsewhere. An app.yaml without format is format 1.",
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "required": ["chapters"],
+        "properties": {
+          "chapters": {}
+        }
+      },
+      "then": {
+        "$ref": "#/$defs/app"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["pages"],
+        "properties": {
+          "pages": {}
+        }
+      },
+      "then": {
+        "$ref": "#/$defs/chapter"
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["blocks"],
+        "properties": {
+          "blocks": {}
+        }
+      },
+      "then": {
+        "$ref": "#/$defs/page"
+      }
+    },
+    {
+      "if": {
+        "type": "array"
+      },
+      "then": {
+        "$ref": "#/$defs/data"
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "$ref": "urn:lernapps:schema:explainer.v1#/$defs/id"
+    },
+    "strand": {
+      "description": "The one strand (Strang) of the learning map the app belongs to, <subject>/<strand>, e.g. mathematik/stochastik; or none if it belongs to none (then it is not on the map).",
+      "type": "string",
+      "pattern": "^(none|[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*)$"
+    },
+    "competency": {
+      "description": "A competency of the learning map, <subject>/<competency>, e.g. physik/gewichtskraft-berechnen.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "app": {
+      "description": "src/app.yaml in format 2: format: 2 and strand, everything else as in format 1.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "strand", "title", "intro", "languages", "chapters"],
+      "properties": {
+        "format": {
+          "description": "Always 2. Without it, the content is format 1 (explainer.v1.schema.json).",
+          "const": 2
+        },
+        "strand": {
+          "$ref": "#/$defs/strand"
+        },
+        "title": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/title"
+        },
+        "intro": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/intro"
+        },
+        "languages": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/languages"
+        },
+        "chapters": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/chapters"
+        },
+        "sources": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/sources"
+        },
+        "tutor": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/tutor"
+        },
+        "scope": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/scope"
+        }
+      }
+    },
+    "chapter": {
+      "$ref": "urn:lernapps:schema:explainer.v1#/$defs/chapter"
+    },
+    "page": {
+      "description": "src/<chapter>/<page>.yaml in format 2: a page as in format 1, plus competencies, or recap on a recap page.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "blocks"],
+      "properties": {
+        "title": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/page/properties/title"
+        },
+        "description": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/page/properties/description"
+        },
+        "competencies": {
+          "description": "The competencies (Bausteine) the page practises, ids of the subject of the app's strand; as a rule one. Required when the app has a strand; leave it out with strand: none and on a recap page. The catalog checks the ids when it lists the app.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "recap": {
+          "description": "Makes the page a recap page: it repeats a competency that the app's competencies require but the app does not practise, e.g. physik/gewichtskraft-berechnen. Use it instead of competencies, also with strand: none. A recap page has descriptive blocks only, no exercise; the link to the competency on the learning map is added for you.",
+          "$ref": "#/$defs/competency"
+        },
+        "blocks": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/page/properties/blocks"
+        },
+        "scope": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/page/properties/scope"
+        }
+      },
+      "not": {
+        "required": ["competencies", "recap"],
+        "properties": {
+          "competencies": {},
+          "recap": {}
+        }
+      }
+    },
+    "data": {
+      "$ref": "urn:lernapps:schema:explainer.v1#/$defs/data"
+    },
+    "event": {
+      "$ref": "urn:lernapps:schema:explainer.v1#/$defs/event"
+    }
+  }
+}

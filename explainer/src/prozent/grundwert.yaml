@@ -1,6 +1,7 @@
-# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v1.schema.json
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
 title: Grundwert
 description: "Den Grundwert berechnen: G = W · 100 : p, mit einem Beispiel und dem Hunderterfeld."
+competencies: [prozent-grundwert]
 scope: |
   Gesucht ist das Ganze, wenn nur ein Teil und sein Prozentsatz bekannt sind, etwa der alte Preis, wenn 30 € gespart
   sind und das 12 % waren. Man rechnet $G = \frac{W \cdot 100}{p}$: $W$ geteilt durch $p$ ist 1 %, mal 100 das Ganze.

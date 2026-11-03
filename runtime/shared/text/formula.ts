@@ -7,6 +7,46 @@ import temml from "temml";
 const mhchem: string = "temml/contrib/mhchem/mhchem.js";
 await import(mhchem);
 
+/** The Greek letters a formula may use, as \\alpha: the small ones, and the capitals that differ from Latin ones. */
+const GREEK = [
+  "alpha",
+  "beta",
+  "gamma",
+  "delta",
+  "varepsilon",
+  "epsilon",
+  "zeta",
+  "eta",
+  "theta",
+  "vartheta",
+  "iota",
+  "kappa",
+  "lambda",
+  "mu",
+  "nu",
+  "xi",
+  "pi",
+  "rho",
+  "sigma",
+  "tau",
+  "upsilon",
+  "varphi",
+  "phi",
+  "chi",
+  "psi",
+  "omega",
+  "Gamma",
+  "Delta",
+  "Theta",
+  "Lambda",
+  "Xi",
+  "Pi",
+  "Sigma",
+  "Phi",
+  "Psi",
+  "Omega",
+];
+
 /** The commands a formula may use (explainer.v1.schema.json, $defs/latex), besides ^, _, braces and parentheses. */
 export const COMMANDS: readonly string[] = [
   "\\frac",
@@ -26,6 +66,25 @@ export const COMMANDS: readonly string[] = [
   "\\}",
   "\\ce",
   "\\pu",
+  // spaces and arrows between the steps of a calculation
+  "\\ ",
+  "\\quad",
+  "\\qquad",
+  "\\Rightarrow",
+  "\\Leftrightarrow",
+  // parentheses that grow with their content
+  "\\left",
+  "\\right",
+  // trigonometry: the functions, their inverses (or \sin^{-1}) and the degree sign (^\circ)
+  "\\sin",
+  "\\cos",
+  "\\tan",
+  "\\arcsin",
+  "\\arccos",
+  "\\arctan",
+  "\\circ",
+  // Greek letters
+  ...GREEK.map((letter) => `\\${letter}`),
 ];
 const allowed = new Set(COMMANDS);
 
@@ -52,7 +111,8 @@ function commands(tex: string): string[] {
 export function formulaProblem(tex: string): string | undefined {
   const unknown = commands(tex).find((command) => !allowed.has(command));
   if (unknown !== undefined) {
-    return `${unknown} is not in the formula command list; write the formula with the commands the schema lists ($defs/latex)`;
+    const list = COMMANDS.map((command) => (command === "\\ " ? "\\  (a space)" : command)).join(", ");
+    return `${unknown} is not in the formula command list; use only these commands, besides ^, _, braces and parentheses: ${list}`;
   }
   try {
     temml.renderToString(tex, { throwOnError: true });

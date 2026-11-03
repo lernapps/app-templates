@@ -181,6 +181,22 @@ blocks:
                 de: "Das ist die Periode, also die Zeile. Die Hauptgruppe ist die Spalte.",
                 en: "That is the period, the row. The main group is the column.",
               }
+      - type: generated
+        id: reaktion
+        given:
+          r: { pick: 1, from: { data: reaktionen } }
+        task:
+          text:
+            {
+              de: "Wie viele Teilchen $\\ce{{{r.produkt}}}$ entstehen bei $\\ce{{{r.gl}}}$?",
+              en: "How many particles of $\\ce{{{r.produkt}}}$ form in $\\ce{{{r.gl}}}$?",
+            }
+        answer: { value: "r.anzahl", compare: { number: {} } }
+        steps:
+          - {
+              de: "Lies die Zahl vor $\\ce{{{r.produkt}}}$ in $\\ce{{{r.gl}}}$: {{answer}}.",
+              en: "Read the number before $\\ce{{{r.produkt}}}$ in $\\ce{{{r.gl}}}$: {{answer}}.",
+            }
       - type: open-task
         id: erklaeren
         task:

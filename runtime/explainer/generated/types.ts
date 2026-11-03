@@ -17,6 +17,9 @@
 // around a lone name ({{G}}), means the same as the letter alone, so nothing is lost; any other group ({{G}^2},
 // {{G} + 1}) stays a group. To fill in a value where the formula needs a group, keep the group: \frac{{{W}}}{{{G}}}.
 // Two braces with spaces inside ({{ G }}) are an error everywhere, as they were most likely meant as a placeholder.
+// In \ce a placeholder is the whole argument, \ce{{{e.gl}}}, drawn from a finite list (oneOf, or pick: 1 from a list
+// or a data file): the build sets the formula of each value with mhchem (LanguageTemplates.chem), and fill() puts in
+// the one of the task's value. A placeholder among other text in \ce, or any in \pu, is an error.
 
 // This module: the types of a generated exercise, its task and its data.
 import { type Value } from "../expression.ts";
@@ -90,6 +93,11 @@ export interface LanguageTemplates {
   hint?: string | undefined;
   /** The mistakes' messages, plain text. */
   messages: string[];
+  /**
+   * The chemical formula of each value of the placeholders in \ce{{{…}}}, as MathML without <math>, by the value as
+   * the learner reads it; fill() puts it in for the token ⟦ce:…⟧.
+   */
+  chem?: Readonly<Record<string, string>>;
 }
 export type Templates = Readonly<Record<string, LanguageTemplates>>;
 

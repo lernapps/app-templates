@@ -10,8 +10,10 @@ import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts"
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
 import type { DataRecord, Exercise, OpenTask, QuestionBlock } from "./content.ts";
-import { hintOf, stepsOf, taskText, tokenize } from "./generated/texts.ts";
-import { generate } from "./generated/values.ts";
+import { chemPlaceholdersIn, hintOf, label, stepsOf, taskText, tokenize, writtenTemplates } from "./generated/texts.ts";
+import { generate, items } from "./generated/values.ts";
+import { evaluate, parse, type Value } from "./expression.ts";
+import { renderFormula } from "../shared/text/formula.ts";
 import { questionFor, taskKey } from "./generated/question.ts";
 import { WORKED_TASKS } from "./tasks.ts";
 import { type Data, type Generated, type LanguageTemplates, type Templates } from "./generated/types.ts";
@@ -57,20 +59,83 @@ export interface OpenTaskData {
   hint?: string;
 }
 
-/** The templates of a generated exercise in each of `languages`; links inside them through `resolve`. */
+/** A value of a placeholder in \ce{{{…}}} whose formula does not parse; the check reports its message as it is. */
+export class ChemError extends Error {}
+
+/**
+ * The chemical formula of each value of the placeholders in \ce{{{…}}} of an exercise's templates in `lang`, as
+ * MathML without <math>, by the value as the learner reads it: each value of the list the placeholder's root is
+ * drawn from (oneOf, or pick: 1 from a list or a data file), set by mhchem as \ce{value}. Throws a ChemError for a
+ * value that does not parse.
+ */
+export function chemFormulas(spec: Generated, data: Data, lang: string): Record<string, string> {
+  const formulas: Record<string, string> = {};
+  const paths = new Set(
+    writtenTemplates(spec)
+      .filter((written) => written.lang === undefined || written.lang === lang)
+      .flatMap((written) => chemPlaceholdersIn(written.text)),
+  );
+  for (const path of paths) {
+    const root = path.split(".")[0] ?? "";
+    const arbitrary = spec.given[root];
+    if (arbitrary === undefined) continue; // reported by templateProblems
+    const source = arbitrary.oneOf ?? (arbitrary.pick === 1 ? arbitrary.from : undefined);
+    if (source === undefined) continue; // reported by templateProblems
+    let candidates: Value[];
+    try {
+      candidates = items(source, data);
+    } catch {
+      continue; // a missing data file is reported on its own
+    }
+    for (const candidate of candidates) {
+      let text: string;
+      try {
+        text = label(evaluate(parse(path), { [root]: candidate }), lang);
+      } catch {
+        continue; // a record without the field, reported when a task draws it
+      }
+      if (text in formulas) continue;
+      try {
+        // a value with unbalanced braces would end \ce early and leave the rest outside it
+        let depth = 0;
+        for (const char of text) {
+          if (char === "{") depth++;
+          else if (char === "}" && --depth < 0) break;
+        }
+        if (depth !== 0) throw new Error("its braces are not balanced");
+        const math = renderFormula(`\\ce{${text}}`, false);
+        formulas[text] = /^<math[^>]*>([\s\S]*)<\/math>$/.exec(math)?.[1] ?? math;
+      } catch (error) {
+        const reason = (error instanceof Error ? error.message : String(error)).split("\n")[0]?.trim() ?? "";
+        throw new ChemError(
+          `\\ce{{{${path}}}}: the value "${text}" is no chemical formula mhchem can set (${reason}); write it in mhchem's notation, e.g. 2H2 + O2 -> 2H2O`,
+        );
+      }
+    }
+  }
+  return formulas;
+}
+
+/**
+ * The templates of a generated exercise in each of `languages`, with the formulas of the values in \ce{{{…}}} drawn
+ * from `data`; links inside them through `resolve`.
+ */
 export function templatesOf(
   spec: Generated,
   languages: readonly string[],
+  data: Data,
   resolve: (href: string) => string = (href) => href,
 ): Templates {
   const templates: Record<string, LanguageTemplates> = {};
   for (const lang of languages) {
     const inline = (text: Text) => renderInline(tokenize(inLanguage(text, lang)), resolve);
+    const chem = chemFormulas(spec, data, lang);
     templates[lang] = {
       task: inline(spec.task.text),
       steps: (spec.steps ?? []).map(inline),
       hint: spec.hint === undefined ? undefined : inline(spec.hint),
       messages: (spec.mistakes ?? []).map((mistake) => tokenize(inLanguage(mistake.message, lang))),
+      ...(Object.keys(chem).length === 0 ? {} : { chem }),
     };
   }
   return templates;
@@ -93,7 +158,7 @@ const seedCache = new WeakMap<Generated, number[]>();
 export function taskSeeds(spec: Generated, data: Data): number[] {
   let seeds = seedCache.get(spec);
   if (seeds === undefined) {
-    const templates = templatesOf(spec, ["de"]);
+    const templates = templatesOf(spec, ["de"], data);
     seeds = distinctSeeds((seed) => {
       try {
         return taskKey(spec, generate(spec, seed, data), "de", templates);
@@ -192,7 +257,7 @@ function generatedData(
     kind: "generated",
     lang,
     spec: shipped,
-    templates: templatesOf(spec, [lang], resolve),
+    templates: templatesOf(spec, [lang], data, resolve),
     data,
     seeds: taskSeeds(spec, data),
     texts: {
@@ -277,8 +342,8 @@ function generatedExercise(
   all: Readonly<Record<string, readonly DataRecord[]>>,
   resolve: (href: string) => string,
 ): string {
-  const templates = templatesOf(spec, [lang], resolve);
   const data = dataOf(spec, all);
+  const templates = templatesOf(spec, [lang], data, resolve);
   const solution = questionMessagesIn(lang).solution;
   const worked = workedTasks(spec, data, templates, lang).map((item) =>
     [

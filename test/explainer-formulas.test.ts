@@ -54,6 +54,35 @@ describe("formulas in the texts of a question", () => {
     ]);
   });
 
+  test("trigonometry: its functions, Greek letters, degrees, spaces, arrows and growing parentheses", () => {
+    const formulas = [
+      "$\\sin \\alpha = \\frac{a}{c}$",
+      "$\\cos \\beta \\cdot \\tan \\gamma$",
+      "$\\alpha = \\arcsin(0{,}5) = 30^\\circ$",
+      "$\\alpha = \\sin^{-1}(0{,}5)$",
+      "$\\arccos x + \\arctan y$",
+      "$\\delta + \\varphi + \\pi + \\Delta x + \\Omega$",
+      "$a\\ b \\quad c \\qquad d$",
+      "$x = 2 \\Rightarrow x^2 = 4 \\Leftrightarrow y$",
+      "$\\left( \\frac{1}{2} \\right)^2$",
+    ];
+    for (const formula of formulas) {
+      expect(formulaProblems(formula), formula).toEqual([]);
+      expect(renderWithFormulas(formula), formula).toContain("<math");
+    }
+    const html = renderWithFormulas("$\\sin \\alpha$");
+    expect(html).toContain(">sin<");
+    expect(html).toContain("α");
+  });
+
+  test("a command outside the list is named, with the list of those it may use", () => {
+    const [problem] = formulaProblems("$\\sinh x$");
+    expect(problem).toContain("\\sinh is not in the formula command list");
+    expect(problem).toContain("\\frac");
+    expect(problem).toContain("\\arcsin");
+    expect(problem).toContain("\\varphi");
+  });
+
   test("the question, its options, their background and the explanation show the formulas as MathML", () => {
     const html = renderExercise(question, "de", {}, (href) => href, { lang: "de", href: (image) => image });
     const body = html.split('<script type="application/json"')[0] ?? "";

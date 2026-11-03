@@ -121,13 +121,15 @@ export function assessments(site: Site): Assessment[] {
   // the app's: the pages of every chapter's, in the order of the chapters
   const steps = site.chapters.flatMap((chapter) => chapter.selfAssessment?.pages ?? []);
   if (steps.length === 0) return [];
-  const all = site.chapters.flatMap((chapter) => chapter.pages);
+  // a recap page has no exercise: the self-assessment leaves it out
+  const asked = (pages: readonly Page[]) => pages.filter((page) => page.recap === undefined);
+  const all = asked(site.chapters.flatMap((chapter) => chapter.pages));
   // a chapter's of its own only where the app shows its chapters: with one chapter, the app's is the chapter's
   const own = site.chapters.length === 1 ? [] : site.chapters;
   return [
     of({ pages: steps }, all),
     ...own.flatMap((chapter) =>
-      chapter.selfAssessment === undefined ? [] : [of(chapter.selfAssessment, chapter.pages, chapter)],
+      chapter.selfAssessment === undefined ? [] : [of(chapter.selfAssessment, asked(chapter.pages), chapter)],
     ),
   ];
 }

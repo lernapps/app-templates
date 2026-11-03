@@ -11,7 +11,8 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   videos directly from then on. The catalog entry of an app with a video says `fitness.thirdParty: on-click`.
 - Exercises of the six question types, with feedback, hints and typical mistakes; a question can show content (`material`: the figures, tables, quotes and code of the page's blocks) between its text and its answers.
 - Generated exercises: each task draws new numbers or records, up to 67 numbered tasks per exercise, with typical
-  mistakes, a hint and the way to the solution. The build tests them over fixed seeds.
+  mistakes, a hint and the way to the solution, also with roots, powers and trigonometry, and with chemical formulas
+  from a data file. The build tests them over fixed seeds.
 - Vue components for what no block can show or check, such as reading a scale, labelling a figure or dragging into
   place; an exercise component draws its own tasks. A component needs its logic module, a test and a text for readers
   without JavaScript. An exercise component also declares its exercise for the tutor (`template`, `params`,
@@ -41,7 +42,7 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - No timer, no game.
 - At most two section levels in a page.
 - An exercise component does not count as a page's required exercise: each page also needs a question or a generated
-  exercise.
+  exercise. A recap page has none at all.
 - Stores nothing but the learner's choice of AI tutor, if they make it, the choice to load videos directly, and the
   last result of each self-assessment they do.
 - A self-assessment needs JavaScript (without it, it is not offered).
@@ -50,5 +51,8 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 ## What the app supplies
 
 - The content as YAML in `src/`: the app, a folder per chapter with its pages, data files and images
-  ([schema](../runtime/explainer/explainer.v1.schema.json)); Vue components in `src/components/` where
+  ([schema](../runtime/explainer/explainer.v2.schema.json), format 2); Vue components in `src/components/` where
   no block fits.
+- Its place on the catalog's learning map (format 2): the app's strand, and the competencies each page practises. A
+  recap page repeats a competency from elsewhere that the app needs, without exercises. Format 1
+  ([schema](../runtime/explainer/explainer.v1.schema.json)) stays valid, without a place on the map.
