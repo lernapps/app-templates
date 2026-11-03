@@ -324,7 +324,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     const notice = /<aside class="explainer-recap"[\s\S]*?<\/aside>/.exec(page)?.[0] ?? "";
     expect(notice).toContain("Wiederholung");
     expect(notice).toContain(
-      '<a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">Baustein auf der Lernkarte von lernapps.net</a>',
+      '<a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">Baustein auf der Lernlandkarte von lernapps.net</a>',
     );
     // at the top: before the first section
     expect(page.indexOf("explainer-recap")).toBeLessThan(page.indexOf('id="gewichtskraft"'));
