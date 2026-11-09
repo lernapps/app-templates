@@ -57,6 +57,7 @@ flowchart TB
         bb-islands["Component islands"]
         bb-generated-exercises["Generated exercises"]
         bb-open-tasks["Open tasks"]
+        bb-language-tasks["Language tasks"]
         bb-scope["Scope"]
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
@@ -86,6 +87,7 @@ flowchart TB
     bb-islands -->|"if-task-numbers"| bb-task-numbers
     bb-generated-exercises -->|"if-archetype-content"| bb-explainer-content
     bb-open-tasks -->|"if-archetype-content"| bb-explainer-content
+    bb-language-tasks -->|"if-archetype-content"| bb-explainer-content
     bb-scope -->|"if-archetype-content"| bb-explainer-content
     bb-generated-exercises -->|"if-data-files"| bb-explainer-data
     bb-tutor-handoff -->|"if-archetype-content"| bb-explainer-content
@@ -307,6 +309,23 @@ id: bb-open-tasks
 title: Open tasks
 parent: bb-archetype-runtime
 path: runtime/explainer/open-task.ts
+technology: TypeScript, DOM
+requires: if-archetype-content
+:::
+```
+
+### Language tasks
+
+Built. A language task (`language-task`) is written by the learner and checked against the answers it lists
+(`dec-language-task`). The check (`language.ts`) is pure and the same in the build and in the browser
+(`language-task.ts`), on a content page with "Prüfen" and in a self-assessment without it.
+
+```arc42
+:::building-block
+id: bb-language-tasks
+title: Language tasks
+parent: bb-archetype-runtime
+path: runtime/explainer/language.ts
 technology: TypeScript, DOM
 requires: if-archetype-content
 :::

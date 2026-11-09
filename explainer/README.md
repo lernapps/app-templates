@@ -10,6 +10,11 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   from YouTube or Google; "Video abspielen" loads the player from youtube-nocookie.com. The learner may choose to load
   videos directly from then on. The catalog entry of an app with a video says `fitness.thirdParty: on-click`.
 - Exercises of the six question types, with feedback, hints and typical mistakes; a question can show content (`material`: the figures, tables, quotes and code of the page's blocks) between its text and its answers.
+- Language tasks (`language-task`): the learner writes a word, a form or sentences in a language and the page
+  checks it against the answers the task lists. An item starts from the other language, a cue or a marker of a
+  labelled figure; modes `write`, `gap`, `choice` and `table`; the direction is part of the task. Mistakes of form
+  count as wrong unless the task loosens them. The example app is
+  [`examples/franzoesisch`](examples/franzoesisch/src/app.yaml).
 - Generated exercises: each task draws new numbers or records, up to 67 numbered tasks per exercise, with typical
   mistakes, a hint and the way to the solution, also with roots, powers and trigonometry, and with chemical formulas
   from a data file. The build tests them over fixed seeds.
@@ -37,6 +42,9 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - German, plus English: a page tree per language.
 
 ## What it cannot do
+
+- No audio: no listening, no dictation, no speaking. A language task checks only what is written, against the answers
+  the task lists: a right version it does not list counts as wrong (the page says the learner may ask).
 
 - No own colours or layout: the look is the runtime's, calm like a worksheet. Dark mode follows the device.
 - No timer, no game.

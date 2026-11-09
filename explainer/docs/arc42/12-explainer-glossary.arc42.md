@@ -14,6 +14,18 @@ definition: One element of an explainer page in its content YAML (a section, a t
 :::
 ```
 
+## Language Task
+
+An exercise for a foreign language that the learner writes (`dec-language-task`).
+
+```arc42
+:::glossary-term
+id: term-language-task
+title: Language task
+definition: An explainer exercise in which the learner writes a word, a form or sentences in a language (translating, filling in gaps, building forms, labelling a figure), checked against the answers the task lists, with its mistakes of form.
+:::
+```
+
 ## Island
 
 Only a page with a component loads Vue.

@@ -483,3 +483,25 @@ date: 2026-11-03
 addresses: qg-understandable, qg-checkable, con-no-request-before-click
 :::
 ```
+
+## A Language Task Is Written, Then Checked Against the Answers It Lists
+
+The learning map has foreign languages: learners should write words, forms and sentences, not only choose. Their
+textbooks differ, so a task carries what it asks: each item names what the learner starts from (the other language,
+a cue, or a marker of a labelled figure) and its answer with its variants. One block, `language-task`, has four
+modes (`write`, `gap`, `choice`, `table`); the direction is part of the task. The check is deterministic and the same
+in browser and build: it evens out what is no mistake, then finds mistakes of form, wrong unless the task loosens
+them, then the item's typical mistakes. Several items give right, partly right (`dec-self-assessment-partly`) or
+wrong. Fields are marked with their language. Rejected: grading by a model (`dec-tutor-variant`); a class for typing
+errors (it would hide wrong endings); mistakes of form right by default; the learner choosing the direction; a
+textbook's word list (a basic vocabulary beside the learning map guides creators instead).
+
+```arc42
+:::decision
+id: dec-language-task
+title: A language task is written by the learner and checked deterministically against the answers it lists
+status: accepted
+date: 2026-11-08
+addresses: qg-understandable, qg-checkable, qg-accessibility, qg-privacy, qg-explainer-readable-without-js
+:::
+```
