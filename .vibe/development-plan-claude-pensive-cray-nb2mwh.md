@@ -49,10 +49,14 @@ Latein). Dafür:
   ausdrücklich als solche gekennzeichnet, stehen nur in der Referenz für Fremdsprachen
   (lernapps/tooling, `foreign-languages.md`, Abschnitt „Examples (French)“). Auch die Feldbeschreibungen im
   JSON-Schema sind allgemein (Owner, 2026-11-09).
-- KD-16 (Owner, 2026-11-09, offen): „Eine App, ein Strang“ ist bei Sprachen hinderlich (viele Querbezüge);
+- KD-16 (Owner, 2026-11-09, beantwortet): „Eine App, ein Strang“ ist bei Sprachen hinderlich (viele Querbezüge);
   gleichzeitig hilft eine einheitliche Methodik je Strang, etwa eine gemeinsame App für Wortschatz. Wie beides
   zusammengeht, wird noch diskutiert (Optionen in der Antwort an den Owner vom 2026-11-09). Owner: als eigenes
   Feature in einer neuen Session: lernapps/apps#226.
+  Beantwortet in lernapps/apps#226 (Plan `.vibe/development-plan-feat-cross-strand-languages.md` in lernapps/apps,
+  KD-01 bis KD-08): Das Fach sagt mit `explainerFocus`, ob eine App über Stränge üben darf; eine Einheiten-App nennt
+  `subject: <fach>` statt `strand`, eine Seite übt Bausteine nur eines Strangs. Hier: Branch
+  `feat/cross-strand-languages`.
 - KD-14 (Owner, 2026-11-08): Quelle des Grundwortschatzes Französisch ist FLELex, mit Zitat (François, Gala, Watrin &
   Fairon 2014, LREC; für FLELex/Beacco: Pintard & François 2020, READI). Die Seite lädt zur Nutzung ein; die Lizenz
   ist nicht ganz klar, der Owner nimmt das in Kauf. Umsetzung in lernapps/apps in dieser Session.

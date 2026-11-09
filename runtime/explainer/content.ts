@@ -50,8 +50,10 @@ export interface Source {
 export interface App {
   /** The format of the content: 2, or none for format 1. */
   format?: 2;
-  /** Format 2: the strand of the learning map the app stays in, <subject>/<strand>, or none. */
+  /** Format 2: the strand of the learning map the app stays in, <subject>/<strand>, or none; never with subject. */
   strand?: string;
+  /** Format 2: the subject of a unit app, which practises competencies of several strands of it; never with strand. */
+  subject?: string;
   title: Text;
   intro: Text;
   languages: readonly string[];

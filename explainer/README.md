@@ -61,6 +61,6 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - The content as YAML in `src/`: the app, a folder per chapter with its pages, data files and images
   ([schema](../runtime/explainer/explainer.v2.schema.json), format 2); Vue components in `src/components/` where
   no block fits.
-- Its place on the catalog's learning map (format 2): the app's strand, and the competencies each page practises. A
-  recap page repeats a competency from elsewhere that the app needs, without exercises. Format 1
+- Its place on the catalog's learning map (format 2): the app's strand, or the subject of a unit app across the
+  strands of a subject whose map allows it, and the competencies each page practises. A recap page repeats a competency from elsewhere that the app needs, without exercises. Format 1
   ([schema](../runtime/explainer/explainer.v1.schema.json)) stays valid, without a place on the map.
