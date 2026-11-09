@@ -22,7 +22,8 @@ import {
   titleOf,
 } from "./assessment.ts";
 import { inLanguage, type BlockOf, type Site, type Text } from "./content.ts";
-import { exerciseData, type ExerciseData } from "./exercises.ts";
+import { exerciseData, languageTaskText, type ExerciseData } from "./exercises.ts";
+import { materialIn } from "../shared/blocks/block.ts";
 import { message } from "./messages.ts";
 import { PROVIDERS, placeholderPrompt } from "./prompt.ts";
 import { TUTOR_PAGE } from "./tutor.ts";
@@ -114,6 +115,8 @@ function itemHtml(context: AssessmentContext, data: AssessmentItemData, n: numbe
   // an open task: its task, and the place its answer and ticks go (open-task.ts); no points, no model answer
   if (data.kind === "open")
     return `${label}<div class="explainer-open-task-text">${data.task}</div><div class="explainer-open-live" hidden></div>`;
+  // a language task: its task and material (`component`), and the place of its fields; no "Prüfen", no solution
+  if (data.kind === "language") return `${label}${component}<div class="explainer-language-live" hidden></div>`;
   const { question, rendered } = data;
   return `${label}${renderQuestion(question, {
     lang,
@@ -137,6 +140,15 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
       return { item, data: { kind: "component", seeds: component?.seeds ?? [1] }, html: component?.html ?? "" };
     }
     const data = exerciseData(item.block, lang, site.data, context.resolve);
+    // a language task: its task and material, and the place of its fields (language-task.ts), by its key
+    if (item.block.type === "language-task" && data.kind === "language") {
+      const { block } = item;
+      const html = [
+        `<div class="explainer-language-text">${languageTaskText(block, lang, context.resolve)}</div>`,
+        block.material === undefined ? "" : renderMaterial(materialIn(block.material, lang), context.material),
+      ].join("");
+      return { item, data: { ...data, id: item.key }, html };
+    }
     // the question by its key: the same id may be on two pages
     return { item, data: data.kind === "question" ? { ...data, question: { ...data.question, id: item.key } } : data };
   });

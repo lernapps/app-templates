@@ -128,6 +128,10 @@ async function runAssessment(page: Page, app: Outline, assessment: AssessmentOut
         await answerOpenTask(view.locator(`[data-key="${item.key}"]`), exercise, exercise.points.length);
         continue;
       }
+      if (exercise.kind === "language") {
+        await fillLanguageTask(view.locator(`[data-key="${item.key}"]`), exercise, "right");
+        continue;
+      }
       let question: Question;
       if (exercise.kind === "question") question = { ...exercise.question, id: item.key };
       else {
@@ -185,11 +189,13 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
       ? { id: exercise.id, texts: [shownText(exercise.question.text)], answers: [exercise.answers] }
       : exercise.kind === "open"
         ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solution] }
-        : {
-            id: exercise.id,
-            texts: exercise.worked.map((worked) => worked.task),
-            answers: exercise.worked.map((worked) => [worked.answer]),
-          },
+        : exercise.kind === "language"
+          ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solutions] }
+          : {
+              id: exercise.id,
+              texts: exercise.worked.map((worked) => worked.task),
+              answers: exercise.worked.map((worked) => [worked.answer]),
+            },
   );
   const read = async () =>
     (
@@ -200,7 +206,9 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
             ? [...element.querySelectorAll("legend")]
             : element.classList.contains("explainer-open-task")
               ? [...element.querySelectorAll(":scope > .explainer-open-task-text")]
-              : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
+              : element.classList.contains("explainer-language-task")
+                ? [...element.querySelectorAll(":scope > .explainer-language-text")]
+                : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
           const solutions = [...element.querySelectorAll<HTMLDetailsElement>("details.explainer-solution")];
           return {
             id: element.id,
@@ -607,6 +615,65 @@ async function checkOpenTask(
   ).toHaveCount(exercise.points.filter((point) => point.source).length);
 }
 
+/** Fills every field of the language task in `item` with the right or a wrong answer of the outline. */
+async function fillLanguageTask(
+  item: Locator,
+  exercise: Extract<ExerciseOutline, { kind: "language" }>,
+  which: "right" | "wrong",
+): Promise<void> {
+  for (const [index, unit] of exercise.units.entries()) {
+    const fields = item.locator(`.explainer-language-unit[data-unit="${index}"] .explainer-language-field`);
+    await expect(fields, `${exercise.id}: a field per answer of unit ${index + 1}`).toHaveCount(unit.right.length);
+    for (const [slot, value] of unit[which].entries()) {
+      const field = fields.nth(slot);
+      if (exercise.mode === "choice") await field.selectOption(value);
+      else await field.fill(value);
+    }
+  }
+}
+
+/**
+ * With JavaScript: a language task's fields are marked with their language; "Prüfen" waits for every field, says how
+ * many units are right, offers "Lösung" after a wrong answer, and closes with the solution after a right one; the bar
+ * of special characters inserts into the field.
+ */
+async function checkLanguageTask(
+  page: Page,
+  url: string,
+  exercise: Extract<ExerciseOutline, { kind: "language" }>,
+): Promise<void> {
+  const item = page.locator(`[id="${exercise.id}"]`);
+  await page.goto(`./${url}#${exercise.id}`);
+  await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung before the answer`).toBeHidden();
+  const first = item.locator(".explainer-language-field").first();
+  await expect(first, `${exercise.id}: the field is marked with its language`).toHaveAttribute("lang", /.+/);
+  const check = item.getByRole("button", { name: questionMessagesIn("de").check, exact: true });
+  await check.click();
+  await expect(item.locator(".question-feedback")).toHaveText(messageOf("de", "languageIncomplete"));
+  if (exercise.chars) {
+    // the bar is a fallback, folded until the learner opens it
+    await expect(item.locator(".explainer-language-chars"), `${exercise.id}: the bar is folded`).toBeHidden();
+    await first.fill("");
+    await first.focus();
+    await item.locator(".explainer-language-chars-toggle button").click();
+    await expect(first, `${exercise.id}: opening the bar keeps the focus in the field`).toBeFocused();
+    const button = item.locator(".explainer-language-chars button").first();
+    const char = (await button.textContent()) ?? "";
+    await button.click();
+    await expect(first, `${exercise.id}: the bar inserts ${char}`).toHaveValue(char);
+  }
+  await fillLanguageTask(item, exercise, "wrong");
+  await check.click();
+  await expect(item.locator(".question-feedback"), `${exercise.id}: wrong`).toHaveClass(/question-wrong/);
+  await expect(item.locator(".explainer-language-solve"), `${exercise.id}: Lösung after a wrong answer`).toBeVisible();
+  await fillLanguageTask(item, exercise, "right");
+  await check.click();
+  await expect(item.locator(".question-feedback"), `${exercise.id}: right`).toHaveText(
+    messageOf("de", "languageAllRight"),
+  );
+  await expect(item.locator("details.explainer-solution"), `${exercise.id}: the Lösung after the answer`).toBeVisible();
+}
+
 /** With JavaScript: a generated exercise at its deep link, its answers, a mistake, and "Neue Aufgabe". */
 async function checkGenerated(
   page: Page,
@@ -1011,6 +1078,7 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
             for (const exercise of types.values()) {
               if (exercise.kind === "question") await checkQuestion(page, item.url, exercise);
               else if (exercise.kind === "open") await checkOpenTask(page, item.url, exercise);
+              else if (exercise.kind === "language") await checkLanguageTask(page, item.url, exercise);
               else await checkGenerated(page, item.url, exercise);
             }
             // only an open task keeps something, its answer, and only while the tab is open

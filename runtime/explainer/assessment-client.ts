@@ -12,6 +12,7 @@
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { createStorage } from "@lernapps/tooling/storage";
 import { startOpenTask, type OpenTaskResult } from "./open-task.ts";
+import { startLanguageTask, type LanguageTaskResult } from "./language-task.ts";
 import { withLanguage, withNeeds, type NeedsChoice } from "./needs.ts";
 import { readAnswer } from "../shared/questions/engine.ts";
 import { renderQuestion } from "../shared/questions/render.ts";
@@ -131,6 +132,8 @@ interface Live {
   component?: true;
   /** What became of an open task so far. */
   open?: () => OpenTaskResult;
+  /** What became of a language task so far. */
+  language?: () => LanguageTaskResult;
   /** The task number of a generated exercise or an exercise component. */
   number?: number;
   /** The typical mistake a wrong answer makes, from 0. */
@@ -213,6 +216,12 @@ export function startAssessment(root: Document, ways: TutorWays): void {
         live.set(item.key, { open: result });
         continue;
       }
+      if (exercise.kind === "language") {
+        // a new run starts it afresh: its fields empty
+        const { result } = startLanguageTask(place, { ...exercise, id: item.key }, { assessment: true });
+        live.set(item.key, { language: result });
+        continue;
+      }
       const { seeds } = exercise;
       const used = drawn.get(item.ref) ?? new Set<number>();
       drawn.set(item.ref, used);
@@ -263,6 +272,11 @@ export function startAssessment(root: Document, ways: TutorWays): void {
           ...(answer.text === undefined || answer.text === "" ? {} : { input: answer.text }),
           ...(answer.missed.length === 0 ? {} : { missed: answer.missed.map((point) => point + 1) }),
         };
+      }
+      if (run?.language !== undefined) {
+        const answer = run.language();
+        if (answer.state === "offen") return { ...base, state: "offen" };
+        return { ...base, state: answer.state, ...(answer.state === "richtig" ? {} : { input: answer.input }) };
       }
       if (run?.component === true) {
         const answer = answers.get(item.key);
