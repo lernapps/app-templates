@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
+# The example of an explainer for a foreign language (dec-language-task): language tasks of each mode, write, gap,
+# choice and table, in both directions, with a labelled figure the learner labels by writing. Copy it over src/ of an
+# explainer to try it: rm -r src && cp -r examples/franzoesisch/src src.
+format: 2
+strand: franzoesisch/wortschatz
+title: "Bonjour ! Sich vorstellen und essen"
+intro: |
+  Sich auf Französisch vorstellen und sagen, was auf dem Tisch steht. Für das erste Lernjahr Französisch.
+languages: [de]
+chapters: [bonjour]
+sources:
+  - title: KMK, Bildungsstandards für die erste Fremdsprache (Englisch/Französisch), i. d. F. vom 22.06.2023
+    url: https://www.kmk.org/fileadmin/Dateien/veroeffentlichungen_beschluesse/2023/2023_06_22-Bista-ESA-MSA-ErsteFremdsprache.pdf
+scope:
+  text: |
+    Die App übt zwei Themen des ersten Lernjahrs Französisch: sich vorstellen (Name, Alter, Herkunft, mit den Formen
+    von être und avoir und mit s'appeler) und Essen auf dem Tisch (Lebensmittel mit ihrem Artikel). Sie setzt keinen
+    Wortschatz eines Lehrwerks voraus: Jedes Wort, das eine Aufgabe braucht, steht auf der Seite.
+  out:
+    - "die Zeiten der Vergangenheit (passé composé, imparfait)"
+    - "Teilungsartikel und Mengenangaben (du pain, beaucoup de)"

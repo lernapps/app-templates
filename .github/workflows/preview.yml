@@ -1,7 +1,8 @@
 name: Preview
 
 # On main, the same bundle is published for good with the app publish action of lernapps/tooling (actions/app-publish):
-# at the repo's address, https://lernapps.net/app-templates/, with quiz/, explainer/ and interactive/ below it, so that
+# at the repo's address, https://lernapps.net/app-templates/, with quiz/, explainer/, explainer-franzoesisch/ (the
+# explainer's example for a foreign language) and interactive/ below it, so that
 # the example apps of the templates stay to be seen after a merge. The previews below pr-preview/ stay.
 
 # A preview of the templates for every pull request, published like the preview of an app: the app preview action of
@@ -56,9 +57,14 @@ jobs:
           for template in quiz explainer interactive; do
             (cd "$template" && npm install --no-audit --no-fund && npx vp build --outDir "$GITHUB_WORKSPACE/preview/$template")
           done
+          # the explainer's example for a foreign language (explainer/examples/franzoesisch), built in place of the
+          # maths example, as check.yml checks it
+          (cd explainer && rm -r src/app.yaml src/prozent src/components src/images && cp -r examples/franzoesisch/src/. src/ &&
+            npx vp build --outDir "$GITHUB_WORKSPACE/preview/explainer-franzoesisch")
           {
             echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Templates</title></head><body><h1>Templates</h1><ul>'
             for template in quiz explainer interactive; do echo "<li><a href=\"$template/\">$template</a></li>"; done
+            echo '<li><a href="explainer-franzoesisch/">explainer: example for a foreign language (French)</a></li>'
             echo '</ul></body></html>'
           } > preview/index.html
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

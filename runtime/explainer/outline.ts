@@ -6,7 +6,7 @@
 import { questionIn, type Question } from "../shared/questions/question.ts";
 import { answerText } from "../shared/questions/render.ts";
 import { inLanguage, timelineEvents, type Block, type ComponentExample, type Site, type Text } from "./content.ts";
-import { dataOf, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
+import { dataOf, languageTaskData, languageTaskText, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
 import { kindOf } from "./generated/comparator.ts";
 import { renderWithFormulas } from "../shared/text/markdown.ts";
 import { plainText } from "./generated/texts.ts";
@@ -89,6 +89,21 @@ export type ExerciseOutline =
       points: { text: string; source: boolean }[];
       /** The model answer as plain text, in the pieces between its formulas (which a reader reads otherwise). */
       solution: string[];
+    }
+  | {
+      kind: "language";
+      id: string;
+      /** language-task, with its mode: language-task:write, language-task:gap, … */
+      type: string;
+      mode: "write" | "gap" | "choice" | "table";
+      /** The task as plain text. */
+      task: string;
+      /** Whether the page offers a bar of special characters. */
+      chars: boolean;
+      /** Each unit's inputs, one per field: a right answer, and a wrong one. */
+      units: { right: string[]; wrong: string[] }[];
+      /** Each unit's solution as "Lösung" states it. */
+      solutions: string[];
     };
 
 /** A self-assessment (assessment.ts), in German: where it is offered, and its exercises by the content pages' outline. */
@@ -235,6 +250,23 @@ function walk(
                 .trim(),
             )
             .filter((piece) => piece !== ""),
+        });
+        break;
+      }
+      case "language-task": {
+        const data = languageTaskData(block, lang);
+        into.exercises.push({
+          kind: "language",
+          id: block.id,
+          type: `language-task:${data.mode}`,
+          mode: data.mode,
+          task: plainText(languageTaskText(block, lang, (href) => href)),
+          chars: data.chars.length > 0 && data.mode !== "choice",
+          units: data.units.map((unit) => ({
+            right: unit.slots.map((slot) => slot.allowed[0] ?? ""),
+            wrong: unit.slots.map((slot) => slot.options?.find((option) => !slot.allowed.includes(option)) ?? "zzz"),
+          })),
+          solutions: data.units.map((unit) => unit.solution),
         });
         break;
       }

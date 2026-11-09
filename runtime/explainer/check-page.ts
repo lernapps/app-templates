@@ -20,6 +20,7 @@ import {
   type Text,
 } from "./content.ts";
 import { ExpressionError, parse, variables } from "./expression.ts";
+import { languageTaskProblems } from "./language.ts";
 import { ChemError, dataOf, templatesOf } from "./exercises.ts";
 import { exampleProblems, soundness } from "./generated/soundness.ts";
 import { templateProblems, unusedVariables } from "./generated/texts.ts";
@@ -251,6 +252,10 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
             });
         });
         break;
+      case "language-task":
+        checkExerciseId(check, block.id, at);
+        checkLanguageTask(check, block, at);
+        break;
       case "vue-component":
         checkComponent(check, block, at);
         break;
@@ -278,6 +283,21 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
         }
     }
   });
+}
+
+/** A language task: its texts, its material, and what language.ts finds in its answers, prompts and examples. */
+function checkLanguageTask(check: PageCheck, block: BlockOf<"language-task">, at: Path): void {
+  const { yaml, texts, problems } = check;
+  for (const field of ["task", "hint", "explanation"] as const)
+    if (block[field] !== undefined) texts.check(yaml, [...at, field], "markdown");
+  if (block.table?.caption !== undefined) texts.check(yaml, [...at, "table", "caption"], "plain");
+  block.items?.forEach((item, index) =>
+    item.mistakes?.forEach((_mistake, place) =>
+      texts.check(yaml, [...at, "items", index, "mistakes", place, "message"], "plain"),
+    ),
+  );
+  block.material?.forEach((material, index) => checkMaterialBlock(check, material, [...at, "material", index]));
+  for (const problem of languageTaskProblems(block)) problems.at(yaml, [...at, ...problem.path], problem.message);
 }
 
 /** A vue-component block: its component exists and passes its checks, its props match, its texts are complete. */

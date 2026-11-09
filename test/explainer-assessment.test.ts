@@ -57,7 +57,7 @@ describe("the build checks a self-assessment", () => {
       "an exercise the page does not have",
       "/zahlen/zahlen-01/#prozent-rechnen",
       "/zahlen/zahlen-01/#prozent-raten",
-      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-01/#prozent-raten names no exercise of src/zahlen/zahlen-01.yaml; use the id of one of its exercises: generated, a question type, or an exercise component",
+      "src/zahlen/chapter.yaml:LINE: selfAssessment.pages[0].exercises[0]: /zahlen/zahlen-01/#prozent-raten names no exercise of src/zahlen/zahlen-01.yaml; use the id of one of its exercises: generated, a question type, a language task, or an exercise component",
     ],
     [
       "a question listed twice",

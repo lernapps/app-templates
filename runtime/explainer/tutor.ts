@@ -17,9 +17,13 @@ import {
   type Site,
   type Text,
   type Descriptions,
+  type LanguageTask,
   type OpenTask,
 } from "./content.ts";
 import { plainText } from "./generated/texts.ts";
+import { languageName, languageTaskText } from "./exercises.ts";
+import { answerLanguage, answersOf, FORM_CLASSES, solutionOf, unitsOf, variantsOf } from "./language.ts";
+import { message } from "./messages.ts";
 import { kindOf } from "./generated/comparator.ts";
 import { type Generated } from "./generated/types.ts";
 import { allBlocks } from "./routes.ts";
@@ -57,6 +61,14 @@ interface Words {
   answerWays: Record<"text" | "photo" | "both", string>;
   openGuide: string;
   formats: Record<string, string>;
+  /** A language task: how the learner answers by mode, how form counts, its items, how to help. */
+  languageModes: Record<"write" | "gap" | "choice" | "table", string>;
+  formRules: string;
+  formClasses: Record<"case" | "accents" | "hyphen" | "apostrophe" | "punctuation", string>;
+  formCounts: Record<"ok" | "hint" | "partly" | "wrong", string>;
+  items: string;
+  also: string;
+  languageGuide: string;
 }
 
 const WORDS: Readonly<Record<string, Words>> = {
@@ -106,6 +118,25 @@ const WORDS: Readonly<Record<string, Words>> = {
       order: "die Einträge in die richtige Reihenfolge bringen (die App zeigt sie gemischt)",
       pairs: "jedem Eintrag links den passenden rechts zuordnen",
     },
+    languageModes: {
+      write: "die ganze Antwort auf {language} schreiben",
+      gap: "die Lücken auf {language} füllen",
+      choice: "für jede Lücke ein Wort wählen",
+      table: "die Lücken der Tabelle auf {language} füllen",
+    },
+    formRules: "Wie die App Fehler der Form zählt",
+    formClasses: {
+      case: "Groß- und Kleinschreibung",
+      accents: "Akzente",
+      hyphen: "Bindestrich",
+      apostrophe: "Apostroph",
+      punctuation: "Satzzeichen",
+    },
+    formCounts: { ok: "egal", hint: "richtig mit Hinweis", partly: "teilweise richtig", wrong: "falsch" },
+    items: "Einträge (Vorgabe → Lösung)",
+    also: "auch richtig",
+    languageGuide:
+      "So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.",
   },
   en: {
     task: "Task",
@@ -153,6 +184,25 @@ const WORDS: Readonly<Record<string, Words>> = {
       order: "put the items in the right order (the app shows them shuffled)",
       pairs: "match each item on the left with one on the right",
     },
+    languageModes: {
+      write: "write the whole answer in {language}",
+      gap: "fill in the gaps in {language}",
+      choice: "choose a word for each gap",
+      table: "fill in the gaps of the table in {language}",
+    },
+    formRules: "How the app counts mistakes of form",
+    formClasses: {
+      case: "capital letters",
+      accents: "accents",
+      hyphen: "hyphen",
+      apostrophe: "apostrophe",
+      punctuation: "punctuation",
+    },
+    formCounts: { ok: "ignored", hint: "right with a hint", partly: "partly right", wrong: "wrong" },
+    items: "Items (start → solution)",
+    also: "also right",
+    languageGuide:
+      "How to help: the app checks word by word against the solutions above and names mistakes of form (e.g. accents) with the child's words. Do not give the solution: ask about the rule (ending, gender, tense) or about a similar sentence of the page. If the app takes a version of the child's as wrong that you think is right, tell the child: the app knows only the versions above.",
   },
 };
 
@@ -229,6 +279,49 @@ function openTaskPart(block: OpenTask, lang: string, words: Words, base: string)
   ];
   if (block.hint !== undefined) lines.push(`- ${words.hint}: ${line(inLanguage(block.hint, lang))}`);
   lines.push(`- ${words.openGuide}`);
+  return lines;
+}
+
+/**
+ * A language task in `lang`: the task, how the learner answers, how mistakes of form count, each item with what the
+ * learner starts from, its solution, the other right answers and the typical mistakes with the app's messages, the
+ * hint, the explanation, and how to help.
+ */
+function languageTaskPart(block: LanguageTask, lang: string, words: Words): string[] {
+  const mode = block.mode ?? "write";
+  const language = languageName(answerLanguage(block), lang);
+  const units = unitsOf(block);
+  const form = block.form ?? {};
+  const lines = [
+    `- ${words.task}: ${line(plainText(languageTaskText(block, lang, (href) => href)))}`,
+    `- ${words.answerFormat}: ${words.languageModes[mode].replace("{language}", language)}`,
+    `- ${words.formRules}: ${FORM_CLASSES.map((name) => `${words.formClasses[name]} ${words.formCounts[form[name] ?? "wrong"]}`).join(", ")}`,
+    `- ${words.items}:`,
+  ];
+  units.forEach((unit, index) => {
+    const prompt =
+      unit.prompt === undefined
+        ? ""
+        : unit.prompt.kind === "marker"
+          ? `${message(lang, "languageMarker", { marker: unit.prompt.marker })} → `
+          : `${unit.prompt.text} → `;
+    const solution = solutionOf(unit);
+    // the other right answers: of a whole answer, its variants; of gaps, each gap's when it allows more than one
+    const others = unit.whole
+      ? answersOf(unit).filter((answer) => answer !== solution)
+      : unit.slots.some((slot) => slot.allowed.length > 1)
+        ? answersOf(unit)
+        : [];
+    lines.push(
+      `  ${index + 1}. ${prompt}${solution}${others.length === 0 ? "" : ` (${words.also}: ${others.join("; ")})`}`,
+    );
+    for (const mistake of block.items?.[index]?.mistakes ?? [])
+      lines.push(`     - ${variantsOf(mistake.answer).join(" / ")}: ${line(inLanguage(mistake.message, lang))}`);
+  });
+  if (block.hint !== undefined) lines.push(`- ${words.hint}: ${line(inLanguage(block.hint, lang))}`);
+  if (block.explanation !== undefined)
+    lines.push(`- ${words.explanation}: ${line(inLanguage(block.explanation, lang))}`);
+  lines.push(`- ${words.languageGuide}`);
   return lines;
 }
 
@@ -393,6 +486,12 @@ export function exercisePart(
     case "open-task":
       // from the tutor page, <chapter>/<page>/tutor/, three levels up is the language tree
       return { id: block.id, type: "open-task", lines: openTaskPart(block, lang, words, "../../../") };
+    case "language-task":
+      return {
+        id: block.id,
+        type: `language-task, ${block.mode ?? "write"}`,
+        lines: languageTaskPart(block, lang, words),
+      };
     case "vue-component": {
       const use = site.components.find((candidate) => candidate.block === block);
       const description = descriptions.get(block);

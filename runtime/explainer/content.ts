@@ -7,6 +7,7 @@ import type { Question } from "../shared/questions/question.ts";
 import type { DataRecord, Generated } from "./generated/types.ts";
 import type { Credit, Drawing, MaterialBlock } from "../shared/blocks/block.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
+import type { LanguageTaskSpec } from "./language.ts";
 
 export type { Credit, Drawing };
 
@@ -35,8 +36,11 @@ export interface OpenTask {
   hint?: Text;
 }
 
-/** An exercise block: one of the question types, generated, or an open task. */
-export type Exercise = QuestionBlock | Generated | OpenTask;
+/** A language task: the learner writes a word, an expression or sentences in a language, and the page checks it. */
+export type LanguageTask = LanguageTaskSpec<Text, MaterialBlock<Text>>;
+
+/** An exercise block: one of the question types, generated, an open task, or a language task. */
+export type Exercise = QuestionBlock | Generated | OpenTask | LanguageTask;
 
 export interface Source {
   title: Text;
@@ -276,6 +280,7 @@ export function mapUrl(recap: string): string {
 export const isExercise = (block: Block): block is Exercise =>
   block.type === "generated" ||
   block.type === "open-task" ||
+  block.type === "language-task" ||
   ["single-choice", "multiple-choice", "true-false", "number", "ordering", "matching"].includes(block.type);
 
 /** The anchor of a term in the glossary: the German term in lower case, umlauts spelled out, hyphens for the rest. */

@@ -154,7 +154,7 @@ function checkAssessment(
         path,
         component
           ? `${ref} is a component that checks no answer; choose an exercise: generated, a question type, or an exercise component`
-          : `${ref} names no exercise of ${page.file}; use the id of one of its exercises: generated, a question type, or an exercise component`,
+          : `${ref} names no exercise of ${page.file}; use the id of one of its exercises: generated, a question type, a language task, or an exercise component`,
       );
     });
   });
@@ -398,7 +398,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         problems.at(
           yaml,
           ["blocks"],
-          "the page has no exercise; give it a section with an exercise: one of the question types, or generated",
+          "the page has no exercise; give it a section with an exercise: one of the question types, generated, or a language task",
         );
       }
       for (const [id, path] of exercises) {

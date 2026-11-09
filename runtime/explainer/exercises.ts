@@ -7,9 +7,23 @@
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
 import { questionIn, type Question } from "../shared/questions/question.ts";
 import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
+import { materialIn } from "../shared/blocks/block.ts";
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
-import type { DataRecord, Exercise, OpenTask, QuestionBlock } from "./content.ts";
+import type { DataRecord, Exercise, LanguageTask, OpenTask, QuestionBlock } from "./content.ts";
+import {
+  answerLanguage,
+  answersOf,
+  FORM_CLASSES,
+  partsOf,
+  promptOf,
+  solutionOf,
+  specialChars,
+  unitsOf,
+  type Form,
+  type Prompt,
+  type Unit,
+} from "./language.ts";
 import { chemPlaceholdersIn, hintOf, label, stepsOf, taskText, tokenize, writtenTemplates } from "./generated/texts.ts";
 import { generate, items } from "./generated/values.ts";
 import { evaluate, parse, type Value } from "./expression.ts";
@@ -41,7 +55,37 @@ export type ExerciseData =
       seeds: number[];
       texts: { newTask: string; practice: string; hint: string; solution: string; taskNumber: string };
     }
-  | OpenTaskData;
+  | OpenTaskData
+  | LanguageTaskData;
+
+/** What the browser reads from a language task: its units with their inputs, its texts, how it counts form. */
+export interface LanguageTaskData {
+  kind: "language";
+  lang: string;
+  id: string;
+  mode: "write" | "gap" | "choice" | "table";
+  /** The language the learner writes in. */
+  answerLang: string;
+  form: Form;
+  /** Each unit (an item, or a row of a table) with what the page shows of it and the messages of its mistakes. */
+  units: (Unit & {
+    /** The answer with its gaps as the page shows it: words and the index of each slot; none for write. */
+    parts?: (string | number)[];
+    /** For a row of a table: each cell so. */
+    cellParts?: (string | number)[][];
+    /** The messages of its typical mistakes, plain text, in the order of the mistakes. */
+    messages: string[];
+    /** Its solution as the learner reads it. */
+    solution: string;
+    /** What the learner starts from, as HTML with its language marked; empty for a row of a table. */
+    promptHtml: string;
+  })[];
+  /** The heads of the columns of a table. */
+  columns?: string[];
+  /** The characters the bar under a field inserts. */
+  chars: string[];
+  texts: Record<string, string>;
+}
 
 /** What the browser reads from an open task: its texts as HTML, its points, how the learner may answer. */
 export interface OpenTaskData {
@@ -289,6 +333,186 @@ export function openTaskData(block: OpenTask, lang: string, resolve: (href: stri
   };
 }
 
+/** The name of a language in `lang`, e.g. Französisch for fr in German. */
+export const languageName = (code: string, lang: string): string =>
+  new Intl.DisplayNames([lang], { type: "language" }).of(code) ?? code;
+
+/** The task of a language task as the learner reads it: its own, or a text by its mode and its first prompt. */
+export function languageTaskText(block: LanguageTask, lang: string, resolve: (href: string) => string): string {
+  if (block.task !== undefined) return renderMarkdown(inLanguage(block.task, lang), resolve);
+  const language = languageName(answerLanguage(block), lang);
+  const mode = block.mode ?? "write";
+  const first = block.items?.[0];
+  const prompt = first === undefined ? undefined : promptOf(block, first);
+  const key =
+    mode === "table"
+      ? "languageTable"
+      : mode === "choice"
+        ? "languageChoice"
+        : mode === "gap"
+          ? "languageGap"
+          : prompt?.kind === "cue"
+            ? "languageBuild"
+            : prompt?.kind === "marker"
+              ? "languageLabelFigure"
+              : prompt?.kind === "text"
+                ? "languageTranslate"
+                : "languageWrite";
+  return `<p>${plain(message(lang, key, { language }))}</p>`;
+}
+
+/** What the browser reads from a language task in `lang`. */
+export function languageTaskData(block: LanguageTask, lang: string): LanguageTaskData {
+  const mode = block.mode ?? "write";
+  const units = unitsOf(block);
+  let slot = 0;
+  const texts: Record<string, string> = {};
+  for (const key of [
+    "languageAnswer",
+    "languageGapLabel",
+    "languageCellLabel",
+    "languageChars",
+    "languageCharInsert",
+    "languageIncomplete",
+    "languageAllRight",
+    "languageSomeRight",
+    "languagePartly",
+    "languageRight",
+    "languageWrong",
+    "languageOwnVersion",
+    "tryAgainOrSolution",
+  ] as const)
+    texts[key] = key === "tryAgainOrSolution" ? questionMessagesIn(lang).tryAgain : message(lang, key);
+  for (const name of FORM_CLASSES) texts[`class_${name}`] = message(lang, `languageClass_${name}`);
+  texts["check"] = questionMessagesIn(lang).check;
+  texts["showSolution"] = questionMessagesIn(lang).showSolution;
+  return {
+    kind: "language",
+    lang,
+    id: block.id,
+    mode,
+    answerLang: answerLanguage(block),
+    form: block.form ?? {},
+    units: units.map((unit, index) => {
+      const item = block.items?.[index];
+      const shown = {
+        ...unit,
+        messages: (item?.mistakes ?? []).map((mistake) => inLanguage(mistake.message, lang)),
+        solution: solutionOf(unit),
+        promptHtml: promptHtml(unit.prompt, lang),
+      };
+      if (mode === "write") return shown;
+      if (unit.cells !== undefined) {
+        const cellParts = unit.cells.map((cell) => {
+          const parts = partsOf(cell, slot);
+          slot += parts.filter((part) => typeof part === "number").length;
+          return parts;
+        });
+        slot = 0;
+        return { ...shown, cellParts };
+      }
+      return { ...shown, parts: partsOf(unit.answer) };
+    }),
+    ...(block.table?.header === undefined ? {} : { columns: [...block.table.header] }),
+    // the bar of special characters only for another language than the page's: its own the learner types every day
+    chars: answerLanguage(block).split("-")[0] === lang.split("-")[0] ? [] : [...specialChars(answerLanguage(block))],
+    texts,
+  };
+}
+
+/** A prompt as the page shows it, plain HTML with its language marked. */
+function promptHtml(prompt: Prompt | undefined, lang: string): string {
+  if (prompt === undefined) return "";
+  if (prompt.kind === "text") return `<span lang="${plain(prompt.lang)}">${plain(prompt.text)}</span>`;
+  if (prompt.kind === "cue") return `<span class="explainer-language-cue">${plain(prompt.text)}</span>`;
+  return `<span class="explainer-language-marker">${plain(message(lang, "languageMarker", { marker: prompt.marker }))}</span>`;
+}
+
+/** Words with gaps as the page shows them without JavaScript: a gap as a blank. */
+const gappedHtml = (parts: readonly (string | number)[]): string =>
+  parts
+    .map((part) => (typeof part === "number" ? `<span class="explainer-language-blank">…</span>` : plain(part)))
+    .join("");
+
+/**
+ * A language task in `lang`: the task, its material, each item with what to start from (and its gaps), or the table
+ * with its gaps, and under "Lösung" every answer with its variants and the explanation, which is all the page shows
+ * without JavaScript; with JavaScript the learner writes and checks (language-task.ts).
+ */
+function languageTaskExercise(
+  block: LanguageTask,
+  lang: string,
+  resolve: (href: string) => string,
+  material: MaterialContext,
+): string {
+  const data = languageTaskData(block, lang);
+  const target = plain(data.answerLang);
+  const solution = questionMessagesIn(lang).solution;
+  const also = plain(message(lang, "languageAlso"));
+  const unitAnswers = (unit: Unit, shown: string) => {
+    const others = answersOf(unit).filter((answer) => answer !== shown);
+    return unit.whole && others.length > 0
+      ? ` <span class="explainer-language-also">(${also} <span lang="${target}">${others.map(plain).join("; ")}</span>)</span>`
+      : "";
+  };
+  const items =
+    data.mode === "table"
+      ? [
+          `<table class="explainer-language-table">`,
+          block.table?.caption === undefined
+            ? ""
+            : `<caption>${plain(inLanguage(block.table.caption, lang))}</caption>`,
+          data.columns === undefined
+            ? ""
+            : `<thead><tr>${data.columns.map((column) => `<th scope="col">${plain(column)}</th>`).join("")}</tr></thead>`,
+          `<tbody lang="${target}">`,
+          ...data.units.map(
+            (unit) => `<tr>${(unit.cellParts ?? []).map((parts) => `<td>${gappedHtml(parts)}</td>`).join("")}</tr>`,
+          ),
+          `</tbody></table>`,
+        ]
+          .filter((part) => part !== "")
+          .join("")
+      : `<ol class="explainer-language-items">${data.units
+          .map((unit) => {
+            const prompt = promptHtml(unit.prompt, lang);
+            const gapped =
+              unit.parts === undefined
+                ? ""
+                : `<span class="explainer-language-gapped" lang="${target}">${gappedHtml(unit.parts)}</span>`;
+            return `<li>${[prompt, gapped].filter((part) => part !== "").join(" → ")}</li>`;
+          })
+          .join("")}</ol>`;
+  const solutions =
+    data.mode === "table"
+      ? `<ol class="explainer-language-solutions" lang="${target}">${data.units.map((unit) => `<li>${plain(unit.solution)}</li>`).join("")}</ol>`
+      : `<ol class="explainer-language-solutions">${data.units
+          .map(
+            (unit) =>
+              `<li><span lang="${target}">${plain(unit.solution)}</span>${unitAnswers(unit, unit.solution)}</li>`,
+          )
+          .join("")}</ol>`;
+  return [
+    `<div class="explainer-exercise explainer-language-task" id="${block.id}">`,
+    `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
+    `<div class="explainer-language-text">${languageTaskText(block, lang, resolve)}</div>`,
+    block.material === undefined ? "" : renderMaterial(materialIn(block.material, lang), material),
+    block.hint === undefined
+      ? ""
+      : `<details class="explainer-hint"><summary>${plain(message(lang, "hint"))}</summary>${renderMarkdown(inLanguage(block.hint, lang), resolve)}</details>`,
+    `<div class="explainer-language-static">${items}</div>`,
+    `<div class="explainer-language-live" hidden></div>`,
+    `<details class="explainer-solution"><summary>${plain(solution)}</summary>`,
+    solutions,
+    block.explanation === undefined ? "" : renderMarkdown(inLanguage(block.explanation, lang), resolve),
+    `</details>`,
+    `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
+    `</div>`,
+  ]
+    .filter((part) => part !== "")
+    .join("\n");
+}
+
 /** What the browser reads from an exercise in `lang` (script.explainer-exercise-data). */
 export function exerciseData(
   block: Exercise,
@@ -298,6 +522,7 @@ export function exerciseData(
 ): ExerciseData {
   if (block.type === "generated") return generatedData(block, lang, all, resolve);
   if (block.type === "open-task") return openTaskData(block, lang, resolve);
+  if (block.type === "language-task") return languageTaskData(block, lang);
   return questionData(block, lang);
 }
 
@@ -387,5 +612,6 @@ export function renderExercise(
 ): string {
   if (block.type === "generated") return generatedExercise(block, lang, data, resolve);
   if (block.type === "open-task") return openTaskExercise(block, lang, resolve, storage);
+  if (block.type === "language-task") return languageTaskExercise(block, lang, resolve, material);
   return questionExercise(block, lang, material);
 }

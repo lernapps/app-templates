@@ -291,6 +291,7 @@
             "matching",
             "generated",
             "open-task",
+            "language-task",
             "vue-component"
           ]
         }
@@ -588,6 +589,20 @@
           },
           "then": {
             "$ref": "#/$defs/openTask"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "language-task"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/languageTask"
           }
         },
         {
@@ -1070,6 +1085,248 @@
         "required": ["source"]
       },
       "unevaluatedProperties": false
+    },
+    "languageTask": {
+      "description": "A language task: the learner writes a word, a form or sentences in a language, and the page checks it against the answers the task lists. Each item starts from the other language, a cue or a marker of a labelled figure in material. mode: write, gap, choice or table. direction is part of the task. Mistakes of form count as wrong unless form loosens them; each item may name typical mistakes with their messages. Without JavaScript the page shows the task and its solution under Lösung. Guidance and examples: lernapps/tooling, references/foreign-languages.md.",
+      "type": "object",
+      "required": ["id", "languages"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "task": {
+          "description": "Optional: what to do, restricted Markdown. Without it, a text by mode and direction.",
+          "$ref": "#/$defs/markdown"
+        },
+        "languages": {
+          "description": "The two languages of the task: source, the one learners know, and target, the one they learn, as language codes.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "target"],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/languageCode"
+            },
+            "target": {
+              "$ref": "#/$defs/languageCode"
+            }
+          }
+        },
+        "direction": {
+          "description": "Which side the learner writes: to-target (the default) or to-source. Part of the task: two tasks for both directions.",
+          "enum": ["to-target", "to-source"]
+        },
+        "mode": {
+          "description": "How the learner answers: write (the default; the whole answer), gap (the gaps [ … ]), choice (one choice per gap, among its answer and distractors), table (the gaps of table).",
+          "enum": ["write", "gap", "choice", "table"]
+        },
+        "form": {
+          "description": "How each class of mistakes of form counts; a class not given counts as wrong.",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "case": {
+              "description": "How the class counts: ok (right, without a word), hint (right, with a hint), partly (partly right), wrong (wrong, with a hint; the default).",
+              "enum": ["ok", "hint", "partly", "wrong"]
+            },
+            "accents": {
+              "description": "How the class counts: ok (right, without a word), hint (right, with a hint), partly (partly right), wrong (wrong, with a hint; the default).",
+              "enum": ["ok", "hint", "partly", "wrong"]
+            },
+            "hyphen": {
+              "description": "How the class counts: ok (right, without a word), hint (right, with a hint), partly (partly right), wrong (wrong, with a hint; the default).",
+              "enum": ["ok", "hint", "partly", "wrong"]
+            },
+            "apostrophe": {
+              "description": "How the class counts: ok (right, without a word), hint (right, with a hint), partly (partly right), wrong (wrong, with a hint; the default).",
+              "enum": ["ok", "hint", "partly", "wrong"]
+            },
+            "punctuation": {
+              "description": "How the class counts: ok (right, without a word), hint (right, with a hint), partly (partly right), wrong (wrong, with a hint; the default).",
+              "enum": ["ok", "hint", "partly", "wrong"]
+            }
+          }
+        },
+        "material": {
+          "description": "Optional: content the task shows before its items, as a question's material; the markers of a labelled figure are what items with marker name.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "urn:lernapps:schema:blocks.v1#/$defs/materialBlock"
+          }
+        },
+        "items": {
+          "description": "The items, 1 to 20, in the order the learner answers them. Required unless mode is table.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/languageItem"
+          }
+        },
+        "table": {
+          "description": "For mode table: a table of forms in the language the learner writes; a cell with [ … ] is a gap.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rows"],
+          "properties": {
+            "caption": {
+              "description": "What the table shows.",
+              "$ref": "#/$defs/text"
+            },
+            "header": {
+              "description": "Optional: the header row, one heading per column, as in a table block.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "rows": {
+              "description": "The rows, each a list of cells as written; every row as long as the others.",
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 20,
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "hint": {
+          "description": "Optional: a hint that helps to start, without the answer.",
+          "$ref": "#/$defs/markdown"
+        },
+        "explanation": {
+          "description": "Optional: why the answer is so, shown with the solution.",
+          "$ref": "#/$defs/markdown"
+        }
+      }
+    },
+    "languageItem": {
+      "description": "An item of a language task: one thing to start from (the other side, cue or marker) and the answer on the side direction names, with its variants (a|b) and, for gap and choice, its gaps [ … ].",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "description": "The item in the source language; gaps [ … ] only when the learner writes it (direction to-source).",
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "description": "The item in the target language. Variants as (a|b), or [a|b] in a gap; (word |) for a word that may be left out.",
+          "type": "string",
+          "minLength": 1
+        },
+        "cue": {
+          "description": "Instead of the other side: the form to build.",
+          "type": "string",
+          "minLength": 1
+        },
+        "marker": {
+          "description": "Instead of the other side: the marker of a label of the labelled figure in material (legend: false); the learner writes the word for it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "accepted": {
+          "description": "Optional: further right answers as written, beside the variants of the answer.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "mistakes": {
+          "description": "Optional: typical wrong answers, each with a message that names the rule; for gap and choice the answer of a gap.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["answer", "message"],
+            "properties": {
+              "answer": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        },
+        "distractors": {
+          "description": "For mode choice: the wrong choices of each gap, in the order of the gaps, 1 to 4 each.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "examples": {
+          "description": "Optional: test cases for the build, never shown to learners. accepted: answers the check must take as right; rejected: answers it must not. The mistakes already count as rejected.",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "accepted": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "description": "An answer as the learner writes it: a text for a task without gaps, one text per gap for a gap or choice task.",
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            },
+            "rejected": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "description": "An answer as the learner writes it: a text for a task without gaps, one text per gap for a gap or choice task.",
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "languageCode": {
+      "description": "A language code (BCP 47).",
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
     },
     "vueComponent": {
       "description": "A Vue single-file component of the app, src/components/<component>.vue, for what no built-in block or generated exercise can express. The build renders it into the page and checks it (what it may do, its test file, and for an exercise, one that emits answer, its logic module <component>.ts); in the browser it hydrates in place. An exercise component is only the input of its task: it emits answer with the learner's answer each time it changes (undefined while there is none) and draws no \"Prüfen\" of its own; the explainer draws \"Prüfen\" under it, checks the answer with check(task, answer) and gives the feedback with reason(task, answer, props, lang), the app's message for a wrong answer, and may set its prop checked: boolean. An exercise component declares the prop seed: number, which the explainer gives it and no block does: its task number. The build numbers its distinct tasks like a generated exercise's (seeds 1, 2, 3, …, tasks compared as the JSON of generate(seed, props), Aufgabe Nr. 1 to N, N at most 67); the page shows \"Aufgabe Nr. <n>\" and \"Neue Aufgabe\", the address ?seed=<n>#<id> opens task number n, and the component gets that task's seed and shows generate(seed, props). Its logic module exports generate(seed, props), check(task, answer), solution(task), wrong(task), reason(task, answer, props, lang), describe(task, props, lang) and about: describe gives { task, solution }, the task as a learner sees it and its solution, each restricted Markdown in the language lang (props come in that language); about = { task, answer, correct, mistakes } says what the learner does, the answer's format, what counts as right and the typical mistakes, each a text (a map by language when the app has more than one). The build checks describe for every task number, and writes the no-JS text of an exercise component from the task of number 1 with its solution folded. Without JavaScript the page shows the nojs text instead of the component.",
