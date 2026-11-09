@@ -1,7 +1,8 @@
 // The formats of an explainer's content. Format 1 (explainer.v1.schema.json) is an app.yaml without `format`, and
 // stays as it was: no strand, no competencies, no page list. Format 2 (explainer.v2.schema.json, `format: 2`) places
-// the app on the learning map of the catalog: src/app.yaml names the app's strand (<subject>/<strand>, or none), each
-// page the competencies it practises (required with a strand, not allowed with none), and the build writes
+// the app on the learning map of the catalog: src/app.yaml names the app's strand (<subject>/<strand>, or none) or,
+// for a unit app across the strands of a subject, the subject; each page the competencies it practises (required with
+// a strand or a subject, not allowed with none), and the build writes
 // lernapps-pages.json at the root of the bundle, the list of the pages for the catalog. A recap page (recap:
 // <subject>/<competency>) repeats a competency the app does not practise instead: no exercise, a notice with the link to the
 // learning map at its top, marked in the contents, left out of the self-assessment. Each broken case fails with
@@ -65,6 +66,13 @@ function v2(strand = "mathematik/stochastik"): string {
   return root;
 }
 
+/** The fixture in format 2 as a unit app: subject: franzoesisch instead of a strand, competencies on each page. */
+function unit(): string {
+  const root = v2();
+  edit(root, "app.yaml", "strand: mathematik/stochastik", "subject: franzoesisch");
+  return root;
+}
+
 /** A recap page, src/kapitel/wdh.yaml, the last of the chapter: repeats physik/gewichtskraft-berechnen. */
 const RECAP = [
   "title: { de: Gewichtskraft – kurz wiederholt, en: Weight – a short recap }",
@@ -122,7 +130,12 @@ describe("format 1: an app.yaml without format", () => {
     [
       "a strand",
       (root: string) => edit(root, "app.yaml", TITLE, `strand: mathematik/stochastik\n${TITLE}`),
-      "src/app.yaml:1: strand: strand is a field of format 2; add format: 2 to src/app.yaml, with the app's strand",
+      "src/app.yaml:1: strand: strand is a field of format 2; add format: 2 to src/app.yaml, with the app's strand or subject",
+    ],
+    [
+      "a subject",
+      (root: string) => edit(root, "app.yaml", TITLE, `subject: franzoesisch\n${TITLE}`),
+      "src/app.yaml:1: subject: subject is a field of format 2; add format: 2 to src/app.yaml, with the app's strand or subject",
     ],
     [
       "a page with competencies",
@@ -133,7 +146,7 @@ describe("format 1: an app.yaml without format", () => {
           "title: { de: Eins, en: One }",
           "competencies: [laplace]\ntitle: { de: Eins, en: One }",
         ),
-      "src/kapitel/eins.yaml:1: competencies: competencies is a field of format 2; add format: 2 and the app's strand to src/app.yaml, or remove it",
+      "src/kapitel/eins.yaml:1: competencies: competencies is a field of format 2; add format: 2 and the app's strand or subject to src/app.yaml, or remove it",
     ],
   ])("has no %s", (_name, breakIt, line) => {
     const root = app();
@@ -158,6 +171,21 @@ describe("format 2: format: 2 and the strand in app.yaml, competencies on the pa
     expect(problemsOf(v2("none"))).toEqual([]);
   });
 
+  test("is valid with a subject instead of a strand and competencies on every page: a unit app", () => {
+    const result = check(unit(), 5);
+    expect(result.problems).toEqual([]);
+    expect(result.site?.app.subject).toBe("franzoesisch");
+    expect(result.site?.app.strand).toBeUndefined();
+  });
+
+  test("needs competencies on every page with a subject", () => {
+    const root = unit();
+    edit(root, "kapitel/zwei.yaml", "competencies: [laplace, baumdiagramm]\n", "");
+    expect(problemsOf(root)).toEqual([
+      "src/kapitel/zwei.yaml:1: competencies is missing; src/app.yaml names the subject franzoesisch, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead",
+    ]);
+  });
+
   test("names the schema of format 2 when it is not valid", () => {
     const root = v2();
     edit(root, "app.yaml", "strand: mathematik/stochastik\n", "");
@@ -170,7 +198,18 @@ describe("format 2: format: 2 and the strand in app.yaml, competencies on the pa
     [
       "a missing strand",
       (root) => edit(root, "app.yaml", "strand: mathematik/stochastik\n", ""),
-      "src/app.yaml:1: strand is missing; name the strand of the learning map the app stays in, <subject>/<strand> (e.g. mathematik/stochastik), or none when the app is on no strand",
+      "src/app.yaml:1: strand or subject is missing; name either strand (one strand of the learning map, <subject>/<strand>, e.g. mathematik/stochastik, or none when the app is on no strand) or subject (a unit app across the strands of a subject whose learning map allows it, e.g. franzoesisch)",
+    ],
+    [
+      "both strand and subject",
+      (root) =>
+        edit(root, "app.yaml", "strand: mathematik/stochastik", "strand: mathematik/stochastik\nsubject: mathematik"),
+      "src/app.yaml:3: subject: name either strand (one strand of the learning map, <subject>/<strand>, e.g. mathematik/stochastik, or none when the app is on no strand) or subject (a unit app across the strands of a subject whose learning map allows it, e.g. franzoesisch), not both; remove one of them",
+    ],
+    [
+      "a subject with a strand",
+      (root) => edit(root, "app.yaml", "strand: mathematik/stochastik", "subject: franzoesisch/grammatik"),
+      "src/app.yaml:2: subject: franzoesisch/grammatik is no subject; write the subject's id in the learning map, e.g. franzoesisch, without a strand",
     ],
     [
       "a strand without its subject",
@@ -238,7 +277,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     [
       "competencies and recap both",
       (root) => edit(root, "kapitel/wdh.yaml", "recap:", "competencies: [laplace]\nrecap:"),
-      "src/kapitel/wdh.yaml:3: recap: a page has competencies or recap, never both: a page practises competencies of the app's strand, a recap page only repeats a competency the app does not practise; remove one of them",
+      "src/kapitel/wdh.yaml:3: recap: a page has competencies or recap, never both: a page practises competencies of the app's strand or subject, a recap page only repeats a competency the app does not practise; remove one of them",
     ],
     [
       "a recap that is no <subject>/<competency>",
@@ -296,7 +335,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
   test("is a field of format 2", () => {
     const root = withRecap(app());
     expect(problemsOf(root)).toEqual([
-      "src/kapitel/wdh.yaml:2: recap: recap is a field of format 2; add format: 2 and the app's strand to src/app.yaml, or remove it",
+      "src/kapitel/wdh.yaml:2: recap: recap is a field of format 2; add format: 2 and the app's strand or subject to src/app.yaml, or remove it",
     ]);
   });
 
@@ -383,6 +422,18 @@ describe("the page list for the catalog", () => {
     });
     // once, at the root: not in a language tree
     expect(existsSync(join(dist, "en", PAGE_LIST))).toBe(false);
+  }, 30_000);
+
+  test("format 2 with a subject writes subject instead of strand", async () => {
+    const dist = await built(unit());
+    expect(JSON.parse(readFileSync(join(dist, PAGE_LIST), "utf8"))).toEqual({
+      format: 1,
+      subject: "franzoesisch",
+      pages: [
+        { path: "kapitel/eins/", title: { de: "Eins", en: "One" }, competencies: ["laplace"] },
+        { path: "kapitel/zwei/", title: { de: "Zwei", en: "Two" }, competencies: ["laplace", "baumdiagramm"] },
+      ],
+    });
   }, 30_000);
 
   test("format 2 with strand none writes the list without competencies", async () => {

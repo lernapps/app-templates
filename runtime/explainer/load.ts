@@ -1,7 +1,7 @@
 // Reads an explainer's content from src/ at build time and validates it: each file against its part of the schema of
 // its format (explainer.v1.schema.json without `format` in src/app.yaml, explainer.v2.schema.json with `format: 2`),
-// then what a schema cannot say. In format 2, every page names its competencies when the app has a strand (or is a
-// recap page, recap: <subject>/<competency>), and none when its strand is none; a recap page has no exercise, and
+// then what a schema cannot say. In format 2, every page names its competencies when the app has a strand or a subject
+// (or is a recap page, recap: <subject>/<competency>), and none when its strand is none; a recap page has no exercise, and
 // every other page at least one. The order lists are complete and unique, the depth is
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
@@ -340,7 +340,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         continue;
       }
       const page = yaml.value as Omit<Page, "id" | "chapter" | "file">;
-      // format 2: the competencies a page practises, by the app's strand
+      // format 2: the competencies a page practises, by the app's strand or subject
       if (app.strand === "none" && page.competencies !== undefined) {
         problems.at(
           yaml,
@@ -348,15 +348,14 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
           "competencies is not allowed: src/app.yaml has strand: none, so the app is on no strand; remove it, or name the app's strand in src/app.yaml",
         );
       } else if (
-        app.strand !== undefined &&
-        app.strand !== "none" &&
+        ((app.strand !== undefined && app.strand !== "none") || app.subject !== undefined) &&
         page.competencies === undefined &&
         page.recap === undefined
       ) {
         problems.at(
           yaml,
           [],
-          `competencies is missing; src/app.yaml names the strand ${app.strand}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead`,
+          `competencies is missing; src/app.yaml names the ${app.strand === undefined ? `subject ${app.subject}` : `strand ${app.strand}`}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead`,
         );
       }
       texts.check(yaml, ["title"], "plain");

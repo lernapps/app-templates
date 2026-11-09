@@ -1,5 +1,5 @@
 // The explainer's content schemas at build time: format 1 (explainer.v1.schema.json) and format 2
-// (explainer.v2.schema.json, which adds the strand of the app, the competencies of each page and recap pages, and refers to format 1
+// (explainer.v2.schema.json, which adds the strand or the subject of the app, the competencies of each page and recap pages, and refers to format 1
 // for everything else); the validators of their files (the app, a chapter, a page, a data file) by format, and the explainer's own words for the errors of the schema (what a quote or a bundled
 // image lacks, which fields a block type has, which an exercise of a question type); the general messages are
 // shared/content.ts's.
@@ -50,7 +50,7 @@ const validatorsV2: typeof validators = {
 export const formatOf = (app: unknown): Format => (isObject(app) && app["format"] !== undefined ? 2 : 1);
 
 /** The fields of format 2, which format 1 does not know. */
-const FORMAT_2_FIELDS = new Set(["format", "strand", "competencies", "recap"]);
+const FORMAT_2_FIELDS = new Set(["format", "strand", "subject", "competencies", "recap"]);
 /** The fields of format 2 on a page. */
 const PAGE_FIELDS = new Set(["competencies", "recap"]);
 
@@ -86,9 +86,6 @@ const questionFields = (type: string): Set<string> => {
 /** What `required` names as missing, with why it is needed. */
 function missing(property: string, object: unknown): string {
   const type = isObject(object) ? object["type"] : undefined;
-  if (property === "strand") {
-    return "strand is missing; name the strand of the learning map the app stays in, <subject>/<strand> (e.g. mathematik/stochastik), or none when the app is on no strand";
-  }
   if (property === "origin") return "origin is missing; a quote names who said or wrote it, where and when";
   if ((property === "licence" || property === "source") && type === "quote") {
     return `${property} is missing; a quote names its source and its licence`;
@@ -99,6 +96,10 @@ function missing(property: string, object: unknown): string {
   return `${property} is missing`;
 }
 
+/** What src/app.yaml of format 2 names: strand or subject, and what each means. */
+const STRAND_OR_SUBJECT =
+  "name either strand (one strand of the learning map, <subject>/<strand>, e.g. mathematik/stochastik, or none when the app is on no strand) or subject (a unit app across the strands of a subject whose learning map allows it, e.g. franzoesisch)";
+
 /** The explainer's own words for the errors of its schema: what a block or an exercise lacks, or may not have. */
 const describe: DescribeError = (error, path, value) => {
   switch (error.keyword) {
@@ -108,13 +109,21 @@ const describe: DescribeError = (error, path, value) => {
       const { lang, message } = addressProblem(value);
       return { message, ...(lang === undefined ? {} : { lang }) };
     }
+    case "oneOf": {
+      // src/app.yaml of format 2: strand or subject, exactly one
+      if (path.length !== 0 || !isObject(value) || !("chapters" in value)) return undefined;
+      if ("strand" in value && "subject" in value) {
+        return { path: ["subject"], message: `${STRAND_OR_SUBJECT}, not both; remove one of them` };
+      }
+      return { message: `strand or subject is missing; ${STRAND_OR_SUBJECT}` };
+    }
     case "not":
-      // a page with both: it practises competencies of the app's strand, or it repeats one the app does not practise
+      // a page with both: it practises competencies of the app's strand or subject, or it repeats one the app does not practise
       if (path.length !== 0 || !isObject(value) || !("recap" in value) || !("competencies" in value)) return undefined;
       return {
         path: ["recap"],
         message:
-          "a page has competencies or recap, never both: a page practises competencies of the app's strand, a recap page only repeats a competency the app does not practise; remove one of them",
+          "a page has competencies or recap, never both: a page practises competencies of the app's strand or subject, a recap page only repeats a competency the app does not practise; remove one of them",
       };
     case "const":
       // the format of the content: 2, or none at all for format 1
@@ -130,13 +139,13 @@ const describe: DescribeError = (error, path, value) => {
       if (PAGE_FIELDS.has(property) && "blocks" in value) {
         return {
           path: [property],
-          message: `${property} is a field of format 2; add format: 2 and the app's strand to src/app.yaml, or remove it`,
+          message: `${property} is a field of format 2; add format: 2 and the app's strand or subject to src/app.yaml, or remove it`,
         };
       }
       if (!PAGE_FIELDS.has(property) && "chapters" in value) {
         return {
           path: [property],
-          message: `${property} is a field of format 2; add format: 2 to src/app.yaml, with the app's strand`,
+          message: `${property} is a field of format 2; add format: 2 to src/app.yaml, with the app's strand or subject`,
         };
       }
       return undefined;
@@ -146,6 +155,12 @@ const describe: DescribeError = (error, path, value) => {
       if (path.length === 1 && path[0] === "strand") {
         return {
           message: `${String(value)} is no strand; write <subject>/<strand> with the ids of the learning map, e.g. mathematik/stochastik, or none`,
+        };
+      }
+      // the subject of a unit app: a subject id of the learning map
+      if (path.length === 1 && path[0] === "subject") {
+        return {
+          message: `${String(value)} is no subject; write the subject's id in the learning map, e.g. franzoesisch, without a strand`,
         };
       }
       // the competency a recap page repeats: <subject>/<competency>
@@ -170,6 +185,9 @@ const describe: DescribeError = (error, path, value) => {
         message: `${String(value)} is no YouTube id; give the 11 characters after watch?v= in the video's address, e.g. rkLmLaFHodo`,
       };
     case "required":
+      // strand and subject: the oneOf of src/app.yaml says what is missing, once
+      if (error.schemaPath.includes("/oneOf/")) return null;
+      return { message: missing(String(error.params["missingProperty"]), value) };
     case "dependentRequired":
       return { message: missing(String(error.params["missingProperty"]), value) };
     case "unevaluatedProperties": {

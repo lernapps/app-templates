@@ -142,9 +142,9 @@ requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-
 
 #### Page list for the catalog
 
-The build provides the catalog with the app's place on the learning map: its strand and its pages with their
-competencies. The catalog consumes it to place the app and checks the ids, which the app cannot know. Only format 2
-apps have one.
+The build provides the catalog with the app's place on the learning map: its strand (or the subject of a unit app) and
+its pages with their competencies. The catalog consumes it to place the app and checks the ids, which the app cannot
+know. Only format 2 apps have one.
 
 ```arc42
 :::interface

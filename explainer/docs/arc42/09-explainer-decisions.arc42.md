@@ -450,7 +450,9 @@ addresses: qg-understandable, qg-privacy, con-no-request-before-click
 ## Format 2 Places the App on the Learning Map
 
 The catalog's learning map shows which apps practise which competencies. The app owns where it belongs: it names one
-strand (or `none`, so that none forgets), and each page the competencies it practises. The build hands this to the
+strand (or `none`, so that none forgets), or the subject of a unit app that practises competencies of several strands
+of a subject whose map allows it (`explainerFocus: competency`, lernapps/apps#226); never both. Each page names the
+competencies it practises. The build hands this to the
 catalog (`if-page-list`); the catalog owns the subjects' ids and checks them. The fields are required, so this is a
 new format; format 1 stays valid for apps that do not move, and they are not on the map. Rejected: strand and
 competencies in the catalog entry (the pages would be listed twice); optional fields in format 1 (an app could forget
@@ -459,7 +461,7 @@ them).
 ```arc42
 :::decision
 id: dec-explainer-format-2
-title: Explainer format 2 names the app's strand and each page's competencies, and the build lists the pages
+title: Explainer format 2 names the app's strand or subject and each page's competencies, and the build lists the pages
 status: accepted
 date: 2026-11-03
 addresses: qg-checkable, con-runtime-unchanged
