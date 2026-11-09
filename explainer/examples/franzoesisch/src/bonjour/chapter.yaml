@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
+title: Bonjour !
+summary: Sich vorstellen und sagen, was auf dem Tisch steht.
+pages: [se-presenter, a-table]
+# The chapter's self-assessment: language tasks are asked without "Prüfen" and read as a whole at the end.
+selfAssessment:
+  pages:
+    - exercises:
+        - /bonjour/se-presenter/#vorstellen-uebersetzen
+        - /bonjour/se-presenter/#etre-konjugieren
+    - exercises:
+        - /bonjour/a-table/#tisch-beschriften
+        - /bonjour/a-table/#artikel-waehlen

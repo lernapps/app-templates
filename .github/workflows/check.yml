@@ -193,6 +193,28 @@ jobs:
       - run: npx lernapps check --pre-push
         working-directory: explainer
 
+  # The example of an explainer for a foreign language (explainer/examples/franzoesisch, dec-language-task): language
+  # tasks of each mode, write, gap, choice and table, in both directions, with a labelled figure labelled by writing,
+  # and a self-assessment with them. The build, the checks of the built app, the unit tests and the end-to-end tests
+  # of every explainer pass on it.
+  explainer-example-franzoesisch:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci # the runtime's build tools, for file:..
+      - run: npm install --no-audit --no-fund
+        working-directory: explainer
+      - run: rm -r src/app.yaml src/prozent src/components src/images && cp -r examples/franzoesisch/src/. src/
+        working-directory: explainer
+      - run: npx lernapps check --pre-push
+        working-directory: explainer
+
   # A page of another archetype, as the explainer will be, that embeds one question of each type through the quiz
   # runtime's per-question exports (test/fixtures/question-page): `lernapps check` with its end-to-end tests, with and
   # without JavaScript. It runs on the @lernapps/tooling version the quiz pins, which Renovate keeps current.
@@ -250,6 +272,7 @@ jobs:
         quiz-bilingual,
         quiz-material,
         explainer-fixtures,
+        explainer-example-franzoesisch,
         question-page,
         architecture,
         actionlint,

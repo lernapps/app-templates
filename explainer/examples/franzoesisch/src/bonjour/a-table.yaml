@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
+title: À table !
+description: "Sagen, was auf dem Tisch steht: Lebensmittel mit ihrem Artikel."
+competencies: [essen-und-lebensmittel]
+scope: |
+  Lebensmittel auf dem Tisch mit ihrem bestimmten Artikel: le pain (das Brot), la pomme (der Apfel), le fromage (der
+  Käse), l'eau (das Wasser). Jedes Nomen hat ein Geschlecht: le für männlich, la für weiblich, l' vor einem Vokal. Das
+  Geschlecht ist oft ein anderes als im Deutschen: la pomme, aber der Apfel.
+blocks:
+  - type: section
+    id: woerter
+    title: Was steht auf dem Tisch?
+    blocks:
+      - type: labelled-figure
+        image: images/tisch.svg
+        alt: Ein gedeckter Tisch mit einem Brot, einem Apfel, einem Stück Käse und einem Glas Wasser.
+        caption: Der Tisch mit seinen Wörtern.
+        source: eigene Zeichnung
+        licence: CC0-1.0
+        labels:
+          - { marker: A, x: 20, y: 40, text: "le pain – das Brot" }
+          - { marker: B, x: 45, y: 40, text: "la pomme – der Apfel" }
+          - { marker: C, x: 68, y: 45, text: "le fromage – der Käse" }
+          - { marker: D, x: 88, y: 25, text: "l'eau – das Wasser" }
+      - type: text
+        text: |
+          Jedes Nomen hat im Französischen ein Geschlecht: *le* steht vor männlichen Nomen, *la* vor weiblichen, und vor
+          einem Vokal wird beides zu *l'*. Das Geschlecht ist oft ein anderes als im Deutschen: *la pomme*, aber *der*
+          Apfel.
+
+          Hier geht es um *das* Brot auf dem Tisch. Wie du sagst, dass du *etwas* Brot isst (*du pain*), steht auf der
+          Lernlandkarte beim [Teilungsartikel](https://lernapps.net/apps/map/franzoesisch/c/teilungsartikel/).
+      - type: language-task
+        id: tisch-beschriften
+        languages: { source: de, target: fr }
+        material:
+          - type: labelled-figure
+            image: images/tisch.svg
+            alt: Ein gedeckter Tisch. A ein Brot, B ein Apfel, C ein Stück Käse, D ein Glas Wasser.
+            source: eigene Zeichnung
+            licence: CC0-1.0
+            legend: false
+            labels:
+              - { marker: A, x: 20, y: 40, text: le pain }
+              - { marker: B, x: 45, y: 40, text: la pomme }
+              - { marker: C, x: 68, y: 45, text: le fromage }
+              - { marker: D, x: 88, y: 25, text: "l'eau" }
+        task: Schreib zu jedem Buchstaben das französische Wort mit seinem Artikel.
+        form: { case: hint }
+        items:
+          - marker: A
+            target: le pain
+          - marker: B
+            target: la pomme
+            mistakes:
+              - answer: le pomme
+                message: "Pomme ist weiblich: la pomme."
+          - marker: C
+            target: le fromage
+          - marker: D
+            target: "l'eau"
+            mistakes:
+              - answer: "(la|le) eau"
+                message: "Vor einem Vokal wird le oder la zu l': l'eau."
+  - type: section
+    id: artikel
+    title: le, la oder l'?
+    blocks:
+      - type: language-task
+        id: artikel-waehlen
+        languages: { source: de, target: fr }
+        mode: choice
+        items:
+          - source: Das Brot ist gut.
+            target: "[Le] pain est bon."
+            distractors: [[La, "L'"]]
+          - source: Der Apfel ist rot.
+            target: "[La] pomme est rouge."
+            distractors: [[Le, "L'"]]
+          - source: Das Wasser ist kalt.
+            target: "[L']eau est froide."
+            distractors: [[Le, La]]
+      - type: language-task
+        id: artikel-schreiben
+        languages: { source: de, target: fr }
+        mode: gap
+        items:
+          - source: Ich esse den Käse.
+            target: "Je mange [le] fromage."
+          - source: Ich trinke das Wasser.
+            target: "Je bois [l']eau."
+            examples:
+              rejected: [["le "]]

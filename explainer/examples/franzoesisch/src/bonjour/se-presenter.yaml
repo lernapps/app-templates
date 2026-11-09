@@ -1,0 +1,112 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
+title: Sich vorstellen
+description: "Auf Französisch sagen, wie du heißt, wie alt du bist und woher du kommst."
+competencies: [begruessen-und-vorstellen]
+scope: |
+  Sich vorstellen mit drei Sätzen: Je m'appelle … (ich heiße), J'ai … ans (ich bin … Jahre alt, wörtlich: ich habe …
+  Jahre) und Je suis de … (ich komme aus …). Vor einem Vokal wird je zu j' (j'ai). Die Formen von être im Präsens:
+  je suis, tu es, il/elle est, nous sommes, vous êtes, ils/elles sont.
+blocks:
+  - type: section
+    id: saetze
+    title: Drei Sätze zum Vorstellen
+    blocks:
+      - type: text
+        text: |
+          Mit drei Sätzen stellst du dich vor:
+
+          - *Je m'appelle Léa.* – Ich heiße Léa.
+          - *J'ai douze ans.* – Ich bin zwölf Jahre alt. Auf Französisch *hast* du dein Alter: *avoir* (haben).
+          - *Je suis de Berlin.* – Ich komme aus Berlin.
+
+          Der dritte Satz braucht das Verb *être* (sein); alle seine Formen stehen unten, mehr dazu auf der Lernlandkarte
+          bei [être im Präsens](https://lernapps.net/apps/map/franzoesisch/c/verb-etre/).
+      - type: note
+        title: Achtung
+        blocks:
+          - type: text
+            text: |
+              Vor einem Vokal wird aus *je* ein *j'*: *j'ai*, nicht *je ai*. Und *s'appeler* schreibt sich mit
+              Apostroph: *je m'appelle*.
+      - type: language-task
+        id: vorstellen-uebersetzen
+        languages: { source: de, target: fr }
+        hint: Schau dir die drei Sätze oben noch einmal an.
+        items:
+          - source: Ich heiße Paul.
+            target: "Je (m'appelle|suis) Paul."
+            mistakes:
+              - answer: Je appelle Paul.
+                message: "Zu s'appeler gehört das m': je m'appelle."
+            examples:
+              accepted: ["Je suis Paul."]
+              rejected: ["je m'appelle Paul.", "Je m'appelle Paul"]
+          - source: Ich bin zwölf Jahre alt.
+            target: "J'ai douze ans."
+            mistakes:
+              - answer: "(Je|je) ai douze ans."
+                message: "Vor einem Vokal wird aus je ein j': j'ai."
+              - answer: "Je suis douze ans."
+                message: "Dein Alter hast du auf Französisch: avoir, also j'ai."
+          - source: Ich komme aus Berlin.
+            target: "Je suis de Berlin."
+  - type: section
+    id: verstehen
+    title: Verstehen
+    blocks:
+      - type: text
+        text: |
+          Manchmal ist es umgekehrt: Du liest Französisch und sagst, was es heißt.
+      - type: language-task
+        id: vorstellen-verstehen
+        languages: { source: de, target: fr }
+        direction: to-source
+        mode: gap
+        form: { punctuation: ok }
+        items:
+          - target: "Elle s'appelle Chloé."
+            source: "Sie [heißt] Chloé."
+          - target: "Nous avons treize ans."
+            source: "Wir sind [dreizehn|13] Jahre alt."
+  - type: section
+    id: etre
+    title: "Die Formen von être"
+    blocks:
+      - type: table
+        caption: "être (sein) im Präsens"
+        header: [Person, Form]
+        rows:
+          - [je, suis]
+          - [tu, es]
+          - [il / elle, est]
+          - [nous, sommes]
+          - [vous, êtes]
+          - [ils / elles, sont]
+      - type: language-task
+        id: etre-konjugieren
+        languages: { source: de, target: fr }
+        mode: table
+        form: { case: hint }
+        explanation: |
+          *être* ist unregelmäßig: Jede Person hat ihre eigene Form. Lern sie als Reihe: *suis, es, est, sommes, êtes,
+          sont*.
+        table:
+          caption: "être · présent"
+          header: [Person, Form]
+          rows:
+            - [je, suis]
+            - [tu, "[es]"]
+            - [il / elle, "[est]"]
+            - [nous, "[sommes]"]
+            - [vous, "[êtes]"]
+            - [ils / elles, "[sont]"]
+      - type: language-task
+        id: formen-bilden
+        languages: { source: de, target: fr }
+        items:
+          - cue: "avoir · je · présent"
+            target: "j'ai"
+            examples:
+              rejected: ["je ai", "jai"]
+          - cue: "être · nous · présent"
+            target: sommes
