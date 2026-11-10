@@ -62,6 +62,8 @@ Lernlandkarte beim [Teilungsartikel](https://lernapps.net/apps/map/franzoesisch/
 
 - Übung `artikel-schreiben` (unten)
 
+- Übung `apfel-erklaeren` (unten)
+
 ### Übung tisch-beschriften
 
 - Aufgabe: Schreib zu jedem Buchstaben das französische Wort mit seinem Artikel.
@@ -99,3 +101,18 @@ Lernlandkarte beim [Teilungsartikel](https://lernapps.net/apps/map/franzoesisch/
 2. Ich trinke das Wasser. → Je bois l'eau.
 - So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
 - Link: [../?via=tutor#artikel-schreiben](../?via=tutor#artikel-schreiben)
+
+### Übung apfel-erklaeren
+
+- Aufgabe: Sieh dir das Bild an. Schreibe in zwei Sätzen, wie das Wort auf Französisch heißt und warum davor *la* steht und nicht *le*.
+- Material:
+  - Bild: Ein roter Apfel mit Stiel und einem grünen Blatt auf einem Tisch. Bildunterschrift: Ein Apfel.
+- Antwortformat: in eigenen Worten eintippen oder auf Papier schreiben und das Blatt fotografieren
+- Eine gute Antwort enthält (P1, P2 … wie die App sie nennt):
+  - P1 (Inhalt) Das Wort heißt la pomme. Quelle: [/bonjour/a-table/#woerter](../../../bonjour/a-table/#woerter)
+  - P2 (Inhalt) Das Nomen ist weiblich, darum steht la davor. Im Deutschen ist es dagegen der Apfel. Quelle: [/bonjour/a-table/#woerter](../../../bonjour/a-table/#woerter)
+  - P3 (Form) Ganze Sätze mit einer Begründung (weil …, darum …).
+- Musterantwort: Der Apfel heißt auf Französisch *la pomme*. Das Nomen ist weiblich, darum steht *la* davor, obwohl es im Deutschen *der* Apfel heißt.
+- Tipp der App: Schau dir das Wort für den Apfel auf dem Tisch oben an.
+- So hilfst du: Die App zeigt die Punkte erst nach der Antwort; das Kind hakt selbst ab, welche seine Antwort enthält, und „es fehlen P2, P4“ nennt die anderen. Fehlt dir die Antwort, bitte das Kind, sie einzufügen oder das Foto seines Blatts anzuhängen. Prüf Punkt für Punkt, auch die abgehakten, und sag zuerst, was gelungen ist. Zu einem fehlenden Punkt stell eine Frage, die dorthin führt, und nenn seine Quelle. Verrate die Musterantwort nicht, bevor das Kind es noch einmal versucht hat. Zu einem Punkt der Form zeig an einem Satz des Kindes, wie es besser geht.
+- Link: [../?via=tutor#apfel-erklaeren](../?via=tutor#apfel-erklaeren)

@@ -86,6 +86,8 @@ Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschr
 
 - Übung `tauschen-erklaeren` (unten)
 
+- Übung `kuchenstueck-erklaeren` (unten)
+
 ### Übung prozentwert-ueben
 
 - Aufgabe: „Ein Fahrrad kostet {G} €. Im Angebot gibt es {p} % Rabatt. Wie viel Euro sparst du?“
@@ -267,3 +269,19 @@ Nr. | G | p | Lösung | F1 | F2
 - Tipp der App: Setz beide Male in die Formel ein und vergleich, was im Zähler steht.
 - So hilfst du: Die App zeigt die Punkte erst nach der Antwort; das Kind hakt selbst ab, welche seine Antwort enthält, und „es fehlen P2, P4“ nennt die anderen. Fehlt dir die Antwort, bitte das Kind, sie einzufügen oder das Foto seines Blatts anzuhängen. Prüf Punkt für Punkt, auch die abgehakten, und sag zuerst, was gelungen ist. Zu einem fehlenden Punkt stell eine Frage, die dorthin führt, und nenn seine Quelle. Verrate die Musterantwort nicht, bevor das Kind es noch einmal versucht hat. Zu einem Punkt der Form zeig an einem Satz des Kindes, wie es besser geht.
 - Link: [../?via=tutor#tauschen-erklaeren](../?via=tutor#tauschen-erklaeren)
+
+### Übung kuchenstueck-erklaeren
+
+- Aufgabe: Ein Kuchen wiegt 800 g. Auf dem Bild sind zwei der acht gleich großen Stücke gefärbt. Erkläre in zwei bis vier Sätzen, wie viel Prozent das sind und wie viel Gramm.
+- Material:
+  - Bild: Ein runder Kuchen, in acht gleich große Stücke geschnitten. Zwei nebeneinanderliegende Stücke sind gefärbt. Bildunterschrift: Ein Kuchen in acht gleiche Stücke geschnitten, zwei Stücke sind gefärbt.
+- Antwortformat: in eigenen Worten eintippen oder auf Papier schreiben und das Blatt fotografieren
+- Eine gute Antwort enthält (P1, P2 … wie die App sie nennt):
+  - P1 (Inhalt) Zwei von acht gleichen Stücken sind ein Viertel des Kuchens, also 25 %. Quelle: [/prozent/prozentwert/#warum](../../../prozent/prozentwert/#warum)
+  - P2 (Inhalt) Der Kuchen ist der Grundwert, 800 g sind 100 %. Quelle: [/prozent/prozentwert/#regel](../../../prozent/prozentwert/#regel)
+  - P3 (Inhalt) Der Prozentwert ist 800 · 25 : 100 = 200, also 200 g. Quelle: [/prozent/prozentwert/#regel](../../../prozent/prozentwert/#regel)
+  - P4 (Form) Ganze Sätze mit einer Begründung (weil …, darum …).
+- Musterantwort: Zwei von acht gleich großen Stücken sind ein Viertel, also 25 %. Der ganze Kuchen mit 800 g ist der Grundwert und entspricht 100 %. Der Prozentwert ist $W = \frac{800 \cdot 25}{100} = 200$, die beiden Stücke wiegen also zusammen 200 g.
+- Tipp der App: Zähle, wie viele gleiche Stücke gefärbt sind und wie viele es insgesamt gibt.
+- So hilfst du: Die App zeigt die Punkte erst nach der Antwort; das Kind hakt selbst ab, welche seine Antwort enthält, und „es fehlen P2, P4“ nennt die anderen. Fehlt dir die Antwort, bitte das Kind, sie einzufügen oder das Foto seines Blatts anzuhängen. Prüf Punkt für Punkt, auch die abgehakten, und sag zuerst, was gelungen ist. Zu einem fehlenden Punkt stell eine Frage, die dorthin führt, und nenn seine Quelle. Verrate die Musterantwort nicht, bevor das Kind es noch einmal versucht hat. Zu einem Punkt der Form zeig an einem Satz des Kindes, wie es besser geht.
+- Link: [../?via=tutor#kuchenstueck-erklaeren](../?via=tutor#kuchenstueck-erklaeren)
