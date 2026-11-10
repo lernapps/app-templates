@@ -145,7 +145,9 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
       const { block } = item;
       const html = [
         `<div class="explainer-language-text">${languageTaskText(block, lang, context.resolve)}</div>`,
-        block.material === undefined ? "" : renderMaterial(materialIn(block.material, lang), context.material),
+        block.material === undefined
+          ? ""
+          : `<div class="question-material">${renderMaterial(materialIn(block.material, lang), context.material)}</div>`,
       ].join("");
       return { item, data: { ...data, id: item.key }, html };
     }

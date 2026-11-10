@@ -188,6 +188,13 @@ blocks:
         id: erklaeren
         task:
           { de: "Erkläre in zwei Sätzen, was diese Seite zeigt.", en: "Explain in two sentences what this page shows." }
+        material:
+          - type: figure
+            image: images/umriss.svg
+            alt: { de: "Ein Umriss als Hilfe zur Aufgabe", en: "An outline to help with the task" }
+            caption: { de: "Der Umriss hilft beim Erklären.", en: "The outline helps to explain." }
+            source: { de: "eigene Zeichnung", en: "own drawing" }
+            licence: CC0-1.0
         points:
           - text: { de: "Nennt die Grundlagen der Seite.", en: "Names the basics of the page." }
             source: /zahlen/zahlen-01/#grundlagen

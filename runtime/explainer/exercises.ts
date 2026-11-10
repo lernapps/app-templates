@@ -496,7 +496,9 @@ function languageTaskExercise(
     `<div class="explainer-exercise explainer-language-task" id="${block.id}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
     `<div class="explainer-language-text">${languageTaskText(block, lang, resolve)}</div>`,
-    block.material === undefined ? "" : renderMaterial(materialIn(block.material, lang), material),
+    ...(block.material === undefined
+      ? []
+      : [`<div class="question-material">${renderMaterial(materialIn(block.material, lang), material)}</div>`]),
     block.hint === undefined
       ? ""
       : `<details class="explainer-hint"><summary>${plain(message(lang, "hint"))}</summary>${renderMarkdown(inLanguage(block.hint, lang), resolve)}</details>`,
@@ -530,7 +532,13 @@ export function exerciseData(
  * An open task in `lang`: the task, the points of a good answer with a link to each one's source, and the model answer
  * under "Lösung", which is all the page shows without JavaScript; with JavaScript the learner answers first (explainer.ts).
  */
-function openTaskExercise(block: OpenTask, lang: string, resolve: (href: string) => string, storage: string): string {
+function openTaskExercise(
+  block: OpenTask,
+  lang: string,
+  resolve: (href: string) => string,
+  storage: string,
+  material: MaterialContext,
+): string {
   const data = openTaskData(block, lang, resolve);
   const points = data.points.map((point) => {
     const where =
@@ -543,6 +551,9 @@ function openTaskExercise(block: OpenTask, lang: string, resolve: (href: string)
     `<div class="explainer-exercise explainer-open-task" id="${block.id}" data-storage="${plain(storage)}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "openTaskLabel"))}</p>`,
     `<div class="explainer-open-task-text">${data.task}</div>`,
+    ...(block.material === undefined
+      ? []
+      : [`<div class="question-material">${renderMaterial(materialIn(block.material, lang), material)}</div>`]),
     data.hint === undefined
       ? ""
       : `<details class="explainer-hint"><summary>${plain(message(lang, "hint"))}</summary>${data.hint}</details>`,
@@ -611,7 +622,7 @@ export function renderExercise(
   storage = "explainer",
 ): string {
   if (block.type === "generated") return generatedExercise(block, lang, data, resolve);
-  if (block.type === "open-task") return openTaskExercise(block, lang, resolve, storage);
+  if (block.type === "open-task") return openTaskExercise(block, lang, resolve, storage, material);
   if (block.type === "language-task") return languageTaskExercise(block, lang, resolve, material);
   return questionExercise(block, lang, material);
 }

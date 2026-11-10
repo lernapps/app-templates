@@ -28,6 +28,8 @@ export interface OpenTask {
   type: "open-task";
   id: string;
   task: Text;
+  /** Content that helps to solve the task: shown between the task and the answer, as a question's material. */
+  material?: readonly MaterialBlock<Text>[];
   /** How the learner may answer; both when not given. */
   answer?: readonly ("text" | "photo")[];
   points: readonly OpenTaskPoint[];
