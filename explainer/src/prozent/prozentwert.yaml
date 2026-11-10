@@ -118,3 +118,27 @@ blocks:
           $\frac{50 \cdot 20}{100} = 10$, für 50 % von 20 € ist es $\frac{20 \cdot 50}{100} = 10$. Weil man beim
           Malnehmen die Zahlen tauschen darf, kommt beide Male 10 € heraus.
         hint: Setz beide Male in die Formel ein und vergleich, was im Zähler steht.
+      - type: open-task
+        id: kuchenstueck-erklaeren
+        task: Ein Kuchen wiegt 800 g. Auf dem Bild sind zwei der acht gleich großen Stücke gefärbt. Erkläre in zwei bis vier Sätzen, wie viel Prozent das sind und wie viel Gramm.
+        material:
+          - type: figure
+            image: images/kuchenstueck.svg
+            alt: Ein runder Kuchen, in acht gleich große Stücke geschnitten. Zwei nebeneinanderliegende Stücke sind gefärbt.
+            caption: Ein Kuchen in acht gleiche Stücke geschnitten, zwei Stücke sind gefärbt.
+            source: eigene Zeichnung
+            licence: CC0-1.0
+        points:
+          - text: Zwei von acht gleichen Stücken sind ein Viertel des Kuchens, also 25 %.
+            source: /prozent/prozentwert/#warum
+          - text: Der Kuchen ist der Grundwert, 800 g sind 100 %.
+            source: /prozent/prozentwert/#regel
+          - text: "Der Prozentwert ist 800 · 25 : 100 = 200, also 200 g."
+            source: /prozent/prozentwert/#regel
+          - text: Ganze Sätze mit einer Begründung (weil …, darum …).
+            kind: form
+        solution: |
+          Zwei von acht gleich großen Stücken sind ein Viertel, also 25 %. Der ganze Kuchen mit 800 g ist der
+          Grundwert und entspricht 100 %. Der Prozentwert ist $W = \frac{800 \cdot 25}{100} = 200$, die beiden
+          Stücke wiegen also zusammen 200 g.
+        hint: Zähle, wie viele gleiche Stücke gefärbt sind und wie viele es insgesamt gibt.

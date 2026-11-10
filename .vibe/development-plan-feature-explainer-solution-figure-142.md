@@ -116,6 +116,7 @@ Vorbild ist die Frage: `material` ist eine Liste von `materialBlock`, steht zwis
 - [x] Angleichung: `language-task` zeigt sein Material im selben Container `question-material` (Seite und Selbsteinschätzung), mit Test
 - [x] Rebase auf `main` (Konflikte in `exercises.ts` und `tutor.ts` gelöst), ein Commit, Force-Push
 - [x] Alle 537 Tests, `vp check`, `vue-tsc` grün
+- [x] Beispiele (Wunsch des Owners): `open-task` mit Material in `explainer/src/prozent/prozentwert.yaml` (Kuchenstück, `images/kuchenstueck.svg`) und in `explainer/examples/franzoesisch` (Apfel, `images/pomme.svg`); `lernapps check` bestanden
 
 
 ---

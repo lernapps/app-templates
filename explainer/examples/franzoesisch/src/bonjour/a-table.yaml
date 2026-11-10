@@ -91,3 +91,24 @@ blocks:
             target: "Je bois [l']eau."
             examples:
               rejected: [["le "]]
+      - type: open-task
+        id: apfel-erklaeren
+        task: Sieh dir das Bild an. Schreibe in zwei Sätzen, wie das Wort auf Französisch heißt und warum davor *la* steht und nicht *le*.
+        material:
+          - type: figure
+            image: images/pomme.svg
+            alt: Ein roter Apfel mit Stiel und einem grünen Blatt auf einem Tisch.
+            caption: Ein Apfel.
+            source: eigene Zeichnung
+            licence: CC0-1.0
+        points:
+          - text: Das Wort heißt la pomme.
+            source: /bonjour/a-table/#woerter
+          - text: Das Nomen ist weiblich, darum steht la davor. Im Deutschen ist es dagegen der Apfel.
+            source: /bonjour/a-table/#woerter
+          - text: Ganze Sätze mit einer Begründung (weil …, darum …).
+            kind: form
+        solution: |
+          Der Apfel heißt auf Französisch *la pomme*. Das Nomen ist weiblich, darum steht *la* davor, obwohl es im
+          Deutschen *der* Apfel heißt.
+        hint: Schau dir das Wort für den Apfel auf dem Tisch oben an.
