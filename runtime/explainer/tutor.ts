@@ -34,6 +34,7 @@ interface Words {
   answerFormat: string;
   solution: string;
   explanation: string;
+  material: string;
   hint: string;
   mistakes: string;
   /** The typical mistakes of an exercise component: descriptions for the tutor, not the app's messages. */
@@ -77,6 +78,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     answerFormat: "Antwortformat",
     solution: "Lösung",
     explanation: "Erklärung",
+    material: "Material",
     hint: "Tipp der App",
     mistakes: "Typische Fehler und was die App sagt",
     componentMistakes: "Typische Fehler (die Meldung der App passt zu einem davon)",
@@ -143,6 +145,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     answerFormat: "Answer format",
     solution: "Solution",
     explanation: "Explanation",
+    material: "Material",
     hint: "The app's hint",
     mistakes: "Typical mistakes and what the app says",
     componentMistakes: "Typical mistakes (the app's message fits one of them)",
@@ -257,16 +260,30 @@ function generatedPart(spec: Generated, lang: string, words: Words): string[] {
   return [`- ${words.answerFormat}: ${words.formats[kind.kind === "number" ? "number" : kind.kind]}${unit}`];
 }
 
+/** The material of an open task as a tutor reads it (figures by alt text and caption, tables row by row), if it has any. */
+function materialLines(site: Site, block: OpenTask, lang: string, words: Words): string[] {
+  if (block.material === undefined) return [];
+  const content = contentLines(
+    site,
+    block.material,
+    lang,
+    (text) => text,
+    (title) => title,
+  ).filter((text) => text !== "");
+  return [`- ${words.material}:`, ...content.map((text) => `  - ${text}`)];
+}
+
 /**
  * An open task in `lang`: the task, how the learner answers, the points of a good answer as P1, P2 … (each with its
  * kind and, for content, a link to its source from the tutor page, `base` up to the language tree), the model answer,
  * the hint (their Markdown as written, formulas $…$ kept), and how to help.
  */
-function openTaskPart(block: OpenTask, lang: string, words: Words, base: string): string[] {
+function openTaskPart(site: Site, block: OpenTask, lang: string, words: Words, base: string): string[] {
   const ways = block.answer ?? ["text", "photo"];
   const way = ways.includes("text") && ways.includes("photo") ? "both" : ways.includes("photo") ? "photo" : "text";
   const lines = [
     `- ${words.task}: ${line(inLanguage(block.task, lang))}`,
+    ...materialLines(site, block, lang, words),
     `- ${words.answerFormat}: ${words.answerWays[way]}`,
     `- ${words.points}:`,
     ...block.points.map((point, index) => {
@@ -485,7 +502,7 @@ export function exercisePart(
       };
     case "open-task":
       // from the tutor page, <chapter>/<page>/tutor/, three levels up is the language tree
-      return { id: block.id, type: "open-task", lines: openTaskPart(block, lang, words, "../../../") };
+      return { id: block.id, type: "open-task", lines: openTaskPart(site, block, lang, words, "../../../") };
     case "language-task":
       return {
         id: block.id,

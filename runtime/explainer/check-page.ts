@@ -237,6 +237,7 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
       case "open-task":
         checkExerciseId(check, block.id, at);
         texts.check(yaml, [...at, "task"], "markdown");
+        block.material?.forEach((material, index) => checkMaterialBlock(check, material, [...at, "material", index]));
         texts.check(yaml, [...at, "solution"], "markdown");
         if (block.hint !== undefined) texts.check(yaml, [...at, "hint"], "markdown");
         block.points.forEach((point, index) => {

@@ -1018,6 +1018,14 @@
           "description": "The task, restricted Markdown, e.g. Erkläre, warum … Say how long the answer should be.",
           "$ref": "#/$defs/markdown"
         },
+        "material": {
+          "description": "Optional: content that the task shows, between its text and the learner's answer: prose, formulas, figures and labelled figures (bundled images in src/images/, or drawn from data), tables, quotations and code. It helps to solve the task, e.g. the picture of a vocabulary item to describe. A figure has an alternative text and a caption, and an image its source and licence. The build checks it as it checks the material of a question.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "urn:lernapps:schema:blocks.v1#/$defs/materialBlock"
+          }
+        },
         "answer": {
           "description": "How the learner may answer: typed (text), on paper with a photo (photo), or both, the learner's choice (the default).",
           "type": "array",
