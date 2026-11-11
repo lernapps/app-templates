@@ -1376,10 +1376,10 @@ textarea.explainer-language-field {
   color: var(--page-wrong);
 }
 
+/* The table as wide as the text, never wider: its fields take the width of their cell, not that of the longest
+   answer, and a long word breaks, so that it fits at 360 px without scrolling sideways (#151). */
 .explainer-language-table {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
+  width: 100%;
   border-collapse: collapse;
   margin: 0 0 0.75rem;
 }
@@ -1390,6 +1390,13 @@ textarea.explainer-language-field {
   border-bottom: 1px solid var(--page-border);
   text-align: left;
   vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+.explainer-language-table .explainer-language-field {
+  width: 100%;
+  min-width: 4ch;
+  box-sizing: border-box;
 }
 
 .explainer-language-chars-toggle {

@@ -8,6 +8,7 @@ import { Ajv2020 } from "ajv/dist/2020.js";
 import { describe, expect, test } from "vite-plus/test";
 import {
   isCorrect,
+  matchedPairs,
   messages,
   QUESTION_REF,
   questionId,
@@ -21,6 +22,7 @@ import {
   wrongReasons,
   type Question,
 } from "../runtime/shared/questions/index.ts";
+import en from "../runtime/shared/questions/messages/en.json" with { type: "json" };
 import { renderQuiz } from "../runtime/quiz/render.ts";
 import { parseBank, problems } from "../runtime/quiz/validate.ts";
 
@@ -329,5 +331,28 @@ describe("why a wrong answer is wrong", () => {
     expect(wrongReasons({ ...item, hint: "Der höchste Berg kommt zuletzt." }, wrongAnswer(item))).toEqual([
       { text: "Der höchste Berg kommt zuletzt." },
     ]);
+  });
+});
+
+describe("a matching answer, pair by pair (#151)", () => {
+  const item = questions.find((entry) => entry.type === "matching") as Question;
+  if (item.type !== "matching") throw new Error("the fixture bank has a matching question");
+
+  test("each pair right or wrong, without the right entry", () => {
+    expect(matchedPairs(item, rightAnswer(item))).toEqual(item.pairs.map(() => true));
+    const swapped = item.pairs.map((_pair, index) => (index < 2 ? 1 - index : index));
+    expect(matchedPairs(item, swapped)).toEqual(item.pairs.map((_pair, index) => index >= 2));
+  });
+
+  test("none for another type or an answer of the wrong shape", () => {
+    expect(matchedPairs(item, 0)).toEqual([]);
+    expect(matchedPairs(questions.find((entry) => entry.type === "single-choice") as Question, [0])).toEqual([]);
+  });
+
+  test("the feedback says how many pairs are right, in every language", () => {
+    expect(messages.pairsRight).toContain("{right}");
+    expect(messages.pairsRight).toContain("{total}");
+    expect(en.pairsRight).toContain("{right}");
+    expect(en.pairsRight).toContain("{total}");
   });
 });
