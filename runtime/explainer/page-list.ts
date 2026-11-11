@@ -5,7 +5,7 @@
 // a subject, its subject instead, and the content pages in the order of the app, each with its address relative to the
 // app's root as the app links it, its title as a text (a string, or by language) and, unless the strand is none, the
 // competencies it practises; a recap page names instead the competency it repeats (recap: <subject>/<competency>),
-// with any strand or subject.
+// with any strand or subject. A page that comes before some of its prerequisites on purpose lists them in ahead.
 import { contentPages } from "./routes.ts";
 import type { Site, Text } from "./content.ts";
 
@@ -19,7 +19,7 @@ export interface PageList {
   strand?: string;
   /** The subject of a unit app; never with strand. */
   subject?: string;
-  pages: { path: string; title: Text; competencies?: readonly string[]; recap?: string }[];
+  pages: { path: string; title: Text; competencies?: readonly string[]; ahead?: readonly string[]; recap?: string }[];
 }
 
 /** The list of the pages of `site`; undefined for an app of format 1, which has none. */
@@ -36,7 +36,7 @@ export function pageList(site: Site): PageList | undefined {
         ? { recap: page.recap }
         : strand === "none" || page.competencies === undefined
           ? {}
-          : { competencies: page.competencies }),
+          : { competencies: page.competencies, ...(page.ahead !== undefined ? { ahead: page.ahead } : {}) }),
     })),
   };
 }

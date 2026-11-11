@@ -424,6 +424,19 @@ describe("the page list for the catalog", () => {
     expect(existsSync(join(dist, "en", PAGE_LIST))).toBe(false);
   }, 30_000);
 
+  test("a page ahead of a prerequisite on purpose carries ahead in the list", async () => {
+    const root = v2();
+    edit(root, "kapitel/eins.yaml", "competencies: [laplace]", "competencies: [laplace]\nahead: [baumdiagramm]");
+    expect(problemsOf(root)).toEqual([]);
+    const dist = await built(root);
+    expect(JSON.parse(readFileSync(join(dist, PAGE_LIST), "utf8")).pages[0]).toEqual({
+      path: "kapitel/eins/",
+      title: { de: "Eins", en: "One" },
+      competencies: ["laplace"],
+      ahead: ["baumdiagramm"],
+    });
+  }, 30_000);
+
   test("format 2 with a subject writes subject instead of strand", async () => {
     const dist = await built(unit());
     expect(JSON.parse(readFileSync(join(dist, PAGE_LIST), "utf8"))).toEqual({
