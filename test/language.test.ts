@@ -1,5 +1,6 @@
 // The check of a language task (runtime/explainer/language.ts): variants and gaps as written, what is no mistake, the
 // classes of mistakes of form and how the task counts them (strict by default), and the typical mistakes.
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vite-plus/test";
 import {
   check,
@@ -249,6 +250,26 @@ describe("the units of a task", () => {
     expect(checkUnit(unit!, ["le"], "fr").state).toBe("falsch");
   });
 
+  test("a choice that is a typical mistake says so, as a gap does (#151)", () => {
+    const [unit] = unitsOf({
+      type: "language-task",
+      id: "t",
+      languages: { source: "de", target: "fr" },
+      mode: "choice",
+      items: [
+        {
+          source: "die Bluse",
+          target: "le ch[e]misier",
+          distractors: [["u", "au"]],
+          mistakes: [{ answer: "u", message: "Im Französischen schreibt man hier e." }],
+        },
+      ],
+    });
+    expect(checkUnit(unit!, ["u"], "fr").verdicts).toEqual([{ state: "falsch", classes: [], words: [], mistake: 0 }]);
+    expect(checkUnit(unit!, ["au"], "fr").verdicts).toEqual([{ state: "falsch", classes: [], words: [] }]);
+    expect(checkUnit(unit!, ["e"], "fr").verdicts).toEqual([{ state: "richtig", classes: [], words: [] }]);
+  });
+
   test("a row of a table: a slot per gap, its solution with every cell", () => {
     const units = unitsOf({
       type: "language-task",
@@ -276,5 +297,26 @@ describe("the units of a task", () => {
     });
     expect(unit?.prompt).toEqual({ kind: "text", text: "Je m'appelle Paul.", lang: "fr" });
     expect(unit?.slots[0]?.allowed).toEqual(["Ich heiße Paul.", "Ich bin Paul."]);
+  });
+});
+
+describe("the table of a language task fits at 360 px (#151)", () => {
+  const css = readFileSync(new URL("../runtime/explainer/explainer.css", import.meta.url), "utf8");
+  const rule = (selector: string) => {
+    const start = css.indexOf(`\n${selector} {`);
+    expect(start, `a rule for ${selector}`).toBeGreaterThan(-1);
+    return css.slice(start, css.indexOf("}", start));
+  };
+
+  test("the table is as wide as the text and does not scroll sideways", () => {
+    const table = rule(".explainer-language-table");
+    expect(table).toContain("width: 100%");
+    expect(table).not.toMatch(/overflow-x|display: block/);
+  });
+
+  test("its fields take the width of their cell, not that of the longest answer", () => {
+    const field = rule(".explainer-language-table .explainer-language-field");
+    expect(field).toContain("width: 100%");
+    expect(field).toContain("box-sizing: border-box");
   });
 });

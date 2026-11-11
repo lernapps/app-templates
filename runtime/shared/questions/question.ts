@@ -327,6 +327,15 @@ export function wrongReasons(question: Question, answer: Answer): { option?: str
   return question.hint === undefined ? [] : [{ text: question.hint }];
 }
 
+/**
+ * For each pair of a matching question, whether the learner's answer matches it: what a retry may mark without giving
+ * the right entry away. None for another question type or an answer of the wrong shape.
+ */
+export const matchedPairs = (question: Question, answer: Answer): boolean[] =>
+  question.type === "matching" && isIndexList(answer)
+    ? question.pairs.map((_pair, index) => answer[index] === index)
+    : [];
+
 /** Whether a multiple-choice answer chose only right options, but not all of them. */
 export const missesRight = (question: Question, answer: Answer): boolean =>
   question.type === "multiple-choice" &&

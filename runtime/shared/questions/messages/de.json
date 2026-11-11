@@ -7,6 +7,7 @@
   "tryAgain": "Versuche es noch einmal oder lass dir die Lösung zeigen.",
   "lookAgain": "Lies dazu noch einmal den Text über der Aufgabe.",
   "missingRight": "Es fehlt noch mindestens eine richtige Antwort.",
+  "pairsRight": "Richtig zugeordnet: {right} von {total}. Ändere die markierten Einträge.",
   "showSolution": "Lösung",
   "true": "Stimmt",
   "false": "Stimmt nicht",

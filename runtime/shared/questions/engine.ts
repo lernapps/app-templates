@@ -2,7 +2,8 @@
 // has rendered it (render.ts); startQuestion makes it live. A complete answer gets its feedback, right or wrong, with
 // the most specific reason of a wrong answer; then the solution shows: the background of every option with the right
 // ones and the learner's choice marked, the explanation and further reading. A question can also be tried again
-// (retry), as an exercise is. The question's own texts are in the page's language (the option `lang`, German by
+// (retry), as an exercise is; a wrong matching then marks its wrong pairs and says how many are right, without the
+// right entries. The question's own texts are in the page's language (the option `lang`, German by
 // default). The browser imports only this module of the questions (@lernapps/app-templates/questions/engine), which
 // has no build-time code: its types and the id of a question. Used on the element that renderQuestion rendered:
 //
@@ -15,6 +16,7 @@ import {
   hash,
   isComplete,
   isCorrect,
+  matchedPairs,
   missesRight,
   shuffled,
   wrongReasons,
@@ -141,6 +143,26 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
   let answered = false;
   let last: Answer | undefined;
 
+  /** Marks the pairs of a matching answer that are wrong and says how many are right; unmarks a pair on a change. */
+  const markPairs = (answer: Answer) => {
+    const matched = matchedPairs(question, answer);
+    if (matched.length === 0) return;
+    for (const select of form.querySelectorAll<HTMLSelectElement>("select[data-left]")) {
+      const wrong = matched[Number(select.dataset["left"])] === false;
+      select.closest("li")?.classList.toggle("question-pair-wrong", wrong);
+      if (wrong) select.setAttribute("aria-invalid", "true");
+      else select.removeAttribute("aria-invalid");
+    }
+    const right = matched.filter(Boolean).length;
+    line(t("pairsRight", { right, total: matched.length }));
+  };
+  form.addEventListener("change", (event) => {
+    const select = event.target;
+    if (!(select instanceof HTMLSelectElement) || select.dataset["left"] === undefined) return;
+    select.closest("li")?.classList.remove("question-pair-wrong");
+    select.removeAttribute("aria-invalid");
+  });
+
   /** The solution: every option's background, the right ones marked, the learner's last choice marked too. */
   const reveal = () => {
     answered = true;
@@ -190,6 +212,9 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
       const missing = missesRight(question, answer);
       if (diagnosis === undefined && missing) line(t("missingRight"));
       if (options.retry === true && reasons.length === 0 && !missing) line(t("lookAgain"));
+      // a matching question that may be tried again: how many pairs are right, and the wrong ones marked; the solution
+      // stays hidden, so the right entries are not given away
+      if (options.retry === true) markPairs(answer);
     }
     const told = said.join(" ");
     if (!right && options.retry === true) line(t("tryAgain"));

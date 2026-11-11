@@ -230,6 +230,13 @@ function touchedWords(input: string, answer: string): string[] {
 
 // --- the check -----------------------------------------------------------------------------------------------------
 
+/** The index of the typical mistake `input` is, as written with its variants; undefined when it is none. */
+export function mistakeOf(input: string, mistakes: readonly string[]): number | undefined {
+  const written = normalize(input);
+  const index = mistakes.findIndex((mistake) => variantsOf(mistake).some((variant) => normalize(variant) === written));
+  return index === -1 ? undefined : index;
+}
+
 /**
  * The verdict on `input` for an answer with the variants `allowed` (in the language `lang`), the typical mistakes
  * `mistakes` (each as written, with variants), counting mistakes of form as `form` says.
@@ -260,8 +267,8 @@ export function check(
       classes: best.rule === "ok" ? [] : best.classes,
       words: best.rule === "ok" ? [] : touchedWords(input, best.answer),
     };
-  const index = mistakes.findIndex((mistake) => variantsOf(mistake).some((variant) => normalize(variant) === written));
-  if (index !== -1) return { state: "falsch", classes: [], words: [], mistake: index };
+  const index = mistakeOf(input, mistakes);
+  if (index !== undefined) return { state: "falsch", classes: [], words: [], mistake: index };
   if (best !== undefined) return { state: "falsch", classes: best.classes, words: touchedWords(input, best.answer) };
   return { state: "falsch", classes: [], words: [] };
 }
@@ -416,8 +423,17 @@ export function checkUnit(
 ): { state: State; verdicts: Verdict[] } {
   const verdicts = unit.slots.map((slot, index) => {
     const input = inputs[index] ?? "";
-    if (slot.options !== undefined)
-      return { state: slot.allowed.includes(input) ? "richtig" : "falsch", classes: [], words: [] } satisfies Verdict;
+    if (slot.options !== undefined) {
+      // a choice is right or wrong as chosen; a wrong one may be a typical mistake, as in a gap
+      if (slot.allowed.includes(input)) return { state: "richtig", classes: [], words: [] } satisfies Verdict;
+      const mistake = mistakeOf(input, slot.mistakes);
+      return {
+        state: "falsch",
+        classes: [],
+        words: [],
+        ...(mistake === undefined ? {} : { mistake }),
+      } satisfies Verdict;
+    }
     return check(input, slot.allowed, lang, form, slot.mistakes);
   });
   return { state: combined(verdicts.map((verdict) => verdict.state)), verdicts };
