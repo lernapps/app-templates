@@ -145,6 +145,15 @@
             "$ref": "#/$defs/id"
           }
         },
+        "ahead": {
+          "description": "Prerequisites of this page's competencies (requires on the learning map) that the page comes before on purpose, e.g. greetings learnt as fixed phrases before the grammar behind them. The app practises each of them on another page; then the catalog and lernapps check do not check their order. Only with competencies.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
         "recap": {
           "description": "Makes the page a recap page: it repeats a competency that the app's competencies require but the app does not practise, e.g. physik/gewichtskraft-berechnen. Use it instead of competencies, also with strand: none. A recap page has descriptive blocks only, no exercise; the link to the competency on the learning map is added for you.",
           "$ref": "#/$defs/competency"
@@ -155,6 +164,9 @@
         "scope": {
           "$ref": "urn:lernapps:schema:explainer.v1#/$defs/page/properties/scope"
         }
+      },
+      "dependentRequired": {
+        "ahead": ["competencies"]
       },
       "not": {
         "required": ["competencies", "recap"],
