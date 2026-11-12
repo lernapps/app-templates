@@ -171,7 +171,7 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     im Build zum Lesen (neue Abhängigkeit von `app-templates`, Lizenz MIT).
   - Offen: Hörtest der Bitraten durch den Owner (24/32/48 kbit/s); MP3 hat am Anfang und Ende eine kurze Lücke
     (Encoder-Verzögerung), für Diktat unkritisch, bei Wiederholung hörbar prüfen.
-- [ ] Metadatenschema der Audiodatei: Felder (KI-generiert, Modell + Version, Stimme, Lizenz der Ausgabe, Namensnennung
+- [x] Metadatenschema der Audiodatei (festgelegt, Option A): Felder (KI-generiert, Modell + Version, Stimme, Lizenz der Ausgabe, Namensnennung
   der Datenquelle, gesprochener Text, Sprache; keine Freigabe, die kommt aus Git), Bibliothek zum Lesen im Build
   (`music-metadata`, siehe oben). **Entwurf, vom Owner zu bestätigen:**
 
@@ -181,17 +181,20 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
   | `TCOP` | Lizenz der Datei, `CC BY-SA 4.0` | ja |
   | `TDRC` | Erzeugungsdatum | ja |
   | `TXXX:lernapps-synthetic` | `true` bei KI-Stimme; `false` bei menschlicher Aufnahme (später) | ja |
+  | `TXXX:lernapps-digital-source-type` | IPTC-Wert, bei KI-Stimme `http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia` | ja |
   | `TXXX:lernapps-model` | Modell mit Version, z. B. `kokoro-v1.0` | bei synthetisch |
   | `TXXX:lernapps-voice` | Stimme, z. B. `ff_siwis` | bei synthetisch |
-  | `TXXX:lernapps-attribution` | geforderte Namensnennung der Datenquelle, z. B. `SIWIS, CC BY 4.0` | wenn die Stimme sie verlangt |
+  | `TXXX:lernapps-generator` | Werkzeug und Version, das die Datei erzeugt hat (das „KI-System“ des Codes) | bei synthetisch |
+  | `TXXX:lernapps-attribution` | geforderte Namensnennung der Datenquelle, z. B. `SIWIS, CC BY 4.0`; `none`, wenn keine verlangt wird | bei synthetisch |
   | `TXXX:lernapps-text` | gesprochener Text; zugleich die Textfassung für den Player | ja |
 
   Der Build prüft, dass der Text der Datei mit der ersten Antwortvariante der Aufgabe übereinstimmt (Warnung). 
 
   **Entschieden (Owner, 2026-11-12):** Es gibt **kein Freigabefeld** in der Datei (`lernapps-review` entfällt): die
   Freigabe kommt aus der Git-Historie. Damit steht auch keine Person in der Datei. Präfix `lernapps-` bleibt. **Audio
-  ohne die Kennzeichnung nach Art. 50 in den Metadaten bricht den Build ab.** Annahme (vom Owner zu bestätigen): Das
-  gilt für alle Pflichtfelder der Tabelle.
+  ohne die Kennzeichnung nach Art. 50 in den Metadaten bricht den Build ab.** **Bestätigt (Owner, 2026-11-12): Der Build bricht bei jedem
+  fehlenden Pflichtfeld der Tabelle ab** („bei synthetisch“ gilt, wenn `lernapps-synthetic` `true` ist). **Option A
+  jetzt** (diese Felder mit IPTC-Wert), **Option B (C2PA-Signatur) später**; Option C (Wasserzeichen) bleibt offen.
 
   **Recherche Art. 50 KI-VO (2026-11-12)**, Quellen: Verordnung, Art. 50(2); Kommission,
   [FAQ zum Code of Practice](https://digital-strategy.ec.europa.eu/en/faqs/code-practice-transparency-ai-generated-content);
