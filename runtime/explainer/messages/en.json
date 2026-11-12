@@ -226,5 +226,20 @@
   "languageClass_punctuation": "Mind the punctuation",
   "languageOwnVersion": "Your version may still be right. Ask if you are unsure.",
   "languageMarker": "Part {marker} of the figure",
-  "languageAlso": "also right:"
+  "languageAlso": "also right:",
+  "media": "Media overview",
+  "mediaIntro": "All images, audio files and videos of this app with their source and licence.",
+  "mediaImages": "Images",
+  "mediaAudio": "Audio",
+  "mediaVideos": "Videos",
+  "mediaUsedOn": "Used on:",
+  "mediaUnused": "Not used on any page.",
+  "mediaAiVoice": "AI voice",
+  "mediaHumanVoice": "Human voice",
+  "mediaVoice": "Model {model}, voice {voice}. Made on {date}.",
+  "mediaLicence": "Licence: {licence}.",
+  "mediaAttribution": "Credit: {attribution}.",
+  "mediaText": "Text:",
+  "mediaVideoBy": "Video by {channel}",
+  "mediaPlay": "Listen: {text}"
 }

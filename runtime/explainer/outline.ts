@@ -18,7 +18,7 @@ import { assessments, titleOf } from "./assessment.ts";
 
 export interface PageOutline {
   /** What page it is: the start page, a chapter, a content page, the glossary, a self-assessment. */
-  kind: "start" | "chapter" | "page" | "glossary" | "assessment";
+  kind: "start" | "chapter" | "page" | "glossary" | "media" | "assessment";
   /** Where the page is, from the app's root: "prozent/prozentwert/", "en/prozent/prozentwert/". */
   url: string;
   lang: string;

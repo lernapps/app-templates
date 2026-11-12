@@ -226,5 +226,20 @@
   "languageClass_punctuation": "Achte auf die Satzzeichen",
   "languageOwnVersion": "Deine Fassung kann trotzdem richtig sein. Frag nach, wenn du unsicher bist.",
   "languageMarker": "Teil {marker} der Abbildung",
-  "languageAlso": "auch richtig:"
+  "languageAlso": "auch richtig:",
+  "media": "Medienübersicht",
+  "mediaIntro": "Alle Bilder, Audios und Videos dieser App mit ihrer Quelle und ihrer Lizenz.",
+  "mediaImages": "Bilder",
+  "mediaAudio": "Audios",
+  "mediaVideos": "Videos",
+  "mediaUsedOn": "Verwendet auf:",
+  "mediaUnused": "Auf keiner Seite verwendet.",
+  "mediaAiVoice": "KI-Stimme",
+  "mediaHumanVoice": "Menschliche Stimme",
+  "mediaVoice": "Modell {model}, Stimme {voice}. Erzeugt am {date}.",
+  "mediaLicence": "Lizenz: {licence}.",
+  "mediaAttribution": "Namensnennung: {attribution}.",
+  "mediaText": "Text:",
+  "mediaVideoBy": "Video von {channel}",
+  "mediaPlay": "Audio anhören: {text}"
 }

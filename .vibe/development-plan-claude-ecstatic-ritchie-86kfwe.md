@@ -385,8 +385,19 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
 ### Entrance criteria
 - Plan vom Owner freigegeben, Hörtest-Ergebnis liegt vor.
 
+Der Owner hat am 2026-11-12 freigegeben, **ohne Halt an den Phasengrenzen** weiterzuarbeiten (autonomer Betrieb).
+
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [x] Inkrement 1 (`app-templates`): Metadaten lesen, `src/audio/`, Auslieferung, Dev-Server mit Range,
+  Medienübersicht (`medien/`) für Bilder, Audio und Videos, Testdateien, Tests (fertig, 567 Tests grün).
+  **Abweichung vom Plan:** Statt `music-metadata` liest `runtime/shared/audio.ts` die ID3-Frames selbst (rund 150 Zeilen,
+  v2.3 und v2.4, UTF-8/16/Latin-1, übersprungene unbekannte Frames wie `GEOB` für C2PA). Grund: der Loader ist synchron,
+  `music-metadata` ist asynchron; und es entfällt eine Abhängigkeit. Das Schreiben bleibt bei `ffmpeg`.
+  Für die Tests in dieser Umgebung wurde `@lernapps/tooling` (optionale Peer-Abhängigkeit) ohne Speichern installiert.
+- [ ] Inkrement 2 (`app-templates`): Diktat (`audio` im Item des `language-task`), Player mit Tempo, Textfassung, Prüfungen, Beispiel
+- [ ] Inkrement 3 (`app-templates`): `speaking-task` (Aufnahme, Wiedergabe-Auswahl, Bewertungen, Tutorseite, nicht in der Selbsteinschätzung)
+- [ ] Inkrement 4 (`tooling`, Branch `feat/audio-skill`): Skill `lernapps-audio` mit Skript (läuft als Unteragent), danach Abgleich der Felder mit dem Build
+- [ ] Inkrement 5: arc42 in `explainer/docs/arc42`, README, Schema, `lernapps check` an der Beispiel-App, `lernapps/docs` `dec-licences`
 
 ### Completed
 *None yet*

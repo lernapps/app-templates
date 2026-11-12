@@ -24,7 +24,7 @@
 // (islands.ts) is a chunk of its own with Vue, and only the pages with a component load it; each component is a chunk
 // that its pages load when they hydrate it, and its own code, gzipped, must stay within the budget.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 import type { Component } from "vue";
@@ -54,6 +54,7 @@ import {
   tutorPageDocument,
 } from "./tutorpage.ts";
 import { imageType } from "../shared/blocks/image.ts";
+import { AUDIO_TYPE, byteRange } from "../shared/audio.ts";
 import { PAGE_LIST, pageList } from "./page-list.ts";
 
 const MARKER = "<!-- explainer -->";
@@ -301,6 +302,9 @@ export function explainer(): Plugin[] {
       for (const [image, file] of content.images) {
         this.emitFile({ type: "asset", fileName: image, source: readFileSync(file) });
       }
+      for (const [name, { file }] of content.audio) {
+        this.emitFile({ type: "asset", fileName: name, source: readFileSync(file) });
+      }
       const problems: string[] = [];
       const tutor = tutorAssets(content, descriptions);
       for (const lang of content.app.languages) {
@@ -430,6 +434,27 @@ export function explainer(): Plugin[] {
         if (path.startsWith("images/")) {
           response.setHeader("content-type", imageType(path));
           response.end(readFileSync(join(root, "src", path)));
+          return;
+        }
+        if (path.startsWith("audio/")) {
+          // an audio file with byte ranges, as a static server sends it: without them a player cannot jump in the file
+          const file = resolve(root, "src", path);
+          if (!file.startsWith(join(root, "src", "audio") + sep) || !existsSync(file)) return next();
+          const bytes = readFileSync(file);
+          const range = byteRange(request.headers.range, bytes.length);
+          response.setHeader("content-type", AUDIO_TYPE);
+          response.setHeader("accept-ranges", "bytes");
+          if (range === "invalid") {
+            response.statusCode = 416;
+            response.setHeader("content-range", `bytes */${bytes.length}`);
+            response.end();
+          } else if (range === undefined) {
+            response.end(bytes);
+          } else {
+            response.statusCode = 206;
+            response.setHeader("content-range", `bytes ${range.start}-${range.end}/${bytes.length}`);
+            response.end(bytes.subarray(range.start, range.end + 1));
+          }
           return;
         }
         const forTutor = new RegExp(`(^|/)tutor/(${TUTOR_MARKDOWN.replace(".", "\\.")})?$`).test(path);

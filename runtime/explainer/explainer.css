@@ -192,6 +192,37 @@
   margin-left: 1rem;
 }
 
+.explainer-media {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.explainer-media li {
+  margin-top: 1.25rem;
+}
+
+.explainer-media-preview {
+  display: block;
+  max-width: min(100%, 20rem);
+  height: auto;
+}
+
+.explainer-media audio {
+  display: block;
+  width: 100%;
+  max-width: 24rem;
+}
+
+.explainer-media-uses {
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-ai-voice {
+  font-weight: 600;
+}
+
 .explainer-pager {
   display: flex;
   flex-wrap: wrap;

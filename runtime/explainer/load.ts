@@ -5,7 +5,7 @@
 // every other page at least one. The order lists are complete and unique, the depth is
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
-// list, bundled images and quotes name source and licence, links to pages of the app find their page and section,
+// list, bundled images and quotes name source and licence, an audio file carries its marking as AI-generated speech, links to pages of the app find their page and section,
 // every page but a recap page has an exercise, a question of the question types passes the validation of a question in every declared language,
 // a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), the check
 // of each exercise judges its examples as they are listed, a vue-component block names a component of src/components/
@@ -13,13 +13,14 @@
 // component's is generated from its describe) and, for an exercise component, its examples (which the build step
 // runs, plugin.ts) and an anchor once on the page (its id, or its name in kebab case), every data file is named by a timeline, a generated exercise or a component prop, and src/ holds nothing else. Each problem is one line: the file,
 // its line, the place in the file, the language where it matters, and what to do.
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { checkBlocks } from "./check-page.ts";
 import { readComponents } from "./components/read.ts";
 import {
   isExercise,
   type App,
+  type AudioFile,
   type Block,
   type BlockOf,
   type Chapter,
@@ -33,6 +34,7 @@ import { allBlocks } from "./routes.ts";
 import { ASSESSMENT, drawsTasks, exerciseOf, parseRef } from "./assessment.ts";
 import { formatOf, SCHEMA_FILES, validate, type Format } from "./schema.ts";
 import { appName } from "../shared/appname.ts";
+import { readAudio } from "../shared/audio.ts";
 import { isObject, Problems, readYaml, Texts, type Path, type YamlFile } from "../shared/content.ts";
 import { isLanguage, LANGUAGES, languageListProblems } from "../shared/languages.ts";
 
@@ -40,11 +42,12 @@ export { SCHEMA_ID, SCHEMA_ID_V2, type Format } from "./schema.ts";
 export const RULE_URL = "https://lernapps.net/tooling/rules/#explainer-content-valid";
 
 /** What src/ may hold besides the chapter folders. */
-const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, components/ and main.ts";
+const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, audio/, components/ and main.ts";
 /** Chapter ids that would collide with other addresses: data files, images, the glossary, the scope, language trees. */
-const RESERVED = new Set(["data", "images", "glossar", "components", "assets", "scope", ASSESSMENT]);
+const RESERVED = new Set(["data", "images", "audio", "glossar", "medien", "components", "assets", "scope", ASSESSMENT]);
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const IMAGE = /^[a-z0-9]+(-[a-z0-9]+)*\.(svg|png|jpg|webp)$/;
+const AUDIO = /^[a-z0-9]+(-[a-z0-9]+)*\.mp3$/;
 
 /** The content could not be read: one problem per line in `problems`. */
 export class ContentError extends Error {
@@ -188,6 +191,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
   // what src/ holds
   const chapterIds: string[] = [];
   const dataFiles = new Map<string, YamlFile>();
+  const audio = new Map<string, AudioFile>();
   for (const name of entries(src)) {
     const path = join(src, name);
     if (name === "app.yaml" || name === "main.ts") continue;
@@ -202,6 +206,20 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
             "not an image of an explainer; src/images/ holds image files <name>.svg, .png, .jpg or .webp, with a lower-case name",
           );
         }
+      }
+    } else if (name === "audio") {
+      for (const sound of entries(path)) {
+        const file = `src/audio/${sound}`;
+        if (isDirectory(join(path, sound)) || !AUDIO.test(sound)) {
+          problems.file(
+            file,
+            "not an audio file of an explainer; src/audio/ holds MP3 files <name>.mp3, with a lower-case name",
+          );
+          continue;
+        }
+        const read = readAudio(readFileSync(join(path, sound)));
+        if (read.meta === undefined) for (const problem of read.problems) problems.file(file, problem);
+        else audio.set(`audio/${sound}`, { file: join(path, sound), meta: read.meta });
       }
     } else if (name === "data") {
       for (const file of entries(path)) {
@@ -490,6 +508,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       chapters,
       data,
       images,
+      audio,
       components: uses,
       storage: appName(root, "explainer"),
     },

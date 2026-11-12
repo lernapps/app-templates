@@ -7,6 +7,7 @@ import type { Question } from "../shared/questions/question.ts";
 import type { DataRecord, Generated } from "./generated/types.ts";
 import type { Credit, Drawing, MaterialBlock } from "../shared/blocks/block.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
+import type { AudioMeta } from "../shared/audio.ts";
 import type { LanguageTaskSpec } from "./language.ts";
 
 export type { Credit, Drawing };
@@ -146,6 +147,12 @@ export interface Chapter {
 
 export type { DataRecord };
 
+/** An audio file of src/audio/: where it is, and what it says about itself (shared/audio.ts). */
+export interface AudioFile {
+  file: string;
+  meta: AudioMeta;
+}
+
 export interface Site {
   app: App;
   chapters: readonly Chapter[];
@@ -153,6 +160,8 @@ export interface Site {
   data: Readonly<Record<string, readonly DataRecord[]>>;
   /** The bundled images that blocks use, by their path from src/ (images/<name>), with the file's absolute path. */
   images: ReadonlyMap<string, string>;
+  /** The audio files of src/audio/, by their path from src/ (audio/<name>.mp3). */
+  audio: ReadonlyMap<string, AudioFile>;
   /** Each vue-component block, with its component and where it is. */
   components: readonly ComponentUse[];
   /** The app's name for what it keeps on the device (its package.json name; @lernapps/tooling/storage). */
