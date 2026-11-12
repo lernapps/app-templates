@@ -157,6 +157,19 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
 ### Tasks
 Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions` und arc42):
 - [ ] Audioformat festlegen (MP3, AAC oder Opus) mit Test in Safari, Chrome, Firefox; Größenbudget pro App
+  **Vorschlag, vom Owner zu bestätigen: MP3, mono, 24 kHz, 48 kbit/s CBR, Metadaten als ID3v2.4 (`TXXX`-Felder).**
+  - Browser-Unterstützung (caniuse-Daten): MP3 überall seit Jahren. AAC: Firefox nur teilweise (hängt von den Codecs des
+    Betriebssystems ab). Opus: Safari nur teilweise (macOS ab 15.4, iOS ab 18.4, vorher nur in CAF/WebM mit Einschränkungen),
+    also fehlt es auf älteren Schulgeräten.
+  - Größe (6,7 s Sprache, gleiche Quelle): MP3 24 kHz 24/32/48 kbit/s = 20,8/27,5/41,0 kB; AAC 48 kbit/s = 42 kB;
+    Opus 24/32 kbit/s = 20,4/27,1 kB. Bei MP3 48 kbit/s sind es 6 kB je Sekunde: 20 Sätze zu je 4 s etwa 480 kB.
+  - Metadaten: `ffmpeg -metadata schlüssel=wert` schreibt beliebige Felder als `TXXX` in MP3 (ID3v2.4) und liest sie wieder.
+    Gelesen mit `music-metadata` 11 (MIT): `TXXX:ai_generated`, `model`, `voice`, `licence`, `attribution`, `text` kamen
+    unverändert an. Bei AAC/M4A schreibt ffmpeg die eigenen Felder nicht, bei Opus in Ogg liest `ffprobe` sie nicht auf
+    Formatebene. Es braucht daher weder `mutagen` (GPL) noch ein weiteres Werkzeug: ffmpeg zum Schreiben, `music-metadata`
+    im Build zum Lesen (neue Abhängigkeit von `app-templates`, Lizenz MIT).
+  - Offen: Hörtest der Bitraten durch den Owner (24/32/48 kbit/s); MP3 hat am Anfang und Ende eine kurze Lücke
+    (Encoder-Verzögerung), für Diktat unkritisch, bei Wiederholung hörbar prüfen.
 - [ ] Metadatenschema der Audiodatei: Felder (KI-generiert, Modell + Version, Stimme, Lizenz der Ausgabe, Namensnennung
   der Datenquelle, gesprochener Text, Sprache, Freigabe mit Datum + Prüfsumme), Tag-Format je Containerformat, Bibliothek
   zum Lesen im Build
