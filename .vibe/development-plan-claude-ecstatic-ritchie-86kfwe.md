@@ -55,6 +55,30 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
   `bm_daniel` D, `ff_siwis` B-, `if_sara` C, `im_nicola` C (Notenhinweis: Menge und Qualität der Trainingsdaten).
   Die Auswahl des Owners beruht auf dem Hören und gilt vor den Noten.
 
+- **Metadaten in der Audiodatei, alles dort** (Owner, 2026-11-12): KI-generiert, Modell, Stimme, Lizenz, Quelle der
+  Daten (Namensnennung), Text, Freigabe. Kein YAML daneben. Der Build liest die Metadaten und schreibt Label und
+  Medienübersicht statisch ins HTML.
+- **Der Skill liegt in `lernapps/tooling`** unter `skills/<Gruppe>/lernapps-<name>/` (SKILL.md plus `references/`),
+  kompakt und instruktiv wie die anderen. Dieses Feature berührt damit **zwei Repos**: `app-templates` (Laufzeit,
+  Build-Prüfung, Player, Aufnahme, Medienübersicht) und `tooling` (Skill, Skript). Zum Schreiben im Tooling ist
+  `add_repo` mit `access: push` nötig (heute nur lesend geklont: `/home/user/lernapps/{docs,tooling}`).
+
+## Befunde aus Plattformdesign und Tooling (2026-11-12)
+- `lernapps/docs` enthält **nichts zu Audio** (kein pdt42-/arc42-Element dazu). Das Design stellt die Frage nicht; die
+  Entscheidung gehört in die Architektur von `app-templates`, bei Änderung der Plattformrandbedingungen nach `lernapps/docs`.
+- **Lizenz der Inhalte laut Plattform** (`dec-licences`, `docs/arc42/09-decisions.arc42.md`): „CC BY 4.0 for content,
+  MIT or Apache 2.0 for code“; der Owner nannte für die Inhalte **CC BY-SA**. Abweichung, zu klären (BY-SA erlaubt
+  die Kopie auch, die Plattform nennt aber nur BY 4.0). Stimmen unter BY-SA oder BY 4.0 passen zu beiden.
+- Plattformregeln, die für Audio zählen: keine versteckte Datenerfassung (KD-18), `qg-privacy`, `con-frontend-only`.
+- Tooling: Skills liegen in `skills/{archetypes,content,process,tooling}/lernapps-*/`, `scripts/dist-skills.ts` kopiert
+  den ganzen Ordner (ein Unterordner `scripts/` im Skill würde also mitgeliefert). **Kein bestehender Skill enthält ein
+  Skript** und keiner nutzt Python: neu für das Tooling (Prüfung, Lizenz `MIT` im Frontmatter, Aufnahme in
+  `skills-lock.json`, `lernapps update`). Das `lernapps-cli` verlangt Git, Node ≥ 22.18 und registry.npmjs.org; ein
+  Python-Skript braucht zusätzlich Python, Pakete und Modell-Downloads von GitHub Releases und Hugging Face: das
+  Preflight muss die Hosts nennen, die eine Umgebung freigeben muss.
+- Der Skill `lernapps-explainer` verweist auf `references/language-tasks.md`; Audio-Übungen gehören dorthin und in
+  einen neuen Skill für die Erzeugung.
+
 ## Notes
 - `explainer/README.md:46` sagt heute „No audio: no listening, no dictation, no speaking“. Das ist zu ändern.
 - Apps haben keinen Server, sind statisch, 100 kB `localStorage` pro App; Lint-Regeln verbieten Netzwerk-APIs, `lernapps
