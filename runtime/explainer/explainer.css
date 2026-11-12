@@ -1531,15 +1531,15 @@ button.explainer-help:focus-visible {
 
 .explainer-language-unit .explainer-language-gapped .explainer-language-field {
   min-width: 4rem;
-  min-height: 2rem;
+  min-height: 1.75rem;
   margin: 0.25rem 0.25rem;
-  padding: 0 0.5rem 0.125rem;
+  padding: 0 0.5rem;
 }
 
 /* A choice in a gap: the same blank with an arrow, drawn in the same colour. */
 .explainer-language-unit .explainer-language-gapped select.explainer-language-field {
   appearance: none;
-  padding: 0.5rem 1.75rem 0.125rem 0.5rem;
+  padding: 0.25rem 1.75rem 0 0.5rem;
   background-image:
     linear-gradient(var(--blank), var(--blank)), linear-gradient(var(--blank), var(--blank)),
     linear-gradient(45deg, transparent 50%, var(--blank) 50%),
