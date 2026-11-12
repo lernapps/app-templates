@@ -156,8 +156,8 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
 
 ### Tasks
 Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions` und arc42):
-- [ ] Audioformat festlegen (MP3, AAC oder Opus) mit Test in Safari, Chrome, Firefox; Größenbudget pro App
-  **Vorschlag, vom Owner zu bestätigen: MP3, mono, 24 kHz, 48 kbit/s CBR, Metadaten als ID3v2.4 (`TXXX`-Felder).**
+- [x] Audioformat festgelegt (Owner, 2026-11-12): **MP3 als einziges Format, mono, 24 kHz, 48 kbit/s CBR, Metadaten als
+  ID3v2.4 (`TXXX`-Felder).** 48 kbit/s klingt für den Owner deutlich besser als 24 und 32. Größenbudget pro App noch offen.
   - Browser-Unterstützung (caniuse-Daten): MP3 überall seit Jahren. AAC: Firefox nur teilweise (hängt von den Codecs des
     Betriebssystems ab). Opus: Safari nur teilweise (macOS ab 15.4, iOS ab 18.4, vorher nur in CAF/WebM mit Einschränkungen),
     also fehlt es auf älteren Schulgeräten.
@@ -171,8 +171,24 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
   - Offen: Hörtest der Bitraten durch den Owner (24/32/48 kbit/s); MP3 hat am Anfang und Ende eine kurze Lücke
     (Encoder-Verzögerung), für Diktat unkritisch, bei Wiederholung hörbar prüfen.
 - [ ] Metadatenschema der Audiodatei: Felder (KI-generiert, Modell + Version, Stimme, Lizenz der Ausgabe, Namensnennung
-  der Datenquelle, gesprochener Text, Sprache, Freigabe mit Datum + Prüfsumme), Tag-Format je Containerformat, Bibliothek
-  zum Lesen im Build
+  der Datenquelle, gesprochener Text, Sprache, Freigabe mit Datum + Prüfsumme), Bibliothek zum Lesen im Build
+  (`music-metadata`, siehe oben). **Entwurf, vom Owner zu bestätigen:**
+
+  | Frame | Inhalt | Pflicht |
+  |---|---|---|
+  | `TLAN` | Sprache, ISO 639-2 (`fra`, `eng`, `spa`, `ita`) | ja |
+  | `TCOP` | Lizenz der Datei, `CC BY-SA 4.0` | ja |
+  | `TDRC` | Erzeugungsdatum | ja |
+  | `TXXX:lernapps-synthetic` | `true` bei KI-Stimme; `false` bei menschlicher Aufnahme (später) | ja |
+  | `TXXX:lernapps-model` | Modell mit Version, z. B. `kokoro-v1.0` | bei synthetisch |
+  | `TXXX:lernapps-voice` | Stimme, z. B. `ff_siwis` | bei synthetisch |
+  | `TXXX:lernapps-attribution` | geforderte Namensnennung der Datenquelle, z. B. `SIWIS, CC BY 4.0` | wenn die Stimme sie verlangt |
+  | `TXXX:lernapps-text` | gesprochener Text; zugleich die Textfassung für den Player | ja |
+  | `TXXX:lernapps-review` | Freigabe: Datum und SHA-256 über Audio (ohne Tags) und Text; kein Name | nein (nur Warnung) |
+
+  Der Build prüft, dass der Text der Datei mit der ersten Antwortvariante der Aufgabe übereinstimmt (Warnung). Die
+  Freigabe gilt nicht mehr, wenn sich Text oder Audio ändern (Prüfsumme). Offen: ob die freigebende Person namentlich
+  in einer öffentlichen Datei stehen soll (Vorschlag: nein, Datenschutz).
 - [ ] Autor-Schnittstelle im Explainer: wie `language-task` auf Audio verweist (Diktat als Modus oder eigener Block;
   Selbstvergleich), Schema-Erweiterung von Format 2 oder neues Format, Fehlermeldungen im Stil `file:line: place (language): what to do`
 - [ ] Build: Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlende Freigabe nur
