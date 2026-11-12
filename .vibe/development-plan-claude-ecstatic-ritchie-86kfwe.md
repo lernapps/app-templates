@@ -410,8 +410,12 @@ Der Owner hat am 2026-11-12 freigegeben, **ohne Halt an den Phasengrenzen** weit
   Browser nutzt ein Mikrofon der Seite selbst (ein Ton über `AudioContext`), weil `launchOptions` in einem Test nicht gesetzt werden dürfen.
   (4) Die Wiedergabe-Auswahl („Original“, „Meine Aufnahme“, „Beide nacheinander“) und die drei Bewertungen sind die Schaltflächen der
   Lernenden, wie beschlossen.
-- [ ] Inkrement 4 (`tooling`, Branch `feat/audio-skill`): Skill `lernapps-audio` mit Skript (läuft als Unteragent), danach Abgleich der Felder mit dem Build
-- [ ] Inkrement 5: arc42 in `explainer/docs/arc42`, README, Schema, `lernapps check` an der Beispiel-App, `lernapps/docs` `dec-licences`
+- [x] Inkrement 4 (`tooling`, Branch `feat/audio-skill`, Commits `1efdab0`, `40d3478`): Skill `lernapps-audio` mit Skript `lernapps_audio.py`
+  (`preflight`, `generate`, `voices`; Exit-Codes 0/2/3/4/64), 16 erlaubte Stimmen, Footprint-Hinweis für den Creator; 506 Tests grün. **Abgleich mit
+  dem Build bestanden:** die Beispieldateien der französischen App stammen aus dem Skript und werden vom Build gelesen. Die Referenz `language-tasks.md` des
+  Explainer-Skills nennt `audio` und `speaking-task`. Nicht geprüft: Windows/macOS, der Weg ohne System-ffmpeg (pip-Paket), ein blockierter Host.
+- [ ] Inkrement 5: arc42 in `explainer/docs/arc42` (fertig: 3 Bausteine, 4 Entscheidungen, 2 Szenarien, 2 Begriffe; `node scripts/arc42.ts` ohne Befund),
+  README (fertig), Schema (fertig), `lernapps check` an der Beispiel-App (fertig, ohne Befund), `lernapps/docs` `dec-licences` (offen)
 
 ### Completed
 *None yet*

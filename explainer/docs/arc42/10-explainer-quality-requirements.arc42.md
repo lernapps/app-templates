@@ -52,3 +52,34 @@ response: A task that differs for the same seed, a solution the check rejects, a
 metric: 50 fixed seeds per exercise component block, every one passes
 :::
 ```
+
+## A Recording Stays on the Device
+
+A learner who speaks into a speaking task must be sure that nothing of the recording leaves the browser.
+
+```arc42
+:::quality-scenario
+id: qs-recording-stays-on-device
+title: A recording is kept in memory and sent nowhere
+quality: qg-privacy
+stimulus: A learner records a sentence in a speaking task, compares and rates it
+response: The microphone is asked for after the click and released when recording stops; the recording is played from memory and dropped when the learner records again or leaves the page
+metric: 0 requests that send something, 0 requests to another host, 0 keys in localStorage or sessionStorage after a recording (the explainer's end-to-end test)
+:::
+```
+
+## Every Audio File Is Marked
+
+An audio file of an explainer is synthetic speech and must say so in its own metadata (`dec-audio-marking`), so the build refuses
+a file that lacks any frame of the marking; the audio skill writes them and reads them back.
+
+```arc42
+:::quality-scenario
+id: qs-audio-is-marked
+title: An audio file without its marking stops the build
+quality: qg-checkable
+stimulus: A creator puts an MP3 file into src/audio/ that lacks a frame of the marking, or has none
+response: The build stops with the file, the missing frame and what to do (make the file again with the audio skill)
+metric: 0 audio files without all required frames in a built app
+:::
+```
