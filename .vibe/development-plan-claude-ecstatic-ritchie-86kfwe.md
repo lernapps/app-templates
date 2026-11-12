@@ -257,7 +257,7 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     Rust/Node (Prüfung im Build), Lizenzen noch nicht geprüft.
   - Felder, die der Entwurf noch ergänzen sollte: `lernapps-digital-source-type` (IPTC-URI), `lernapps-generator`
     (Werkzeug und Version, das erzeugt hat; der „Name des KI-Systems“).
-- [ ] Autor-Schnittstelle im Explainer: wie `language-task` auf Audio verweist (Diktat als Modus oder eigener Block;
+- [x] Autor-Schnittstelle im Explainer (**bestätigt vom Owner, 2026-11-12**: Diktat als Item des `language-task`, Selbstvergleich als eigener Block `speaking-task`, Text der Datei ist keine Antwortvariante: **Fehler**, Format 2 bleibt, `audio` ist optional und abwärtskompatibel; der Modus `write` des `language-task` ist weiter reines Schreiben ohne Audio): wie `language-task` auf Audio verweist (Diktat als Modus oder eigener Block;
   Selbstvergleich), Schema-Erweiterung von Format 2 oder neues Format, Fehlermeldungen im Stil `file:line: place (language): what to do`
   **Entwurf, vom Owner zu bestätigen:**
   - *Diktat und Hören* sind ein `language-task`: ein Item nennt statt `source` (oder `cue`) ein `audio: bonjour.mp3`
@@ -271,18 +271,43 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
   - Prüfungen im Build, jeweils `file:line: place (language): what to do`: Datei fehlt oder liegt nicht in `src/audio/`;
     Pflichtfeld der Metadaten fehlt (**Abbruch**); die Sprache der Datei (`TLAN`) passt nicht zu `languages.target`;
     der Text der Datei ist keine Variante der Antwort (**vorgeschlagen: Fehler**, Owner entscheidet).
-  - Format: `audio` als zusätzliche optionale Eigenschaft ist abwärtskompatibel, **Format 2 bleibt**; Entscheidung des Owners.
-- [ ] Build: Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlt ein Pflichtfeld,
+  - Format: `audio` als zusätzliche optionale Eigenschaft ist abwärtskompatibel, **Format 2 bleibt**.
+- [ ] Build (**Entwurf, zu bestätigen**): Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlt ein Pflichtfeld,
   vor allem die KI-Kennzeichnung: Build bricht ab; Entscheidung des Owners)
-- [ ] Anhang „Medienübersicht“ an jedem Explainer: Adresse, Inhalt (Bilder und Audio, Quelle, Lizenz, KI-Hinweis,
+  - `src/audio/` (`load.ts` wie `images`: nur `<name>.mp3`, Kleinbuchstaben, sonst Fehler mit Ort und Abhilfe); `plugin.ts`
+    gibt die Dateien als Assets nach `audio/` aus; der Dev-Server liefert sie als `audio/mpeg` **mit Range-Anfragen**
+    (sonst springt der Player nicht); `shared/blocks/audio.ts` mit Medientyp, analog zu `image.ts`.
+  - Metadaten lesen mit `music-metadata` (MIT, neue Abhängigkeit, nur im Build, nicht im Browser-Bundle). Jede fehlende
+    Pflicht (Tabelle oben) ist ein Fehler `src/audio/x.mp3: lernapps-model is missing; run the audio skill again`.
+  - Der Text der Datei steht als Textfassung im HTML (für den Player und nach dem Lösen); die Sprache `TLAN` wird gegen
+    `languages.target` geprüft.
+- [ ] Anhang „Medienübersicht“ an jedem Explainer (**Entwurf, zu bestätigen**): Adresse, Inhalt (Bilder und Audio, Quelle, Lizenz, KI-Hinweis,
   Namensnennung), Sprachbäume, ohne JavaScript, barrierefrei
-- [ ] Browser: Player (Tempo 0,75/1/1,25 per `playbackRate`, Wiederholen, `preload="none"`, Tastatur, Textfassung),
+  - Eigene Seite `medien/` (Route `kind: "media"` neben `glossar/`, Muster: `routes.ts:110`, `render.ts:391`); `medien` kommt
+    in die reservierten Kapitel-IDs (`load.ts:44`); verlinkt von der Startseite, wenn die App Medien hat. Beschriftung
+    „Medienübersicht“ / „Media overview“ in `messages/de.json` und `en.json`.
+  - Inhalt: eine Liste aller Bilder, Audios und Videos der App; je Eintrag: Vorschau (Bild) oder Player (Audio, `preload="none"`),
+    die Seiten, auf denen sie vorkommen, Quelle, Lizenz, bei Audio zusätzlich „KI-Stimme“, Modell, Stimme, Namensnennung,
+    Sprache und Textfassung. Alles statisch gebaut, ohne JavaScript lesbar; für Bilder aus dem Alternativtext.
+  - Sie ersetzt keine Pflichtprüfung: der Build prüft schon vorher; die Seite macht Lücken für Menschen sichtbar.
+  - Offen: Videos (YouTube) aufnehmen? Vorschlag: ja, mit Titel und Adresse.
+- [ ] Browser (**Entwurf, zu bestätigen**): Player (Tempo 0,75/1/1,25 per `playbackRate`, Wiederholen, `preload="none"`, Tastatur, Textfassung),
   Aufnahme (`MediaRecorder`, Berechtigung erst nach Klick, nur Arbeitsspeicher, keine Speicherung, Fallback ohne Mikrofon)
+  - Player: natives `<audio controls preload="none">` im statischen HTML (spielt ohne JavaScript), daneben mit JavaScript
+    Tempo-Schalter 0,75 / 1 / 1,25 (`playbackRate`, `preservesPitch`), am Player ein sichtbares „KI-Stimme“ mit Modell und Stimme
+    (aus den Metadaten), Textfassung als `<details>`; beim Diktat erst nach dem Lösen. Eigene Tastenbedienung nicht nötig,
+    die Bedienelemente des Browsers sind zugänglich.
+  - Aufnahme (`speaking-task`): Mikrofon erst nach dem Klick auf „Aufnehmen“ (`getUserMedia`); `MediaRecorder` mit dem
+    Format, das der Browser meldet (`audio/webm` oder `audio/mp4`); die Aufnahme bleibt ein `Blob` im Arbeitsspeicher, wird
+    nur über eine Objekt-URL abgespielt, beim Verlassen der Seite verworfen und nirgends gespeichert oder gesendet; die
+    Spuren werden nach dem Stoppen beendet, damit die Mikrofon-Anzeige ausgeht. Verweigert oder fehlt das Mikrofon: kurzer
+    Hinweis; die Selbstbewertung bleibt möglich („Ich habe laut gesprochen und verglichen“).
+  - Benötigt HTTPS (lernapps.net hat es).
 - [ ] Prüfregeln: Lint und `lernapps check` erlauben Audio, `getUserMedia` und `MediaRecorder` gezielt, verbieten
   Netzwerk-APIs weiter, prüfen „keine Anfrage vor einem Klick“ auch für Audio (Lehre aus `qg-privacy`)
 - [ ] Zustand und Tutor: wie Diktat (richtig/teilweise/falsch) und Selbstvergleich („selbst bewertet“) in Ergebniszeile,
   Selbsteinschätzung und Tutorseite eingehen
-- [ ] Skill in `lernapps/tooling` (`skills/…/lernapps-…`), kompakt: Stimmenliste, Aufruf, Preflight mit gesammelten
+- [ ] Skill in `lernapps/tooling` (**Auflage des Owners:** kurze Erklärung an den Creator, bevor Audio-Aufgaben erstellt werden: was gebraucht wird, Footprint (Tabelle oben, rund 0,6 GB Download, 0,8 GB Platz, einmalig) und freizugebende Hosts) (`skills/…/lernapps-…`), kompakt: Stimmenliste, Aufruf, Preflight mit gesammelten
   Fehlern (Python, Pakete, `ffmpeg`, Modelle + Prüfsumme, Speicher, Hosts), Exit-Codes, Hinweis zum Umgang mit
   Sprachproben, Pfade; Auswirkung auf `skills-lock.json`, `lernapps update`, `lernapps-cli` (Voraussetzungen)
 - [ ] Piper-Stimme `pierre` und Kokoro in einem Skript (zwei Engines) oder getrennt? Entscheidung; Metadaten gleich
