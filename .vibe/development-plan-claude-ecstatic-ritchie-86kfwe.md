@@ -88,6 +88,13 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
   - Lizenzangaben aus den Model-Cards (HF `rhasspy/piper-voices`): siwis (fr) CC BY 4.0; alba (en_GB) CC BY 4.0;
     davefx (es) CC0; lessac (en_US) eigene Lizenz des Blizzard-2013-Datensatzes, **nicht geprüft**; paola (it) „See URL“,
     **nicht geprüft**. Kokoro: Lizenz des Modells und der Stimmen **noch aus den Quellen zu prüfen**, nicht aus dem Gedächtnis.
+  - Owner (2026-11-12): wählt **je Sprache eine weibliche und eine männliche Stimme**; Kokoro klingt durchgängig besser.
+    Zweite Runde: Kokoro Englisch US (4 w, 4 m) und GB (4 w, 4 m).
+  - **Französisch hat in Kokoro nur eine weibliche Stimme (`ff_siwis`)**, keine männliche. Piper `fr_FR-upmc` (Sprecher
+    `pierre`) ist männlich, Lizenz CC BY-SA 4.0 des Datensatzes (passt zu den Inhalten). `fr_FR-tom` ist AGPLv3 und
+    scheidet aus. Spanisch (`ef_dora`, `em_alex`) und Italienisch (`if_sara`, `im_nicola`) haben je ein Paar in Kokoro.
+  - **Tempo:** Kokoro erzeugt langsamere Sprache über `speed` (Test 0,8: 8,7 s statt 6,7 s); der Player kann sie mit
+    `playbackRate` (Tonhöhe bleibt erhalten) strecken (Test: 8,4 s). Hörvergleich beim Owner.
   - Download braucht Netz (GitHub Releases, Hugging Face); beide Wege waren in dieser Umgebung erreichbar.
   - Kokoro-Modell ca. 325 MB + Stimmen 28 MB; Piper je Stimme 63 bis 114 MB. Für den Skill: nur beim Erstellen nötig.
 - [ ] Testsätze für den Hörtest Englisch und Französisch vorbereiten
