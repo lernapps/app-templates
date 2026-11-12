@@ -139,7 +139,7 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
       const component = context.component(item.block, item.key);
       return { item, data: { kind: "component", seeds: component?.seeds ?? [1] }, html: component?.html ?? "" };
     }
-    const data = exerciseData(item.block, lang, site.data, context.resolve);
+    const data = exerciseData(item.block, lang, site.data, context.resolve, context.material.audio);
     // a language task: its task and material, and the place of its fields (language-task.ts), by its key
     if (item.block.type === "language-task" && data.kind === "language") {
       const { block } = item;

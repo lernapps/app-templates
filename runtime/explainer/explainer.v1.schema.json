@@ -1231,6 +1231,11 @@
           "type": "string",
           "minLength": 1
         },
+        "audio": {
+          "description": "Instead of the other side: an audio file of src/audio/, <name>.mp3, spoken in the target language; the learner hears it (a dictation when the learner writes the target, else a translation of what they hear). The text of the file must be a right answer.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*\\.mp3$"
+        },
         "cue": {
           "description": "Instead of the other side: the form to build.",
           "type": "string",

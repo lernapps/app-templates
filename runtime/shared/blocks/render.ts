@@ -30,6 +30,14 @@ export interface MaterialContext {
    * draws such an image with zero width.
    */
   sizeless?: (image: string) => boolean;
+  /** An audio file of the app by its name in src/audio/ (<name>.mp3): its address from the page, and a label when a model made the voice. */
+  audio?: (name: string) => AudioRef | undefined;
+}
+
+/** What a page needs to show an audio file: where it is, and "KI-Stimme" (in the page's language) for a voice a model made. */
+export interface AudioRef {
+  src: string;
+  ai?: string;
 }
 
 const external = (url: string) => `<a href="${escape(url)}" rel="noopener">${escape(url)}</a>`;

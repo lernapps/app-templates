@@ -18,9 +18,11 @@ import {
   type DataRecord,
   type Event,
   type Text,
+  type AudioFile,
 } from "./content.ts";
 import { ExpressionError, parse, variables } from "./expression.ts";
-import { languageTaskProblems } from "./language.ts";
+import { languageTaskProblems, normalize, SyntaxProblem, wholeVariants, type LanguageItem } from "./language.ts";
+import { AUDIO_LANGUAGES } from "../shared/audio.ts";
 import { ChemError, dataOf, templatesOf } from "./exercises.ts";
 import { exampleProblems, soundness } from "./generated/soundness.ts";
 import { templateProblems, unusedVariables } from "./generated/texts.ts";
@@ -58,6 +60,8 @@ export interface PageCheck {
   dataFiles: ReadonlyMap<string, YamlFile>;
   terms: Map<string, string>;
   images: Map<string, string>;
+  /** The audio files of src/audio/, by their path from src/ (audio/<name>.mp3). */
+  audio: ReadonlyMap<string, AudioFile>;
   /** The anchors of the page's sections: warum, regel/merkhilfe. */
   anchors: Set<string>;
   /** The ids of the page's exercises, which are anchors too, with where each is. */
@@ -299,6 +303,47 @@ function checkLanguageTask(check: PageCheck, block: BlockOf<"language-task">, at
   );
   block.material?.forEach((material, index) => checkMaterialBlock(check, material, [...at, "material", index]));
   for (const problem of languageTaskProblems(block)) problems.at(yaml, [...at, ...problem.path], problem.message);
+  block.items?.forEach((item, index) => {
+    if (item.audio !== undefined) checkAudioItem(check, block, item, [...at, "items", index, "audio"]);
+  });
+}
+
+/** An item that starts from an audio file: the file is there, in the task's target language, and says a right answer. */
+function checkAudioItem(check: PageCheck, block: BlockOf<"language-task">, item: LanguageItem<Text>, at: Path): void {
+  const { yaml, problems } = check;
+  const name = `audio/${item.audio}`;
+  const file = check.audio.get(name);
+  if (file === undefined) {
+    problems.at(
+      yaml,
+      at,
+      `${name} is missing: put the file into src/audio/; the audio skill (lernapps-audio) makes it with the marking the build requires`,
+    );
+    return;
+  }
+  const expected = AUDIO_LANGUAGES[block.languages.target];
+  if (expected !== undefined && file.meta.language !== expected) {
+    problems.at(
+      yaml,
+      at,
+      `${name} is spoken in ${file.meta.language} (TLAN), but the task's target language ${block.languages.target} is ${expected}; use a file in ${expected}`,
+    );
+  }
+  // what the learner hears is a right answer, or the dictation cannot be solved; in a translation the target is optional
+  const answer = item.target;
+  if (answer === undefined) return;
+  try {
+    const right = [...wholeVariants(answer), ...(item.accepted ?? [])].map(normalize);
+    if (!right.includes(normalize(file.meta.text))) {
+      problems.at(
+        yaml,
+        at,
+        `the text of ${name} is "${file.meta.text}", which is no version of this item's target: the learner hears it, so write the target as this text or add it as a variant (a|b), or make the file again with the text of the target`,
+      );
+    }
+  } catch (error) {
+    if (!(error instanceof SyntaxProblem)) throw error;
+  }
 }
 
 /** A vue-component block: its component exists and passes its checks, its props match, its texts are complete. */

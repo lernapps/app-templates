@@ -296,6 +296,8 @@ export interface LanguageTable<T> {
 export interface LanguageItem<T> {
   source?: string;
   target?: string;
+  /** An audio file of src/audio/, <name>.mp3, spoken in the target language, in place of the other side. */
+  audio?: string;
   cue?: string;
   marker?: string;
   accepted?: readonly string[];
@@ -323,9 +325,10 @@ export interface LanguageTaskSpec<T, M = unknown> {
   explanation?: T;
 }
 
-/** What the learner starts from: the other language, a cue, or a marker of the labelled figure. */
+/** What the learner starts from: the other language, a cue, a marker of the labelled figure, or an audio file. */
 export type Prompt =
   | { kind: "text"; text: string; lang: string }
+  | { kind: "audio"; file: string }
   | { kind: "cue"; text: string }
   | { kind: "marker"; marker: string };
 
@@ -365,6 +368,7 @@ export const answerOf = (
 
 /** What the learner starts from in an item. */
 export function promptOf(task: LanguageTaskSpec<unknown>, item: LanguageItem<unknown>): Prompt | undefined {
+  if (item.audio !== undefined) return { kind: "audio", file: item.audio };
   if (item.cue !== undefined) return { kind: "cue", text: item.cue };
   if (item.marker !== undefined) return { kind: "marker", marker: item.marker };
   const other = task.direction === "to-source" ? item.target : item.source;
@@ -506,12 +510,14 @@ export function languageTaskProblems(task: LanguageTaskSpec<unknown>): TaskProbl
       });
       return;
     }
-    const prompts = [item.cue, item.marker, item[promptSide]].filter((prompt) => prompt !== undefined);
+    const prompts = [item.cue, item.marker, item.audio, item[promptSide]].filter((prompt) => prompt !== undefined);
     if (prompts.length !== 1)
       problems.push({
         path: at,
-        message: `give exactly one thing to start from: ${promptSide} (a translation), cue (a form to build) or marker (a label of the figure)`,
+        message: `give exactly one thing to start from: ${promptSide} (a translation), cue (a form to build), marker (a label of the figure) or audio (a file of src/audio/)`,
       });
+    if (item.audio !== undefined && mode === "table")
+      problems.push({ path: [...at, "audio"], message: "audio is for the items of a task, not for a table" });
     const other = item[promptSide];
     if (other !== undefined && other.includes("["))
       problems.push({

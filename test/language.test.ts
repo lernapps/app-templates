@@ -170,8 +170,8 @@ describe("what the build reports about a language task", () => {
     ).toEqual([
       "languages.target: the target language is the source language; name the language learners learn",
       "items.0: target is missing: it is what the learner writes (direction to-target)",
-      "items.1: give exactly one thing to start from: source (a translation), cue (a form to build) or marker (a label of the figure)",
-      "items.2: give exactly one thing to start from: source (a translation), cue (a form to build) or marker (a label of the figure)",
+      "items.1: give exactly one thing to start from: source (a translation), cue (a form to build), marker (a label of the figure) or audio (a file of src/audio/)",
+      "items.2: give exactly one thing to start from: source (a translation), cue (a form to build), marker (a label of the figure) or audio (a file of src/audio/)",
     ]);
   });
 

@@ -394,7 +394,14 @@ Der Owner hat am 2026-11-12 freigegeben, **ohne Halt an den Phasengrenzen** weit
   v2.3 und v2.4, UTF-8/16/Latin-1, übersprungene unbekannte Frames wie `GEOB` für C2PA). Grund: der Loader ist synchron,
   `music-metadata` ist asynchron; und es entfällt eine Abhängigkeit. Das Schreiben bleibt bei `ffmpeg`.
   Für die Tests in dieser Umgebung wurde `@lernapps/tooling` (optionale Peer-Abhängigkeit) ohne Speichern installiert.
-- [ ] Inkrement 2 (`app-templates`): Diktat (`audio` im Item des `language-task`), Player mit Tempo, Textfassung, Prüfungen, Beispiel
+- [x] Inkrement 2 (`app-templates`): Diktat (`audio` im Item des `language-task`), Player mit Tempo, Prüfungen, Beispiel
+  (fertig; 578 Tests grün; `lernapps check` an der französischen Beispiel-App mit Audio ohne Befund außer einer alten Warnung).
+  **Abweichungen:** (1) Bei `direction: to-source` darf das Item kein `target` haben (es wäre ein zweiter Ausgangspunkt); der Text
+  der Datei wird dort nicht gegen eine Antwort geprüft. (2) Die Textfassung beim Diktat ist die „Lösung“ der Aufgabe (ohne
+  JavaScript im `<details>`, mit JavaScript über „Lösung“), kein eigener Block; die Medienübersicht zeigt den Text immer.
+  (3) Die Beispieldateien stammen aus dem neuen Skill (`lernapps_audio.py generate`), der Vertrag der Felder wurde damit gegen den
+  Build geprüft. Für den Test in der Vorlage `explainer/` muss die Kopie des Laufzeitpakets neu installiert werden
+  (`install-links`); das Skript dafür liegt nur in der Sitzung.
 - [ ] Inkrement 3 (`app-templates`): `speaking-task` (Aufnahme, Wiedergabe-Auswahl, Bewertungen, Tutorseite, nicht in der Selbsteinschätzung)
 - [ ] Inkrement 4 (`tooling`, Branch `feat/audio-skill`): Skill `lernapps-audio` mit Skript (läuft als Unteragent), danach Abgleich der Felder mit dem Build
 - [ ] Inkrement 5: arc42 in `explainer/docs/arc42`, README, Schema, `lernapps check` an der Beispiel-App, `lernapps/docs` `dec-licences`

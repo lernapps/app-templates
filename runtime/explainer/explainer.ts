@@ -36,6 +36,7 @@ import { generate } from "./generated/values.ts";
 import { message } from "./messages.ts";
 import { answerShown, Progress, resultLine, sessionLines } from "./result.ts";
 import { pointNames, startOpenTask } from "./open-task.ts";
+import { startAudio } from "./audio-client.ts";
 import { startLanguageTask } from "./language-task.ts";
 import { stuckLines, stuckPrompt } from "./stuck.ts";
 import { currentExercise, pageQuery, taskQuery, type PagePosition } from "./position.ts";
@@ -771,6 +772,7 @@ export function startExplainer(root: Document = document): void {
     );
   });
   startVideos(root);
+  startAudio(root);
   startAssessment(root, {
     chosen: (storage, ways) => new WayChoice(storage, ways).get(),
     needs: chosenNeeds,

@@ -321,7 +321,9 @@ function languageTaskPart(block: LanguageTask, lang: string, words: Words): stri
         ? ""
         : unit.prompt.kind === "marker"
           ? `${message(lang, "languageMarker", { marker: unit.prompt.marker })} → `
-          : `${unit.prompt.text} → `;
+          : unit.prompt.kind === "audio"
+            ? `${message(lang, "languageAudioItem")} → `
+            : `${unit.prompt.text} → `;
     const solution = solutionOf(unit);
     // the other right answers: of a whole answer, its variants; of gaps, each gap's when it allows more than one
     const others = unit.whole
@@ -335,6 +337,7 @@ function languageTaskPart(block: LanguageTask, lang: string, words: Words): stri
     for (const mistake of block.items?.[index]?.mistakes ?? [])
       lines.push(`     - ${variantsOf(mistake.answer).join(" / ")}: ${line(inLanguage(mistake.message, lang))}`);
   });
+  if (units.some((unit) => unit.prompt?.kind === "audio")) lines.push(`- ${message(lang, "tutorAudioNote")}`);
   if (block.hint !== undefined) lines.push(`- ${words.hint}: ${line(inLanguage(block.hint, lang))}`);
   if (block.explanation !== undefined)
     lines.push(`- ${words.explanation}: ${line(inLanguage(block.explanation, lang))}`);

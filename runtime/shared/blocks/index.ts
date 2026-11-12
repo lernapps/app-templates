@@ -2,7 +2,7 @@
 export * from "./block.ts";
 export { highlight, type CodeLanguage } from "./code.ts";
 export { bar, hundredGrid } from "./figures.ts";
-export { renderCredit, renderMaterial, type MaterialContext } from "./render.ts";
+export { renderCredit, renderMaterial, type AudioRef, type MaterialContext } from "./render.ts";
 export {
   checkMaterial,
   MATERIAL_DEFINITIONS,

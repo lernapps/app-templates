@@ -389,6 +389,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
           dataFiles,
           terms,
           images,
+          audio,
           anchors: pageAnchors,
           exercises,
           seeds,

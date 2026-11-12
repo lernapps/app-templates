@@ -14,6 +14,7 @@ import { type Data, type Generated, type Templates } from "./generated/types.ts"
 import { loadSite } from "./load.ts";
 import { inspect, renderMarkdown } from "../shared/text/markdown.ts";
 import { routes } from "./routes.ts";
+import { audioOf } from "./media.ts";
 import { assessments, titleOf } from "./assessment.ts";
 
 export interface PageOutline {
@@ -29,6 +30,8 @@ export interface PageOutline {
   figures: string[];
   /** The videos, in order: each shows its title, channel and link without JavaScript, its player only after a click. */
   videos: { youtube: string; title: string; channel: string }[];
+  /** The audio files the page's tasks start from (audio/<name>.mp3), in order, each as often as a task uses it. */
+  audio: string[];
   exercises: ExerciseOutline[];
   /** The vue-component blocks, in order. */
   components: ComponentOutline[];
@@ -255,6 +258,7 @@ function walk(
       }
       case "language-task": {
         const data = languageTaskData(block, lang);
+        into.audio.push(...audioOf(block));
         into.exercises.push({
           kind: "language",
           id: block.id,
@@ -308,6 +312,7 @@ export function outline(root = "."): Outline {
       formulas: 0,
       figures: [],
       videos: [],
+      audio: [],
       exercises: [],
       components: [],
     };

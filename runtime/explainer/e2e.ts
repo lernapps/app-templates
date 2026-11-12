@@ -291,6 +291,41 @@ const ofYoutubeOrGoogle = (url: string): boolean =>
   );
 
 /**
+ * With JavaScript: the audio files of a page are not requested before the learner plays one (`preload="none"`), each
+ * has the tempo buttons, and a button sets the tempo of every player of the page, keeping the pitch; the file is served
+ * as audio with byte ranges, so that a player can jump in it.
+ */
+async function checkAudio(page: Page, item: PageOutline): Promise<void> {
+  const requested: string[] = [];
+  page.on("request", (request) => {
+    if (/\/audio\/[^/]+\.mp3$/.test(new URL(request.url()).pathname)) requested.push(request.url());
+  });
+  await page.goto(`./${item.url}`);
+  await page.waitForLoadState("networkidle");
+  const players = page.locator("main .explainer-audio audio:visible");
+  await expect(players, `${item.url}: one player per audio prompt`).toHaveCount(item.audio.length);
+  expect(requested, `${item.url}: no audio file is requested before a click`).toEqual([]);
+  const speed = page.locator("main .explainer-audio-speed:visible").first();
+  await expect(speed, "the tempo buttons show with JavaScript").toBeVisible();
+  const slow = speed.getByRole("button", { name: /^0[.,]75×$/ });
+  await slow.click();
+  await expect(slow, "the chosen tempo is pressed").toHaveAttribute("aria-pressed", "true");
+  await expect(speed.getByRole("button", { name: /^1×$/ })).toHaveAttribute("aria-pressed", "false");
+  for (const index of item.audio.keys()) {
+    const player = players.nth(index);
+    expect(await player.evaluate((audio: HTMLAudioElement) => audio.playbackRate), `${item.url}: player ${index}`).toBe(
+      0.75,
+    );
+    expect(await player.evaluate((audio: HTMLAudioElement) => audio.preservesPitch), "the pitch is kept").toBe(true);
+  }
+  // the file itself: audio, with a range
+  const src = await players.first().evaluate((audio: HTMLAudioElement) => audio.src);
+  const answer = await page.request.get(src, { headers: { range: "bytes=0-99" } });
+  expect(answer.headers()["content-type"], src).toBe("audio/mpeg");
+  expect([200, 206], `${src} answers a range request`).toContain(answer.status());
+}
+
+/**
  * With JavaScript: the videos of a page load nothing of another host before a click (every such request is blocked and
  * recorded); "Video abspielen" puts the player of youtube-nocookie.com, named by the video's title, into its figure
  * and stores nothing; "Videos immer direkt laden" is kept on the device, loads every player without the click from
@@ -1089,6 +1124,15 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
               "nothing else in the tab",
             ).toEqual([]);
             expect(kept.length, "an answer per open task").toBe(types.has("open-task") ? 1 : 0);
+          });
+        }
+      if (!content)
+        for (const item of app.pages["de"] ?? []) {
+          if (item.audio.length === 0) continue;
+          test(`${item.url}: the audio loads nothing before a click, and the tempo buttons set the tempo`, async ({
+            page,
+          }) => {
+            await checkAudio(page, item);
           });
         }
       if (!content)

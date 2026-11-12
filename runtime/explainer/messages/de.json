@@ -241,5 +241,11 @@
   "mediaAttribution": "Namensnennung: {attribution}.",
   "mediaText": "Text:",
   "mediaVideoBy": "Video von {channel}",
-  "mediaPlay": "Audio anhören: {text}"
+  "mediaPlay": "Audio anhören: {text}",
+  "audioPlay": "Audio abspielen",
+  "audioSpeed": "Tempo",
+  "languageDictate": "Hör zu und schreibe den Satz auf {language} auf.",
+  "languageListen": "Hör zu und schreibe auf {language}, was gesagt wird.",
+  "languageAudioItem": "Audio",
+  "tutorAudioNote": "Die Lernenden hören bei den Items mit Audio eine Datei mit einer KI-Stimme. Du kannst sie nicht abspielen; was gesprochen wird, steht in der Lösung."
 }

@@ -223,6 +223,36 @@
   font-weight: 600;
 }
 
+.explainer-audio {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.explainer-audio audio {
+  max-width: 100%;
+}
+
+.explainer-audio-speed {
+  display: none;
+  gap: 0.25rem;
+}
+
+.explainer-js .explainer-audio-speed {
+  display: inline-flex;
+}
+
+.explainer-audio-speed-button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+.explainer-audio-speed-button[aria-pressed="true"] {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .explainer-pager {
   display: flex;
   flex-wrap: wrap;

@@ -83,6 +83,14 @@ class Context {
       href: (image) => relative(route.path, image),
       resolve: this.resolve,
       sizeless: (image) => sizeless(site, image),
+      audio: (name) => {
+        const file = site.audio.get(`audio/${name}`);
+        if (file === undefined) return undefined;
+        return {
+          src: relative(route.path, `audio/${name}`),
+          ...(file.meta.synthetic ? { ai: message(route.lang, "mediaAiVoice") } : {}),
+        };
+      },
     };
   }
   get lang(): string {

@@ -241,5 +241,11 @@
   "mediaAttribution": "Credit: {attribution}.",
   "mediaText": "Text:",
   "mediaVideoBy": "Video by {channel}",
-  "mediaPlay": "Listen: {text}"
+  "mediaPlay": "Listen: {text}",
+  "audioPlay": "Play audio",
+  "audioSpeed": "Speed",
+  "languageDictate": "Listen and write the sentence in {language}.",
+  "languageListen": "Listen and write in {language} what is said.",
+  "languageAudioItem": "Audio",
+  "tutorAudioNote": "For the items with audio, learners hear a file with an AI voice. You cannot play it; what is spoken is the solution."
 }
