@@ -187,8 +187,38 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
   | `TXXX:lernapps-review` | Freigabe: Datum und SHA-256 über Audio (ohne Tags) und Text; kein Name | nein (nur Warnung) |
 
   Der Build prüft, dass der Text der Datei mit der ersten Antwortvariante der Aufgabe übereinstimmt (Warnung). Die
-  Freigabe gilt nicht mehr, wenn sich Text oder Audio ändern (Prüfsumme). Offen: ob die freigebende Person namentlich
-  in einer öffentlichen Datei stehen soll (Vorschlag: nein, Datenschutz).
+  Freigabe gilt nicht mehr, wenn sich Text oder Audio ändern (Prüfsumme).
+
+  **Entschieden (Owner, 2026-11-12):** Die freigebende Person steht **nicht** namentlich in der Datei, nur Datum und
+  Prüfsumme. Präfix `lernapps-` bleibt. **Audio ohne die Kennzeichnung nach Art. 50 in den Metadaten bricht den Build ab.**
+  Annahme (vom Owner zu bestätigen): Das gilt für alle Pflichtfelder der Tabelle außer der Freigabe, deren Fehlen nur warnt.
+
+  **Recherche Art. 50 KI-VO (2026-11-12)**, Quellen: Verordnung, Art. 50(2); Kommission,
+  [FAQ zum Code of Practice](https://digital-strategy.ec.europa.eu/en/faqs/code-practice-transparency-ai-generated-content);
+  Text des [Code of Practice on Transparency of AI-Generated Content](https://ec.europa.eu/newsroom/dae/redirection/document/129555)
+  (selbst gelesen, Abschnitt 1, Stand der Datei nicht geprüft):
+  - Art. 50(2) verpflichtet **Anbieter** von KI-Systemen, die Audio, Bild, Video oder Text erzeugen: Die Ausgaben müssen
+    „in einem maschinenlesbaren Format“ gekennzeichnet und als künstlich erzeugt erkennbar sein. Anwendbar seit
+    2. August 2026; für vorher in Verkehr gebrachte Systeme Übergangsfrist bis 2. Dezember 2026 (Kommission, FAQ).
+    **Ob ein Creator, der Kokoro lokal betreibt und die Ausgabe veröffentlicht, „Anbieter“ ist, beantworten die gelesenen
+    Quellen nicht.** Rechtsberatung ist das nicht; wir kennzeichnen vorsorglich.
+  - Der Code (freiwillig) verlangt in Maßnahme 1.1 **mindestens zwei Ebenen**, solange keine einzelne Technik die vier
+    Anforderungen für Audio erfüllt: (1.1.1) **digital signierte und mit Zeitstempel versehene Metadaten**, die angeben, dass der
+    Inhalt KI-erzeugt ist („in a secure and tamper-evident manner“), mit Ausnahme, wo der Schlüssel nicht sicher gehandhabt
+    werden kann, „for example in a local deployment scenario“; (1.1.2) ein **nicht wahrnehmbares Wasserzeichen**. Fingerabdruck
+    oder Protokoll allein genügen nicht.
+  - Metadaten: der Code nennt **keinen** Standard für Felder; Maßnahme 3.4 verlangt, „established standards or best
+    practices“ zu übernehmen. Empfohlen (Maßnahme 1.3): Name des KI-Systems, Name des Anbieters, Zeitstempel,
+    Modellkennung und Version. Maßnahme 1.2: Metadaten nicht entfernen; bei offenen Modellen genügt ein Hinweis in der
+    Dokumentation.
+  - **Lücke:** Unsere ID3-Felder sind weder signiert noch ergänzt ein Wasserzeichen sie. Sie erfüllen den Code, falls er für
+    uns gälte, nicht vollständig. Optionen für den Owner (Entscheidung offen):
+    (A) Felder wie in der Tabelle plus Standardwerte (IPTC `DigitalSourceType` =
+    `http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia`); (B) zusätzlich Signatur (z. B. C2PA; MP3-Einbettung
+    und Schlüsselverwaltung noch nicht geprüft); (C) zusätzlich ein unhörbares Wasserzeichen (z. B. AudioSeal, Lizenz und
+    Aufwand noch nicht geprüft). Vorschlag: A jetzt, B und C als Folgeinkrement, wenn die Rechtslage klärt, wer Anbieter ist.
+  - Felder, die der Entwurf noch ergänzen sollte: `lernapps-digital-source-type` (IPTC-URI), `lernapps-generator`
+    (Werkzeug und Version, das erzeugt hat; der „Name des KI-Systems“).
 - [ ] Autor-Schnittstelle im Explainer: wie `language-task` auf Audio verweist (Diktat als Modus oder eigener Block;
   Selbstvergleich), Schema-Erweiterung von Format 2 oder neues Format, Fehlermeldungen im Stil `file:line: place (language): what to do`
 - [ ] Build: Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlende Freigabe nur
