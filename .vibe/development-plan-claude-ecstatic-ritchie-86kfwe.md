@@ -33,10 +33,11 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
 - **Kein Whisper** (Owner, 2026-11-12): keine Rücktranskription im Skill. Qualität sichert das Hören.
 - Der **Owner wählt pro Sprache die Standardstimme** nach einer Hörprobe (Englisch, Französisch, Spanisch, Italienisch);
   der Owner spricht alle vier Sprachen.
-- Die **Creator geben die Sätze ihrer App frei**. Fehlende Freigabe bricht den Build **nicht** ab. Dazu nur ein Hinweis
-  zum Umgang mit Sprachproben (die prüfende Person soll die Sprache beherrschen), mehr nicht.
+- Die **Creator geben die Sätze ihrer App frei**. Die Freigabe steht **nicht in der Datei**: sie kommt aus der
+  Git-Historie (Owner, 2026-11-12), der Build prüft sie nicht. Dazu nur ein Hinweis zum Umgang mit Sprachproben (die
+  prüfende Person soll die Sprache beherrschen), mehr nicht.
 - **Anhang „Medienübersicht“** an jedem Explainer: listet alle Medien und Bilder (Quelle, Lizenz, bei Audio
-  „KI-generiert“, Modell, Stimme, Freigabe), damit sich die Qualität leicht sichern lässt.
+  „KI-generiert“, Modell, Stimme), damit sich die Qualität leicht sichern lässt.
 
 - **Stimmenauswahl des Owners (2026-11-12), im Skill ausdrücklich zu nennen; der Creator wählt daraus:**
   - Englisch US: `af_sarah`, `af_nova`, `af_sky` (w), `am_eric`, `am_puck` (m)
@@ -56,7 +57,7 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
   Die Auswahl des Owners beruht auf dem Hören und gilt vor den Noten.
 
 - **Metadaten in der Audiodatei, alles dort** (Owner, 2026-11-12): KI-generiert, Modell, Stimme, Lizenz, Quelle der
-  Daten (Namensnennung), Text, Freigabe. Kein YAML daneben. Der Build liest die Metadaten und schreibt Label und
+  Daten (Namensnennung), Text. Kein YAML daneben. Der Build liest die Metadaten und schreibt Label und
   Medienübersicht statisch ins HTML.
 - **Der Skill liegt in `lernapps/tooling`** unter `skills/<Gruppe>/lernapps-<name>/` (SKILL.md plus `references/`),
   kompakt und instruktiv wie die anderen. Dieses Feature berührt damit **zwei Repos**: `app-templates` (Laufzeit,
@@ -171,7 +172,7 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
   - Offen: Hörtest der Bitraten durch den Owner (24/32/48 kbit/s); MP3 hat am Anfang und Ende eine kurze Lücke
     (Encoder-Verzögerung), für Diktat unkritisch, bei Wiederholung hörbar prüfen.
 - [ ] Metadatenschema der Audiodatei: Felder (KI-generiert, Modell + Version, Stimme, Lizenz der Ausgabe, Namensnennung
-  der Datenquelle, gesprochener Text, Sprache, Freigabe mit Datum + Prüfsumme), Bibliothek zum Lesen im Build
+  der Datenquelle, gesprochener Text, Sprache; keine Freigabe, die kommt aus Git), Bibliothek zum Lesen im Build
   (`music-metadata`, siehe oben). **Entwurf, vom Owner zu bestätigen:**
 
   | Frame | Inhalt | Pflicht |
@@ -184,14 +185,13 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
   | `TXXX:lernapps-voice` | Stimme, z. B. `ff_siwis` | bei synthetisch |
   | `TXXX:lernapps-attribution` | geforderte Namensnennung der Datenquelle, z. B. `SIWIS, CC BY 4.0` | wenn die Stimme sie verlangt |
   | `TXXX:lernapps-text` | gesprochener Text; zugleich die Textfassung für den Player | ja |
-  | `TXXX:lernapps-review` | Freigabe: Datum und SHA-256 über Audio (ohne Tags) und Text; kein Name | nein (nur Warnung) |
 
-  Der Build prüft, dass der Text der Datei mit der ersten Antwortvariante der Aufgabe übereinstimmt (Warnung). Die
-  Freigabe gilt nicht mehr, wenn sich Text oder Audio ändern (Prüfsumme).
+  Der Build prüft, dass der Text der Datei mit der ersten Antwortvariante der Aufgabe übereinstimmt (Warnung). 
 
-  **Entschieden (Owner, 2026-11-12):** Die freigebende Person steht **nicht** namentlich in der Datei, nur Datum und
-  Prüfsumme. Präfix `lernapps-` bleibt. **Audio ohne die Kennzeichnung nach Art. 50 in den Metadaten bricht den Build ab.**
-  Annahme (vom Owner zu bestätigen): Das gilt für alle Pflichtfelder der Tabelle außer der Freigabe, deren Fehlen nur warnt.
+  **Entschieden (Owner, 2026-11-12):** Es gibt **kein Freigabefeld** in der Datei (`lernapps-review` entfällt): die
+  Freigabe kommt aus der Git-Historie. Damit steht auch keine Person in der Datei. Präfix `lernapps-` bleibt. **Audio
+  ohne die Kennzeichnung nach Art. 50 in den Metadaten bricht den Build ab.** Annahme (vom Owner zu bestätigen): Das
+  gilt für alle Pflichtfelder der Tabelle.
 
   **Recherche Art. 50 KI-VO (2026-11-12)**, Quellen: Verordnung, Art. 50(2); Kommission,
   [FAQ zum Code of Practice](https://digital-strategy.ec.europa.eu/en/faqs/code-practice-transparency-ai-generated-content);
@@ -224,8 +224,8 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     `signingCredential.untrusted`, weil ich das Testzertifikat des Projekts benutzt habe. **Ein Zertifikat, dem Prüfer
     vertrauen, habe ich nicht**; wer es ausstellt, was es kostet und ob einzelne Creator es bekommen, ist nicht geprüft.
     **Folgen:** (1) Wer danach ein Tag ändert (Test: `ffmpeg -c copy -metadata …`), verliert das Manifest ganz („no JUMBF
-    data found“). Die Signatur muss der **letzte** Schritt sein, also **nach** der Freigabe; die Freigabe müsste dann im
-    Manifest selbst stehen oder die Datei neu signieren. (2) Schlüsselverwahrung: einen Schlüssel pro Creator, einen
+    data found“). Die Signatur muss der **letzte** Schritt der Erzeugung sein; weil es kein Freigabefeld mehr gibt, das
+    danach in die Datei geschrieben würde, entfällt dieser Konflikt. (2) Schlüsselverwahrung: einen Schlüssel pro Creator, einen
     der Organisation (z. B. in GitHub Actions) oder unsignierte Manifeste (nur Strukturschutz, kein Vertrauen). Der Code
     erlaubt für lokalen Betrieb eine Ausnahme von der Schlüsselverwahrung. (3) Die Bibliothek ist Python (Skill) und
     Rust/Node (Prüfung im Build), Lizenzen noch nicht geprüft.
@@ -233,10 +233,10 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     (Werkzeug und Version, das erzeugt hat; der „Name des KI-Systems“).
 - [ ] Autor-Schnittstelle im Explainer: wie `language-task` auf Audio verweist (Diktat als Modus oder eigener Block;
   Selbstvergleich), Schema-Erweiterung von Format 2 oder neues Format, Fehlermeldungen im Stil `file:line: place (language): what to do`
-- [ ] Build: Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlende Freigabe nur
-  Warnung; fehlende KI-Kennzeichnung oder Lizenz: Fehler oder Warnung, mit dem Owner klären)
+- [ ] Build: Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlt ein Pflichtfeld,
+  vor allem die KI-Kennzeichnung: Build bricht ab; Entscheidung des Owners)
 - [ ] Anhang „Medienübersicht“ an jedem Explainer: Adresse, Inhalt (Bilder und Audio, Quelle, Lizenz, KI-Hinweis,
-  Namensnennung, Freigabe), Sprachbäume, ohne JavaScript, barrierefrei
+  Namensnennung), Sprachbäume, ohne JavaScript, barrierefrei
 - [ ] Browser: Player (Tempo 0,75/1/1,25 per `playbackRate`, Wiederholen, `preload="none"`, Tastatur, Textfassung),
   Aufnahme (`MediaRecorder`, Berechtigung erst nach Klick, nur Arbeitsspeicher, keine Speicherung, Fallback ohne Mikrofon)
 - [ ] Prüfregeln: Lint und `lernapps check` erlauben Audio, `getUserMedia` und `MediaRecorder` gezielt, verbieten
