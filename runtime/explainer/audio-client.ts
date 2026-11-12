@@ -1,5 +1,6 @@
 // The audio files of a page in the browser (explainer.ts; dec-audio-player): the player is the browser's own and works
-// without this module. This adds buttons for three tempos (0.75, 1, 1.25 times the speed, the pitch kept) that set the tempo
+// without this module. Where the browser's control has no tempo menu (Safari, Firefox), this shows buttons for three tempos
+// (0.75, 1, 1.25 times the speed, the pitch kept) next to the player, and they set the tempo
 // of every player of the page, also of those a task writes later, and lets one player stop the others. The browser's own
 // control may have a tempo menu as well (Chrome's does): the two stay one, because a change in the control is read from the
 // players (`ratechange`), taken as the tempo of the page and shown on the buttons, which press none when the tempo is
@@ -32,8 +33,20 @@ function apply(audio: HTMLAudioElement): void {
   pressed(audio.closest(".explainer-audio") ?? audio);
 }
 
+/**
+ * Whether the browser's own audio control has a tempo menu: Chromium's has (Chrome, Edge, Opera, also on Android), the controls
+ * of Safari and Firefox have none. On iOS every browser is WebKit, whatever its name says.
+ */
+export function hasNativeTempo(userAgent: string): boolean {
+  // "Chrome/" also in HeadlessChrome/, which a test browser sends
+  return /Chrome\//.test(userAgent) && !/\b(CriOS|FxiOS|EdgiOS|OPiOS)\b/.test(userAgent);
+}
+
 /** Makes the tempo buttons and the players of `root` work. */
 export function startAudio(root: Document = document): void {
+  // the buttons only where the control has no tempo menu of its own: one control for one thing
+  if (!hasNativeTempo(root.defaultView?.navigator.userAgent ?? ""))
+    root.documentElement.classList.add("explainer-tempo");
   // media events do not bubble: catch them on the way down
   root.addEventListener(
     "loadedmetadata",

@@ -219,57 +219,60 @@
   font-size: 0.9375rem;
 }
 
-/* The label of an AI voice: a small chip. */
+/* The label of an AI voice: small, with the model and the licence on hover (and for a screen reader). */
 .explainer-ai-voice {
   display: inline-block;
-  padding: 0.125rem 0.625rem;
+  padding: 0.0625rem 0.5rem;
   border: 1px solid var(--page-border);
   border-radius: 999px;
   background: var(--page-surface);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  line-height: 1.5;
   white-space: nowrap;
+  cursor: help;
 }
 
-/* A player: the browser's own on its own line, the label and the tempo below it. */
+.explainer-ai-voice:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+/* A player: the browser's own, the tempo buttons where the browser's control has no tempo menu, and the label, in one row
+   that wraps only when the screen is too narrow for it. */
 .explainer-audio {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  width: 100%;
-  max-width: 28rem;
-}
-
-.explainer-audio audio {
-  width: 100%;
-}
-
-.explainer-audio-tools {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 0.75rem;
+  gap: 0.5rem;
+  max-width: 36rem;
 }
 
-/* The tempo: three buttons that belong together, shown once the client module runs. */
+.explainer-audio audio {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .explainer-audio-speed {
   display: none;
 }
 
-.explainer-js .explainer-audio-speed {
+.explainer-tempo .explainer-audio-speed {
   display: inline-flex;
+  flex: none;
 }
 
 .explainer-audio-speed-button {
-  min-width: 3rem;
-  min-height: 2.5rem;
-  padding: 0.25rem 0.75rem;
+  min-width: 2.5rem;
+  min-height: 2.25rem;
+  padding: 0.125rem 0.5rem;
   border: 2px solid var(--page-accent);
   border-left-width: 0;
   background: var(--page-background);
   color: var(--page-accent);
   font: inherit;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 
@@ -1671,7 +1674,7 @@ textarea.explainer-language-field {
 
 .explainer-speaking-mine audio {
   width: 100%;
-  max-width: 28rem;
+  max-width: 24rem;
 }
 
 .explainer-speaking-compare {

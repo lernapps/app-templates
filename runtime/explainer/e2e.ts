@@ -311,8 +311,66 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
   const players = page.locator("main .explainer-audio audio:visible");
   await expect(players, `${item.url}: one player per audio prompt`).toHaveCount(item.audio.length);
   expect(requested, `${item.url}: no audio file is requested before a click`).toEqual([]);
+  // Chromium's own control has a tempo menu: no buttons beside it. A tempo set in the control becomes the page's tempo, every
+  // player follows it, and playing does not set it back.
+  await expect(
+    page.locator("main .explainer-audio-speed:visible"),
+    "no buttons where the control has a tempo menu",
+  ).toHaveCount(0);
+  await players.first().evaluate((audio: HTMLAudioElement) => {
+    audio.playbackRate = 1.25;
+  });
+  for (const index of item.audio.keys()) {
+    await expect
+      .poll(
+        () => players.nth(index).evaluate((audio: HTMLAudioElement) => audio.playbackRate),
+        `player ${index} follows`,
+      )
+      .toBe(1.25);
+  }
+  await expect(page.locator("main .explainer-audio-speed button[data-speed='1.25']").first()).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await players.first().evaluate((audio: HTMLAudioElement) => {
+    audio.playbackRate = 0.5;
+  });
+  await expect(page.locator("main .explainer-audio-speed button[aria-pressed=true]"), "no button has 0.5").toHaveCount(
+    0,
+  );
+  await players.first().evaluate((audio: HTMLAudioElement) => audio.dispatchEvent(new Event("play")));
+  expect(
+    await players.first().evaluate((audio: HTMLAudioElement) => audio.playbackRate),
+    "playing keeps the tempo",
+  ).toBe(0.5);
+  // the label of an AI voice is small and says what it is on hover and for a screen reader
+  const label = page.locator("main .explainer-audio .explainer-ai-voice:visible").first();
+  await expect(label).toHaveText(/^(KI|AI)$/);
+  await expect(label).toHaveAttribute("title", /Modell .*Lizenz/);
+  await expect(label).toHaveAttribute("aria-label", /Modell .*Lizenz/);
+  // the file itself: audio, with a range
+  const src = await players.first().evaluate((audio: HTMLAudioElement) => audio.src);
+  const answer = await page.request.get(src, { headers: { range: "bytes=0-99" } });
+  expect(answer.headers()["content-type"], src).toBe("audio/mpeg");
+  expect([200, 206], `${src} answers a range request`).toContain(answer.status());
+}
+
+/**
+ * Where the browser's control has no tempo menu (Safari, Firefox: here a Safari agent), the tempo buttons show beside the
+ * player, in one row with it, press the tempo, and set it for every player of the page, keeping the pitch.
+ */
+async function checkTempoButtons(page: Page, item: PageOutline): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      get: () =>
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
+    });
+  });
+  await page.goto(`./${item.url}`);
+  const players = page.locator("main .explainer-audio audio:visible");
+  await expect(players).toHaveCount(item.audio.length);
   const speed = page.locator("main .explainer-audio-speed:visible").first();
-  await expect(speed, "the tempo buttons show with JavaScript").toBeVisible();
+  await expect(speed, "the tempo buttons show where the control has no tempo menu").toBeVisible();
   const slow = speed.getByRole("button", { name: /^0[.,]75×$/ });
   await slow.click();
   await expect(slow, "the chosen tempo is pressed").toHaveAttribute("aria-pressed", "true");
@@ -324,36 +382,17 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
     );
     expect(await player.evaluate((audio: HTMLAudioElement) => audio.preservesPitch), "the pitch is kept").toBe(true);
   }
-  // the browser's own control may set a tempo as well (Chrome's menu): it becomes the page's tempo, shown on the buttons
-  await players.first().evaluate((audio: HTMLAudioElement) => {
-    audio.playbackRate = 1.25;
-  });
-  await expect(
-    speed.getByRole("button", { name: /^1[.,]25×$/ }),
-    "a tempo set in the control is pressed",
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(slow).toHaveAttribute("aria-pressed", "false");
-  for (const index of item.audio.keys()) {
+  // one row with the player, as long as the screen is wide enough for both
+  if ((page.viewportSize()?.width ?? 0) >= 600) {
+    const player = await players.first().boundingBox();
+    const buttons = await speed.boundingBox();
+    if (player === null || buttons === null) throw new Error("no box");
+    expect(buttons.x, "the buttons are right of the player").toBeGreaterThan(player.x + player.width - 1);
     expect(
-      await players.nth(index).evaluate((audio: HTMLAudioElement) => audio.playbackRate),
-      `player ${index} follows`,
-    ).toBe(1.25);
+      Math.abs(buttons.y + buttons.height / 2 - (player.y + player.height / 2)),
+      "level with the player",
+    ).toBeLessThan(Math.max(player.height, buttons.height) / 2);
   }
-  // a tempo that no button has presses none, and playing does not set it back
-  await players.first().evaluate((audio: HTMLAudioElement) => {
-    audio.playbackRate = 0.5;
-  });
-  await expect(speed.locator("button[aria-pressed=true]"), "no button has 0.5").toHaveCount(0);
-  await players.first().evaluate((audio: HTMLAudioElement) => audio.dispatchEvent(new Event("play")));
-  expect(
-    await players.first().evaluate((audio: HTMLAudioElement) => audio.playbackRate),
-    "playing keeps the tempo",
-  ).toBe(0.5);
-  // the file itself: audio, with a range
-  const src = await players.first().evaluate((audio: HTMLAudioElement) => audio.src);
-  const answer = await page.request.get(src, { headers: { range: "bytes=0-99" } });
-  expect(answer.headers()["content-type"], src).toBe("audio/mpeg");
-  expect([200, 206], `${src} answers a range request`).toContain(answer.status());
 }
 
 /**
@@ -1260,6 +1299,11 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
             page,
           }) => {
             await checkAudio(page, item);
+          });
+          test(`${item.url}: where the control has no tempo menu, buttons beside the player set the tempo`, async ({
+            page,
+          }) => {
+            await checkTempoButtons(page, item);
           });
         }
       if (!content)

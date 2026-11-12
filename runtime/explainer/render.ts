@@ -89,7 +89,23 @@ class Context {
         return {
           src: relative(route.path, `audio/${name}`),
           text: file.meta.text,
-          ...(file.meta.synthetic ? { ai: message(route.lang, "mediaAiVoice") } : {}),
+          ...(file.meta.synthetic
+            ? {
+                ai: message(route.lang, "audioAiShort"),
+                info: [
+                  `${message(route.lang, "mediaAiVoice")}.`,
+                  message(route.lang, "mediaVoice", {
+                    model: file.meta.model ?? "",
+                    voice: file.meta.voice ?? "",
+                    date: file.meta.date,
+                  }),
+                  message(route.lang, "mediaLicence", { licence: file.meta.licence }),
+                  ...(file.meta.attribution === undefined || file.meta.attribution === "none"
+                    ? []
+                    : [message(route.lang, "mediaAttribution", { attribution: file.meta.attribution })]),
+                ].join(" "),
+              }
+            : {}),
         };
       },
     };
