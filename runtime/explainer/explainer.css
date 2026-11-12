@@ -1500,11 +1500,69 @@ button.explainer-help:focus-visible {
   line-height: 2.5;
 }
 
+/* A gap as a blank: a line below and short ticks at both ends, a third of the field's height, so that two gaps that wrap
+   side by side do not run into each other. The colour is --blank, which a verdict changes. Without JavaScript the same
+   blank is a span. */
+.explainer-language-blank,
+.explainer-language-unit .explainer-language-gapped .explainer-language-field,
+.explainer-language-unit[data-state] .explainer-language-gapped .explainer-language-field {
+  --blank: var(--page-text);
+  border: 0;
+  border-bottom: 2px solid var(--blank);
+  border-radius: 0;
+  background-color: transparent;
+  background-image: linear-gradient(var(--blank), var(--blank)), linear-gradient(var(--blank), var(--blank));
+  background-position:
+    left bottom,
+    right bottom;
+  background-size:
+    2px 33%,
+    2px 33%;
+  background-repeat: no-repeat;
+  text-align: center;
+}
+
 .explainer-language-blank {
   display: inline-block;
-  min-width: 3rem;
-  border-bottom: 1px solid var(--page-text);
-  text-align: center;
+  min-width: 3.5rem;
+  min-height: 1.5rem;
+  vertical-align: bottom;
+}
+
+.explainer-language-unit .explainer-language-gapped .explainer-language-field {
+  min-width: 4rem;
+  min-height: 2rem;
+  margin: 0.25rem 0.25rem;
+  padding: 0 0.5rem 0.125rem;
+}
+
+/* A choice in a gap: the same blank with an arrow, drawn in the same colour. */
+.explainer-language-unit .explainer-language-gapped select.explainer-language-field {
+  appearance: none;
+  padding: 0.5rem 1.75rem 0.125rem 0.5rem;
+  background-image:
+    linear-gradient(var(--blank), var(--blank)), linear-gradient(var(--blank), var(--blank)),
+    linear-gradient(45deg, transparent 50%, var(--blank) 50%),
+    linear-gradient(135deg, var(--blank) 50%, transparent 50%);
+  background-position:
+    left bottom,
+    right bottom,
+    calc(100% - 0.9rem) 55%,
+    calc(100% - 0.6rem) 55%;
+  background-size:
+    2px 33%,
+    2px 33%,
+    0.3rem 0.3rem,
+    0.3rem 0.3rem;
+}
+
+.explainer-language-unit[data-state="richtig"] .explainer-language-gapped .explainer-language-field {
+  --blank: var(--page-right);
+}
+
+.explainer-language-unit[data-state="teilweise"] .explainer-language-gapped .explainer-language-field,
+.explainer-language-unit[data-state="falsch"] .explainer-language-gapped .explainer-language-field {
+  --blank: var(--page-wrong);
 }
 
 .explainer-language-field {
