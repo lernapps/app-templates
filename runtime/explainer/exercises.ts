@@ -484,8 +484,10 @@ export function audioHtml(audio: AudioRef | undefined, lang: string): string {
   return [
     `<span class="explainer-audio">`,
     `<audio controls preload="none" src="${plain(audio.src)}" aria-label="${plain(message(lang, "audioPlay"))}"></audio>`,
+    `<span class="explainer-audio-tools">`,
     audio.ai === undefined ? "" : `<span class="explainer-ai-voice">${plain(audio.ai)}</span>`,
     `<span class="explainer-audio-speed" role="group" aria-label="${plain(message(lang, "audioSpeed"))}">${buttons}</span>`,
+    `</span>`,
     `</span>`,
   ].join("");
 }
@@ -551,7 +553,9 @@ function languageTaskExercise(
               unit.parts === undefined
                 ? ""
                 : `<span class="explainer-language-gapped" lang="${target}">${gappedHtml(unit.parts)}</span>`;
-            return `<li>${[prompt, gapped].filter((part) => part !== "").join(" → ")}</li>`;
+            // a player is a block of its own: the gapped text follows it, no arrow
+            const joiner = unit.prompt?.kind === "audio" ? " " : " → ";
+            return `<li>${[prompt, gapped].filter((part) => part !== "").join(joiner)}</li>`;
           })
           .join("")}</ol>`;
   const solutions =
@@ -633,8 +637,8 @@ function speakingTaskExercise(
       const text =
         item.text === undefined
           ? ""
-          : ` <span class="explainer-speaking-sentence" lang="${plain(data.language)}">${plain(item.text)}</span>`;
-      return `<li data-item="${index}">${item.player}${text}</li>`;
+          : `<span class="explainer-speaking-sentence" lang="${plain(data.language)}">${plain(item.text)}</span>`;
+      return `<li data-item="${index}">${text}${item.player}</li>`;
     })
     .join("");
   return [

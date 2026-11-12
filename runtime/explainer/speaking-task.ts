@@ -5,6 +5,7 @@
 // browser's memory, played through an object URL: never stored, never sent, dropped when the learner records again or
 // leaves the page, and the microphone is released as soon as the recording stops. Without a microphone, or when it is
 // refused, the learner says it aloud and compares with the original, and still rates.
+import { applyTempo } from "./audio-client.ts";
 import type { SpeakingTaskData } from "./exercises.ts";
 import { escape } from "../shared/html.ts";
 
@@ -55,11 +56,11 @@ export function startSpeakingTask(
       [
         `<li class="explainer-speaking-item" data-item="${index}">`,
         `<p class="explainer-speaking-title"><strong>${escape(t("speakItem", { n: String(index + 1) }))}</strong></p>`,
-        `<div class="explainer-speaking-model">${item.player}${
+        `<div class="explainer-speaking-model">${
           item.text === undefined
             ? ""
-            : ` <span class="explainer-speaking-sentence" lang="${escape(data.language)}">${escape(item.text)}</span>`
-        }</div>`,
+            : `<span class="explainer-speaking-sentence" lang="${escape(data.language)}">${escape(item.text)}</span>`
+        }${item.player}</div>`,
         `<p class="explainer-speaking-controls"><button type="button" class="explainer-speaking-record">${escape(t("speakRecord"))}</button> <span class="explainer-speaking-status" role="status"></span></p>`,
         `<div class="explainer-speaking-mine" hidden>`,
         `<audio controls preload="metadata" aria-label="${escape(t("speakMine"))}"></audio>`,
@@ -138,6 +139,7 @@ export function startSpeakingTask(
     const next = URL.createObjectURL(blob);
     urls[index] = next;
     const player = mine(index);
+    applyTempo(player);
     player.src = next;
     part(index, ".explainer-speaking-mine").hidden = false;
     part(index, ".explainer-speaking-nomic").hidden = true;
@@ -188,11 +190,14 @@ export function startSpeakingTask(
       // release the microphone at once: the browser's recording sign goes off
       for (const track of stream.getTracks()) track.stop();
       recording = undefined;
+      delete part<HTMLButtonElement>(index, ".explainer-speaking-record").dataset["recording"];
       if (chunks.length > 0) keep(index, new Blob(chunks, { type: recorder.mimeType }));
       else withoutMicrophone(index);
     };
     recording = { index, recorder, stream, timer: window.setTimeout(finish, LONGEST) };
-    part<HTMLButtonElement>(index, ".explainer-speaking-record").textContent = t("speakStop");
+    const button = part<HTMLButtonElement>(index, ".explainer-speaking-record");
+    button.textContent = t("speakStop");
+    button.dataset["recording"] = "";
     status(index, t("speakRecording"));
     recorder.start();
   };

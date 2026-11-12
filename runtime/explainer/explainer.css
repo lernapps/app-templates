@@ -219,24 +219,42 @@
   font-size: 0.9375rem;
 }
 
+/* The label of an AI voice: a small chip. */
 .explainer-ai-voice {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid var(--page-border);
+  border-radius: 999px;
+  background: var(--page-surface);
+  font-size: 0.875rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
+/* A player: the browser's own on its own line, the label and the tempo below it. */
 .explainer-audio {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 28rem;
+}
+
+.explainer-audio audio {
+  width: 100%;
+}
+
+.explainer-audio-tools {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.75rem;
 }
 
-.explainer-audio audio {
-  max-width: 100%;
-}
-
+/* The tempo: three buttons that belong together, shown once the client module runs. */
 .explainer-audio-speed {
   display: none;
-  gap: 0.25rem;
 }
 
 .explainer-js .explainer-audio-speed {
@@ -244,13 +262,35 @@
 }
 
 .explainer-audio-speed-button {
-  min-width: 2.75rem;
-  min-height: 2.75rem;
+  min-width: 3rem;
+  min-height: 2.5rem;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid var(--page-accent);
+  border-left-width: 0;
+  background: var(--page-background);
+  color: var(--page-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.explainer-audio-speed-button:first-child {
+  border-left-width: 2px;
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.explainer-audio-speed-button:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
 }
 
 .explainer-audio-speed-button[aria-pressed="true"] {
-  font-weight: 700;
-  text-decoration: underline;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  font-weight: 600;
+}
+
+.explainer-audio-speed-button:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
 }
 
 .explainer-pager {
@@ -1367,6 +1407,36 @@ button.explainer-help:focus-visible {
   margin: 0 0 0.25rem;
 }
 
+.explainer-language-prompt:has(.explainer-audio) {
+  margin-bottom: 0.75rem;
+}
+
+/* An item that starts from a player: its number stands level with the player, not at the bottom of its line. */
+.explainer-language-items,
+.explainer-language-units {
+  counter-reset: language-item;
+}
+
+.explainer-language-units > li,
+.explainer-language-items > li {
+  counter-increment: language-item;
+}
+
+.explainer-language-units > li:has(.explainer-audio),
+.explainer-language-items > li:has(.explainer-audio) {
+  position: relative;
+  list-style: none;
+}
+
+.explainer-language-units > li:has(.explainer-audio)::before,
+.explainer-language-items > li:has(.explainer-audio)::before {
+  content: counter(language-item) ".";
+  position: absolute;
+  left: -1.5rem;
+  top: 0;
+  line-height: 3.25rem;
+}
+
 .explainer-language-cue,
 .explainer-language-marker {
   font-weight: 600;
@@ -1502,15 +1572,44 @@ textarea.explainer-language-field {
   color: var(--page-muted);
 }
 
-.explainer-speaking-items {
+/* A speaking task: each sentence is a card with its model, its recording, and its rating. */
+.explainer-speaking-static {
   padding-left: 1.25rem;
 }
 
-.explainer-speaking-item {
-  margin-top: 1.25rem;
+.explainer-speaking-static li {
+  margin-top: 1rem;
+}
+
+.explainer-speaking-live .explainer-speaking-items {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-speaking-live .explainer-speaking-item {
+  padding: 1rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+}
+
+.explainer-speaking-title {
+  margin: 0 0 0.25rem;
+}
+
+.explainer-speaking-model {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .explainer-speaking-sentence {
+  display: block;
+  font-size: 1.125rem;
   font-style: italic;
 }
 
@@ -1525,28 +1624,100 @@ textarea.explainer-language-field {
   display: none;
 }
 
+.explainer-speaking-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 1rem 0 0;
+}
+
+/* The buttons: the one that records is filled, the others outlined, as the buttons of an exercise are. */
+.explainer-speaking-item button {
+  min-height: 2.5rem;
+  padding: 0.25rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.explainer-speaking-item button.explainer-speaking-record {
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-speaking-item button.explainer-speaking-record[data-recording] {
+  border-color: var(--page-wrong);
+  background: var(--page-wrong);
+}
+
+.explainer-speaking-item button:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-speaking-mine {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--page-border);
+}
+
+.explainer-speaking-mine audio {
+  width: 100%;
+  max-width: 28rem;
+}
+
 .explainer-speaking-compare {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.5rem;
 }
 
-.explainer-speaking-item button {
-  min-height: 2.75rem;
+.explainer-speaking-nomic {
+  margin: 0.75rem 0 0;
 }
 
 .explainer-speaking-rate {
-  margin: 0.75rem 0 0;
+  margin: 1rem 0 0;
   padding: 0;
   border: 0;
 }
 
-.explainer-speaking-rate label {
-  display: block;
-  padding: 0.25rem 0;
+.explainer-speaking-rate legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-weight: 600;
 }
 
-.explainer-speaking-result {
+.explainer-speaking-rate label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0.5rem 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  cursor: pointer;
+}
+
+.explainer-speaking-rate label:has(input:checked) {
+  border-color: var(--page-accent);
+  box-shadow: inset 0 0 0 1px var(--page-accent);
+  font-weight: 600;
+}
+
+.explainer-speaking-result:not(:empty) {
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--page-accent);
+  background: var(--page-surface);
   font-weight: 600;
 }

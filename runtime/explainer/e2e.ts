@@ -324,6 +324,31 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
     );
     expect(await player.evaluate((audio: HTMLAudioElement) => audio.preservesPitch), "the pitch is kept").toBe(true);
   }
+  // the browser's own control may set a tempo as well (Chrome's menu): it becomes the page's tempo, shown on the buttons
+  await players.first().evaluate((audio: HTMLAudioElement) => {
+    audio.playbackRate = 1.25;
+  });
+  await expect(
+    speed.getByRole("button", { name: /^1[.,]25×$/ }),
+    "a tempo set in the control is pressed",
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(slow).toHaveAttribute("aria-pressed", "false");
+  for (const index of item.audio.keys()) {
+    expect(
+      await players.nth(index).evaluate((audio: HTMLAudioElement) => audio.playbackRate),
+      `player ${index} follows`,
+    ).toBe(1.25);
+  }
+  // a tempo that no button has presses none, and playing does not set it back
+  await players.first().evaluate((audio: HTMLAudioElement) => {
+    audio.playbackRate = 0.5;
+  });
+  await expect(speed.locator("button[aria-pressed=true]"), "no button has 0.5").toHaveCount(0);
+  await players.first().evaluate((audio: HTMLAudioElement) => audio.dispatchEvent(new Event("play")));
+  expect(
+    await players.first().evaluate((audio: HTMLAudioElement) => audio.playbackRate),
+    "playing keeps the tempo",
+  ).toBe(0.5);
   // the file itself: audio, with a range
   const src = await players.first().evaluate((audio: HTMLAudioElement) => audio.src);
   const answer = await page.request.get(src, { headers: { range: "bytes=0-99" } });
