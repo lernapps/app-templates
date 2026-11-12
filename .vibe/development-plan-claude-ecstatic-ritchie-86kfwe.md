@@ -83,6 +83,29 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
 - Der Skill `lernapps-explainer` verweist auf `references/language-tasks.md`; Audio-Übungen gehören dorthin und in
   einen neuen Skill für die Erzeugung.
 
+## Footprint des Erzeugungs-Skills (gemessen 2026-11-12, Linux x86_64, Python 3.13)
+Gemessen in sauberen venvs; „installiert“ in MiB, „Download“ in MB (Wheels bzw. Dateigröße). Nur nötig beim **Erzeugen**
+der Dateien, nicht beim Bauen oder im Browser.
+
+| Baustein | Download | installiert | Hinweis |
+|---|---|---|---|
+| Kokoro-Pakete (`kokoro-onnx`, `soundfile`, `onnxruntime`, `numpy`, `espeakng_loader`) | 51 MB | 184 MiB (venv, davon pip 12) | Python-venv |
+| Kokoro-Modell `kokoro-v1.0.onnx` | 325,5 MB | 311 MiB | GitHub Releases, **ein Modell für alle vier Sprachen** |
+| Kokoro-Stimmen `voices-v1.0.bin` | 28,2 MB | 27 MiB | alle Stimmen, alle Sprachen |
+| Piper-Pakete (`piper-tts`, nur für `pierre`) | 72 MB | 199 MiB (venv) | teilt sich `numpy`/`onnxruntime` mit Kokoro: beide zusammen im selben venv 231 MiB |
+| Piper-Stimme `fr_FR-upmc-medium` (`pierre`) | 76,7 MB | 74 MiB | Hugging Face |
+| `ffmpeg` (Tags schreiben, MP3 mit 48 kbit/s CBR) | 65 MB als pip-Paket `imageio-ffmpeg` | 178 MiB (venv mit eingebauter Programmdatei, 165 MiB) | oder System-`ffmpeg` (Größe samt Bibliotheken nicht gemessen) |
+| `c2pa-python` (später, Option B) | 21 MB | 87 MiB (venv) | |
+
+Summe, wenn alles zusammen genutzt wird (Kokoro + Piper-Stimme + ffmpeg als pip-Paket): **rund 0,6 GB Download und
+rund 0,8 GB auf der Platte**, davon etwa 430 MB Modelle. Modelle werden einmal geladen und in einem Cache außerhalb
+des Repos gehalten (nicht in die App einchecken). Die Dateien der App: etwa 6 kB je Sekunde Sprache.
+Geprüft und **nicht** tauglich: `soundfile` allein schreibt MP3, aber ohne Einfluss auf Bitrate (61 kbit/s statt 48) und
+ohne eigene ID3-Felder, ersetzt `ffmpeg` also nicht. Nicht geprüft: kleinere (quantisierte) Kokoro-Modelle; sie
+bräuchten einen neuen Hörtest des Owners. Whisper entfällt (kein Footprint).
+Hosts, die eine Umgebung freigeben muss: `pypi.org`, `files.pythonhosted.org`, `github.com` (Release-Dateien von Kokoro),
+`huggingface.co` (Piper-Stimme) und deren Weiterleitungs-/CDN-Hosts (nicht vollständig ermittelt).
+
 ## Notes
 - `explainer/README.md:46` sagt heute „No audio: no listening, no dictation, no speaking“. Das ist zu ändern.
 - Apps haben keinen Server, sind statisch, 100 kB `localStorage` pro App; Lint-Regeln verbieten Netzwerk-APIs, `lernapps
