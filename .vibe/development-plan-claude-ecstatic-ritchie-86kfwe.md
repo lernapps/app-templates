@@ -272,7 +272,7 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     Pflichtfeld der Metadaten fehlt (**Abbruch**); die Sprache der Datei (`TLAN`) passt nicht zu `languages.target`;
     der Text der Datei ist keine Variante der Antwort (**vorgeschlagen: Fehler**, Owner entscheidet).
   - Format: `audio` als zusätzliche optionale Eigenschaft ist abwärtskompatibel, **Format 2 bleibt**.
-- [ ] Build (**Entwurf, zu bestätigen**): Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlt ein Pflichtfeld,
+- [x] Build (**bestätigt vom Owner, 2026-11-12**): Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlt ein Pflichtfeld,
   vor allem die KI-Kennzeichnung: Build bricht ab; Entscheidung des Owners)
   - `src/audio/` (`load.ts` wie `images`: nur `<name>.mp3`, Kleinbuchstaben, sonst Fehler mit Ort und Abhilfe); `plugin.ts`
     gibt die Dateien als Assets nach `audio/` aus; der Dev-Server liefert sie als `audio/mpeg` **mit Range-Anfragen**
@@ -281,7 +281,7 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     Pflicht (Tabelle oben) ist ein Fehler `src/audio/x.mp3: lernapps-model is missing; run the audio skill again`.
   - Der Text der Datei steht als Textfassung im HTML (für den Player und nach dem Lösen); die Sprache `TLAN` wird gegen
     `languages.target` geprüft.
-- [ ] Anhang „Medienübersicht“ an jedem Explainer (**Entwurf, zu bestätigen**): Adresse, Inhalt (Bilder und Audio, Quelle, Lizenz, KI-Hinweis,
+- [x] Anhang „Medienübersicht“ an jedem Explainer (**bestätigt, Videos (YouTube) mit Titel und Adresse eingeschlossen**): Adresse, Inhalt (Bilder und Audio, Quelle, Lizenz, KI-Hinweis,
   Namensnennung), Sprachbäume, ohne JavaScript, barrierefrei
   - Eigene Seite `medien/` (Route `kind: "media"` neben `glossar/`, Muster: `routes.ts:110`, `render.ts:391`); `medien` kommt
     in die reservierten Kapitel-IDs (`load.ts:44`); verlinkt von der Startseite, wenn die App Medien hat. Beschriftung
@@ -290,8 +290,7 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     die Seiten, auf denen sie vorkommen, Quelle, Lizenz, bei Audio zusätzlich „KI-Stimme“, Modell, Stimme, Namensnennung,
     Sprache und Textfassung. Alles statisch gebaut, ohne JavaScript lesbar; für Bilder aus dem Alternativtext.
   - Sie ersetzt keine Pflichtprüfung: der Build prüft schon vorher; die Seite macht Lücken für Menschen sichtbar.
-  - Offen: Videos (YouTube) aufnehmen? Vorschlag: ja, mit Titel und Adresse.
-- [ ] Browser (**Entwurf, zu bestätigen**): Player (Tempo 0,75/1/1,25 per `playbackRate`, Wiederholen, `preload="none"`, Tastatur, Textfassung),
+- [x] Browser (**bestätigt**): Player (Tempo 0,75/1/1,25 per `playbackRate`, Wiederholen, `preload="none"`, Tastatur, Textfassung),
   Aufnahme (`MediaRecorder`, Berechtigung erst nach Klick, nur Arbeitsspeicher, keine Speicherung, Fallback ohne Mikrofon)
   - Player: natives `<audio controls preload="none">` im statischen HTML (spielt ohne JavaScript), daneben mit JavaScript
     Tempo-Schalter 0,75 / 1 / 1,25 (`playbackRate`, `preservesPitch`), am Player ein sichtbares „KI-Stimme“ mit Modell und Stimme
@@ -303,10 +302,28 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     Spuren werden nach dem Stoppen beendet, damit die Mikrofon-Anzeige ausgeht. Verweigert oder fehlt das Mikrofon: kurzer
     Hinweis; die Selbstbewertung bleibt möglich („Ich habe laut gesprochen und verglichen“).
   - Benötigt HTTPS (lernapps.net hat es).
-- [ ] Prüfregeln: Lint und `lernapps check` erlauben Audio, `getUserMedia` und `MediaRecorder` gezielt, verbieten
+- [ ] Prüfregeln (**Entwurf, zu bestätigen**): Lint und `lernapps check` erlauben Audio, `getUserMedia` und `MediaRecorder` gezielt, verbieten
   Netzwerk-APIs weiter, prüfen „keine Anfrage vor einem Klick“ auch für Audio (Lehre aus `qg-privacy`)
-- [ ] Zustand und Tutor: wie Diktat (richtig/teilweise/falsch) und Selbstvergleich („selbst bewertet“) in Ergebniszeile,
+  - **Befund `lernapps/tooling`:** Es braucht voraussichtlich **keine neue Regel**. `vue-component-no-network` verbietet in
+    Komponenten `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource` und `sendBeacon`, nicht `<audio>`, `getUserMedia` oder
+    `MediaRecorder`; eine Aufnahme kann also nicht über eine Komponente verschickt werden. `no-request-before-click`
+    meldet Anfragen an **andere Hosts** vor einem Klick; Audio liegt auf demselben Host und lädt mit `preload="none"` gar nicht.
+    `dependency-licence` lässt `music-metadata` (MIT) zu. Zu prüfen im Code (nicht annehmen): dass die gebaute Seite mit Audio
+    und `speaking-task` die Regeln `accessible`, `explainer-readable-without-js`, `usable-at-360px` und `no-tracking` besteht.
+  - Dazu ein **Test mit der Beispiel-App**: `lernapps check` über `explainer/examples/franzoesisch` mit Audio ohne Befund.
+- [ ] Zustand und Tutor (**Entwurf, zu bestätigen**): wie Diktat (richtig/teilweise/falsch) und Selbstvergleich („selbst bewertet“) in Ergebniszeile,
   Selbsteinschätzung und Tutorseite eingehen
+  - **Vorbild ist `dec-open-task`** (Antwort zuerst, dann Vergleich mit Punkten, das Foto „aus dem Arbeitsspeicher, nie gespeichert
+    oder gesendet“). Der Selbstvergleich folgt dem: drei Schaltflächen **„Passt“ → richtig, „Fast“ → teilweise,
+    „Nochmal“ → falsch**; die Aufnahme bleibt im Arbeitsspeicher; in der Ergebniszeile steht nur die Bewertung und der
+    Hinweis, dass aufgenommen wurde, nie die Aufnahme. Die Bewertung bleibt nur solange der Tab offen ist (wie beim
+    offenen Task über `sessionStorage` mit dem Präfix der App).
+  - **Diktat:** Zustand aus der bestehenden Prüfung (`language.ts`), unverändert.
+  - **Tutorseite:** Für das Diktat steht die Textfassung der Datei (`lernapps-text`) auf der Tutorseite, mit dem Hinweis, dass die
+    Lernenden das Audio gehört haben und der Tutor es nicht abspielen kann. Für den Selbstvergleich der Text, die Anleitung und
+    wie man hilft (zum Beispiel Laute zu beschreiben); der Tutor hört die Aufnahme nicht.
+  - **Selbsteinschätzung eines Kapitels:** `speaking-task` nicht zulassen (eine Selbstbewertung zur Selbsteinschätzung wäre
+    zirkulär); das Diktat ja, wie jede `language-task`. **Offen, Owner entscheidet.**
 - [ ] Skill in `lernapps/tooling` (**Auflage des Owners:** kurze Erklärung an den Creator, bevor Audio-Aufgaben erstellt werden: was gebraucht wird, Footprint (Tabelle oben, rund 0,6 GB Download, 0,8 GB Platz, einmalig) und freizugebende Hosts) (`skills/…/lernapps-…`), kompakt: Stimmenliste, Aufruf, Preflight mit gesammelten
   Fehlern (Python, Pakete, `ffmpeg`, Modelle + Prüfsumme, Speicher, Hosts), Exit-Codes, Hinweis zum Umgang mit
   Sprachproben, Pfade; Auswirkung auf `skills-lock.json`, `lernapps update`, `lernapps-cli` (Voraussetzungen)
