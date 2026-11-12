@@ -217,6 +217,18 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     `http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia`); (B) zusätzlich Signatur (z. B. C2PA; MP3-Einbettung
     und Schlüsselverwaltung noch nicht geprüft); (C) zusätzlich ein unhörbares Wasserzeichen (z. B. AudioSeal, Lizenz und
     Aufwand noch nicht geprüft). Vorschlag: A jetzt, B und C als Folgeinkrement, wenn die Rechtslage klärt, wer Anbieter ist.
+  - **Option B geprüft (2026-11-12, Versuch mit `c2pa-python` 0.38.1 / c2pa-rs 0.91.3):** Technisch machbar. Ein
+    C2PA-Manifest mit `c2pa.created` und `digitalSourceType` = `trainedAlgorithmicMedia` ließ sich in unsere MP3 (`audio/mpeg`)
+    einbetten (als ID3-Frame `GEOB`, +3,6 kB auf 41 kB), die Audiodaten und alle `TXXX`-Felder blieben unverändert, `music-metadata`
+    liest sie weiter, die Dauer ist gleich. Das Manifest wurde als `Valid` gelesen, aber mit
+    `signingCredential.untrusted`, weil ich das Testzertifikat des Projekts benutzt habe. **Ein Zertifikat, dem Prüfer
+    vertrauen, habe ich nicht**; wer es ausstellt, was es kostet und ob einzelne Creator es bekommen, ist nicht geprüft.
+    **Folgen:** (1) Wer danach ein Tag ändert (Test: `ffmpeg -c copy -metadata …`), verliert das Manifest ganz („no JUMBF
+    data found“). Die Signatur muss der **letzte** Schritt sein, also **nach** der Freigabe; die Freigabe müsste dann im
+    Manifest selbst stehen oder die Datei neu signieren. (2) Schlüsselverwahrung: einen Schlüssel pro Creator, einen
+    der Organisation (z. B. in GitHub Actions) oder unsignierte Manifeste (nur Strukturschutz, kein Vertrauen). Der Code
+    erlaubt für lokalen Betrieb eine Ausnahme von der Schlüsselverwahrung. (3) Die Bibliothek ist Python (Skill) und
+    Rust/Node (Prüfung im Build), Lizenzen noch nicht geprüft.
   - Felder, die der Entwurf noch ergänzen sollte: `lernapps-digital-source-type` (IPTC-URI), `lernapps-generator`
     (Werkzeug und Version, das erzeugt hat; der „Name des KI-Systems“).
 - [ ] Autor-Schnittstelle im Explainer: wie `language-task` auf Audio verweist (Diktat als Modus oder eigener Block;
