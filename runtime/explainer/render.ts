@@ -398,7 +398,7 @@ function mediaOverview(context: Context): string {
           meta.attribution === undefined || meta.attribution === "none"
             ? ""
             : ` ${plain(context.t("mediaAttribution", { attribution: meta.attribution }))}`;
-        return `<li><p><code>${plain(item.name)}</code></p><audio controls preload="none" src="${plain(context.material.href(item.name))}" aria-label="${plain(context.t("mediaPlay", { text: meta.text }))}"></audio><p class="explainer-media-text">${plain(context.t("mediaText"))} <span lang="${plain(spoken)}">${plain(meta.text)}</span></p><p>${voice}${attribution} ${plain(context.t("mediaLicence", { licence: meta.licence }))}</p>${uses(item)}</li>`;
+        return `<li><p><code>${plain(item.name)}</code></p><span class="explainer-audio"><audio controls preload="none" src="${plain(context.material.href(item.name))}" aria-label="${plain(context.t("mediaPlay", { text: meta.text }))}"></audio></span><p class="explainer-media-text">${plain(context.t("mediaText"))} <span lang="${plain(spoken)}">${plain(meta.text)}</span></p><p>${voice}${attribution} ${plain(context.t("mediaLicence", { licence: meta.licence }))}</p>${uses(item)}</li>`;
       }
       case "video":
         return `<li><p>${external(watchAddress(item.youtube), item.title)} ${plain(context.t("mediaVideoBy", { channel: item.channel }))}</p>${uses(item)}</li>`;

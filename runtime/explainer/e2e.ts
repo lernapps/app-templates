@@ -369,8 +369,8 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
 }
 
 /**
- * Where the browser's control has no tempo menu (an iPhone or an iPad: here an iPhone agent), the tempo buttons show beside
- * the player, in one row with it, press the tempo, and set it for every player of the page, keeping the pitch.
+ * Where the browser's control has no tempo menu (an iPhone or an iPad: here an iPhone agent), the tempo buttons show in the
+ * player's box, below the control, press the tempo, and set it for every player of the page, keeping the pitch.
  */
 async function checkTempoButtons(page: Page, item: PageOutline): Promise<void> {
   await page.addInitScript(() => {
@@ -395,17 +395,16 @@ async function checkTempoButtons(page: Page, item: PageOutline): Promise<void> {
     );
     expect(await player.evaluate((audio: HTMLAudioElement) => audio.preservesPitch), "the pitch is kept").toBe(true);
   }
-  // one row with the player, as long as the screen is wide enough for both
-  if ((page.viewportSize()?.width ?? 0) >= 600) {
-    const player = await players.first().boundingBox();
-    const buttons = await speed.boundingBox();
-    if (player === null || buttons === null) throw new Error("no box");
-    expect(buttons.x, "the buttons are right of the player").toBeGreaterThan(player.x + player.width - 1);
-    expect(
-      Math.abs(buttons.y + buttons.height / 2 - (player.y + player.height / 2)),
-      "level with the player",
-    ).toBeLessThan(Math.max(player.height, buttons.height) / 2);
-  }
+  // one box: the control, the buttons and the label are in it, the buttons below the control
+  const box = players.first().locator("xpath=ancestor::*[contains(@class,'explainer-audio')][1]");
+  const frame = await box.boundingBox();
+  const player = await players.first().boundingBox();
+  const buttons = await speed.boundingBox();
+  if (frame === null || player === null || buttons === null) throw new Error("no box");
+  expect(player.y, "the control is in the box").toBeGreaterThanOrEqual(frame.y);
+  expect(buttons.y, "the buttons are below the control").toBeGreaterThanOrEqual(player.y + player.height - 1);
+  expect(buttons.y + buttons.height, "and in the box").toBeLessThanOrEqual(frame.y + frame.height + 1);
+  expect(buttons.x + buttons.width, "within its width").toBeLessThanOrEqual(frame.x + frame.width + 1);
 }
 
 /**

@@ -63,7 +63,7 @@ export function startSpeakingTask(
         }${item.player}</div>`,
         `<p class="explainer-speaking-controls"><button type="button" class="explainer-speaking-record">${escape(t("speakRecord"))}</button> <span class="explainer-speaking-status" role="status"></span></p>`,
         `<div class="explainer-speaking-mine" hidden>`,
-        `<audio controls preload="metadata" aria-label="${escape(t("speakMine"))}"></audio>`,
+        `<span class="explainer-audio"><audio controls preload="metadata" aria-label="${escape(t("speakMine"))}"></audio></span>`,
         `<div role="group" aria-label="${escape(t("speakCompare"))}" class="explainer-speaking-compare">`,
         `<button type="button" data-play="original">${escape(t("speakOriginal"))}</button>`,
         `<button type="button" data-play="mine">${escape(t("speakMine"))}</button>`,

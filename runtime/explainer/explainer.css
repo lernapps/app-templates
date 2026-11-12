@@ -208,12 +208,6 @@
   height: auto;
 }
 
-.explainer-media audio {
-  display: block;
-  width: 100%;
-  max-width: 24rem;
-}
-
 .explainer-media-uses {
   color: var(--page-muted);
   font-size: 0.9375rem;
@@ -273,20 +267,35 @@
   visibility: visible;
 }
 
-/* A player: the browser's own, the tempo buttons where the browser's control has no tempo menu, and the label, in one row
-   that wraps only when the screen is too narrow for it. */
+/* A player is one box: the browser's own control, the label of an AI voice and, on an iPhone or an iPad, the tempo buttons. Wide:
+   the control and the label in a row. With the buttons: the control across the box, below it the buttons and, at the end of the
+   row, the label. */
 .explainer-audio {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.5rem 0.75rem;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 36rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
 }
 
 .explainer-audio audio {
-  flex: 1 1 12rem;
+  flex: 1 1 14rem;
   min-width: 0;
   max-width: 100%;
+}
+
+.explainer-tempo .explainer-audio > audio {
+  flex-basis: 100%;
+}
+
+.explainer-speaking-item .explainer-audio {
+  background: var(--page-background);
 }
 
 .explainer-audio-speed {
@@ -296,6 +305,7 @@
 .explainer-tempo .explainer-audio-speed {
   display: inline-flex;
   flex: none;
+  margin-right: auto;
 }
 
 .explainer-audio-speed-button {
@@ -1705,11 +1715,6 @@ textarea.explainer-language-field {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px dashed var(--page-border);
-}
-
-.explainer-speaking-mine audio {
-  width: 100%;
-  max-width: 24rem;
 }
 
 .explainer-speaking-compare {
