@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/explainer/explainer.v2.schema.json
 # The example of an explainer for a foreign language (dec-language-task): language tasks of each mode, write, gap,
-# choice and table, in both directions, with a labelled figure the learner labels by writing. Copy it over src/ of an
+# choice and table, in both directions, with a labelled figure the learner labels by writing, and tasks with audio (AI voices
+# made with the audio skill, files in audio/): a dictation, a gap dictation, a choice and a translation of what is heard, and
+# speaking tasks. Copy it over src/ of an
 # explainer to try it: rm -r src && cp -r examples/franzoesisch/src src.
 format: 2
 strand: franzoesisch/wortschatz

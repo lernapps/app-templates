@@ -10,6 +10,8 @@ import { describe, expect, test } from "vite-plus/test";
 import { ContentError, loadSite } from "../runtime/explainer/load.ts";
 import { renderPage } from "../runtime/explainer/render.ts";
 import { routes } from "../runtime/explainer/routes.ts";
+import { allBlocks } from "../runtime/explainer/content.ts";
+import { audioOf } from "../runtime/explainer/media.ts";
 import { tutorPageMarkdown } from "../runtime/explainer/tutorpage.ts";
 
 const here = import.meta.dirname;
@@ -134,5 +136,29 @@ describe("what the build reports about audio in a task", () => {
   test("a name that is no file name", () => {
     const problems = problemsOf(withChange(FIRST, FIRST.replace("je-mappelle.mp3", "../je.mp3")));
     expect(problems.length).toBeGreaterThan(0);
+  });
+});
+
+describe("the French example", () => {
+  test("has audio tasks of every kind: write, gap and choice, both directions, and speaking, with both voices", () => {
+    const site = loadSite(app(), 0);
+    const kinds = new Set<string>();
+    const voices = new Set<string>();
+    for (const chapter of site.chapters)
+      for (const page of chapter.pages)
+        for (const block of allBlocks(page.blocks)) {
+          for (const name of audioOf(block)) voices.add(site.audio.get(name)?.meta.voice ?? "");
+          if (block.type === "language-task" && audioOf(block).length > 0) {
+            kinds.add(`${block.mode ?? "write"} ${block.direction ?? "to-target"}`);
+          } else if (block.type === "speaking-task") kinds.add("speaking");
+        }
+    expect([...kinds].sort()).toEqual([
+      "choice to-target",
+      "gap to-target",
+      "speaking",
+      "write to-source",
+      "write to-target",
+    ]);
+    expect([...voices].sort()).toEqual(["ff_siwis", "pierre"]);
   });
 });
