@@ -1501,3 +1501,52 @@ textarea.explainer-language-field {
 .explainer-language-also {
   color: var(--page-muted);
 }
+
+.explainer-speaking-items {
+  padding-left: 1.25rem;
+}
+
+.explainer-speaking-item {
+  margin-top: 1.25rem;
+}
+
+.explainer-speaking-sentence {
+  font-style: italic;
+}
+
+.explainer-speaking-privacy,
+.explainer-speaking-nojs,
+.explainer-speaking-status {
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-js .explainer-speaking-nojs {
+  display: none;
+}
+
+.explainer-speaking-compare {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.explainer-speaking-item button {
+  min-height: 2.75rem;
+}
+
+.explainer-speaking-rate {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.explainer-speaking-rate label {
+  display: block;
+  padding: 0.25rem 0;
+}
+
+.explainer-speaking-result {
+  font-weight: 600;
+}

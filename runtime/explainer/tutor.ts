@@ -19,9 +19,10 @@ import {
   type Descriptions,
   type LanguageTask,
   type OpenTask,
+  type SpeakingTask,
 } from "./content.ts";
 import { plainText } from "./generated/texts.ts";
-import { languageName, languageTaskText } from "./exercises.ts";
+import { languageName, languageTaskText, speakingTaskText } from "./exercises.ts";
 import { answerLanguage, answersOf, FORM_CLASSES, solutionOf, unitsOf, variantsOf } from "./language.ts";
 import { message } from "./messages.ts";
 import { kindOf } from "./generated/comparator.ts";
@@ -300,6 +301,25 @@ function openTaskPart(site: Site, block: OpenTask, lang: string, words: Words, b
 }
 
 /**
+ * A speaking task in `lang`: the task, what the learner does, each model with the text it says, and how to help. The tutor
+ * cannot hear the models or the recordings, so the text of each model is on the page.
+ */
+function speakingTaskPart(site: Site, block: SpeakingTask, lang: string): string[] {
+  const words = wordsIn(lang);
+  const lines = [
+    `- ${words.task}: ${line(plainText(speakingTaskText(block, lang, (href) => href)))}`,
+    `- ${message(lang, "speakTutorNote")}`,
+    `- ${message(lang, "speakTutorItems")}:`,
+  ];
+  block.items.forEach((item, index) => {
+    const said = site.audio.get(`audio/${item.audio}`)?.meta.text ?? item.text ?? "";
+    lines.push(`  ${index + 1}. ${message(lang, "languageAudioItem")} → ${said}`);
+  });
+  if (block.hint !== undefined) lines.push(`- ${words.hint}: ${line(inLanguage(block.hint, lang))}`);
+  return lines;
+}
+
+/**
  * A language task in `lang`: the task, how the learner answers, how mistakes of form count, each item with what the
  * learner starts from, its solution, the other right answers and the typical mistakes with the app's messages, the
  * hint, the explanation, and how to help.
@@ -512,6 +532,8 @@ export function exercisePart(
         type: `language-task, ${block.mode ?? "write"}`,
         lines: languageTaskPart(block, lang, words),
       };
+    case "speaking-task":
+      return { id: block.id, type: "speaking-task", lines: speakingTaskPart(site, block, lang) };
     case "vue-component": {
       const use = site.components.find((candidate) => candidate.block === block);
       const description = descriptions.get(block);

@@ -148,6 +148,14 @@ function checkAssessment(
         );
         return;
       }
+      if (exercise?.type === "speaking-task") {
+        problems.at(
+          yaml,
+          path,
+          `${ref} is a speaking task, which the learner rates themself: a self-assessment would be a rating of a rating; choose another exercise of the page`,
+        );
+        return;
+      }
       if (exercise !== undefined) return;
       const component = components.some(
         (use) => use.id === parts.exercise && [...allBlocks(page.blocks)].some((block) => block === use.block),

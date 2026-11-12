@@ -222,6 +222,7 @@ export function startAssessment(root: Document, ways: TutorWays): void {
         live.set(item.key, { language: result });
         continue;
       }
+      if (exercise.kind === "speaking") continue;
       const { seeds } = exercise;
       const used = drawn.get(item.ref) ?? new Set<number>();
       drawn.set(item.ref, used);

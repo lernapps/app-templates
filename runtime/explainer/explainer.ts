@@ -38,6 +38,7 @@ import { answerShown, Progress, resultLine, sessionLines } from "./result.ts";
 import { pointNames, startOpenTask } from "./open-task.ts";
 import { startAudio } from "./audio-client.ts";
 import { startLanguageTask } from "./language-task.ts";
+import { startSpeakingTask } from "./speaking-task.ts";
 import { stuckLines, stuckPrompt } from "./stuck.ts";
 import { currentExercise, pageQuery, taskQuery, type PagePosition } from "./position.ts";
 import {
@@ -832,6 +833,11 @@ export function startExplainer(root: Document = document): void {
       startLanguageTask(element, data, {
         onAnswer: (right, input, said) => progress.answered(id, undefined, right, input, said),
         onReveal: () => progress.revealed(id, undefined),
+      });
+    } else if (data.kind === "speaking") {
+      const { id } = data;
+      startSpeakingTask(element, data, {
+        onResult: (right, input, said) => progress.answered(id, undefined, right, input, said),
       });
     } else startGenerated(element, data, progress);
   }

@@ -88,6 +88,7 @@ class Context {
         if (file === undefined) return undefined;
         return {
           src: relative(route.path, `audio/${name}`),
+          text: file.meta.text,
           ...(file.meta.synthetic ? { ai: message(route.lang, "mediaAiVoice") } : {}),
         };
       },

@@ -132,6 +132,8 @@ async function runAssessment(page: Page, app: Outline, assessment: AssessmentOut
         await fillLanguageTask(view.locator(`[data-key="${item.key}"]`), exercise, "right");
         continue;
       }
+      // a speaking task is no part of a self-assessment: the build stops it
+      if (exercise.kind === "speaking") throw new Error(`${item.page}#${item.id} is a speaking task`);
       let question: Question;
       if (exercise.kind === "question") question = { ...exercise.question, id: item.key };
       else {
@@ -187,15 +189,17 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
   const expected = item.exercises.map((exercise) =>
     exercise.kind === "question"
       ? { id: exercise.id, texts: [shownText(exercise.question.text)], answers: [exercise.answers] }
-      : exercise.kind === "open"
-        ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solution] }
-        : exercise.kind === "language"
-          ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solutions] }
-          : {
-              id: exercise.id,
-              texts: exercise.worked.map((worked) => worked.task),
-              answers: exercise.worked.map((worked) => [worked.answer]),
-            },
+      : exercise.kind === "speaking"
+        ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solutions] }
+        : exercise.kind === "open"
+          ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solution] }
+          : exercise.kind === "language"
+            ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solutions] }
+            : {
+                id: exercise.id,
+                texts: exercise.worked.map((worked) => worked.task),
+                answers: exercise.worked.map((worked) => [worked.answer]),
+              },
   );
   const read = async () =>
     (
@@ -208,7 +212,9 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
               ? [...element.querySelectorAll(":scope > .explainer-open-task-text")]
               : element.classList.contains("explainer-language-task")
                 ? [...element.querySelectorAll(":scope > .explainer-language-text")]
-                : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
+                : element.classList.contains("explainer-speaking-task")
+                  ? [...element.querySelectorAll(":scope > .explainer-speaking-text")]
+                  : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
           const solutions = [...element.querySelectorAll<HTMLDetailsElement>("details.explainer-solution")];
           return {
             id: element.id,
@@ -323,6 +329,101 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
   const answer = await page.request.get(src, { headers: { range: "bytes=0-99" } });
   expect(answer.headers()["content-type"], src).toBe("audio/mpeg");
   expect([200, 206], `${src} answers a range request`).toContain(answer.status());
+}
+
+/**
+ * With JavaScript: a speaking task records with the microphone (a tone from the page's own audio context in the test), plays the original,
+ * the recording or both, and counts the ratings: all "sounds the same" is right, a mix is partly right, all "again"
+ * is wrong. Nothing leaves the browser: no request that sends something, none to another host, nothing stored.
+ */
+async function checkSpeaking(
+  page: Page,
+  item: PageOutline,
+  task: PageOutline["speaking"][number],
+  origin: string,
+): Promise<void> {
+  const requests: { url: string; method: string }[] = [];
+  page.on("request", (request) => requests.push({ url: request.url(), method: request.method() }));
+  // a microphone of the page's own: a tone, as a stream the browser's recorder takes like a real one
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      const context = new AudioContext();
+      await context.resume();
+      const oscillator = context.createOscillator();
+      const destination = context.createMediaStreamDestination();
+      oscillator.connect(destination);
+      oscillator.start();
+      return destination.stream;
+    };
+  });
+  await page.goto(`./${item.url}`);
+  const view = page.locator(`[id="${task.id}"]`);
+  const live = view.locator(".explainer-speaking-live");
+  await expect(live, `${task.id}: the live task shows with JavaScript`).toBeVisible();
+  await expect(view.locator(".explainer-speaking-static"), "the static list goes").toBeHidden();
+  await expect(live.locator(".explainer-speaking-privacy")).toHaveText(messageOf("de", "speakPrivacy"));
+  const rows = live.locator(".explainer-speaking-item");
+  await expect(rows).toHaveCount(task.items.length);
+  await expect(live.locator(".explainer-speaking-rate:visible"), "no rating before a recording").toHaveCount(0);
+  const rate = (row: Locator, key: "speakSame" | "speakBumpy" | "speakAgain") =>
+    row.getByLabel(messageOf("de", key), { exact: true }).check();
+  const result = live.locator(".explainer-speaking-result");
+  for (const index of task.items.keys()) {
+    const row = rows.nth(index);
+    await row.getByRole("button", { name: messageOf("de", "speakRecord"), exact: true }).click();
+    await expect(row.locator(".explainer-speaking-status")).toHaveText(messageOf("de", "speakRecording"));
+    await page.waitForTimeout(800);
+    await row.getByRole("button", { name: messageOf("de", "speakStop"), exact: true }).click();
+    await expect(row.locator(".explainer-speaking-mine audio"), "the recording plays from memory").toHaveAttribute(
+      "src",
+      /^blob:/,
+    );
+    await expect(row.getByRole("button", { name: messageOf("de", "speakRerecord"), exact: true })).toBeVisible();
+    await expect(row.locator(".explainer-speaking-rate")).toBeVisible();
+    for (const key of ["speakOriginal", "speakMine", "speakBoth"] as const) {
+      await row
+        .locator(".explainer-speaking-compare")
+        .getByRole("button", { name: messageOf("de", key), exact: true })
+        .click();
+    }
+    await rate(row, "speakSame");
+    if (index < task.items.length - 1) await expect(result, "no result before every sentence is rated").toHaveText("");
+  }
+  await expect(result).toHaveText(messageOf("de", "speakAllRight"));
+  await rate(rows.first(), "speakBumpy");
+  await expect(result).toHaveText(messageOf("de", "speakSomeRight"));
+  for (const index of task.items.keys()) await rate(rows.nth(index), "speakAgain");
+  await expect(result).toHaveText(messageOf("de", "speakWrong"));
+  expect(
+    requests.filter((request) => request.method !== "GET"),
+    `${task.id}: nothing is sent`,
+  ).toEqual([]);
+  expect(
+    requests.filter((request) => !request.url.startsWith(origin) && !/^(blob|data):/.test(request.url)),
+    `${task.id}: nothing is requested from another host`,
+  ).toEqual([]);
+  expect(
+    await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)]),
+    `${task.id}: the recording is stored nowhere`,
+  ).toEqual([]);
+}
+
+/** Without a microphone (the browser refuses it): the learner is told, says it aloud, and can still rate. */
+async function checkSpeakingWithoutMicrophone(
+  page: Page,
+  item: PageOutline,
+  task: PageOutline["speaking"][number],
+): Promise<void> {
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException("refused", "NotAllowedError"));
+  });
+  await page.goto(`./${item.url}`);
+  const row = page.locator(`[id="${task.id}"] .explainer-speaking-item`).first();
+  await row.getByRole("button", { name: messageOf("de", "speakRecord"), exact: true }).click();
+  await expect(row.locator(".explainer-speaking-nomic")).toContainText(messageOf("de", "speakNoMic"));
+  await expect(row.locator(".explainer-speaking-rate"), "no rating before the learner says so").toBeHidden();
+  await row.getByRole("button", { name: messageOf("de", "speakSpoken"), exact: true }).click();
+  await expect(row.locator(".explainer-speaking-rate")).toBeVisible();
 }
 
 /**
@@ -1114,6 +1215,7 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
               if (exercise.kind === "question") await checkQuestion(page, item.url, exercise);
               else if (exercise.kind === "open") await checkOpenTask(page, item.url, exercise);
               else if (exercise.kind === "language") await checkLanguageTask(page, item.url, exercise);
+              else if (exercise.kind === "speaking") continue; // nothing to check: its own tests record and rate
               else await checkGenerated(page, item.url, exercise);
             }
             // only an open task keeps something, its answer, and only while the tab is open
@@ -1135,6 +1237,22 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
             await checkAudio(page, item);
           });
         }
+      if (!content)
+        test.describe("speaking tasks", () => {
+          for (const item of app.pages["de"] ?? []) {
+            for (const task of item.speaking) {
+              test(`${item.url}: ${task.id} records, compares and rates, and keeps the recording in memory`, async ({
+                page,
+                baseURL,
+              }) => {
+                await checkSpeaking(page, item, task, new URL(baseURL ?? page.url()).origin);
+              });
+              test(`${item.url}: ${task.id} without a microphone says it aloud and still rates`, async ({ page }) => {
+                await checkSpeakingWithoutMicrophone(page, item, task);
+              });
+            }
+          }
+        });
       if (!content)
         for (const item of app.pages["de"] ?? []) {
           if (item.videos.length === 0) continue;

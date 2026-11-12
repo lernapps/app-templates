@@ -10,7 +10,7 @@ import { renderMaterial, type AudioRef, type MaterialContext } from "../shared/b
 import { materialIn } from "../shared/blocks/block.ts";
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
-import type { DataRecord, Exercise, LanguageTask, OpenTask, QuestionBlock } from "./content.ts";
+import type { DataRecord, Exercise, LanguageTask, OpenTask, QuestionBlock, SpeakingTask } from "./content.ts";
 import {
   answerLanguage,
   answersOf,
@@ -56,7 +56,45 @@ export type ExerciseData =
       texts: { newTask: string; practice: string; hint: string; solution: string; taskNumber: string };
     }
   | OpenTaskData
-  | LanguageTaskData;
+  | LanguageTaskData
+  | SpeakingTaskData;
+
+/** The keys of the texts the browser needs for a speaking task, from the messages. */
+const SPEAKING_TEXTS = [
+  "speakPrivacy",
+  "speakRecord",
+  "speakStop",
+  "speakRerecord",
+  "speakRecording",
+  "speakOriginal",
+  "speakMine",
+  "speakBoth",
+  "speakCompare",
+  "speakRate",
+  "speakSame",
+  "speakBumpy",
+  "speakAgain",
+  "speakNoMic",
+  "speakSpoken",
+  "speakItem",
+  "speakAllRight",
+  "speakSomeRight",
+  "speakWrong",
+  "speakResultRecorded",
+  "speakResultNotRecorded",
+  "speakResultLine",
+] as const;
+
+/** What the browser reads from a speaking task: its models with their players, and its texts. */
+export interface SpeakingTaskData {
+  kind: "speaking";
+  lang: string;
+  id: string;
+  /** The language of the models. */
+  language: string;
+  items: { audio: string; player: string; text?: string; spoken?: string }[];
+  texts: Record<(typeof SPEAKING_TEXTS)[number], string>;
+}
 
 /** What the browser reads from a language task: its units with their inputs, its texts, how it counts form. */
 export interface LanguageTaskData {
@@ -548,6 +586,79 @@ function languageTaskExercise(
     .join("\n");
 }
 
+/** What the browser reads from a speaking task in `lang`. */
+export function speakingTaskData(
+  block: SpeakingTask,
+  lang: string,
+  audio?: MaterialContext["audio"],
+): SpeakingTaskData {
+  return {
+    kind: "speaking",
+    lang,
+    id: block.id,
+    language: block.language,
+    items: block.items.map((item) => {
+      const spoken = audio?.(item.audio)?.text;
+      return {
+        audio: item.audio,
+        player: audioHtml(audio?.(item.audio), lang),
+        ...(item.text === undefined ? {} : { text: item.text }),
+        ...(spoken === undefined ? {} : { spoken }),
+      };
+    }),
+    texts: Object.fromEntries(SPEAKING_TEXTS.map((key) => [key, message(lang, key)])) as SpeakingTaskData["texts"],
+  };
+}
+
+/** The task of a speaking task as the learner reads it: its own, or a text. */
+export function speakingTaskText(block: SpeakingTask, lang: string, resolve: (href: string) => string): string {
+  return block.task !== undefined
+    ? renderMarkdown(inLanguage(block.task, lang), resolve)
+    : `<p>${plain(message(lang, "speakTask"))}</p>`;
+}
+
+/**
+ * A speaking task in `lang`: the task, each model with its player and its text, and the note that recording needs
+ * JavaScript, which is all the page shows without it; with JavaScript the learner records and rates (speaking-task.ts).
+ */
+function speakingTaskExercise(
+  block: SpeakingTask,
+  lang: string,
+  resolve: (href: string) => string,
+  material: MaterialContext,
+): string {
+  const data = speakingTaskData(block, lang, material.audio);
+  const items = data.items
+    .map((item, index) => {
+      const text =
+        item.text === undefined
+          ? ""
+          : ` <span class="explainer-speaking-sentence" lang="${plain(data.language)}">${plain(item.text)}</span>`;
+      return `<li data-item="${index}">${item.player}${text}</li>`;
+    })
+    .join("");
+  return [
+    `<div class="explainer-exercise explainer-speaking-task" id="${block.id}">`,
+    `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
+    `<div class="explainer-speaking-text">${speakingTaskText(block, lang, resolve)}</div>`,
+    block.hint === undefined
+      ? ""
+      : `<details class="explainer-hint"><summary>${plain(message(lang, "hint"))}</summary>${renderMarkdown(inLanguage(block.hint, lang), resolve)}</details>`,
+    `<ol class="explainer-speaking-items explainer-speaking-static">${items}</ol>`,
+    `<p class="explainer-speaking-nojs">${plain(message(lang, "speakNoJs"))}</p>`,
+    `<div class="explainer-speaking-live" hidden></div>`,
+    `<details class="explainer-solution"><summary>${plain(questionMessagesIn(lang).solution)}</summary>`,
+    `<ol class="explainer-speaking-solutions" lang="${plain(data.language)}">${data.items
+      .map((item) => `<li>${plain(item.spoken ?? item.text ?? "")}</li>`)
+      .join("")}</ol>`,
+    `</details>`,
+    `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
+    `</div>`,
+  ]
+    .filter((part) => part !== "")
+    .join("\n");
+}
+
 /** What the browser reads from an exercise in `lang` (script.explainer-exercise-data). */
 export function exerciseData(
   block: Exercise,
@@ -559,6 +670,7 @@ export function exerciseData(
   if (block.type === "generated") return generatedData(block, lang, all, resolve);
   if (block.type === "open-task") return openTaskData(block, lang, resolve);
   if (block.type === "language-task") return languageTaskData(block, lang, audio);
+  if (block.type === "speaking-task") return speakingTaskData(block, lang, audio);
   return questionData(block, lang);
 }
 
@@ -658,5 +770,6 @@ export function renderExercise(
   if (block.type === "generated") return generatedExercise(block, lang, data, resolve);
   if (block.type === "open-task") return openTaskExercise(block, lang, resolve, storage, material);
   if (block.type === "language-task") return languageTaskExercise(block, lang, resolve, material);
+  if (block.type === "speaking-task") return speakingTaskExercise(block, lang, resolve, material);
   return questionExercise(block, lang, material);
 }

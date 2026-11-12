@@ -292,6 +292,7 @@
             "generated",
             "open-task",
             "language-task",
+            "speaking-task",
             "vue-component"
           ]
         }
@@ -603,6 +604,20 @@
           },
           "then": {
             "$ref": "#/$defs/languageTask"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "speaking-task"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/speakingTask"
           }
         },
         {
@@ -1093,6 +1108,51 @@
         "required": ["source"]
       },
       "unevaluatedProperties": false
+    },
+    "speakingTask": {
+      "description": "A speaking task: the learner hears a model (an audio file of src/audio/, spoken in the language they learn), records themself with the microphone, listens to the original, to their own recording or to both one after the other, and rates their pronunciation: sounds the same (right), understandable but bumpy (partly right) or again (wrong). Nothing is checked by the page, and the recording stays in the browser's memory: it is never stored or sent. Not allowed in a self-assessment. Without JavaScript the page plays the models and shows their texts. Guidance: lernapps/tooling, skill lernapps-audio.",
+      "type": "object",
+      "required": ["id", "language", "items"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "language": {
+          "description": "The language of the models, the one learners learn, as a language code; the audio files must be spoken in it.",
+          "$ref": "#/$defs/languageCode"
+        },
+        "task": {
+          "description": "Optional: what to do, restricted Markdown. Without it, a text by the language.",
+          "$ref": "#/$defs/markdown"
+        },
+        "items": {
+          "description": "1 to 10 models, each an audio file and optionally the text the learner reads aloud.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["audio"],
+            "properties": {
+              "audio": {
+                "description": "The model: an audio file of src/audio/, <name>.mp3, made by the audio skill (lernapps-audio).",
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*\\.mp3$"
+              },
+              "text": {
+                "description": "Optional: the text to read aloud, shown beside the model. Without it the learner only listens and repeats.",
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "hint": {
+          "description": "Optional: a hint on how to say it, shown on request.",
+          "$ref": "#/$defs/markdown"
+        }
+      }
     },
     "languageTask": {
       "description": "A language task: the learner writes a word, a form or sentences in a language, and the page checks it against the answers the task lists. Each item starts from the other language, a cue or a marker of a labelled figure in material. mode: write, gap, choice or table. direction is part of the task. Mistakes of form count as wrong unless form loosens them; each item may name typical mistakes with their messages. Without JavaScript the page shows the task and its solution under Lösung. Guidance and examples: lernapps/tooling, references/foreign-languages.md.",

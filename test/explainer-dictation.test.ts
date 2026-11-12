@@ -116,7 +116,7 @@ describe("what the build reports about audio in a task", () => {
       ),
     );
     expect(problems.join("\n")).toMatch(
-      /audio\/je-mappelle\.mp3 is spoken in fra \(TLAN\), but the task's target language en is eng/,
+      /audio\/je-mappelle\.mp3 is spoken in fra \(TLAN\), but the task's language en is eng/,
     );
   });
 

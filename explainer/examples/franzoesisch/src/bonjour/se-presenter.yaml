@@ -147,3 +147,17 @@ blocks:
         items:
           - audio: je-mappelle-paul.mp3
             source: "(Ich heiße|Mein Name ist) Paul."
+  - type: section
+    id: sprechen
+    title: Nachsprechen
+    blocks:
+      - type: speaking-task
+        id: nachsprechen
+        language: fr
+        items:
+          - audio: je-mappelle.mp3
+            text: "Je m'appelle Marie."
+          - audio: jai-douze-ans.mp3
+            text: "J'ai douze ans."
+          - audio: je-suis-de-berlin.mp3
+        hint: "Sprich langsam. Das *j'* in *j'ai* klingt wie das *g* in *Garage*."

@@ -261,6 +261,10 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
         checkExerciseId(check, block.id, at);
         checkLanguageTask(check, block, at);
         break;
+      case "speaking-task":
+        checkExerciseId(check, block.id, at);
+        checkSpeakingTask(check, block, at);
+        break;
       case "vue-component":
         checkComponent(check, block, at);
         break;
@@ -304,46 +308,72 @@ function checkLanguageTask(check: PageCheck, block: BlockOf<"language-task">, at
   block.material?.forEach((material, index) => checkMaterialBlock(check, material, [...at, "material", index]));
   for (const problem of languageTaskProblems(block)) problems.at(yaml, [...at, ...problem.path], problem.message);
   block.items?.forEach((item, index) => {
-    if (item.audio !== undefined) checkAudioItem(check, block, item, [...at, "items", index, "audio"]);
+    checkAudioItem(check, block, item, [...at, "items", index, "audio"]);
   });
 }
 
-/** An item that starts from an audio file: the file is there, in the task's target language, and says a right answer. */
-function checkAudioItem(check: PageCheck, block: BlockOf<"language-task">, item: LanguageItem<Text>, at: Path): void {
+/**
+ * An audio file a task names: it is in src/audio/ and spoken in the language of the task. Returns the file, or nothing
+ * when a problem has been reported.
+ */
+function checkAudioFile(check: PageCheck, name: string, language: string, at: Path): AudioFile | undefined {
   const { yaml, problems } = check;
-  const name = `audio/${item.audio}`;
-  const file = check.audio.get(name);
+  const file = check.audio.get(`audio/${name}`);
   if (file === undefined) {
     problems.at(
       yaml,
       at,
-      `${name} is missing: put the file into src/audio/; the audio skill (lernapps-audio) makes it with the marking the build requires`,
+      `audio/${name} is missing: put the file into src/audio/; the audio skill (lernapps-audio) makes it with the marking the build requires`,
     );
-    return;
+    return undefined;
   }
-  const expected = AUDIO_LANGUAGES[block.languages.target];
+  const expected = AUDIO_LANGUAGES[language];
   if (expected !== undefined && file.meta.language !== expected) {
     problems.at(
       yaml,
       at,
-      `${name} is spoken in ${file.meta.language} (TLAN), but the task's target language ${block.languages.target} is ${expected}; use a file in ${expected}`,
+      `audio/${name} is spoken in ${file.meta.language} (TLAN), but the task's language ${language} is ${expected}; use a file in ${expected}`,
     );
   }
+  return file;
+}
+
+/** An item that starts from an audio file: the file is there, in the task's target language, and says a right answer. */
+function checkAudioItem(check: PageCheck, block: BlockOf<"language-task">, item: LanguageItem<Text>, at: Path): void {
+  if (item.audio === undefined) return;
+  const file = checkAudioFile(check, item.audio, block.languages.target, at);
   // what the learner hears is a right answer, or the dictation cannot be solved; in a translation the target is optional
   const answer = item.target;
-  if (answer === undefined) return;
+  if (file === undefined || answer === undefined) return;
   try {
     const right = [...wholeVariants(answer), ...(item.accepted ?? [])].map(normalize);
     if (!right.includes(normalize(file.meta.text))) {
-      problems.at(
-        yaml,
+      check.problems.at(
+        check.yaml,
         at,
-        `the text of ${name} is "${file.meta.text}", which is no version of this item's target: the learner hears it, so write the target as this text or add it as a variant (a|b), or make the file again with the text of the target`,
+        `the text of audio/${item.audio} is "${file.meta.text}", which is no version of this item's target: the learner hears it, so write the target as this text or add it as a variant (a|b), or make the file again with the text of the target`,
       );
     }
   } catch (error) {
     if (!(error instanceof SyntaxProblem)) throw error;
   }
+}
+
+/** A speaking task: its texts, and for each item the audio file, in the language of the task, and the text it reads. */
+function checkSpeakingTask(check: PageCheck, block: BlockOf<"speaking-task">, at: Path): void {
+  const { yaml, texts } = check;
+  for (const field of ["task", "hint"] as const)
+    if (block[field] !== undefined) texts.check(yaml, [...at, field], "markdown");
+  block.items.forEach((item, index) => {
+    const file = checkAudioFile(check, item.audio, block.language, [...at, "items", index, "audio"]);
+    if (file !== undefined && item.text !== undefined && normalize(item.text) !== normalize(file.meta.text)) {
+      check.problems.at(
+        yaml,
+        [...at, "items", index, "text"],
+        `the text is "${item.text}", but audio/${item.audio} says "${file.meta.text}": the learner reads the text aloud and compares with the model, so both must be the same; change the text, or make the file again`,
+      );
+    }
+  });
 }
 
 /** A vue-component block: its component exists and passes its checks, its props match, its texts are complete. */

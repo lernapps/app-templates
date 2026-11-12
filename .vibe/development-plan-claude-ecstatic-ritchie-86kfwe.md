@@ -402,7 +402,14 @@ Der Owner hat am 2026-11-12 freigegeben, **ohne Halt an den Phasengrenzen** weit
   (3) Die Beispieldateien stammen aus dem neuen Skill (`lernapps_audio.py generate`), der Vertrag der Felder wurde damit gegen den
   Build geprüft. Für den Test in der Vorlage `explainer/` muss die Kopie des Laufzeitpakets neu installiert werden
   (`install-links`); das Skript dafür liegt nur in der Sitzung.
-- [ ] Inkrement 3 (`app-templates`): `speaking-task` (Aufnahme, Wiedergabe-Auswahl, Bewertungen, Tutorseite, nicht in der Selbsteinschätzung)
+- [x] Inkrement 3 (`app-templates`): `speaking-task` (Aufnahme, Wiedergabe-Auswahl, Bewertungen, Tutorseite, nicht in der Selbsteinschätzung)
+  (fertig; 588 Tests grün; `lernapps check` der Vorlage mit der französischen Beispiel-App samt Aufnahme-Test im Browser ohne Befund).
+  **Abweichungen:** (1) Die Bewertungen bleiben nur im Arbeitsspeicher der Seite (kein `sessionStorage`): eine Aufnahme wird nirgends
+  gespeichert, und mit ihr die Bewertung zu verlieren, ist die einfachere und datensparsamere Regel. (2) Der Block hat ein „Lösung“ mit den
+  Texten der Modelle (verlangt die Regel `explainer-readable-without-js` für jede Übung, und es ist die Textfassung für alle). (3) Der Test im
+  Browser nutzt ein Mikrofon der Seite selbst (ein Ton über `AudioContext`), weil `launchOptions` in einem Test nicht gesetzt werden dürfen.
+  (4) Die Wiedergabe-Auswahl („Original“, „Meine Aufnahme“, „Beide nacheinander“) und die drei Bewertungen sind die Schaltflächen der
+  Lernenden, wie beschlossen.
 - [ ] Inkrement 4 (`tooling`, Branch `feat/audio-skill`): Skill `lernapps-audio` mit Skript (läuft als Unteragent), danach Abgleich der Felder mit dem Build
 - [ ] Inkrement 5: arc42 in `explainer/docs/arc42`, README, Schema, `lernapps check` an der Beispiel-App, `lernapps/docs` `dec-licences`
 

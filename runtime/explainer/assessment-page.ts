@@ -117,6 +117,8 @@ function itemHtml(context: AssessmentContext, data: AssessmentItemData, n: numbe
     return `${label}<div class="explainer-open-task-text">${data.task}</div><div class="explainer-open-live" hidden></div>`;
   // a language task: its task and material (`component`), and the place of its fields; no "Prüfen", no solution
   if (data.kind === "language") return `${label}${component}<div class="explainer-language-live" hidden></div>`;
+  // a speaking task is not asked in a self-assessment: the build stops it (load.ts)
+  if (data.kind === "speaking") return label;
   const { question, rendered } = data;
   return `${label}${renderQuestion(question, {
     lang,

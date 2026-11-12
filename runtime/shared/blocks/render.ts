@@ -38,6 +38,8 @@ export interface MaterialContext {
 export interface AudioRef {
   src: string;
   ai?: string;
+  /** What the file says: the transcript, which the solution of a speaking task lists. */
+  text?: string;
 }
 
 const external = (url: string) => `<a href="${escape(url)}" rel="noopener">${escape(url)}</a>`;

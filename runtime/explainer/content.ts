@@ -42,8 +42,22 @@ export interface OpenTask {
 /** A language task: the learner writes a word, an expression or sentences in a language, and the page checks it. */
 export type LanguageTask = LanguageTaskSpec<Text, MaterialBlock<Text>>;
 
-/** An exercise block: one of the question types, generated, an open task, or a language task. */
-export type Exercise = QuestionBlock | Generated | OpenTask | LanguageTask;
+/**
+ * A speaking task: the learner hears a model (an audio file of src/audio/), records themself and compares, and rates the
+ * pronunciation. The page checks nothing; the recording never leaves the browser's memory (dec-speaking-task).
+ */
+export interface SpeakingTask {
+  type: "speaking-task";
+  id: string;
+  /** The language of the models: a language code. */
+  language: string;
+  task?: Text;
+  items: readonly { audio: string; text?: string }[];
+  hint?: Text;
+}
+
+/** An exercise block: one of the question types, generated, an open task, a language task or a speaking task. */
+export type Exercise = QuestionBlock | Generated | OpenTask | LanguageTask | SpeakingTask;
 
 export interface Source {
   title: Text;
@@ -299,6 +313,7 @@ export const isExercise = (block: Block): block is Exercise =>
   block.type === "generated" ||
   block.type === "open-task" ||
   block.type === "language-task" ||
+  block.type === "speaking-task" ||
   ["single-choice", "multiple-choice", "true-false", "number", "ordering", "matching"].includes(block.type);
 
 /** The anchor of a term in the glossary: the German term in lower case, umlauts spelled out, hyphens for the rest. */

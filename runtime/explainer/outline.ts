@@ -6,7 +6,15 @@
 import { questionIn, type Question } from "../shared/questions/question.ts";
 import { answerText } from "../shared/questions/render.ts";
 import { inLanguage, timelineEvents, type Block, type ComponentExample, type Site, type Text } from "./content.ts";
-import { dataOf, languageTaskData, languageTaskText, renderExercise, templatesOf, workedTasks } from "./exercises.ts";
+import {
+  dataOf,
+  languageTaskData,
+  languageTaskText,
+  renderExercise,
+  speakingTaskText,
+  templatesOf,
+  workedTasks,
+} from "./exercises.ts";
 import { kindOf } from "./generated/comparator.ts";
 import { renderWithFormulas } from "../shared/text/markdown.ts";
 import { plainText } from "./generated/texts.ts";
@@ -30,6 +38,8 @@ export interface PageOutline {
   figures: string[];
   /** The videos, in order: each shows its title, channel and link without JavaScript, its player only after a click. */
   videos: { youtube: string; title: string; channel: string }[];
+  /** The speaking tasks, in order: no answer to check, so they are no exercises of the outline (explainer.ts). */
+  speaking: { id: string; task: string; items: { audio: string; text?: string }[] }[];
   /** The audio files the page's tasks start from (audio/<name>.mp3), in order, each as often as a task uses it. */
   audio: string[];
   exercises: ExerciseOutline[];
@@ -92,6 +102,15 @@ export type ExerciseOutline =
       points: { text: string; source: boolean }[];
       /** The model answer as plain text, in the pieces between its formulas (which a reader reads otherwise). */
       solution: string[];
+    }
+  | {
+      kind: "speaking";
+      id: string;
+      type: "speaking-task";
+      /** The task as plain text. */
+      task: string;
+      /** The text of each model, as "Lösung" lists it. */
+      solutions: string[];
     }
   | {
       kind: "language";
@@ -256,6 +275,24 @@ function walk(
         });
         break;
       }
+      case "speaking-task":
+        into.audio.push(...audioOf(block));
+        into.speaking.push({
+          id: block.id,
+          task: plainText(speakingTaskText(block, lang, (href) => href)),
+          items: block.items.map((item) => ({
+            audio: item.audio,
+            ...(item.text === undefined ? {} : { text: item.text }),
+          })),
+        });
+        into.exercises.push({
+          kind: "speaking",
+          id: block.id,
+          type: "speaking-task",
+          task: plainText(speakingTaskText(block, lang, (href) => href)),
+          solutions: block.items.map((item) => site.audio.get(`audio/${item.audio}`)?.meta.text ?? item.text ?? ""),
+        });
+        break;
       case "language-task": {
         const data = languageTaskData(block, lang);
         into.audio.push(...audioOf(block));
@@ -313,6 +350,7 @@ export function outline(root = "."): Outline {
       figures: [],
       videos: [],
       audio: [],
+      speaking: [],
       exercises: [],
       components: [],
     };
