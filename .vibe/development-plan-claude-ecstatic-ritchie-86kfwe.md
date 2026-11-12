@@ -142,10 +142,10 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
     `playbackRate` (Tonhöhe bleibt erhalten) strecken (Test: 8,4 s). Hörvergleich beim Owner.
   - Download braucht Netz (GitHub Releases, Hugging Face); beide Wege waren in dieser Umgebung erreichbar.
   - Kokoro-Modell ca. 325 MB + Stimmen 28 MB; Piper je Stimme 63 bis 114 MB. Für den Skill: nur beim Erstellen nötig.
-- [ ] Testsätze für den Hörtest Englisch und Französisch vorbereiten
-- [ ] Format (MP3/AAC/Opus) und Metadatenfelder festlegen
-- [ ] Offene Entscheidung klären: Metadaten in der Datei oder YAML
-- [ ] Entscheidung klären: Wo liegt der Skill (dieses Repo oder `lernapps/docs`)
+- [x] Testsätze für den Hörtest Englisch und Französisch vorbereiten
+- [x] Format (MP3/AAC/Opus) und Metadatenfelder festlegen
+- [x] Offene Entscheidung klären: Metadaten in der Datei oder YAML
+- [x] Entscheidung klären: Wo liegt der Skill (dieses Repo oder `lernapps/docs`)
 
 ### Completed
 - [x] Created development plan file
@@ -236,6 +236,19 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     (Werkzeug und Version, das erzeugt hat; der „Name des KI-Systems“).
 - [ ] Autor-Schnittstelle im Explainer: wie `language-task` auf Audio verweist (Diktat als Modus oder eigener Block;
   Selbstvergleich), Schema-Erweiterung von Format 2 oder neues Format, Fehlermeldungen im Stil `file:line: place (language): what to do`
+  **Entwurf, vom Owner zu bestätigen:**
+  - *Diktat und Hören* sind ein `language-task`: ein Item nennt statt `source` (oder `cue`) ein `audio: bonjour.mp3`
+    (Datei in `src/audio/`, Kleinbuchstaben, nur `.mp3`). Die Modi `write` (Diktat), `gap` (Lückendiktat) und `choice` bleiben,
+    ebenso `form`, `mistakes`, `examples`, `hint`. Der Player steht an der Stelle des Ausgangstextes; der Text der Datei
+    (`lernapps-text`) erscheint erst nach dem Lösen oder wenn Lösung oder Hilfe geöffnet werden.
+  - Beispiel: `- audio: je-mappelle.mp3` und `target: "Je m'appelle (Marie|Paul)."`
+  - *Selbstvergleich* ist ein eigener Block `speaking-task` (kein Vergleich mit Antworten): Items mit `audio` (Vorlage) und
+    optional `text`; Ablauf: hören, aufnehmen, beides abspielen, selbst bewerten („passt“, „nochmal“). Der Zustand ist
+    „selbst bewertet“ und fließt wie eine Selbsteinschätzung in Ergebniszeile und Tutor ein.
+  - Prüfungen im Build, jeweils `file:line: place (language): what to do`: Datei fehlt oder liegt nicht in `src/audio/`;
+    Pflichtfeld der Metadaten fehlt (**Abbruch**); die Sprache der Datei (`TLAN`) passt nicht zu `languages.target`;
+    der Text der Datei ist keine Variante der Antwort (**vorgeschlagen: Fehler**, Owner entscheidet).
+  - Format: `audio` als zusätzliche optionale Eigenschaft ist abwärtskompatibel, **Format 2 bleibt**; Entscheidung des Owners.
 - [ ] Build: Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlt ein Pflichtfeld,
   vor allem die KI-Kennzeichnung: Build bricht ab; Entscheidung des Owners)
 - [ ] Anhang „Medienübersicht“ an jedem Explainer: Adresse, Inhalt (Bilder und Audio, Quelle, Lizenz, KI-Hinweis,
