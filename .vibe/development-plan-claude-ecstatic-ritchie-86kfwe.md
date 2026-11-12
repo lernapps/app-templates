@@ -301,8 +301,11 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     nur über eine Objekt-URL abgespielt, beim Verlassen der Seite verworfen und nirgends gespeichert oder gesendet; die
     Spuren werden nach dem Stoppen beendet, damit die Mikrofon-Anzeige ausgeht. Verweigert oder fehlt das Mikrofon: kurzer
     Hinweis; die Selbstbewertung bleibt möglich („Ich habe laut gesprochen und verglichen“).
+  - **Zur Kontrolle (Owner, 2026-11-12) wählen die Lernenden, was sie hören:** „Original“, „Meine Aufnahme“ und „Beide
+    nacheinander“ (Original, kurze Pause, Aufnahme). Die Aufnahme lässt sich also auch allein abspielen. Alle drei
+    laufen im Tempo, das gerade gewählt ist.
   - Benötigt HTTPS (lernapps.net hat es).
-- [ ] Prüfregeln (**Entwurf, zu bestätigen**): Lint und `lernapps check` erlauben Audio, `getUserMedia` und `MediaRecorder` gezielt, verbieten
+- [x] Prüfregeln (**bestätigt**, keine neue Regel erwartet; Prüfung in der Code-Phase): Lint und `lernapps check` erlauben Audio, `getUserMedia` und `MediaRecorder` gezielt, verbieten
   Netzwerk-APIs weiter, prüfen „keine Anfrage vor einem Klick“ auch für Audio (Lehre aus `qg-privacy`)
   - **Befund `lernapps/tooling`:** Es braucht voraussichtlich **keine neue Regel**. `vue-component-no-network` verbietet in
     Komponenten `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource` und `sendBeacon`, nicht `<audio>`, `getUserMedia` oder
@@ -311,19 +314,19 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
     `dependency-licence` lässt `music-metadata` (MIT) zu. Zu prüfen im Code (nicht annehmen): dass die gebaute Seite mit Audio
     und `speaking-task` die Regeln `accessible`, `explainer-readable-without-js`, `usable-at-360px` und `no-tracking` besteht.
   - Dazu ein **Test mit der Beispiel-App**: `lernapps check` über `explainer/examples/franzoesisch` mit Audio ohne Befund.
-- [ ] Zustand und Tutor (**Entwurf, zu bestätigen**): wie Diktat (richtig/teilweise/falsch) und Selbstvergleich („selbst bewertet“) in Ergebniszeile,
+- [x] Zustand und Tutor (**bestätigt**): wie Diktat (richtig/teilweise/falsch) und Selbstvergleich („selbst bewertet“) in Ergebniszeile,
   Selbsteinschätzung und Tutorseite eingehen
   - **Vorbild ist `dec-open-task`** (Antwort zuerst, dann Vergleich mit Punkten, das Foto „aus dem Arbeitsspeicher, nie gespeichert
-    oder gesendet“). Der Selbstvergleich folgt dem: drei Schaltflächen **„Passt“ → richtig, „Fast“ → teilweise,
-    „Nochmal“ → falsch**; die Aufnahme bleibt im Arbeitsspeicher; in der Ergebniszeile steht nur die Bewertung und der
+    oder gesendet“). Der Selbstvergleich folgt dem: drei Schaltflächen zur **Aussprache** (Owner,
+    2026-11-12): **„Klingt gleich“ → richtig, „Erkennbar, aber holprig“ → teilweise, „Nochmal“ → falsch**; die Aufnahme bleibt im Arbeitsspeicher; in der Ergebniszeile steht nur die Bewertung und der
     Hinweis, dass aufgenommen wurde, nie die Aufnahme. Die Bewertung bleibt nur solange der Tab offen ist (wie beim
     offenen Task über `sessionStorage` mit dem Präfix der App).
   - **Diktat:** Zustand aus der bestehenden Prüfung (`language.ts`), unverändert.
   - **Tutorseite:** Für das Diktat steht die Textfassung der Datei (`lernapps-text`) auf der Tutorseite, mit dem Hinweis, dass die
     Lernenden das Audio gehört haben und der Tutor es nicht abspielen kann. Für den Selbstvergleich der Text, die Anleitung und
     wie man hilft (zum Beispiel Laute zu beschreiben); der Tutor hört die Aufnahme nicht.
-  - **Selbsteinschätzung eines Kapitels:** `speaking-task` nicht zulassen (eine Selbstbewertung zur Selbsteinschätzung wäre
-    zirkulär); das Diktat ja, wie jede `language-task`. **Offen, Owner entscheidet.**
+  - **Selbsteinschätzung eines Kapitels:** `speaking-task` **nicht zulassen** (Owner, 2026-11-12; eine Selbstbewertung zur
+    Selbsteinschätzung wäre zirkulär; der Build meldet es mit Ort und Abhilfe); das Diktat ja, wie jede `language-task`.
 - [ ] Skill in `lernapps/tooling` (**Auflage des Owners:** kurze Erklärung an den Creator, bevor Audio-Aufgaben erstellt werden: was gebraucht wird, Footprint (Tabelle oben, rund 0,6 GB Download, 0,8 GB Platz, einmalig) und freizugebende Hosts) (`skills/…/lernapps-…`), kompakt: Stimmenliste, Aufruf, Preflight mit gesammelten
   Fehlern (Python, Pakete, `ffmpeg`, Modelle + Prüfsumme, Speicher, Hosts), Exit-Codes, Hinweis zum Umgang mit
   Sprachproben, Pfade; Auswirkung auf `skills-lock.json`, `lernapps update`, `lernapps-cli` (Voraussetzungen)
