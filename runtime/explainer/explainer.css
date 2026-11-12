@@ -1455,6 +1455,11 @@ button.explainer-help:focus-visible {
   margin: 0 0 0.25rem;
 }
 
+/* The word before a gap stays in one piece with its field (language-task.ts). */
+.explainer-language-keep {
+  white-space: nowrap;
+}
+
 .explainer-language-prompt:has(.explainer-audio) {
   margin-bottom: 0.75rem;
 }
@@ -1717,10 +1722,30 @@ textarea.explainer-language-field {
   border-top: 1px dashed var(--page-border);
 }
 
+/* The three ways to listen: one row of joined buttons that fills the width of the card, short words (the full name is the
+   button's name for a screen reader and its title). */
 .explainer-speaking-compare {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  width: 100%;
+  max-width: 24rem;
+}
+
+.explainer-speaking-item .explainer-speaking-compare button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.25rem 0.5rem;
+  border-left-width: 0;
+  border-radius: 0;
+  font-size: 0.9375rem;
+}
+
+.explainer-speaking-item .explainer-speaking-compare button:first-child {
+  border-left-width: 2px;
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.explainer-speaking-item .explainer-speaking-compare button:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
 }
 
 .explainer-speaking-nomic {

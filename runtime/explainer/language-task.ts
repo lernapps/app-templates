@@ -47,6 +47,34 @@ function selectHtml(id: string, label: string, lang: string, options: readonly s
   ].join("");
 }
 
+/** A piece of the text of a unit: words, or a gap with the word before it and what sticks to it behind. */
+export type GapPiece = { gap?: undefined; text: string } | { gap: number; word: string; after: string };
+
+/**
+ * The text of a unit with its gaps as pieces. The word before a gap, and what sticks to the gap behind it (a full stop, the rest
+ * of a word after an apostrophe), go with the gap: shown in one piece that does not break, a line never ends with a word whose
+ * field is on the next line, nor starts with a full stop.
+ */
+export function keepWithGaps(parts: readonly (string | number)[]): GapPiece[] {
+  const texts = parts.map((part) => (typeof part === "number" ? undefined : part));
+  const kept = new Map<number, { word: string; after: string }>();
+  parts.forEach((part, index) => {
+    if (typeof part !== "number") return;
+    const before = texts[index - 1];
+    const word = before === undefined ? "" : (/\S+\s*$/.exec(before)?.[0] ?? "");
+    if (before !== undefined) texts[index - 1] = before.slice(0, before.length - word.length);
+    const next = texts[index + 1];
+    const after = next === undefined ? "" : (/^\S+/.exec(next)?.[0] ?? "");
+    if (next !== undefined) texts[index + 1] = next.slice(after.length);
+    kept.set(index, { word, after });
+  });
+  return parts.flatMap((part, index): GapPiece[] => {
+    if (typeof part === "number") return [{ gap: part, ...(kept.get(index) ?? { word: "", after: "" }) }];
+    const text = texts[index] ?? "";
+    return text === "" ? [] : [{ text }];
+  });
+}
+
 /** Makes a language task live in `element`: its fields, the bar of characters, and (on a content page) "Prüfen". */
 export function startLanguageTask(
   element: HTMLElement,
@@ -73,11 +101,11 @@ export function startLanguageTask(
     return fieldHtml(fieldId(unit, slot), label, answerLang, width, mode === "write" && width > 40);
   };
   const gapped = (unit: number, parts: readonly (string | number)[], name: string) =>
-    parts
-      .map((part) =>
-        typeof part === "number"
-          ? field(unit, part, t("languageGapLabel", { gap: String(part + 1), n: name }))
-          : escape(part),
+    keepWithGaps(parts)
+      .map((piece) =>
+        piece.gap === undefined
+          ? escape(piece.text)
+          : `<span class="explainer-language-keep">${escape(piece.word)}${field(unit, piece.gap, t("languageGapLabel", { gap: String(piece.gap + 1), n: name }))}${escape(piece.after)}</span>`,
       )
       .join("");
 

@@ -69,6 +69,8 @@ const SPEAKING_TEXTS = [
   "speakOriginal",
   "speakMine",
   "speakBoth",
+  "speakMineShort",
+  "speakBothShort",
   "speakCompare",
   "speakRate",
   "speakSame",

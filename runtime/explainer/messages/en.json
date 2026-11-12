@@ -275,5 +275,7 @@
   "speakResultLine": "{n}: {rating} ({recorded})",
   "speakTutorNote": "Learners hear the original, record themselves and rate how their pronunciation sounds. You can hear neither the original nor the recording. Ask which sounds were hard and describe how to make them.",
   "speakTutorItems": "Sentences",
-  "audioAiShort": "AI"
+  "audioAiShort": "AI",
+  "speakMineShort": "Recording",
+  "speakBothShort": "Both"
 }

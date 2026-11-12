@@ -275,5 +275,7 @@
   "speakResultLine": "{n}: {rating} ({recorded})",
   "speakTutorNote": "Die Lernenden hören das Original, nehmen sich auf und bewerten selbst, wie ihre Aussprache klingt. Du kannst weder das Original noch die Aufnahme hören. Frage, welche Laute schwer waren, und beschreibe, wie man sie bildet.",
   "speakTutorItems": "Sätze",
-  "audioAiShort": "KI"
+  "audioAiShort": "KI",
+  "speakMineShort": "Aufnahme",
+  "speakBothShort": "Beide"
 }
