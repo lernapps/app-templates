@@ -38,6 +38,23 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
 - **Anhang „Medienübersicht“** an jedem Explainer: listet alle Medien und Bilder (Quelle, Lizenz, bei Audio
   „KI-generiert“, Modell, Stimme, Freigabe), damit sich die Qualität leicht sichern lässt.
 
+- **Stimmenauswahl des Owners (2026-11-12), im Skill ausdrücklich zu nennen; der Creator wählt daraus:**
+  - Englisch US: `af_sarah`, `af_nova`, `af_sky` (w), `am_eric`, `am_puck` (m)
+  - Englisch GB: `bf_emma`, `bf_isabella`, `bf_lily` (w), `bm_george`, `bm_daniel` (m)
+  - Französisch: `ff_siwis` (w, Kokoro), `pierre` (m, Piper `fr_FR-upmc`, CC BY-SA 4.0)
+  - Spanisch: `ef_dora` (w), `em_alex` (m)
+  - Italienisch: `if_sara` (w), `im_nicola` (m)
+  Andere Stimmen lässt der Skill nicht zu.
+- **Tempo im Player** (`playbackRate`, Tonhöhe bleibt), nicht vom Modell erzeugt (Annahme aus der Aussage des Owners:
+  modellseitig langsamere Sprache klingt voraussichtlich nicht besser als lokales Strecken; vom Owner zu bestätigen).
+- **Kokoro-Lizenz aus der Model-Card geprüft** (HF `hexgrad/Kokoro-82M`, 2026-11-12): Gewichte Apache 2.0; trainiert
+  auf Audio mit permissiver Lizenz, darunter synthetische Sprache geschlossener TTS-Anbieter (deren Bedingungen sind
+  von uns nicht geprüft). Zum Training diente auch SIWIS (CC BY 4.0) und Koniwa (CC BY 3.0): **Namensnennung nötig**,
+  sicher bei `ff_siwis`, in die Medienübersicht aufnehmen. Qualitätsnoten der Stimmen laut `VOICES.md`: `af_sarah` C+,
+  `af_nova` C, `af_sky` C-, `am_eric` D, `am_puck` C+, `bf_emma` B-, `bf_isabella` C, `bf_lily` D, `bm_george` C,
+  `bm_daniel` D, `ff_siwis` B-, `if_sara` C, `im_nicola` C (Notenhinweis: Menge und Qualität der Trainingsdaten).
+  Die Auswahl des Owners beruht auf dem Hören und gilt vor den Noten.
+
 ## Notes
 - `explainer/README.md:46` sagt heute „No audio: no listening, no dictation, no speaking“. Das ist zu ändern.
 - Apps haben keinen Server, sind statisch, 100 kB `localStorage` pro App; Lint-Regeln verbieten Netzwerk-APIs, `lernapps
