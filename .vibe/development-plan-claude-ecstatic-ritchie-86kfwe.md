@@ -331,7 +331,7 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
   Fehlern (Python, Pakete, `ffmpeg`, Modelle + Prüfsumme, Speicher, Hosts), Exit-Codes, Hinweis zum Umgang mit
   Sprachproben, Pfade; Auswirkung auf `skills-lock.json`, `lernapps update`, `lernapps-cli` (Voraussetzungen)
 - [ ] Piper-Stimme `pierre` und Kokoro in einem Skript (zwei Engines) oder getrennt? Entscheidung; Metadaten gleich
-- [ ] `add_repo` mit Push-Zugriff für `lernapps/tooling` klären (Owner), Branch und Reihenfolge der Repos
+- [x] `add_repo` mit Push-Zugriff für `lernapps/tooling`: erteilt und geklont (`/home/user/tooling`, Branch `main`; vor dem Schreiben einen Feature-Branch anlegen)
 - [ ] Anpassung der Plattform `dec-licences` in `lernapps/docs` auf CC BY-SA (Owner: eigener Branch dort)
 - [ ] Architektur (arc42 in `explainer/docs/arc42`): Bausteine (Audio, Metadaten-Prüfung, Player, Aufnahme,
   Medienübersicht), Entscheidungen (synthetische Stimmen, Metadaten in der Datei, Tempo im Player, kein Whisper),
@@ -345,6 +345,41 @@ Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions`
 
 ### Completed
 *None yet*
+
+### Entwurf der restlichen Plan-Aufgaben (zu bestätigen)
+- **Skill in `lernapps/tooling`:** `skills/content/lernapps-audio/` mit `SKILL.md` (kompakt: wann, Ablauf in wenigen Schritten, die
+  erlaubten Stimmen, kurzer Footprint-Hinweis für den Creator, Hinweis zum Umgang mit Sprachproben: die prüfende Person
+  soll die Sprache beherrschen, die Freigabe ist der Commit), `references/voices.md` (Stimmen, Sprache, Geschlecht, Lizenz,
+  Namensnennung) und `scripts/lernapps_audio.py` **mit zwei Engines (Kokoro, Piper) in einer Datei**: ein Aufruf, ein Preflight,
+  ein venv (231 MiB gemessen). Unterbefehle `preflight` und `generate` (Sprache, Stimme, Text, Ausgabedatei in `src/audio/`),
+  Modelle und venv im Cache des Nutzers (`~/.cache/lernapps/audio/`), nie in der App. Preflight meldet **alle** fehlenden
+  Voraussetzungen gesammelt (Python-Version, Pakete, `ffmpeg`, Modelle samt Prüfsumme, Platz, Hosts) mit Abhilfe in einer
+  Zeile; Exit-Codes: 0 gut, 2 Voraussetzung fehlt, 3 Stimme nicht erlaubt, 4 Erzeugung fehlgeschlagen. Schreibt die
+  Metadaten der Tabelle (ffmpeg), nur Stimmen der Liste; die Namensnennung stammt aus der Liste. Auswirkung auf
+  `lernapps update`, `skills-lock.json` und `lernapps-cli` (Voraussetzungen) im Code zu prüfen.
+- **Plattform `dec-licences` in `lernapps/docs`:** eigene kleine Änderung (CC BY-SA statt CC BY 4.0) auf einem eigenen Branch dort,
+  nach dem Code, mit Push-Zugriff auf `lernapps/docs` (heute nur lesend). Bis dahin widersprechen sich Plattform und Apps.
+- **Architektur (`explainer/docs/arc42`) und README:** `arc42 guide chapter <n>`, dann Bausteine (Audio-Datei und Metadaten-Prüfung,
+  Player, Aufnahme, Medienübersicht), Entscheidungen (synthetische Stimmen mit Kennzeichnung, Metadaten in der Datei, Tempo im Player, Diktat als
+  `language-task`, Selbstvergleich nach `dec-open-task`, MP3 als einziges Format, Signatur später), Randbedingung Mikrofon (`con-…`)
+  und Szenarien; `arc42 validate`; im README „No audio“ ersetzen.
+- **Reihenfolge der Inkremente** (je Inkrement eigene Commits auf dem Feature-Branch, vor dem Merge zusammenfassen):
+  (1) `app-templates`: Metadaten lesen, `src/audio/`, Auslieferung, Dev-Server, Medienübersicht für Bilder, Audio, Videos;
+  (2) `app-templates`: Diktat (`audio` im `language-task`, Player mit Tempo, Textfassung, Prüfungen, Beispiel);
+  (3) `app-templates`: `speaking-task` (Aufnahme, Wiedergabe-Auswahl, Bewertungen, Tutor);
+  (4) `tooling`: Skill und Skript, abgestimmt auf die Metadaten aus (1) mit einer gemeinsamen Testdatei;
+  (5) Architektur, README, `lernapps/docs`.
+- **Teststrategie:** Einheitentests (Metadaten lesen: gültige Datei, fehlendes Pflichtfeld, falsche Sprache, Text keine Variante der
+  Antwort); Build-Tests (Fehlermeldungen mit Ort und Abhilfe); End-to-End mit Playwright ohne Netz (Diktat: kein Request vor dem Klick,
+  richtig/falsch, Textfassung nach dem Lösen; Aufnahme mit Chromium-Testmikrofon `--use-fake-device-for-media-stream`
+  `--use-fake-ui-for-media-stream`: keine Anfrage mit der Aufnahme, Bewertung, Wiedergabe-Auswahl); `lernapps check` an
+  `explainer/examples/franzoesisch` (Barrierefreiheit, ohne JavaScript, 360 px); kleine Testdateien (wenige kB, mit
+  `lernapps-model: test-fixture`). Safari/iOS ist hier nicht testbar (nur Chromium vorhanden): von Hand durch den Owner.
+- **Risiken:** (1) Safari/iOS: Wiedergabe nur nach Geste, `MediaRecorder` liefert dort `audio/mp4`: ungetestet; (2) Mikrofon verweigert
+  oder fehlt; (3) Modell-Download blockiert (Hosts im Preflight nennen); (4) Aussprachefehler des Modells (Zahlen, Fremdwörter,
+  Bindung im Französischen), nur durch Hören zu fangen; (5) Kokoro-Trainingsdaten teils synthetisch von geschlossenen Anbietern, von uns nicht
+  geprüft; (6) unsignierte Metadaten erfüllen den Code of Practice nicht vollständig, Rechtslage offen (Optionen B, C);
+  (7) neue Abhängigkeit `music-metadata` im Build; (8) Skripte in Skills sind im Tooling neu (Verteilung, Sicherheit der Ausführung).
 
 ## Code
 ### Entrance criteria
