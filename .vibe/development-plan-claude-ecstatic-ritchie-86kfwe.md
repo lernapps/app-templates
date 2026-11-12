@@ -426,7 +426,13 @@ Der Owner hat am 2026-11-12 freigegeben, **ohne Halt an den Phasengrenzen** weit
 - Code fertig, Tests grün, Dokumentation (arc42, README) angepasst.
 
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [x] Aufräumen: keine Debug-Ausgaben, keine TODO/FIXME in den geänderten Dateien (geprüft)
+- [x] Dokumentation: arc42 der Vorlage (`node scripts/arc42.ts` ohne Befund), README, Schema, Plan, Skill `lernapps-audio` im Tooling, `dec-licences` in `lernapps/docs`
+- [x] Tests: 588 Tests in `app-templates`, 506 in `tooling`; `lernapps check` der Vorlage mit der französischen Beispiel-App (Wiedergabe, Tempo, Aufnahme, ohne Mikrofon, ohne JavaScript, 360 px) ohne Befund
+- [ ] Offen für den Owner: die vier Beispieldateien des Französisch-Beispiels anhören; Safari/iOS von Hand testen (Wiedergabe, Aufnahme als `audio/mp4`);
+  Skript auf Windows/macOS und ohne System-`ffmpeg` ausprobieren; Branches zusammenführen (`app-templates` `claude/ecstatic-ritchie-86kfwe`,
+  `tooling` `feat/audio-skill`, `docs` `fix/content-licence-cc-by-sa`): vor dem Merge je Branch zusammenfassen (squash), Pull Requests nicht angelegt
+- [ ] Später (Owner): C2PA-Signatur und Wasserzeichen (Optionen B und C), Rechtsfrage „Anbieter oder nicht“, Spanisch und Italienisch im Beispiel
 
 ### Completed
 *None yet*
