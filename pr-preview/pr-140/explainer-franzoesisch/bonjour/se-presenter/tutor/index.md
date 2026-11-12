@@ -82,6 +82,21 @@ Manchmal ist es umgekehrt: Du liest Französisch und sagst, was es heißt.
 
 - Übung `formen-bilden` (unten)
 
+### Hören und aufschreiben
+
+Hör genau zu und schreibe auf, was du hörst. Die Stimme ist eine KI-Stimme. Mit den Tasten unter dem Player
+stellst du das Tempo ein: langsamer, wenn du mehr Zeit brauchst.
+
+- Übung `diktat` (unten)
+
+- Übung `diktat-luecken` (unten)
+
+- Übung `hoeren-verstehen` (unten)
+
+### Nachsprechen
+
+- Übung `nachsprechen` (unten)
+
 ### Übung vorstellen-uebersetzen
 
 - Aufgabe: Übersetze. Schreib auf Französisch.
@@ -135,3 +150,50 @@ Manchmal ist es umgekehrt: Du liest Französisch und sagst, was es heißt.
 2. être · nous · présent → sommes
 - So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
 - Link: [../?via=tutor#formen-bilden](../?via=tutor#formen-bilden)
+
+### Übung diktat
+
+- Aufgabe: Hör zu und schreibe den Satz auf Französisch auf.
+- Antwortformat: die ganze Antwort auf Französisch schreiben
+- Wie die App Fehler der Form zählt: Groß- und Kleinschreibung falsch, Akzente falsch, Bindestrich falsch, Apostroph falsch, Satzzeichen egal
+- Einträge (Vorgabe → Lösung):
+1. Audio → Je m'appelle Marie.
+     - Je appelle Marie.: Zu s'appeler gehört das m': je m'appelle.
+2. Audio → J'ai douze ans.
+     - Je ai douze ans. / je ai douze ans.: Vor einem Vokal wird aus je ein j': j'ai.
+- Die Lernenden hören bei den Items mit Audio eine Datei mit einer KI-Stimme. Du kannst sie nicht abspielen; was gesprochen wird, steht in der Lösung.
+- So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
+- Link: [../?via=tutor#diktat](../?via=tutor#diktat)
+
+### Übung diktat-luecken
+
+- Aufgabe: Fülle die Lücken auf Französisch.
+- Antwortformat: die Lücken auf Französisch füllen
+- Wie die App Fehler der Form zählt: Groß- und Kleinschreibung falsch, Akzente falsch, Bindestrich falsch, Apostroph falsch, Satzzeichen falsch
+- Einträge (Vorgabe → Lösung):
+1. Audio → Je suis de Berlin.
+- Die Lernenden hören bei den Items mit Audio eine Datei mit einer KI-Stimme. Du kannst sie nicht abspielen; was gesprochen wird, steht in der Lösung.
+- So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
+- Link: [../?via=tutor#diktat-luecken](../?via=tutor#diktat-luecken)
+
+### Übung hoeren-verstehen
+
+- Aufgabe: Hör zu und schreibe auf Deutsch, was gesagt wird.
+- Antwortformat: die ganze Antwort auf Deutsch schreiben
+- Wie die App Fehler der Form zählt: Groß- und Kleinschreibung falsch, Akzente falsch, Bindestrich falsch, Apostroph falsch, Satzzeichen falsch
+- Einträge (Vorgabe → Lösung):
+1. Audio → Ich heiße Paul. (auch richtig: Mein Name ist Paul.)
+- Die Lernenden hören bei den Items mit Audio eine Datei mit einer KI-Stimme. Du kannst sie nicht abspielen; was gesprochen wird, steht in der Lösung.
+- So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
+- Link: [../?via=tutor#hoeren-verstehen](../?via=tutor#hoeren-verstehen)
+
+### Übung nachsprechen
+
+- Aufgabe: Hör zu, sprich nach und nimm dich auf. Vergleiche dann mit dem Original.
+- Die Lernenden hören das Original, nehmen sich auf und bewerten selbst, wie ihre Aussprache klingt. Du kannst weder das Original noch die Aufnahme hören. Frage, welche Laute schwer waren, und beschreibe, wie man sie bildet.
+- Sätze:
+1. Audio → Je m'appelle Marie.
+2. Audio → J'ai douze ans.
+3. Audio → Je suis de Berlin.
+- Tipp der App: Sprich langsam. Das *j'* in *j'ai* klingt wie das *g* in *Garage*.
+- Link: [../?via=tutor#nachsprechen](../?via=tutor#nachsprechen)

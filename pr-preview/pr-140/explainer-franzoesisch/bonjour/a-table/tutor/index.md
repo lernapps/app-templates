@@ -64,6 +64,23 @@ Lernlandkarte beim [Teilungsartikel](https://lernapps.net/apps/map/franzoesisch/
 
 - Übung `apfel-erklaeren` (unten)
 
+### Hören, was auf dem Tisch steht
+
+Jetzt hörst du die Sätze, mit einer weiblichen und einer männlichen KI-Stimme. Hör genau auf den Artikel:
+*le*, *la* oder *l'*. Mit den Tasten unter dem Player stellst du das Tempo ein.
+
+- Übung `tisch-diktat` (unten)
+
+- Übung `tisch-artikel-hoeren` (unten)
+
+- Übung `tisch-luecken` (unten)
+
+- Übung `tisch-verstehen` (unten)
+
+### Nachsprechen
+
+- Übung `tisch-nachsprechen` (unten)
+
 ### Übung tisch-beschriften
 
 - Aufgabe: Schreib zu jedem Buchstaben das französische Wort mit seinem Artikel.
@@ -116,3 +133,66 @@ Lernlandkarte beim [Teilungsartikel](https://lernapps.net/apps/map/franzoesisch/
 - Tipp der App: Schau dir das Wort für den Apfel auf dem Tisch oben an.
 - So hilfst du: Die App zeigt die Punkte erst nach der Antwort; das Kind hakt selbst ab, welche seine Antwort enthält, und „es fehlen P2, P4“ nennt die anderen. Fehlt dir die Antwort, bitte das Kind, sie einzufügen oder das Foto seines Blatts anzuhängen. Prüf Punkt für Punkt, auch die abgehakten, und sag zuerst, was gelungen ist. Zu einem fehlenden Punkt stell eine Frage, die dorthin führt, und nenn seine Quelle. Verrate die Musterantwort nicht, bevor das Kind es noch einmal versucht hat. Zu einem Punkt der Form zeig an einem Satz des Kindes, wie es besser geht.
 - Link: [../?via=tutor#apfel-erklaeren](../?via=tutor#apfel-erklaeren)
+
+### Übung tisch-diktat
+
+- Aufgabe: Hör zu und schreibe den Satz auf Französisch auf.
+- Antwortformat: die ganze Antwort auf Französisch schreiben
+- Wie die App Fehler der Form zählt: Groß- und Kleinschreibung richtig mit Hinweis, Akzente falsch, Bindestrich falsch, Apostroph falsch, Satzzeichen egal
+- Einträge (Vorgabe → Lösung):
+1. Audio → Le pain est bon.
+2. Audio → La pomme est rouge.
+     - Le pomme est rouge.: Pomme ist weiblich: la pomme.
+3. Audio → L'eau est froide.
+     - La eau est froide. / Le eau est froide.: Vor einem Vokal wird le oder la zu l': l'eau.
+- Die Lernenden hören bei den Items mit Audio eine Datei mit einer KI-Stimme. Du kannst sie nicht abspielen; was gesprochen wird, steht in der Lösung.
+- So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
+- Link: [../?via=tutor#tisch-diktat](../?via=tutor#tisch-diktat)
+
+### Übung tisch-artikel-hoeren
+
+- Aufgabe: Wähle für jede Lücke das passende Wort.
+- Antwortformat: für jede Lücke ein Wort wählen
+- Wie die App Fehler der Form zählt: Groß- und Kleinschreibung falsch, Akzente falsch, Bindestrich falsch, Apostroph falsch, Satzzeichen falsch
+- Einträge (Vorgabe → Lösung):
+1. Audio → Le pain est bon.
+2. Audio → La pomme est rouge.
+3. Audio → L'eau est froide.
+- Die Lernenden hören bei den Items mit Audio eine Datei mit einer KI-Stimme. Du kannst sie nicht abspielen; was gesprochen wird, steht in der Lösung.
+- So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
+- Link: [../?via=tutor#tisch-artikel-hoeren](../?via=tutor#tisch-artikel-hoeren)
+
+### Übung tisch-luecken
+
+- Aufgabe: Fülle die Lücken auf Französisch.
+- Antwortformat: die Lücken auf Französisch füllen
+- Wie die App Fehler der Form zählt: Groß- und Kleinschreibung falsch, Akzente falsch, Bindestrich falsch, Apostroph falsch, Satzzeichen falsch
+- Einträge (Vorgabe → Lösung):
+1. Audio → Je mange le fromage.
+2. Audio → Je bois l'eau.
+- Die Lernenden hören bei den Items mit Audio eine Datei mit einer KI-Stimme. Du kannst sie nicht abspielen; was gesprochen wird, steht in der Lösung.
+- So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
+- Link: [../?via=tutor#tisch-luecken](../?via=tutor#tisch-luecken)
+
+### Übung tisch-verstehen
+
+- Aufgabe: Hör zu und schreibe auf Deutsch, was der Sprecher sagt.
+- Antwortformat: die ganze Antwort auf Deutsch schreiben
+- Wie die App Fehler der Form zählt: Groß- und Kleinschreibung falsch, Akzente falsch, Bindestrich falsch, Apostroph falsch, Satzzeichen falsch
+- Einträge (Vorgabe → Lösung):
+1. Audio → Das Brot ist gut.
+2. Audio → Der Apfel ist rot.
+- Die Lernenden hören bei den Items mit Audio eine Datei mit einer KI-Stimme. Du kannst sie nicht abspielen; was gesprochen wird, steht in der Lösung.
+- So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
+- Link: [../?via=tutor#tisch-verstehen](../?via=tutor#tisch-verstehen)
+
+### Übung tisch-nachsprechen
+
+- Aufgabe: Hör zu, sprich nach und nimm dich auf. Vergleiche dann mit dem Original.
+- Die Lernenden hören das Original, nehmen sich auf und bewerten selbst, wie ihre Aussprache klingt. Du kannst weder das Original noch die Aufnahme hören. Frage, welche Laute schwer waren, und beschreibe, wie man sie bildet.
+- Sätze:
+1. Audio → Le pain est bon.
+2. Audio → La pomme est rouge.
+3. Audio → L'eau est froide.
+- Tipp der App: Sprich *l'eau* als ein einziges Wort, ungefähr wie *lo*.
+- Link: [../?via=tutor#tisch-nachsprechen](../?via=tutor#tisch-nachsprechen)
