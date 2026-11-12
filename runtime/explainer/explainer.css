@@ -192,6 +192,155 @@
   margin-left: 1rem;
 }
 
+.explainer-media {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.explainer-media li {
+  margin-top: 1.25rem;
+}
+
+.explainer-media-preview {
+  display: block;
+  max-width: min(100%, 20rem);
+  height: auto;
+}
+
+.explainer-media-uses {
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+/* The label of an AI voice: small, with the model and the licence on hover (and for a screen reader). */
+.explainer-ai-voice {
+  display: inline-block;
+  padding: 0.0625rem 0.5rem;
+  border: 1px solid var(--page-border);
+  border-radius: 999px;
+  background: var(--page-surface);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: help;
+}
+
+.explainer-ai-voice:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+/* What the label says about the voice: at once on hover, on focus and on a tap (a title would show late, and not on a touch
+   screen). Below the label, from its right edge to the left, since the label is at the end of a row. */
+.explainer-ai-voice[data-info] {
+  position: relative;
+}
+
+.explainer-ai-voice[data-info]::after {
+  content: attr(data-info);
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  right: 0;
+  z-index: 10;
+  width: max-content;
+  max-width: min(20rem, 80vw);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  background: var(--page-text);
+  color: var(--page-background);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.explainer-ai-voice[data-info]:hover::after,
+.explainer-ai-voice[data-info]:focus::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* A player is one box: the browser's own control, the label of an AI voice and, on an iPhone or an iPad, the tempo buttons. Wide:
+   the control and the label in a row. With the buttons: the control across the box, below it the buttons and, at the end of the
+   row, the label. */
+.explainer-audio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 36rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+}
+
+.explainer-audio audio {
+  flex: 1 1 14rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.explainer-tempo .explainer-audio > audio {
+  flex-basis: 100%;
+}
+
+.explainer-speaking-item .explainer-audio {
+  background: var(--page-background);
+}
+
+.explainer-audio-speed {
+  display: none;
+}
+
+.explainer-tempo .explainer-audio-speed {
+  display: inline-flex;
+  flex: none;
+  margin-right: auto;
+}
+
+.explainer-audio-speed-button {
+  min-width: 2.5rem;
+  min-height: 2.25rem;
+  padding: 0.125rem 0.5rem;
+  border: 2px solid var(--page-accent);
+  border-left-width: 0;
+  background: var(--page-background);
+  color: var(--page-accent);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.explainer-audio-speed-button:first-child {
+  border-left-width: 2px;
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.explainer-audio-speed-button:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.explainer-audio-speed-button[aria-pressed="true"] {
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  font-weight: 600;
+}
+
+.explainer-audio-speed-button:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
 .explainer-pager {
   display: flex;
   flex-wrap: wrap;
@@ -1306,6 +1455,41 @@ button.explainer-help:focus-visible {
   margin: 0 0 0.25rem;
 }
 
+/* The word before a gap stays in one piece with its field (language-task.ts). */
+.explainer-language-keep {
+  white-space: nowrap;
+}
+
+.explainer-language-prompt:has(.explainer-audio) {
+  margin-bottom: 0.75rem;
+}
+
+/* An item that starts from a player: its number stands level with the player, not at the bottom of its line. */
+.explainer-language-items,
+.explainer-language-units {
+  counter-reset: language-item;
+}
+
+.explainer-language-units > li,
+.explainer-language-items > li {
+  counter-increment: language-item;
+}
+
+.explainer-language-units > li:has(.explainer-audio),
+.explainer-language-items > li:has(.explainer-audio) {
+  position: relative;
+  list-style: none;
+}
+
+.explainer-language-units > li:has(.explainer-audio)::before,
+.explainer-language-items > li:has(.explainer-audio)::before {
+  content: counter(language-item) ".";
+  position: absolute;
+  left: -1.5rem;
+  top: 0;
+  line-height: 3.25rem;
+}
+
 .explainer-language-cue,
 .explainer-language-marker {
   font-weight: 600;
@@ -1316,11 +1500,69 @@ button.explainer-help:focus-visible {
   line-height: 2.5;
 }
 
+/* A gap as a blank: a line below and short ticks at both ends, a third of the field's height, so that two gaps that wrap
+   side by side do not run into each other. The colour is --blank, which a verdict changes. Without JavaScript the same
+   blank is a span. */
+.explainer-language-blank,
+.explainer-language-unit .explainer-language-gapped .explainer-language-field,
+.explainer-language-unit[data-state] .explainer-language-gapped .explainer-language-field {
+  --blank: var(--page-text);
+  border: 0;
+  border-bottom: 2px solid var(--blank);
+  border-radius: 0;
+  background-color: transparent;
+  background-image: linear-gradient(var(--blank), var(--blank)), linear-gradient(var(--blank), var(--blank));
+  background-position:
+    left bottom,
+    right bottom;
+  background-size:
+    2px 33%,
+    2px 33%;
+  background-repeat: no-repeat;
+  text-align: center;
+}
+
 .explainer-language-blank {
   display: inline-block;
-  min-width: 3rem;
-  border-bottom: 1px solid var(--page-text);
-  text-align: center;
+  min-width: 3.5rem;
+  min-height: 1.5rem;
+  vertical-align: bottom;
+}
+
+.explainer-language-unit .explainer-language-gapped .explainer-language-field {
+  min-width: 4rem;
+  min-height: 1.75rem;
+  margin: 0.25rem 0.25rem;
+  padding: 0 0.5rem;
+}
+
+/* A choice in a gap: the same blank with an arrow, drawn in the same colour. */
+.explainer-language-unit .explainer-language-gapped select.explainer-language-field {
+  appearance: none;
+  padding: 0.25rem 1.75rem 0 0.5rem;
+  background-image:
+    linear-gradient(var(--blank), var(--blank)), linear-gradient(var(--blank), var(--blank)),
+    linear-gradient(45deg, transparent 50%, var(--blank) 50%),
+    linear-gradient(135deg, var(--blank) 50%, transparent 50%);
+  background-position:
+    left bottom,
+    right bottom,
+    calc(100% - 0.9rem) 55%,
+    calc(100% - 0.6rem) 55%;
+  background-size:
+    2px 33%,
+    2px 33%,
+    0.3rem 0.3rem,
+    0.3rem 0.3rem;
+}
+
+.explainer-language-unit[data-state="richtig"] .explainer-language-gapped .explainer-language-field {
+  --blank: var(--page-right);
+}
+
+.explainer-language-unit[data-state="teilweise"] .explainer-language-gapped .explainer-language-field,
+.explainer-language-unit[data-state="falsch"] .explainer-language-gapped .explainer-language-field {
+  --blank: var(--page-wrong);
 }
 
 .explainer-language-field {
@@ -1439,4 +1681,169 @@ textarea.explainer-language-field {
 
 .explainer-language-also {
   color: var(--page-muted);
+}
+
+/* A speaking task: each sentence is a card with its model, its recording, and its rating. */
+.explainer-speaking-static {
+  padding-left: 1.25rem;
+}
+
+.explainer-speaking-static li {
+  margin-top: 1rem;
+}
+
+.explainer-speaking-live .explainer-speaking-items {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-speaking-live .explainer-speaking-item {
+  padding: 1rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+}
+
+.explainer-speaking-title {
+  margin: 0 0 0.25rem;
+}
+
+.explainer-speaking-model {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.explainer-speaking-sentence {
+  display: block;
+  font-size: 1.125rem;
+  font-style: italic;
+}
+
+.explainer-speaking-privacy,
+.explainer-speaking-nojs,
+.explainer-speaking-status {
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-js .explainer-speaking-nojs {
+  display: none;
+}
+
+.explainer-speaking-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 1rem 0 0;
+}
+
+/* The buttons: the one that records is filled, the others outlined, as the buttons of an exercise are. */
+.explainer-speaking-item button {
+  min-height: 2.5rem;
+  padding: 0.25rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.explainer-speaking-item button.explainer-speaking-record {
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-speaking-item button.explainer-speaking-record[data-recording] {
+  border-color: var(--page-wrong);
+  background: var(--page-wrong);
+}
+
+.explainer-speaking-item button:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-speaking-mine {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--page-border);
+}
+
+/* The three ways to listen: one row of joined buttons that fills the width of the card, short words (the full name is the
+   button's name for a screen reader and its title). */
+.explainer-speaking-compare {
+  display: flex;
+  width: 100%;
+  max-width: 24rem;
+}
+
+.explainer-speaking-item .explainer-speaking-compare button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.25rem 0.5rem;
+  border-left-width: 0;
+  border-radius: 0;
+  font-size: 0.9375rem;
+}
+
+.explainer-speaking-item .explainer-speaking-compare button:first-child {
+  border-left-width: 2px;
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.explainer-speaking-item .explainer-speaking-compare button:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.explainer-speaking-nomic {
+  margin: 0.75rem 0 0;
+}
+
+.explainer-speaking-rate {
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.explainer-speaking-rate legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.explainer-speaking-rate label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0.5rem 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  cursor: pointer;
+}
+
+.explainer-speaking-rate label:has(input:checked) {
+  border-color: var(--page-accent);
+  box-shadow: inset 0 0 0 1px var(--page-accent);
+  font-weight: 600;
+}
+
+.explainer-speaking-result:not(:empty) {
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--page-accent);
+  background: var(--page-surface);
+  font-weight: 600;
 }

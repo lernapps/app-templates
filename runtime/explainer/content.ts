@@ -7,6 +7,7 @@ import type { Question } from "../shared/questions/question.ts";
 import type { DataRecord, Generated } from "./generated/types.ts";
 import type { Credit, Drawing, MaterialBlock } from "../shared/blocks/block.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
+import type { AudioMeta } from "../shared/audio.ts";
 import type { LanguageTaskSpec } from "./language.ts";
 
 export type { Credit, Drawing };
@@ -41,8 +42,22 @@ export interface OpenTask {
 /** A language task: the learner writes a word, an expression or sentences in a language, and the page checks it. */
 export type LanguageTask = LanguageTaskSpec<Text, MaterialBlock<Text>>;
 
-/** An exercise block: one of the question types, generated, an open task, or a language task. */
-export type Exercise = QuestionBlock | Generated | OpenTask | LanguageTask;
+/**
+ * A speaking task: the learner hears a model (an audio file of src/audio/), records themself and compares, and rates the
+ * pronunciation. The page checks nothing; the recording never leaves the browser's memory (dec-speaking-task).
+ */
+export interface SpeakingTask {
+  type: "speaking-task";
+  id: string;
+  /** The language of the models: a language code. */
+  language: string;
+  task?: Text;
+  items: readonly { audio: string; text?: string }[];
+  hint?: Text;
+}
+
+/** An exercise block: one of the question types, generated, an open task, a language task or a speaking task. */
+export type Exercise = QuestionBlock | Generated | OpenTask | LanguageTask | SpeakingTask;
 
 export interface Source {
   title: Text;
@@ -146,6 +161,12 @@ export interface Chapter {
 
 export type { DataRecord };
 
+/** An audio file of src/audio/: where it is, and what it says about itself (shared/audio.ts). */
+export interface AudioFile {
+  file: string;
+  meta: AudioMeta;
+}
+
 export interface Site {
   app: App;
   chapters: readonly Chapter[];
@@ -153,6 +174,8 @@ export interface Site {
   data: Readonly<Record<string, readonly DataRecord[]>>;
   /** The bundled images that blocks use, by their path from src/ (images/<name>), with the file's absolute path. */
   images: ReadonlyMap<string, string>;
+  /** The audio files of src/audio/, by their path from src/ (audio/<name>.mp3). */
+  audio: ReadonlyMap<string, AudioFile>;
   /** Each vue-component block, with its component and where it is. */
   components: readonly ComponentUse[];
   /** The app's name for what it keeps on the device (its package.json name; @lernapps/tooling/storage). */
@@ -290,6 +313,7 @@ export const isExercise = (block: Block): block is Exercise =>
   block.type === "generated" ||
   block.type === "open-task" ||
   block.type === "language-task" ||
+  block.type === "speaking-task" ||
   ["single-choice", "multiple-choice", "true-false", "number", "ordering", "matching"].includes(block.type);
 
 /** The anchor of a term in the glossary: the German term in lower case, umlauts spelled out, hyphens for the rest. */

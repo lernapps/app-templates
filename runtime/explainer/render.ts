@@ -37,7 +37,10 @@ import { LANGUAGES, languageName, NEEDS, OTHER_LANGUAGE, type Need } from "./nee
 import { BASE, placeholderPrompt, plainAddress, PROVIDERS, QUERY, startPrompt } from "./prompt.ts";
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
-import { renderVideo } from "./video.ts";
+import { renderVideo, watchAddress } from "./video.ts";
+import { mediaOf, type MediaItem } from "./media.ts";
+import { languageOfAudio } from "../shared/audio.ts";
+import { renderCredit } from "../shared/blocks/render.ts";
 import { assessmentOf } from "./assessment.ts";
 import { assessmentMain, assessmentOffer, type AssessmentContext } from "./assessment-page.ts";
 
@@ -80,6 +83,31 @@ class Context {
       href: (image) => relative(route.path, image),
       resolve: this.resolve,
       sizeless: (image) => sizeless(site, image),
+      audio: (name) => {
+        const file = site.audio.get(`audio/${name}`);
+        if (file === undefined) return undefined;
+        return {
+          src: relative(route.path, `audio/${name}`),
+          text: file.meta.text,
+          ...(file.meta.synthetic
+            ? {
+                ai: message(route.lang, "audioAiShort"),
+                info: [
+                  `${message(route.lang, "mediaAiVoice")}.`,
+                  message(route.lang, "mediaVoice", {
+                    model: file.meta.model ?? "",
+                    voice: file.meta.voice ?? "",
+                    date: file.meta.date,
+                  }),
+                  message(route.lang, "mediaLicence", { licence: file.meta.licence }),
+                  ...(file.meta.attribution === undefined || file.meta.attribution === "none"
+                    ? []
+                    : [message(route.lang, "mediaAttribution", { attribution: file.meta.attribution })]),
+                ].join(" "),
+              }
+            : {}),
+        };
+      },
     };
   }
   get lang(): string {
@@ -332,6 +360,61 @@ function pageList(context: Context, pages: readonly NonNullable<Route["page"]>[]
     .join("")}</ol>`;
 }
 
+/** The page "Medienübersicht": the images, audio files and videos of the app, each with its credit and where it is used. */
+function mediaOverview(context: Context): string {
+  const items = mediaOf(context.site);
+  const uses = (item: MediaItem) =>
+    `<p class="explainer-media-uses">${
+      item.uses.length === 0
+        ? plain(context.t("mediaUnused"))
+        : `${plain(context.t("mediaUsedOn"))} ${item.uses
+            .map(
+              ({ chapter, page }) =>
+                `<a href="${context.to(`${chapter.id}/${page.id}/`)}">${context.text(page.title)}</a>`,
+            )
+            .join(", ")}`
+    }</p>`;
+  const entry = (item: MediaItem): string => {
+    switch (item.kind) {
+      case "image": {
+        const credit = renderCredit(
+          {
+            ...(item.source === undefined ? {} : { source: item.source }),
+            ...(item.licence === undefined ? {} : { licence: item.licence }),
+          },
+          context.lang,
+        );
+        return `<li><img class="explainer-media-preview" src="${plain(context.material.href(item.name))}" alt="${context.text(item.alt)}" loading="lazy" decoding="async"><p><code>${plain(item.name)}</code>${credit}</p>${uses(item)}</li>`;
+      }
+      case "audio": {
+        const { meta } = item;
+        const spoken = languageOfAudio(meta.language);
+        const voice = meta.synthetic
+          ? `<span class="explainer-ai-voice">${plain(context.t("mediaAiVoice"))}</span> ${plain(
+              context.t("mediaVoice", { model: meta.model ?? "", voice: meta.voice ?? "", date: meta.date }),
+            )}`
+          : `<span class="explainer-ai-voice">${plain(context.t("mediaHumanVoice"))}</span>`;
+        const attribution =
+          meta.attribution === undefined || meta.attribution === "none"
+            ? ""
+            : ` ${plain(context.t("mediaAttribution", { attribution: meta.attribution }))}`;
+        return `<li><p><code>${plain(item.name)}</code></p><span class="explainer-audio"><audio controls preload="none" src="${plain(context.material.href(item.name))}" aria-label="${plain(context.t("mediaPlay", { text: meta.text }))}"></audio></span><p class="explainer-media-text">${plain(context.t("mediaText"))} <span lang="${plain(spoken)}">${plain(meta.text)}</span></p><p>${voice}${attribution} ${plain(context.t("mediaLicence", { licence: meta.licence }))}</p>${uses(item)}</li>`;
+      }
+      case "video":
+        return `<li><p>${external(watchAddress(item.youtube), item.title)} ${plain(context.t("mediaVideoBy", { channel: item.channel }))}</p>${uses(item)}</li>`;
+    }
+  };
+  const section = (kind: MediaItem["kind"], title: "mediaImages" | "mediaAudio" | "mediaVideos"): string => {
+    const list = items.filter((item) => item.kind === kind);
+    return list.length === 0
+      ? ""
+      : `<section class="explainer-media-section"><h2>${plain(context.t(title))}</h2><ul class="explainer-media">${list.map(entry).join("")}</ul></section>`;
+  };
+  return [section("image", "mediaImages"), section("audio", "mediaAudio"), section("video", "mediaVideos")]
+    .filter((part) => part !== "")
+    .join("\n");
+}
+
 function main(context: Context): string {
   const { route, site } = context;
   const title = `<h1>${plain(route.title)}</h1>`;
@@ -349,6 +432,8 @@ function main(context: Context): string {
         terms(site).length === 0
           ? ""
           : `<p><a href="${context.to("glossar/")}">${plain(context.t("glossary"))}</a></p>`;
+      const media =
+        mediaOf(site).length === 0 ? "" : `<p><a href="${context.to("medien/")}">${plain(context.t("media"))}</a></p>`;
       const sources =
         site.app.sources === undefined
           ? ""
@@ -365,6 +450,7 @@ function main(context: Context): string {
         assessment === undefined ? "" : assessmentOffer(assessmentContext(context), assessment),
         `<nav class="explainer-contents" aria-labelledby="inhalt"><h2 id="inhalt">${plain(context.t("contents"))}</h2>${contents}</nav>`,
         glossary,
+        media,
         tutorAbout(context),
         sources,
       ]
@@ -403,6 +489,8 @@ function main(context: Context): string {
         `<dl class="explainer-glossary">${entries.join("")}</dl>`,
       ].join("\n");
     }
+    case "media":
+      return [title, `<p>${plain(context.t("mediaIntro"))}</p>`, mediaOverview(context)].join("\n");
     case "page": {
       const page = route.page;
       if (page === undefined) return title;

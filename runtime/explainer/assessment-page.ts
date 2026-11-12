@@ -117,6 +117,8 @@ function itemHtml(context: AssessmentContext, data: AssessmentItemData, n: numbe
     return `${label}<div class="explainer-open-task-text">${data.task}</div><div class="explainer-open-live" hidden></div>`;
   // a language task: its task and material (`component`), and the place of its fields; no "Prüfen", no solution
   if (data.kind === "language") return `${label}${component}<div class="explainer-language-live" hidden></div>`;
+  // a speaking task is not asked in a self-assessment: the build stops it (load.ts)
+  if (data.kind === "speaking") return label;
   const { question, rendered } = data;
   return `${label}${renderQuestion(question, {
     lang,
@@ -139,7 +141,7 @@ export function assessmentMain(context: AssessmentContext, assessment: Assessmen
       const component = context.component(item.block, item.key);
       return { item, data: { kind: "component", seeds: component?.seeds ?? [1] }, html: component?.html ?? "" };
     }
-    const data = exerciseData(item.block, lang, site.data, context.resolve);
+    const data = exerciseData(item.block, lang, site.data, context.resolve, context.material.audio);
     // a language task: its task and material, and the place of its fields (language-task.ts), by its key
     if (item.block.type === "language-task" && data.kind === "language") {
       const { block } = item;

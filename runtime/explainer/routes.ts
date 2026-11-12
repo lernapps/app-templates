@@ -1,6 +1,6 @@
 // The pages an explainer's build writes, per language, and how they link: the start page, a page per chapter (none
 // when the app has one chapter, which the navigation then hides), the content pages in the order of the lists, the
-// glossary when the content defines terms, and the page of each self-assessment (assessment.ts), linked only from
+// glossary when the content defines terms, the media overview when it has media, and the page of each self-assessment (assessment.ts), linked only from
 // the start page or its chapter's page. German is at the root, every other language below /<language>/;
 // within a language tree the addresses are the same: <chapter>/<page>/, glossar/.
 import {
@@ -16,9 +16,10 @@ import {
 import { languageRoot } from "../shared/pages.ts";
 import { message } from "./messages.ts";
 import { assessments, type Assessment } from "./assessment.ts";
+import { mediaOf } from "./media.ts";
 
 export interface Route {
-  kind: "start" | "chapter" | "page" | "glossary" | "assessment";
+  kind: "start" | "chapter" | "page" | "glossary" | "media" | "assessment";
   lang: string;
   /** Where the page is, from the app's root: "", "prozent/", "en/prozent/prozentwert/", "glossar/". */
   path: string;
@@ -61,6 +62,7 @@ export function terms(site: Site): Term[] {
 export function routes(site: Site): Route[] {
   const hidden = hiddenChapter(site);
   const glossary = terms(site).length > 0;
+  const media = mediaOf(site).length > 0;
   const all = assessments(site);
   return site.app.languages.flatMap((lang) => {
     const root = languageRoot(lang);
@@ -112,6 +114,15 @@ export function routes(site: Site): Route[] {
         path: `${root}glossar/`,
         local: "glossar/",
         title: message(lang, "glossary"),
+      });
+    }
+    if (media) {
+      list.push({
+        kind: "media",
+        lang,
+        path: `${root}medien/`,
+        local: "medien/",
+        title: message(lang, "media"),
       });
     }
     return list;

@@ -2,6 +2,7 @@
 // classes of mistakes of form and how the task counts them (strict by default), and the typical mistakes.
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vite-plus/test";
+import { keepWithGaps } from "../runtime/explainer/language-task.ts";
 import {
   check,
   checkUnit,
@@ -170,8 +171,8 @@ describe("what the build reports about a language task", () => {
     ).toEqual([
       "languages.target: the target language is the source language; name the language learners learn",
       "items.0: target is missing: it is what the learner writes (direction to-target)",
-      "items.1: give exactly one thing to start from: source (a translation), cue (a form to build) or marker (a label of the figure)",
-      "items.2: give exactly one thing to start from: source (a translation), cue (a form to build) or marker (a label of the figure)",
+      "items.1: give exactly one thing to start from: source (a translation), cue (a form to build), marker (a label of the figure) or audio (a file of src/audio/)",
+      "items.2: give exactly one thing to start from: source (a translation), cue (a form to build), marker (a label of the figure) or audio (a file of src/audio/)",
     ]);
   });
 
@@ -318,5 +319,36 @@ describe("the table of a language task fits at 360 px (#151)", () => {
     const field = rule(".explainer-language-table .explainer-language-field");
     expect(field).toContain("width: 100%");
     expect(field).toContain("box-sizing: border-box");
+  });
+});
+
+describe("the text of a gap task as pieces (language-task.ts)", () => {
+  test("the word before a gap and the full stop behind it go with the gap", () => {
+    expect(keepWithGaps(["Je ", 0, " de ", 1, "."])).toEqual([
+      { gap: 0, word: "Je ", after: "" },
+      { text: " " },
+      { gap: 1, word: "de ", after: "." },
+    ]);
+  });
+
+  test("the rest of a word after an apostrophe goes with its gap, and the part before it", () => {
+    expect(keepWithGaps(["Je bois ", 0, "eau."])).toEqual([{ text: "Je " }, { gap: 0, word: "bois ", after: "eau." }]);
+    expect(keepWithGaps(["l'", 0, "eau"])).toEqual([{ gap: 0, word: "l'", after: "eau" }]);
+  });
+
+  test("a gap at the start or next to another gap has nothing to take", () => {
+    expect(keepWithGaps([0, " est ", 1])).toEqual([
+      { gap: 0, word: "", after: "" },
+      { text: " " },
+      { gap: 1, word: "est ", after: "" },
+    ]);
+    expect(keepWithGaps([0, 1])).toEqual([
+      { gap: 0, word: "", after: "" },
+      { gap: 1, word: "", after: "" },
+    ]);
+  });
+
+  test("a text without gaps is one piece", () => {
+    expect(keepWithGaps(["Je suis de Berlin."])).toEqual([{ text: "Je suis de Berlin." }]);
   });
 });

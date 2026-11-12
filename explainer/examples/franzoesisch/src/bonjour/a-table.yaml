@@ -112,3 +112,77 @@ blocks:
           Der Apfel heißt auf Französisch *la pomme*. Das Nomen ist weiblich, darum steht *la* davor, obwohl es im
           Deutschen *der* Apfel heißt.
         hint: Schau dir das Wort für den Apfel auf dem Tisch oben an.
+  - type: section
+    id: hoeren
+    title: Hören, was auf dem Tisch steht
+    blocks:
+      - type: text
+        text: |
+          Jetzt hörst du die Sätze, mit einer weiblichen und einer männlichen KI-Stimme. Hör genau auf den Artikel:
+          *le*, *la* oder *l'*. Mit den Tasten unter dem Player stellst du das Tempo ein.
+      - type: language-task
+        id: tisch-diktat
+        languages: { source: de, target: fr }
+        form: { punctuation: ok, case: hint }
+        items:
+          - audio: le-pain-est-bon.mp3
+            target: Le pain est bon.
+          - audio: la-pomme-est-rouge.mp3
+            target: La pomme est rouge.
+            mistakes:
+              - answer: Le pomme est rouge.
+                message: "Pomme ist weiblich: la pomme."
+          - audio: leau-est-froide.mp3
+            target: "L'eau est froide."
+            mistakes:
+              - answer: "(La|Le) eau est froide."
+                message: "Vor einem Vokal wird le oder la zu l': l'eau."
+      - type: language-task
+        id: tisch-artikel-hoeren
+        languages: { source: de, target: fr }
+        mode: choice
+        items:
+          - audio: le-pain-est-bon.mp3
+            target: "[Le] pain est bon."
+            distractors: [[La, "L'"]]
+          - audio: la-pomme-est-rouge.mp3
+            target: "[La] pomme est rouge."
+            distractors: [[Le, "L'"]]
+          - audio: leau-est-froide.mp3
+            target: "[L']eau est froide."
+            distractors: [[Le, La]]
+      - type: language-task
+        id: tisch-luecken
+        languages: { source: de, target: fr }
+        mode: gap
+        items:
+          - audio: je-mange-le-fromage.mp3
+            target: "Je mange [le] fromage."
+          - audio: je-bois-leau.mp3
+            target: "Je bois [l']eau."
+            examples:
+              rejected: [["le "]]
+      - type: language-task
+        id: tisch-verstehen
+        languages: { source: de, target: fr }
+        direction: to-source
+        task: Hör zu und schreibe auf Deutsch, was der Sprecher sagt.
+        items:
+          - audio: pierre-le-pain-est-bon.mp3
+            source: "Das Brot ist gut."
+          - audio: pierre-la-pomme-est-rouge.mp3
+            source: "Der Apfel ist rot."
+  - type: section
+    id: sprechen
+    title: Nachsprechen
+    blocks:
+      - type: speaking-task
+        id: tisch-nachsprechen
+        language: fr
+        items:
+          - audio: le-pain-est-bon.mp3
+            text: Le pain est bon.
+          - audio: pierre-la-pomme-est-rouge.mp3
+            text: La pomme est rouge.
+          - audio: leau-est-froide.mp3
+        hint: "Sprich *l'eau* als ein einziges Wort, ungefähr wie *lo*."

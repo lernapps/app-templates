@@ -195,3 +195,27 @@ title: Self-assessment
 definition: Exercises of an explainer's content pages, a few per page of its own, which the learner may answer before learning and which are checked only all together; the result says per content page whether it is probably known, to look at again or to read.
 :::
 ```
+
+## Speaking Task
+
+A speaking exercise in which the learner records themself and compares with a model (`dec-speaking-task`).
+
+```arc42
+:::glossary-term
+id: term-speaking-task
+title: Speaking task
+definition: An explainer exercise in which the learner hears a model, records themself, plays the original, the recording or both, and rates how their pronunciation sounds; the page checks nothing and the recording stays in the browser's memory.
+:::
+```
+
+## Media Overview
+
+The page that lists every image, audio file and video of an explainer (`dec-media-overview`).
+
+```arc42
+:::glossary-term
+id: term-media-overview
+title: Media overview
+definition: The page "Medienübersicht" at medien/ of an explainer: every image, audio file and video with its credit and licence, the pages that use it and, for an AI voice, the model, the voice and the text.
+:::
+```

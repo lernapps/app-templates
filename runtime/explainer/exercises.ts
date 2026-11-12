@@ -6,11 +6,11 @@
 // once the live task is solved). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
 import { questionIn, type Question } from "../shared/questions/question.ts";
-import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
+import { renderMaterial, type AudioRef, type MaterialContext } from "../shared/blocks/index.ts";
 import { materialIn } from "../shared/blocks/block.ts";
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
 import { inLanguage, type Text } from "../shared/languages.ts";
-import type { DataRecord, Exercise, LanguageTask, OpenTask, QuestionBlock } from "./content.ts";
+import type { DataRecord, Exercise, LanguageTask, OpenTask, QuestionBlock, SpeakingTask } from "./content.ts";
 import {
   answerLanguage,
   answersOf,
@@ -56,7 +56,47 @@ export type ExerciseData =
       texts: { newTask: string; practice: string; hint: string; solution: string; taskNumber: string };
     }
   | OpenTaskData
-  | LanguageTaskData;
+  | LanguageTaskData
+  | SpeakingTaskData;
+
+/** The keys of the texts the browser needs for a speaking task, from the messages. */
+const SPEAKING_TEXTS = [
+  "speakPrivacy",
+  "speakRecord",
+  "speakStop",
+  "speakRerecord",
+  "speakRecording",
+  "speakOriginal",
+  "speakMine",
+  "speakBoth",
+  "speakMineShort",
+  "speakBothShort",
+  "speakCompare",
+  "speakRate",
+  "speakSame",
+  "speakBumpy",
+  "speakAgain",
+  "speakNoMic",
+  "speakSpoken",
+  "speakItem",
+  "speakAllRight",
+  "speakSomeRight",
+  "speakWrong",
+  "speakResultRecorded",
+  "speakResultNotRecorded",
+  "speakResultLine",
+] as const;
+
+/** What the browser reads from a speaking task: its models with their players, and its texts. */
+export interface SpeakingTaskData {
+  kind: "speaking";
+  lang: string;
+  id: string;
+  /** The language of the models. */
+  language: string;
+  items: { audio: string; player: string; text?: string; spoken?: string }[];
+  texts: Record<(typeof SPEAKING_TEXTS)[number], string>;
+}
 
 /** What the browser reads from a language task: its units with their inputs, its texts, how it counts form. */
 export interface LanguageTaskData {
@@ -351,18 +391,26 @@ export function languageTaskText(block: LanguageTask, lang: string, resolve: (hr
         ? "languageChoice"
         : mode === "gap"
           ? "languageGap"
-          : prompt?.kind === "cue"
-            ? "languageBuild"
-            : prompt?.kind === "marker"
-              ? "languageLabelFigure"
-              : prompt?.kind === "text"
-                ? "languageTranslate"
-                : "languageWrite";
+          : prompt?.kind === "audio"
+            ? block.direction === "to-source"
+              ? "languageListen"
+              : "languageDictate"
+            : prompt?.kind === "cue"
+              ? "languageBuild"
+              : prompt?.kind === "marker"
+                ? "languageLabelFigure"
+                : prompt?.kind === "text"
+                  ? "languageTranslate"
+                  : "languageWrite";
   return `<p>${plain(message(lang, key, { language }))}</p>`;
 }
 
 /** What the browser reads from a language task in `lang`. */
-export function languageTaskData(block: LanguageTask, lang: string): LanguageTaskData {
+export function languageTaskData(
+  block: LanguageTask,
+  lang: string,
+  audio?: MaterialContext["audio"],
+): LanguageTaskData {
   const mode = block.mode ?? "write";
   const units = unitsOf(block);
   let slot = 0;
@@ -399,7 +447,7 @@ export function languageTaskData(block: LanguageTask, lang: string): LanguageTas
         ...unit,
         messages: (item?.mistakes ?? []).map((mistake) => inLanguage(mistake.message, lang)),
         solution: solutionOf(unit),
-        promptHtml: promptHtml(unit.prompt, lang),
+        promptHtml: promptHtml(unit.prompt, lang, audio),
       };
       if (mode === "write") return shown;
       if (unit.cells !== undefined) {
@@ -420,9 +468,40 @@ export function languageTaskData(block: LanguageTask, lang: string): LanguageTas
   };
 }
 
+/** The tempos of the player, as a factor of the speed of the recording. */
+const SPEEDS = [0.75, 1, 1.25] as const;
+
+/**
+ * An audio file as the page shows it: the browser's own player (it plays without JavaScript, and loads nothing before
+ * the learner presses play), a label when a model made the voice, and the buttons for the tempo, which only the client
+ * module makes work and the style shows once it runs.
+ */
+export function audioHtml(audio: AudioRef | undefined, lang: string): string {
+  if (audio === undefined) return `<span class="explainer-audio">${plain(message(lang, "languageAudioItem"))}</span>`;
+  const number = new Intl.NumberFormat(lang, { maximumFractionDigits: 2 });
+  const buttons = SPEEDS.map(
+    (speed) =>
+      `<button type="button" class="explainer-audio-speed-button" data-speed="${speed}" aria-pressed="${speed === 1}">${plain(number.format(speed))}×</button>`,
+  ).join("");
+  // the label of an AI voice is small; the information shows on hover, focus and tap (data-info, drawn by the style) and is
+  // read by a screen reader (aria-label); no title, which browsers show late and in their own way
+  const label =
+    audio.ai === undefined
+      ? ""
+      : `<span class="explainer-ai-voice" tabindex="0" role="note" data-info="${plain(audio.info ?? audio.ai)}" aria-label="${plain(audio.info ?? audio.ai)}">${plain(audio.ai)}</span>`;
+  return [
+    `<span class="explainer-audio">`,
+    `<audio controls preload="none" src="${plain(audio.src)}" aria-label="${plain(message(lang, "audioPlay"))}"></audio>`,
+    `<span class="explainer-audio-speed" role="group" aria-label="${plain(message(lang, "audioSpeed"))}">${buttons}</span>`,
+    label,
+    `</span>`,
+  ].join("");
+}
+
 /** A prompt as the page shows it, plain HTML with its language marked. */
-function promptHtml(prompt: Prompt | undefined, lang: string): string {
+function promptHtml(prompt: Prompt | undefined, lang: string, audio?: MaterialContext["audio"]): string {
   if (prompt === undefined) return "";
+  if (prompt.kind === "audio") return audioHtml(audio?.(prompt.file), lang);
   if (prompt.kind === "text") return `<span lang="${plain(prompt.lang)}">${plain(prompt.text)}</span>`;
   if (prompt.kind === "cue") return `<span class="explainer-language-cue">${plain(prompt.text)}</span>`;
   return `<span class="explainer-language-marker">${plain(message(lang, "languageMarker", { marker: prompt.marker }))}</span>`;
@@ -445,7 +524,7 @@ function languageTaskExercise(
   resolve: (href: string) => string,
   material: MaterialContext,
 ): string {
-  const data = languageTaskData(block, lang);
+  const data = languageTaskData(block, lang, material.audio);
   const target = plain(data.answerLang);
   const solution = questionMessagesIn(lang).solution;
   const also = plain(message(lang, "languageAlso"));
@@ -475,12 +554,14 @@ function languageTaskExercise(
           .join("")
       : `<ol class="explainer-language-items">${data.units
           .map((unit) => {
-            const prompt = promptHtml(unit.prompt, lang);
+            const prompt = promptHtml(unit.prompt, lang, material.audio);
             const gapped =
               unit.parts === undefined
                 ? ""
                 : `<span class="explainer-language-gapped" lang="${target}">${gappedHtml(unit.parts)}</span>`;
-            return `<li>${[prompt, gapped].filter((part) => part !== "").join(" → ")}</li>`;
+            // a player is a block of its own: the gapped text follows it, no arrow
+            const joiner = unit.prompt?.kind === "audio" ? " " : " → ";
+            return `<li>${[prompt, gapped].filter((part) => part !== "").join(joiner)}</li>`;
           })
           .join("")}</ol>`;
   const solutions =
@@ -515,16 +596,91 @@ function languageTaskExercise(
     .join("\n");
 }
 
+/** What the browser reads from a speaking task in `lang`. */
+export function speakingTaskData(
+  block: SpeakingTask,
+  lang: string,
+  audio?: MaterialContext["audio"],
+): SpeakingTaskData {
+  return {
+    kind: "speaking",
+    lang,
+    id: block.id,
+    language: block.language,
+    items: block.items.map((item) => {
+      const spoken = audio?.(item.audio)?.text;
+      return {
+        audio: item.audio,
+        player: audioHtml(audio?.(item.audio), lang),
+        ...(item.text === undefined ? {} : { text: item.text }),
+        ...(spoken === undefined ? {} : { spoken }),
+      };
+    }),
+    texts: Object.fromEntries(SPEAKING_TEXTS.map((key) => [key, message(lang, key)])) as SpeakingTaskData["texts"],
+  };
+}
+
+/** The task of a speaking task as the learner reads it: its own, or a text. */
+export function speakingTaskText(block: SpeakingTask, lang: string, resolve: (href: string) => string): string {
+  return block.task !== undefined
+    ? renderMarkdown(inLanguage(block.task, lang), resolve)
+    : `<p>${plain(message(lang, "speakTask"))}</p>`;
+}
+
+/**
+ * A speaking task in `lang`: the task, each model with its player and its text, and the note that recording needs
+ * JavaScript, which is all the page shows without it; with JavaScript the learner records and rates (speaking-task.ts).
+ */
+function speakingTaskExercise(
+  block: SpeakingTask,
+  lang: string,
+  resolve: (href: string) => string,
+  material: MaterialContext,
+): string {
+  const data = speakingTaskData(block, lang, material.audio);
+  const items = data.items
+    .map((item, index) => {
+      const text =
+        item.text === undefined
+          ? ""
+          : `<span class="explainer-speaking-sentence" lang="${plain(data.language)}">${plain(item.text)}</span>`;
+      return `<li data-item="${index}">${text}${item.player}</li>`;
+    })
+    .join("");
+  return [
+    `<div class="explainer-exercise explainer-speaking-task" id="${block.id}">`,
+    `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
+    `<div class="explainer-speaking-text">${speakingTaskText(block, lang, resolve)}</div>`,
+    block.hint === undefined
+      ? ""
+      : `<details class="explainer-hint"><summary>${plain(message(lang, "hint"))}</summary>${renderMarkdown(inLanguage(block.hint, lang), resolve)}</details>`,
+    `<ol class="explainer-speaking-items explainer-speaking-static">${items}</ol>`,
+    `<p class="explainer-speaking-nojs">${plain(message(lang, "speakNoJs"))}</p>`,
+    `<div class="explainer-speaking-live" hidden></div>`,
+    `<details class="explainer-solution"><summary>${plain(questionMessagesIn(lang).solution)}</summary>`,
+    `<ol class="explainer-speaking-solutions" lang="${plain(data.language)}">${data.items
+      .map((item) => `<li>${plain(item.spoken ?? item.text ?? "")}</li>`)
+      .join("")}</ol>`,
+    `</details>`,
+    `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
+    `</div>`,
+  ]
+    .filter((part) => part !== "")
+    .join("\n");
+}
+
 /** What the browser reads from an exercise in `lang` (script.explainer-exercise-data). */
 export function exerciseData(
   block: Exercise,
   lang: string,
   all: Readonly<Record<string, readonly DataRecord[]>>,
   resolve: (href: string) => string,
+  audio?: MaterialContext["audio"],
 ): ExerciseData {
   if (block.type === "generated") return generatedData(block, lang, all, resolve);
   if (block.type === "open-task") return openTaskData(block, lang, resolve);
-  if (block.type === "language-task") return languageTaskData(block, lang);
+  if (block.type === "language-task") return languageTaskData(block, lang, audio);
+  if (block.type === "speaking-task") return speakingTaskData(block, lang, audio);
   return questionData(block, lang);
 }
 
@@ -624,5 +780,6 @@ export function renderExercise(
   if (block.type === "generated") return generatedExercise(block, lang, data, resolve);
   if (block.type === "open-task") return openTaskExercise(block, lang, resolve, storage, material);
   if (block.type === "language-task") return languageTaskExercise(block, lang, resolve, material);
+  if (block.type === "speaking-task") return speakingTaskExercise(block, lang, resolve, material);
   return questionExercise(block, lang, material);
 }

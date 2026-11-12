@@ -58,6 +58,9 @@ flowchart TB
         bb-generated-exercises["Generated exercises"]
         bb-open-tasks["Open tasks"]
         bb-language-tasks["Language tasks"]
+        bb-speaking-tasks["Speaking tasks"]
+        bb-audio-player["Audio player"]
+        bb-media["Audio files and media overview"]
         bb-scope["Scope"]
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
@@ -88,6 +91,9 @@ flowchart TB
     bb-generated-exercises -->|"if-archetype-content"| bb-explainer-content
     bb-open-tasks -->|"if-archetype-content"| bb-explainer-content
     bb-language-tasks -->|"if-archetype-content"| bb-explainer-content
+    bb-speaking-tasks -->|"if-archetype-content"| bb-explainer-content
+    bb-audio-player -->|"if-archetype-content"| bb-explainer-content
+    bb-media -->|"if-archetype-content"| bb-explainer-content
     bb-scope -->|"if-archetype-content"| bb-explainer-content
     bb-generated-exercises -->|"if-data-files"| bb-explainer-data
     bb-tutor-handoff -->|"if-archetype-content"| bb-explainer-content
@@ -327,6 +333,63 @@ title: Language tasks
 parent: bb-archetype-runtime
 path: runtime/explainer/language.ts
 technology: TypeScript, DOM
+requires: if-archetype-content
+:::
+```
+
+### Audio files and the media overview
+
+Built. An app may hold MP3 files in `src/audio/`. Each carries its marking as ID3 frames: the spoken language, the licence,
+the date, that a model made the voice (`lernapps-synthetic`, the IPTC value, model, voice, generator, the credit its data
+source asks for) and the text it speaks (`dec-audio-marking`). The build reads them itself (`shared/audio.ts`, pure, no new
+package), stops with the file, the frame and what to do when one is missing, and writes the files next to the pages; the
+dev server sends them with byte ranges. The page "Medienübersicht" (`medien/`) lists every image, audio file and video of the
+app with its credit, where it is used and, for speech a model made, the AI voice, model and text (`dec-media-overview`).
+
+```arc42
+:::building-block
+id: bb-media
+title: Audio files and media overview
+parent: bb-archetype-runtime
+path: runtime/explainer/media.ts
+technology: TypeScript, ID3
+requires: if-archetype-content
+:::
+```
+
+### Audio player
+
+Built. A task that starts from an audio file shows the browser's own player, which plays without JavaScript and loads
+nothing before the learner presses play, a small label "KI" for a voice a model made (the model, the voice and the licence show at
+once on hover, focus and tap, and a screen reader reads them), and, only on an iPhone or an iPad, whose control has no tempo menu,
+buttons for the tempo (0.75, 1 and 1.25 times the speed, the pitch kept) beside it, which the client module makes work for every
+player of the page. A tempo chosen in a control that has a menu (Chrome's, Safari's) becomes the tempo of the page
+(`dec-audio-player`).
+
+```arc42
+:::building-block
+id: bb-audio-player
+title: Audio player
+parent: bb-archetype-runtime
+path: runtime/explainer/audio-client.ts
+technology: TypeScript, DOM
+requires: if-archetype-content
+:::
+```
+
+### Speaking tasks
+
+Built. A speaking task (`speaking-task`) lets the learner hear a model, record themself with the microphone, play the
+original, the recording or both, and rate the pronunciation (`dec-speaking-task`). The page checks nothing; the recording is a
+Blob in the browser's memory that is neither stored nor sent.
+
+```arc42
+:::building-block
+id: bb-speaking-tasks
+title: Speaking tasks
+parent: bb-archetype-runtime
+path: runtime/explainer/speaking-task.ts
+technology: TypeScript, DOM, MediaRecorder
 requires: if-archetype-content
 :::
 ```

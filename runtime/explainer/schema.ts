@@ -73,6 +73,7 @@ const BLOCK_DEFINITIONS: Readonly<Record<string, string>> = {
   generated: "generated",
   "open-task": "openTask",
   "language-task": "languageTask",
+  "speaking-task": "speakingTask",
   "vue-component": "vueComponent",
 };
 

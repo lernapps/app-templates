@@ -507,3 +507,92 @@ date: 2026-11-08
 addresses: qg-understandable, qg-checkable, qg-accessibility, qg-privacy, qg-explainer-readable-without-js
 :::
 ```
+
+## Audio Is Synthetic, Marked in Its File, and Made While the App Is Written
+
+Foreign-language learners must hear the language. Every sentence of a dictation is an MP3 file in `src/audio/` that the
+creator makes while writing the app with the audio skill (`lernapps-audio` in lernapps/tooling) and commits with it. The skill
+offers a fixed list of voices that the owner chose by listening (Kokoro, and Piper for one French voice), under licences that
+allow the CC BY-SA content to be copied. The file carries what it is: the EU AI Act asks providers of generated speech to mark
+it machine-readably (Article 50(2)), so the file has, as ID3 frames, that a model made it, which model and voice, the licence
+and the credit its data source asks for, and the text; the build stops when one is missing, because a file without them
+would be published unmarked. MP3 is the only format, because it plays in every browser (AAC only partly in Firefox, Opus
+not in older Safari) and the frames survive. The marking is not signed and has no watermark: the Code of Practice on
+Transparency asks for both for a provider who is bound by it, and whether a creator who runs an open model counts as one
+is open; signing with C2PA was shown to work and comes later. Rejected: the browser's speech synthesis (its voices may be
+remote, a hidden request), speech recognition or a check of the files with a model (Whisper: the owner decided against it, the
+creator listens), a cloud service (audio and text would leave the device), a model in the browser (tens of megabytes
+per voice), and the approval in the file (it is the git commit).
+
+```arc42
+:::decision
+id: dec-audio-marking
+title: Audio is synthetic speech made while the app is written, and its file carries the marking the build requires
+status: accepted
+date: 2026-11-12
+addresses: qg-privacy, qg-checkable, qg-accessibility
+:::
+```
+
+## A Dictation Is a Language Task That Starts From Audio, Played by the Browser's Own Player
+
+A dictation, a gap dictation and a listening task with a translation are items of the language task that start from `audio`
+instead of the other side, so the check, the rules of form, the typical mistakes and the self-assessment are the ones of every
+language task (`dec-language-task`). The text of the file must be a right answer, or nobody could solve the task: the build
+stops otherwise. The player is the browser's own, so it works without JavaScript, is as accessible as the browser, and loads
+nothing before the learner presses play; the tempo is set in the player, with the pitch kept, because one file then serves every
+pace and the creator has one file to listen to (a model that speaks slower was not better in the owner's listening test). The
+player's own control has a tempo menu in Chrome, Edge, Safari and Firefox on a computer and in Chrome on Android, and none on an
+iPhone or an iPad, so the page shows its three buttons (0.75, 1, 1.25) only there, and a tempo chosen in a control becomes the
+page's tempo: one control for one thing. A voice a model made is labelled "KI", small, with the model, the voice and the licence in
+a tooltip of the page that shows at once on hover, focus and tap (a title attribute shows late and not on a touch screen) and is read
+by a screen reader. The text of the file is the "Lösung" of the task, and the media overview lists it for review.
+
+```arc42
+:::decision
+id: dec-audio-player
+title: A dictation is a language task item that starts from an audio file, played by the browser's player with the tempo set in the player
+status: accepted
+date: 2026-11-12
+addresses: qg-understandable, qg-accessibility, qg-privacy, qg-explainer-readable-without-js
+:::
+```
+
+## A Speaking Task Records in Memory and the Learner Rates It
+
+Speaking is practised by comparing, not by grading: the learner hears a model, records themself, plays the original, their
+own recording or both one after the other, and rates how their pronunciation sounds, "Klingt gleich" (right), "Erkennbar, aber
+holprig" (partly right) or "Nochmal" (wrong), after the model of the open task (`dec-open-task`), whose photo is also kept in memory only.
+The microphone is asked for only when the learner presses "Aufnehmen" and released when the recording stops. The recording is a
+Blob played through an object URL: it is never stored, never sent, and dropped when the learner records again or leaves the page. When
+the microphone is missing or refused the learner says it aloud and still rates. A model never judges the pronunciation, since
+no model runs on the device (`dec-tutor-variant`) and one that recognised words would hide the errors it should show. A speaking
+task is not asked in a chapter's self-assessment, since a rating of a rating would tell nothing; the build says so.
+
+```arc42
+:::decision
+id: dec-speaking-task
+title: A speaking task records in the browser's memory, plays the recording against the original, and the learner rates it
+status: accepted
+date: 2026-11-12
+addresses: qg-privacy, qg-understandable, qg-accessibility, qg-explainer-readable-without-js
+:::
+```
+
+## The Media Overview Lists Every Medium of the App
+
+Quality of images, audio and videos is checked where a creator or a reviewer can see all of them: the page "Medienübersicht"
+at `medien/` of every explainer with media, linked from the start page, in each language. It lists each medium once with its credit and
+licence, the pages that use it and, for an AI voice, the label, the model, the voice, the credit and the text with a player that
+loads on press. It is built at build time and readable without JavaScript. An audio file that no page uses is listed too, so that
+it is not forgotten. The approval of a file is not shown: it is the git history.
+
+```arc42
+:::decision
+id: dec-media-overview
+title: Every explainer with media has a media overview page that lists them with their credit and use
+status: accepted
+date: 2026-11-12
+addresses: qg-checkable, qg-understandable
+:::
+```

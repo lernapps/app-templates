@@ -132,6 +132,8 @@ async function runAssessment(page: Page, app: Outline, assessment: AssessmentOut
         await fillLanguageTask(view.locator(`[data-key="${item.key}"]`), exercise, "right");
         continue;
       }
+      // a speaking task is no part of a self-assessment: the build stops it
+      if (exercise.kind === "speaking") throw new Error(`${item.page}#${item.id} is a speaking task`);
       let question: Question;
       if (exercise.kind === "question") question = { ...exercise.question, id: item.key };
       else {
@@ -187,15 +189,17 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
   const expected = item.exercises.map((exercise) =>
     exercise.kind === "question"
       ? { id: exercise.id, texts: [shownText(exercise.question.text)], answers: [exercise.answers] }
-      : exercise.kind === "open"
-        ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solution] }
-        : exercise.kind === "language"
-          ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solutions] }
-          : {
-              id: exercise.id,
-              texts: exercise.worked.map((worked) => worked.task),
-              answers: exercise.worked.map((worked) => [worked.answer]),
-            },
+      : exercise.kind === "speaking"
+        ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solutions] }
+        : exercise.kind === "open"
+          ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solution] }
+          : exercise.kind === "language"
+            ? { id: exercise.id, texts: [exercise.task], answers: [exercise.solutions] }
+            : {
+                id: exercise.id,
+                texts: exercise.worked.map((worked) => worked.task),
+                answers: exercise.worked.map((worked) => [worked.answer]),
+              },
   );
   const read = async () =>
     (
@@ -208,7 +212,9 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
               ? [...element.querySelectorAll(":scope > .explainer-open-task-text")]
               : element.classList.contains("explainer-language-task")
                 ? [...element.querySelectorAll(":scope > .explainer-language-text")]
-                : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
+                : element.classList.contains("explainer-speaking-task")
+                  ? [...element.querySelectorAll(":scope > .explainer-speaking-text")]
+                  : [...element.querySelectorAll(".explainer-worked-task > .explainer-task")];
           const solutions = [...element.querySelectorAll<HTMLDetailsElement>("details.explainer-solution")];
           return {
             id: element.id,
@@ -289,6 +295,212 @@ const ofYoutubeOrGoogle = (url: string): boolean =>
   /(^|\.)(youtube[a-z-]*\.com|youtu\.be|ytimg\.com|google[a-z-]*\.com|gstatic\.com|ggpht\.com|doubleclick\.net)$/.test(
     new URL(url).hostname,
   );
+
+/**
+ * With JavaScript: the audio files of a page are not requested before the learner plays one (`preload="none"`), each
+ * has the tempo buttons, and a button sets the tempo of every player of the page, keeping the pitch; the file is served
+ * as audio with byte ranges, so that a player can jump in it.
+ */
+async function checkAudio(page: Page, item: PageOutline): Promise<void> {
+  const requested: string[] = [];
+  page.on("request", (request) => {
+    if (/\/audio\/[^/]+\.mp3$/.test(new URL(request.url()).pathname)) requested.push(request.url());
+  });
+  await page.goto(`./${item.url}`);
+  await page.waitForLoadState("networkidle");
+  const players = page.locator("main .explainer-audio audio:visible");
+  await expect(players, `${item.url}: one player per audio prompt`).toHaveCount(item.audio.length);
+  expect(requested, `${item.url}: no audio file is requested before a click`).toEqual([]);
+  // the browser's own control has a tempo menu (Chrome's, Safari's): no buttons beside it. A tempo set in the control becomes the page's tempo, every
+  // player follows it, and playing does not set it back.
+  await expect(
+    page.locator("main .explainer-audio-speed:visible"),
+    "no buttons where the control has a tempo menu",
+  ).toHaveCount(0);
+  await players.first().evaluate((audio: HTMLAudioElement) => {
+    audio.playbackRate = 1.25;
+  });
+  for (const index of item.audio.keys()) {
+    await expect
+      .poll(
+        () => players.nth(index).evaluate((audio: HTMLAudioElement) => audio.playbackRate),
+        `player ${index} follows`,
+      )
+      .toBe(1.25);
+  }
+  await expect(page.locator("main .explainer-audio-speed button[data-speed='1.25']").first()).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await players.first().evaluate((audio: HTMLAudioElement) => {
+    audio.playbackRate = 0.5;
+  });
+  await expect(page.locator("main .explainer-audio-speed button[aria-pressed=true]"), "no button has 0.5").toHaveCount(
+    0,
+  );
+  await players.first().evaluate((audio: HTMLAudioElement) => audio.dispatchEvent(new Event("play")));
+  expect(
+    await players.first().evaluate((audio: HTMLAudioElement) => audio.playbackRate),
+    "playing keeps the tempo",
+  ).toBe(0.5);
+  // the label of an AI voice is small and says what it is on hover and for a screen reader
+  const label = page.locator("main .explainer-audio .explainer-ai-voice:visible").first();
+  await expect(label).toHaveText(/^(KI|AI)$/);
+  await expect(label).toHaveAttribute("aria-label", /Modell .*Lizenz/);
+  // what it says shows at once on hover, in the page's own tooltip, and not before
+  const tooltip = () =>
+    label.evaluate((element) => {
+      const style = getComputedStyle(element, "::after");
+      return { shown: style.visibility === "visible" && style.opacity === "1", text: style.content };
+    });
+  expect((await tooltip()).shown, "no tooltip before the hover").toBe(false);
+  await label.hover();
+  const hovered = await tooltip();
+  expect(hovered.shown, "the tooltip shows on hover").toBe(true);
+  expect(hovered.text, "and says the model and the licence").toMatch(/Modell .*Lizenz/);
+  await page.mouse.move(0, 0);
+  await label.focus();
+  expect((await tooltip()).shown, "and on focus, which a tap gives").toBe(true);
+  // the file itself: audio, with a range
+  const src = await players.first().evaluate((audio: HTMLAudioElement) => audio.src);
+  const answer = await page.request.get(src, { headers: { range: "bytes=0-99" } });
+  expect(answer.headers()["content-type"], src).toBe("audio/mpeg");
+  expect([200, 206], `${src} answers a range request`).toContain(answer.status());
+}
+
+/**
+ * Where the browser's control has no tempo menu (an iPhone or an iPad: here an iPhone agent), the tempo buttons show in the
+ * player's box, below the control, press the tempo, and set it for every player of the page, keeping the pitch.
+ */
+async function checkTempoButtons(page: Page, item: PageOutline): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      get: () =>
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+    });
+  });
+  await page.goto(`./${item.url}`);
+  const players = page.locator("main .explainer-audio audio:visible");
+  await expect(players).toHaveCount(item.audio.length);
+  const speed = page.locator("main .explainer-audio-speed:visible").first();
+  await expect(speed, "the tempo buttons show where the control has no tempo menu").toBeVisible();
+  const slow = speed.getByRole("button", { name: /^0[.,]75×$/ });
+  await slow.click();
+  await expect(slow, "the chosen tempo is pressed").toHaveAttribute("aria-pressed", "true");
+  await expect(speed.getByRole("button", { name: /^1×$/ })).toHaveAttribute("aria-pressed", "false");
+  for (const index of item.audio.keys()) {
+    const player = players.nth(index);
+    expect(await player.evaluate((audio: HTMLAudioElement) => audio.playbackRate), `${item.url}: player ${index}`).toBe(
+      0.75,
+    );
+    expect(await player.evaluate((audio: HTMLAudioElement) => audio.preservesPitch), "the pitch is kept").toBe(true);
+  }
+  // one box: the control, the buttons and the label are in it, the buttons below the control
+  const box = players.first().locator("xpath=ancestor::*[contains(@class,'explainer-audio')][1]");
+  const frame = await box.boundingBox();
+  const player = await players.first().boundingBox();
+  const buttons = await speed.boundingBox();
+  if (frame === null || player === null || buttons === null) throw new Error("no box");
+  expect(player.y, "the control is in the box").toBeGreaterThanOrEqual(frame.y);
+  expect(buttons.y, "the buttons are below the control").toBeGreaterThanOrEqual(player.y + player.height - 1);
+  expect(buttons.y + buttons.height, "and in the box").toBeLessThanOrEqual(frame.y + frame.height + 1);
+  expect(buttons.x + buttons.width, "within its width").toBeLessThanOrEqual(frame.x + frame.width + 1);
+}
+
+/**
+ * With JavaScript: a speaking task records with the microphone (a tone from the page's own audio context in the test), plays the original,
+ * the recording or both, and counts the ratings: all "sounds the same" is right, a mix is partly right, all "again"
+ * is wrong. Nothing leaves the browser: no request that sends something, none to another host, nothing stored.
+ */
+async function checkSpeaking(
+  page: Page,
+  item: PageOutline,
+  task: PageOutline["speaking"][number],
+  origin: string,
+): Promise<void> {
+  const requests: { url: string; method: string }[] = [];
+  page.on("request", (request) => requests.push({ url: request.url(), method: request.method() }));
+  // a microphone of the page's own: a tone, as a stream the browser's recorder takes like a real one
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      const context = new AudioContext();
+      await context.resume();
+      const oscillator = context.createOscillator();
+      const destination = context.createMediaStreamDestination();
+      oscillator.connect(destination);
+      oscillator.start();
+      return destination.stream;
+    };
+  });
+  await page.goto(`./${item.url}`);
+  const view = page.locator(`[id="${task.id}"]`);
+  const live = view.locator(".explainer-speaking-live");
+  await expect(live, `${task.id}: the live task shows with JavaScript`).toBeVisible();
+  await expect(view.locator(".explainer-speaking-static"), "the static list goes").toBeHidden();
+  await expect(live.locator(".explainer-speaking-privacy")).toHaveText(messageOf("de", "speakPrivacy"));
+  const rows = live.locator(".explainer-speaking-item");
+  await expect(rows).toHaveCount(task.items.length);
+  await expect(live.locator(".explainer-speaking-rate:visible"), "no rating before a recording").toHaveCount(0);
+  const rate = (row: Locator, key: "speakSame" | "speakBumpy" | "speakAgain") =>
+    row.getByLabel(messageOf("de", key), { exact: true }).check();
+  const result = live.locator(".explainer-speaking-result");
+  for (const index of task.items.keys()) {
+    const row = rows.nth(index);
+    await row.getByRole("button", { name: messageOf("de", "speakRecord"), exact: true }).click();
+    await expect(row.locator(".explainer-speaking-status")).toHaveText(messageOf("de", "speakRecording"));
+    await page.waitForTimeout(800);
+    await row.getByRole("button", { name: messageOf("de", "speakStop"), exact: true }).click();
+    await expect(row.locator(".explainer-speaking-mine audio"), "the recording plays from memory").toHaveAttribute(
+      "src",
+      /^blob:/,
+    );
+    await expect(row.getByRole("button", { name: messageOf("de", "speakRerecord"), exact: true })).toBeVisible();
+    await expect(row.locator(".explainer-speaking-rate")).toBeVisible();
+    for (const key of ["speakOriginal", "speakMine", "speakBoth"] as const) {
+      await row
+        .locator(".explainer-speaking-compare")
+        .getByRole("button", { name: messageOf("de", key), exact: true })
+        .click();
+    }
+    await rate(row, "speakSame");
+    if (index < task.items.length - 1) await expect(result, "no result before every sentence is rated").toHaveText("");
+  }
+  await expect(result).toHaveText(messageOf("de", "speakAllRight"));
+  await rate(rows.first(), "speakBumpy");
+  await expect(result).toHaveText(messageOf("de", "speakSomeRight"));
+  for (const index of task.items.keys()) await rate(rows.nth(index), "speakAgain");
+  await expect(result).toHaveText(messageOf("de", "speakWrong"));
+  expect(
+    requests.filter((request) => request.method !== "GET"),
+    `${task.id}: nothing is sent`,
+  ).toEqual([]);
+  expect(
+    requests.filter((request) => !request.url.startsWith(origin) && !/^(blob|data):/.test(request.url)),
+    `${task.id}: nothing is requested from another host`,
+  ).toEqual([]);
+  expect(
+    await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)]),
+    `${task.id}: the recording is stored nowhere`,
+  ).toEqual([]);
+}
+
+/** Without a microphone (the browser refuses it): the learner is told, says it aloud, and can still rate. */
+async function checkSpeakingWithoutMicrophone(
+  page: Page,
+  item: PageOutline,
+  task: PageOutline["speaking"][number],
+): Promise<void> {
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException("refused", "NotAllowedError"));
+  });
+  await page.goto(`./${item.url}`);
+  const row = page.locator(`[id="${task.id}"] .explainer-speaking-item`).first();
+  await row.getByRole("button", { name: messageOf("de", "speakRecord"), exact: true }).click();
+  await expect(row.locator(".explainer-speaking-nomic")).toContainText(messageOf("de", "speakNoMic"));
+  await expect(row.locator(".explainer-speaking-rate"), "no rating before the learner says so").toBeHidden();
+  await row.getByRole("button", { name: messageOf("de", "speakSpoken"), exact: true }).click();
+  await expect(row.locator(".explainer-speaking-rate")).toBeVisible();
+}
 
 /**
  * With JavaScript: the videos of a page load nothing of another host before a click (every such request is blocked and
@@ -1079,6 +1291,7 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
               if (exercise.kind === "question") await checkQuestion(page, item.url, exercise);
               else if (exercise.kind === "open") await checkOpenTask(page, item.url, exercise);
               else if (exercise.kind === "language") await checkLanguageTask(page, item.url, exercise);
+              else if (exercise.kind === "speaking") continue; // nothing to check: its own tests record and rate
               else await checkGenerated(page, item.url, exercise);
             }
             // only an open task keeps something, its answer, and only while the tab is open
@@ -1091,6 +1304,36 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
             expect(kept.length, "an answer per open task").toBe(types.has("open-task") ? 1 : 0);
           });
         }
+      if (!content)
+        for (const item of app.pages["de"] ?? []) {
+          if (item.audio.length === 0) continue;
+          test(`${item.url}: the audio loads nothing before a click, and the tempo buttons set the tempo`, async ({
+            page,
+          }) => {
+            await checkAudio(page, item);
+          });
+          test(`${item.url}: where the control has no tempo menu, buttons beside the player set the tempo`, async ({
+            page,
+          }) => {
+            await checkTempoButtons(page, item);
+          });
+        }
+      if (!content)
+        test.describe("speaking tasks", () => {
+          for (const item of app.pages["de"] ?? []) {
+            for (const task of item.speaking) {
+              test(`${item.url}: ${task.id} records, compares and rates, and keeps the recording in memory`, async ({
+                page,
+                baseURL,
+              }) => {
+                await checkSpeaking(page, item, task, new URL(baseURL ?? page.url()).origin);
+              });
+              test(`${item.url}: ${task.id} without a microphone says it aloud and still rates`, async ({ page }) => {
+                await checkSpeakingWithoutMicrophone(page, item, task);
+              });
+            }
+          }
+        });
       if (!content)
         for (const item of app.pages["de"] ?? []) {
           if (item.videos.length === 0) continue;
