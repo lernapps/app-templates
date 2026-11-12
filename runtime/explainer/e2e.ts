@@ -311,7 +311,7 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
   const players = page.locator("main .explainer-audio audio:visible");
   await expect(players, `${item.url}: one player per audio prompt`).toHaveCount(item.audio.length);
   expect(requested, `${item.url}: no audio file is requested before a click`).toEqual([]);
-  // Chromium's own control has a tempo menu: no buttons beside it. A tempo set in the control becomes the page's tempo, every
+  // the browser's own control has a tempo menu (Chrome's, Safari's): no buttons beside it. A tempo set in the control becomes the page's tempo, every
   // player follows it, and playing does not set it back.
   await expect(
     page.locator("main .explainer-audio-speed:visible"),
@@ -346,8 +346,21 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
   // the label of an AI voice is small and says what it is on hover and for a screen reader
   const label = page.locator("main .explainer-audio .explainer-ai-voice:visible").first();
   await expect(label).toHaveText(/^(KI|AI)$/);
-  await expect(label).toHaveAttribute("title", /Modell .*Lizenz/);
   await expect(label).toHaveAttribute("aria-label", /Modell .*Lizenz/);
+  // what it says shows at once on hover, in the page's own tooltip, and not before
+  const tooltip = () =>
+    label.evaluate((element) => {
+      const style = getComputedStyle(element, "::after");
+      return { shown: style.visibility === "visible" && style.opacity === "1", text: style.content };
+    });
+  expect((await tooltip()).shown, "no tooltip before the hover").toBe(false);
+  await label.hover();
+  const hovered = await tooltip();
+  expect(hovered.shown, "the tooltip shows on hover").toBe(true);
+  expect(hovered.text, "and says the model and the licence").toMatch(/Modell .*Lizenz/);
+  await page.mouse.move(0, 0);
+  await label.focus();
+  expect((await tooltip()).shown, "and on focus, which a tap gives").toBe(true);
   // the file itself: audio, with a range
   const src = await players.first().evaluate((audio: HTMLAudioElement) => audio.src);
   const answer = await page.request.get(src, { headers: { range: "bytes=0-99" } });
@@ -356,14 +369,14 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
 }
 
 /**
- * Where the browser's control has no tempo menu (Safari, Firefox: here a Safari agent), the tempo buttons show beside the
- * player, in one row with it, press the tempo, and set it for every player of the page, keeping the pitch.
+ * Where the browser's control has no tempo menu (an iPhone or an iPad: here an iPhone agent), the tempo buttons show beside
+ * the player, in one row with it, press the tempo, and set it for every player of the page, keeping the pitch.
  */
 async function checkTempoButtons(page: Page, item: PageOutline): Promise<void> {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "userAgent", {
       get: () =>
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
     });
   });
   await page.goto(`./${item.url}`);

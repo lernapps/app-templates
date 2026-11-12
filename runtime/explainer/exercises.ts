@@ -481,11 +481,12 @@ export function audioHtml(audio: AudioRef | undefined, lang: string): string {
     (speed) =>
       `<button type="button" class="explainer-audio-speed-button" data-speed="${speed}" aria-pressed="${speed === 1}">${plain(number.format(speed))}×</button>`,
   ).join("");
-  // the label of an AI voice is small; the information is on hover and for a screen reader (it can be focused)
+  // the label of an AI voice is small; the information shows on hover, focus and tap (data-info, drawn by the style) and is
+  // read by a screen reader (aria-label); no title, which browsers show late and in their own way
   const label =
     audio.ai === undefined
       ? ""
-      : `<span class="explainer-ai-voice" tabindex="0" role="note" title="${plain(audio.info ?? audio.ai)}" aria-label="${plain(audio.info ?? audio.ai)}">${plain(audio.ai)}</span>`;
+      : `<span class="explainer-ai-voice" tabindex="0" role="note" data-info="${plain(audio.info ?? audio.ai)}" aria-label="${plain(audio.info ?? audio.ai)}">${plain(audio.ai)}</span>`;
   return [
     `<span class="explainer-audio">`,
     `<audio controls preload="none" src="${plain(audio.src)}" aria-label="${plain(message(lang, "audioPlay"))}"></audio>`,

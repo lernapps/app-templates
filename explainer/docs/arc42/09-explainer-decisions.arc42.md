@@ -542,9 +542,11 @@ language task (`dec-language-task`). The text of the file must be a right answer
 stops otherwise. The player is the browser's own, so it works without JavaScript, is as accessible as the browser, and loads
 nothing before the learner presses play; the tempo is set in the player, with the pitch kept, because one file then serves every
 pace and the creator has one file to listen to (a model that speaks slower was not better in the owner's listening test). The
-player's own control has a tempo menu in Chromium and none in Safari and Firefox, so the page shows its three buttons (0.75, 1,
-1.25) only where there is none, and a tempo chosen in a control becomes the page's tempo: one control for one thing. A voice a model
-made is labelled "KI", small, with the model, the voice and the licence on hover and for a screen reader. The text of the file is the "Lösung" of the task, and the media overview lists it for review.
+player's own control has a tempo menu in Chrome, Edge, Safari and Firefox on a computer and in Chrome on Android, and none on an
+iPhone or an iPad, so the page shows its three buttons (0.75, 1, 1.25) only there, and a tempo chosen in a control becomes the
+page's tempo: one control for one thing. A voice a model made is labelled "KI", small, with the model, the voice and the licence in
+a tooltip of the page that shows at once on hover, focus and tap (a title attribute shows late and not on a touch screen) and is read
+by a screen reader. The text of the file is the "Lösung" of the task, and the media overview lists it for review.
 
 ```arc42
 :::decision

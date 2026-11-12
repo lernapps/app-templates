@@ -1,5 +1,5 @@
 // The audio files of a page in the browser (explainer.ts; dec-audio-player): the player is the browser's own and works
-// without this module. Where the browser's control has no tempo menu (Safari, Firefox), this shows buttons for three tempos
+// without this module. Where the browser's control has no tempo menu (iPhone, iPad), this shows buttons for three tempos
 // (0.75, 1, 1.25 times the speed, the pitch kept) next to the player, and they set the tempo
 // of every player of the page, also of those a task writes later, and lets one player stop the others. The browser's own
 // control may have a tempo menu as well (Chrome's does): the two stay one, because a change in the control is read from the
@@ -34,19 +34,22 @@ function apply(audio: HTMLAudioElement): void {
 }
 
 /**
- * Whether the browser's own audio control has a tempo menu: Chromium's has (Chrome, Edge, Opera, also on Android), the controls
- * of Safari and Firefox have none. On iOS every browser is WebKit, whatever its name says.
+ * Whether the page shows its own tempo buttons: only where the browser's audio control is known to have no tempo menu, on an
+ * iPhone or an iPad (every browser there is WebKit with the system's control). Chrome, Edge, Safari and Firefox on a computer
+ * have a tempo menu (Firefox in the context menu), and so has Chrome on Android. An iPad that says it is a Mac is told by its
+ * touch screen.
  */
-export function hasNativeTempo(userAgent: string): boolean {
-  // "Chrome/" also in HeadlessChrome/, which a test browser sends
-  return /Chrome\//.test(userAgent) && !/\b(CriOS|FxiOS|EdgiOS|OPiOS)\b/.test(userAgent);
+export function needsTempoButtons(userAgent: string, touchPoints = 0): boolean {
+  return /\b(iPhone|iPad|iPod)\b/.test(userAgent) || (/\bMacintosh\b/.test(userAgent) && touchPoints > 1);
 }
 
 /** Makes the tempo buttons and the players of `root` work. */
 export function startAudio(root: Document = document): void {
-  // the buttons only where the control has no tempo menu of its own: one control for one thing
-  if (!hasNativeTempo(root.defaultView?.navigator.userAgent ?? ""))
+  // the buttons only where the control has no tempo menu of its own (iPhone, iPad): one control for one thing
+  const browser = root.defaultView?.navigator;
+  if (needsTempoButtons(browser?.userAgent ?? "", browser?.maxTouchPoints ?? 0)) {
     root.documentElement.classList.add("explainer-tempo");
+  }
   // media events do not bubble: catch them on the way down
   root.addEventListener(
     "loadedmetadata",

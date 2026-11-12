@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
-import { hasNativeTempo } from "../runtime/explainer/audio-client.ts";
+import { needsTempoButtons } from "../runtime/explainer/audio-client.ts";
 import { byteRange, isMpegAudio, readAudio, readId3, TRAINED_ALGORITHMIC_MEDIA } from "../runtime/shared/audio.ts";
 
 const fixture = (name: string): Uint8Array => readFileSync(join(import.meta.dirname, "fixtures/audio", name));
@@ -181,19 +181,33 @@ function tagged(
 }
 
 describe("the tempo buttons of the player", () => {
-  test("are shown only where the browser's own control has no tempo menu", () => {
-    const chrome =
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
-    const edge = `${chrome} Edg/139.0.0.0`;
-    const android =
-      "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36";
-    const safari =
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
-    const firefox = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:140.0) Gecko/20100101 Firefox/140.0";
-    const chromeIos =
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/139.0.0.0 Mobile/15E148 Safari/604.1";
-    const headless = chrome.replace("Chrome/", "HeadlessChrome/");
-    expect([chrome, edge, android, headless].map(hasNativeTempo)).toEqual([true, true, true, true]);
-    expect([safari, firefox, chromeIos, ""].map(hasNativeTempo)).toEqual([false, false, false, false]);
+  const chrome =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
+  const safari =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
+  const firefox = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:140.0) Gecko/20100101 Firefox/140.0";
+  const android =
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36";
+  const iphone =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+  const chromeIos = iphone.replace("Version/18.0", "CriOS/139.0.0.0");
+  const ipad =
+    "Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+
+  test("are shown only where the browser's own control has no tempo menu: iPhone and iPad", () => {
+    expect([iphone, chromeIos, ipad].map((agent) => needsTempoButtons(agent))).toEqual([true, true, true]);
+    expect([chrome, safari, firefox, android, ""].map((agent) => needsTempoButtons(agent))).toEqual([
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
+  });
+
+  test("an iPad that says it is a Mac is told by its touch screen", () => {
+    expect(needsTempoButtons(safari, 5)).toBe(true);
+    expect(needsTempoButtons(safari, 0)).toBe(false);
+    expect(needsTempoButtons(chrome, 1)).toBe(false);
   });
 });

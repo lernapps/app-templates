@@ -62,7 +62,7 @@ describe("a task that starts from audio", () => {
       '<audio controls preload="none" src="../../audio/je-mappelle.mp3" aria-label="Audio abspielen">',
     );
     expect(task).toMatch(
-      /<span class="explainer-ai-voice" tabindex="0" role="note" title="KI-Stimme\. Modell kokoro-v1\.0, Stimme ff_siwis\. Erzeugt am \d{4}-\d{2}-\d{2}\. Lizenz: CC BY-SA 4\.0\. Namensnennung: SIWIS[^"]*" aria-label="KI-Stimme\.[^"]*">KI<\/span>/,
+      /<span class="explainer-ai-voice" tabindex="0" role="note" data-info="KI-Stimme\. Modell kokoro-v1\.0, Stimme ff_siwis\. Erzeugt am \d{4}-\d{2}-\d{2}\. Lizenz: CC BY-SA 4\.0\. Namensnennung: SIWIS[^"]*" aria-label="KI-Stimme\.[^"]*">KI<\/span>/,
     );
     expect(task).toMatch(/data-speed="0\.75"[^>]*>0,75×</);
     expect(task).toMatch(/data-speed="1" aria-pressed="true">1×</);

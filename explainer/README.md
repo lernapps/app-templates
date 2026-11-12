@@ -20,8 +20,8 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   with a translation), and a `speaking-task` lets the learner record themself, play the original, the recording or both,
   and rate the pronunciation. The files are MP3s in `src/audio/` that the audio skill (`lernapps-audio`) makes and marks as
   AI-generated in their own metadata; the build stops when a file lacks the marking. The player is the browser's own, with a
-  small "KI" label (the model and the licence on hover) and, where the browser's control has no tempo menu, buttons for a
-  tempo (0.75, 1, 1.25 times). A recording stays in the browser's memory: it is not stored and not sent.
+  small "KI" label (the model and the licence on hover, focus and tap) and, on an iPhone or an iPad, whose control has no tempo
+  menu, buttons for a tempo (0.75, 1, 1.25 times). A recording stays in the browser's memory: it is not stored and not sent.
 - A page "Medienübersicht" (`medien/`) lists every image, audio file and video with credit, licence and use, for review.
 - Generated exercises: each task draws new numbers or records, up to 67 numbered tasks per exercise, with typical
   mistakes, a hint and the way to the solution, also with roots, powers and trigonometry, and with chemical formulas

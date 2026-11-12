@@ -360,10 +360,11 @@ requires: if-archetype-content
 ### Audio player
 
 Built. A task that starts from an audio file shows the browser's own player, which plays without JavaScript and loads
-nothing before the learner presses play, a small label "KI" for a voice a model made (the model, the voice and the licence are
-on hover and for a screen reader), and, only where the browser's own control has no tempo menu (Safari, Firefox), buttons for the
-tempo (0.75, 1 and 1.25 times the speed, the pitch kept) beside it, which the client module makes work for every player of the
-page. A tempo chosen in a control that has a menu (Chrome's) becomes the tempo of the page (`dec-audio-player`).
+nothing before the learner presses play, a small label "KI" for a voice a model made (the model, the voice and the licence show at
+once on hover, focus and tap, and a screen reader reads them), and, only on an iPhone or an iPad, whose control has no tempo menu,
+buttons for the tempo (0.75, 1 and 1.25 times the speed, the pitch kept) beside it, which the client module makes work for every
+player of the page. A tempo chosen in a control that has a menu (Chrome's, Safari's) becomes the tempo of the page
+(`dec-audio-player`).
 
 ```arc42
 :::building-block

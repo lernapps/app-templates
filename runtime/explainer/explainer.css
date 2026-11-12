@@ -238,6 +238,41 @@
   outline-offset: 2px;
 }
 
+/* What the label says about the voice: at once on hover, on focus and on a tap (a title would show late, and not on a touch
+   screen). Below the label, from its right edge to the left, since the label is at the end of a row. */
+.explainer-ai-voice[data-info] {
+  position: relative;
+}
+
+.explainer-ai-voice[data-info]::after {
+  content: attr(data-info);
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  right: 0;
+  z-index: 10;
+  width: max-content;
+  max-width: min(20rem, 80vw);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  background: var(--page-text);
+  color: var(--page-background);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.explainer-ai-voice[data-info]:hover::after,
+.explainer-ai-voice[data-info]:focus::after {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* A player: the browser's own, the tempo buttons where the browser's control has no tempo menu, and the label, in one row
    that wraps only when the screen is too narrow for it. */
 .explainer-audio {
