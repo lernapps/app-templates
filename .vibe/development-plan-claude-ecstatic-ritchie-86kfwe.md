@@ -63,6 +63,9 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
   Build-Prüfung, Player, Aufnahme, Medienübersicht) und `tooling` (Skill, Skript). Zum Schreiben im Tooling ist
   `add_repo` mit `access: push` nötig (heute nur lesend geklont: `/home/user/lernapps/{docs,tooling}`).
 
+- **Lizenz der Inhalte: CC BY-SA überall** (Owner, 2026-11-12). Die Plattform nennt in `dec-licences` (`lernapps/docs`)
+  „CC BY 4.0 for content“: das ist dort anzupassen, sonst widersprechen sich Plattform und Apps.
+
 ## Befunde aus Plattformdesign und Tooling (2026-11-12)
 - `lernapps/docs` enthält **nichts zu Audio** (kein pdt42-/arc42-Element dazu). Das Design stellt die Frage nicht; die
   Entscheidung gehört in die Architektur von `app-templates`, bei Änderung der Plattformrandbedingungen nach `lernapps/docs`.
@@ -111,20 +114,20 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
 - Entwicklungsplan angelegt, Feature-Branch aktiv, Ziel mit dem Owner abgestimmt.
 
 ### Tasks
-- [ ] Skills pdt und arc42-language beschaffen und anwenden: Einpassung in Plattformdesign und Architektur
+- [x] Skills pdt und arc42-language beschaffen und anwenden: Einpassung in Plattformdesign und Architektur (gelesen;
+  `lernapps/docs` und `lernapps/tooling` lesend geklont, Befunde oben; der arc42-CLI-Leitfaden folgt im Plan)
   - pdt gelesen (`lernapps/docs`, `skills/pdt/SKILL.md`): reiner Leitfaden zum Lesen des Plattformdesigns
     (`lernapps/docs`, Ordner `docs/pdt42/` und `docs/arc42/`, per `npx pdt42` / `npx arc42`). Änderungen am Design nur dort.
-    Das Design selbst steht im Repo `lernapps/docs`, das dieser Sitzung nicht zugänglich ist: Owner fragen, ob es
-    angehängt werden darf (`add_repo`).
   - arc42-language gelesen (`doctoolchain/arc42-language`, `skills/arc42-language/SKILL.md`): Architekturdoku nur ändern,
     wenn sich Verantwortung oder Zusammenspiel der Teile ändert, sonst bleibt sie. Das trifft hier zu (neue Bausteine
     Audio-Dateien, Build-Prüfung, Aufnahme im Browser; neue Entscheidung; Randbedingung Mikrofon). Arbeitsweise:
     `arc42 guide chapter <n>` lesen, `arc42 explain <type>`, am Ende `arc42 validate`. Der CLI-Leitfaden selbst ist noch nicht
     gelesen (Plan-Phase). Eigene Elemente erhalten `x-`-Attribute nur wenn nötig.
-- [ ] Bestehende Aufgabentypen und Sprachaufgaben weiter lesen (`exercises.ts`, `render.ts`, `language-task.ts`; `dec-language-task` und `language.ts` gelesen)
-- [x] Wie Bilder Quelle und Lizenz erfassen und prüfen (Befund oben), auf Audio übertragen: noch zu entwerfen im Plan
-- [ ] Prüfregeln (Lint, `lernapps check`) für Audio und Mikrofon klären
-- [ ] TTS-Kandidaten mit Lizenz (CC BY-SA-verträglich) für alle vier Sprachen: Hörproben liegen beim Owner (2026-11-12)
+- [x] Bestehende Aufgabentypen und Sprachaufgaben gelesen (`dec-language-task`, `language.ts`); `exercises.ts`,
+  `render.ts`, `language-task.ts` folgen beim Entwurf im Plan
+- [x] Wie Bilder Quelle und Lizenz erfassen und prüfen (Befund oben), auf Audio übertragen: Entwurf im Plan
+- [x] Prüfregeln (Lint, `lernapps check`) für Audio und Mikrofon: im Plan zu entwerfen (Aufgabe dort)
+- [x] TTS-Kandidaten mit Lizenz (CC BY-SA-verträglich) für alle vier Sprachen: Auswahl des Owners steht oben (2026-11-12)
   - Proben: Kokoro (kokoro-onnx 0.6.1, Modell v1.0) und Piper 1.8.0, ein Satz-Set je Sprache, CPU, 4 Kerne, ohne GPU.
   - Lizenzangaben aus den Model-Cards (HF `rhasspy/piper-voices`): siwis (fr) CC BY 4.0; alba (en_GB) CC BY 4.0;
     davefx (es) CC0; lessac (en_US) eigene Lizenz des Blizzard-2013-Datensatzes, **nicht geprüft**; paola (it) „See URL“,
@@ -152,7 +155,38 @@ Sprachen: Englisch und Französisch zuerst, Spanisch und Italienisch später.
 - Explore abgeschlossen, Einpassung in die Architektur beschrieben, offene Entscheidungen beantwortet.
 
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+Entwurf (Entscheidungen, jede mit dem Owner abzustimmen, dann in `Key Decisions` und arc42):
+- [ ] Audioformat festlegen (MP3, AAC oder Opus) mit Test in Safari, Chrome, Firefox; Größenbudget pro App
+- [ ] Metadatenschema der Audiodatei: Felder (KI-generiert, Modell + Version, Stimme, Lizenz der Ausgabe, Namensnennung
+  der Datenquelle, gesprochener Text, Sprache, Freigabe mit Datum + Prüfsumme), Tag-Format je Containerformat, Bibliothek
+  zum Lesen im Build
+- [ ] Autor-Schnittstelle im Explainer: wie `language-task` auf Audio verweist (Diktat als Modus oder eigener Block;
+  Selbstvergleich), Schema-Erweiterung von Format 2 oder neues Format, Fehlermeldungen im Stil `file:line: place (language): what to do`
+- [ ] Build: Ordner `src/audio/`, Medientyp, Auslieferung, Dev-Server, Prüfung der Metadaten (fehlende Freigabe nur
+  Warnung; fehlende KI-Kennzeichnung oder Lizenz: Fehler oder Warnung, mit dem Owner klären)
+- [ ] Anhang „Medienübersicht“ an jedem Explainer: Adresse, Inhalt (Bilder und Audio, Quelle, Lizenz, KI-Hinweis,
+  Namensnennung, Freigabe), Sprachbäume, ohne JavaScript, barrierefrei
+- [ ] Browser: Player (Tempo 0,75/1/1,25 per `playbackRate`, Wiederholen, `preload="none"`, Tastatur, Textfassung),
+  Aufnahme (`MediaRecorder`, Berechtigung erst nach Klick, nur Arbeitsspeicher, keine Speicherung, Fallback ohne Mikrofon)
+- [ ] Prüfregeln: Lint und `lernapps check` erlauben Audio, `getUserMedia` und `MediaRecorder` gezielt, verbieten
+  Netzwerk-APIs weiter, prüfen „keine Anfrage vor einem Klick“ auch für Audio (Lehre aus `qg-privacy`)
+- [ ] Zustand und Tutor: wie Diktat (richtig/teilweise/falsch) und Selbstvergleich („selbst bewertet“) in Ergebniszeile,
+  Selbsteinschätzung und Tutorseite eingehen
+- [ ] Skill in `lernapps/tooling` (`skills/…/lernapps-…`), kompakt: Stimmenliste, Aufruf, Preflight mit gesammelten
+  Fehlern (Python, Pakete, `ffmpeg`, Modelle + Prüfsumme, Speicher, Hosts), Exit-Codes, Hinweis zum Umgang mit
+  Sprachproben, Pfade; Auswirkung auf `skills-lock.json`, `lernapps update`, `lernapps-cli` (Voraussetzungen)
+- [ ] Piper-Stimme `pierre` und Kokoro in einem Skript (zwei Engines) oder getrennt? Entscheidung; Metadaten gleich
+- [ ] `add_repo` mit Push-Zugriff für `lernapps/tooling` klären (Owner), Branch und Reihenfolge der Repos
+- [ ] Anpassung der Plattform `dec-licences` in `lernapps/docs` auf CC BY-SA (Owner: eigener Branch dort)
+- [ ] Architektur (arc42 in `explainer/docs/arc42`): Bausteine (Audio, Metadaten-Prüfung, Player, Aufnahme,
+  Medienübersicht), Entscheidungen (synthetische Stimmen, Metadaten in der Datei, Tempo im Player, kein Whisper),
+  Randbedingung Mikrofon, Qualitätsszenarien; `arc42 guide chapter <n>` und `arc42 validate`
+- [ ] Reihenfolge der Inkremente festlegen. Vorschlag: (1) Format, Metadaten, Build-Prüfung, Medienübersicht für Bilder
+  und Audio; (2) Diktat mit Player; (3) Selbstvergleich mit Aufnahme; (4) Skill im Tooling; (5) Dokumentation und README
+- [ ] Teststrategie: Einheitentests (Metadaten lesen, Prüfregeln), End-to-End mit Playwright ohne Netz, Barrierefreiheit,
+  Prüfung ohne JavaScript; Beispiel `explainer/examples/franzoesisch` um Audio erweitern
+- [ ] Risiken: Safari/iOS-Audio, Mikrofon verweigert, Größe, Modell-Download blockiert, Lizenz der Trainingsdaten von
+  Kokoro (synthetische Daten geschlossener Anbieter, nicht von uns geprüft)
 
 ### Completed
 *None yet*
