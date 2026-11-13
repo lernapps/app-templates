@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
  * would fetch and build once more; not npx, which resolves a git package again on every run (13 to 18 s, and npm 10
  * fails on this one). The same commit as `tooling-ref` in .github/workflows/check.yml (test/pre-push.test.ts checks it).
  */
-export const TOOLING_REF = "8fe79fea7e17348cda53e185ab050aee060d100e";
+export const TOOLING_REF = "271dd65ff7e3692d24a7c2aae39e5eb56757a2d2";
 
 export const TEMPLATES = ["quiz", "explainer", "interactive"] as const;
 export type Template = (typeof TEMPLATES)[number];
