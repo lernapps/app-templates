@@ -109,13 +109,13 @@
     "@doctc/arc42": "0.38.0",
     "@types/node": "26.6.6",
     "typescript": "6.0.3",
-    "vite-plus": "1.4.0",
+    "vite-plus": "1.6.0",
     "vue-tsc": "3.3.14"
   },
   "peerDependencies": {
     "@lernapps/tooling": "*",
     "playwright": "*",
-    "vite-plus": "1.4.0"
+    "vite-plus": "1.6.0"
   },
   "peerDependenciesMeta": {
     "@lernapps/tooling": {
@@ -129,7 +129,7 @@
     }
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.6.0"
   },
   "engines": {
     "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
