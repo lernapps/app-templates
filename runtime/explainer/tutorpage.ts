@@ -73,7 +73,7 @@ interface Words {
   needsIntro: string;
   needs: Readonly<Record<Need, string>>;
   contextTitle: string;
-  /** On a recap page: that it has no exercise, and where the competency is practised ({url}). */
+  /** On a recap page: that it has no exercise, and where its competencies are practised ({url}: one address each). */
   recap: string;
   exercise: string;
   steps: string;
@@ -576,7 +576,7 @@ function pageMarkdown(
     `## ${fill(words.contextTitle)}`,
     "",
   );
-  if (page.recap !== undefined) lines.push(words.recap.replace("{url}", mapUrl(page.recap)), "");
+  if (page.recap !== undefined) lines.push(words.recap.replace("{url}", page.recap.map(mapUrl).join(", ")), "");
   if (page.description !== undefined) lines.push(own(page.description), "");
   lines.push(
     ...contentLines(

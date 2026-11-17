@@ -4,8 +4,8 @@
 // for a unit app across the strands of a subject, the subject; each page the competencies it practises (required with
 // a strand or a subject, not allowed with none), and the build writes
 // lernapps-pages.json at the root of the bundle, the list of the pages for the catalog. A recap page (recap:
-// <subject>/<competency>) repeats a competency the app does not practise instead: no exercise, a notice with the link to the
-// learning map at its top, marked in the contents, left out of the self-assessment. Each broken case fails with
+// <subject>/<competency>, or a list of several) repeats competencies the app does not practise instead: no exercise, a
+// notice with a link to the learning map for each at its top, marked in the contents, left out of the self-assessment. Each broken case fails with
 // exactly one problem line.
 import { cpSync, existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -182,7 +182,7 @@ describe("format 2: format: 2 and the strand in app.yaml, competencies on the pa
     const root = unit();
     edit(root, "kapitel/zwei.yaml", "competencies: [laplace, baumdiagramm]\n", "");
     expect(problemsOf(root)).toEqual([
-      "src/kapitel/zwei.yaml:1: competencies is missing; src/app.yaml names the subject franzoesisch, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead",
+      "src/kapitel/zwei.yaml:1: competencies is missing; src/app.yaml names the subject franzoesisch, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats competencies the app does not practise says recap: <subject>/<competency>, or recap: [<subject>/<competency>, …] for several, instead",
     ]);
   });
 
@@ -229,7 +229,7 @@ describe("format 2: format: 2 and the strand in app.yaml, competencies on the pa
     [
       "a page without competencies while the app has a strand",
       (root) => edit(root, "kapitel/zwei.yaml", "competencies: [laplace, baumdiagramm]\n", ""),
-      "src/kapitel/zwei.yaml:1: competencies is missing; src/app.yaml names the strand mathematik/stochastik, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead",
+      "src/kapitel/zwei.yaml:1: competencies is missing; src/app.yaml names the strand mathematik/stochastik, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats competencies the app does not practise says recap: <subject>/<competency>, or recap: [<subject>/<competency>, …] for several, instead",
     ],
     [
       "a page with competencies while the strand is none",
@@ -263,31 +263,80 @@ describe("format 2: format: 2 and the strand in app.yaml, competencies on the pa
   });
 });
 
+/** RECAP repeating several competencies: physik/gewichtskraft-berechnen and physik/masse. */
+const RECAP_SEVERAL = RECAP.replace(
+  "recap: physik/gewichtskraft-berechnen",
+  "recap: [physik/gewichtskraft-berechnen, physik/masse]",
+);
+
 describe("a recap page: recap: <subject>/<competency> instead of competencies", () => {
   test("is valid without an exercise, with a strand and with strand none", () => {
     const result = check(withRecap(v2()), 5);
     expect(result.problems).toEqual([]);
     const page = result.site?.chapters[0]?.pages[2];
-    expect(page?.recap).toBe("physik/gewichtskraft-berechnen");
+    expect(page?.recap).toEqual(["physik/gewichtskraft-berechnen"]);
     expect(page?.competencies).toBeUndefined();
     expect(problemsOf(withRecap(v2("none")))).toEqual([]);
+  });
+
+  test("may repeat several competencies, as a list; a list of one is the same as one", () => {
+    const result = check(withRecap(v2(), RECAP_SEVERAL), 5);
+    expect(result.problems).toEqual([]);
+    expect(result.site?.chapters[0]?.pages[2]?.recap).toEqual(["physik/gewichtskraft-berechnen", "physik/masse"]);
+    expect(problemsOf(withRecap(v2("none"), RECAP_SEVERAL))).toEqual([]);
+    const one = check(
+      withRecap(
+        v2(),
+        RECAP.replace("recap: physik/gewichtskraft-berechnen", "recap: [physik/gewichtskraft-berechnen]"),
+      ),
+      5,
+    );
+    expect(one.problems).toEqual([]);
+    expect(one.site?.chapters[0]?.pages[2]?.recap).toEqual(["physik/gewichtskraft-berechnen"]);
   });
 
   const cases: [string, (root: string) => void, string][] = [
     [
       "competencies and recap both",
       (root) => edit(root, "kapitel/wdh.yaml", "recap:", "competencies: [laplace]\nrecap:"),
-      "src/kapitel/wdh.yaml:3: recap: a page has competencies or recap, never both: a page practises competencies of the app's strand or subject, a recap page only repeats a competency the app does not practise; remove one of them",
+      "src/kapitel/wdh.yaml:3: recap: a page has competencies or recap, never both: a page practises competencies of the app's strand or subject, a recap page only repeats competencies the app does not practise; remove one of them",
     ],
     [
       "a recap that is no <subject>/<competency>",
       (root) => edit(root, "kapitel/wdh.yaml", "recap: physik/gewichtskraft-berechnen", "recap: gewichtskraft"),
-      "src/kapitel/wdh.yaml:2: recap: gewichtskraft is no competency of the learning map; write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen",
+      "src/kapitel/wdh.yaml:2: recap: gewichtskraft is no competency of the learning map; write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen, or a list of several, e.g. [physik/kraft, physik/masse]",
+    ],
+    [
+      "a list with an entry that is no <subject>/<competency>",
+      (root) =>
+        edit(root, "kapitel/wdh.yaml", "recap: physik/gewichtskraft-berechnen", "recap: [physik/masse, gewichtskraft]"),
+      "src/kapitel/wdh.yaml:2: recap[1]: gewichtskraft is no competency of the learning map; write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen, or a list of several, e.g. [physik/kraft, physik/masse]",
+    ],
+    [
+      "a list that names a competency twice",
+      (root) =>
+        edit(root, "kapitel/wdh.yaml", "recap: physik/gewichtskraft-berechnen", "recap: [physik/masse, physik/masse]"),
+      "src/kapitel/wdh.yaml:2: recap: names a competency twice; name each competency once",
+    ],
+    [
+      "an empty list",
+      (root) => edit(root, "kapitel/wdh.yaml", "recap: physik/gewichtskraft-berechnen", "recap: []"),
+      "src/kapitel/wdh.yaml:2: recap: is an empty list; name at least one competency: write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen, or a list of several, e.g. [physik/kraft, physik/masse]",
+    ],
+    [
+      "a recap that is neither a competency nor a list",
+      (root) => edit(root, "kapitel/wdh.yaml", "recap: physik/gewichtskraft-berechnen", "recap: { physik: masse }"),
+      'src/kapitel/wdh.yaml:2: recap: {"physik":"masse"} is no competency; write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen, or a list of several, e.g. [physik/kraft, physik/masse]',
     ],
     [
       "an exercise",
       (root) => writeFileSync(join(root, "src/kapitel/wdh.yaml"), `${RECAP}${EXERCISE}`),
       "src/kapitel/wdh.yaml:10: blocks[0].blocks[1]: the exercise generated is not allowed on a recap page: it repeats physik/gewichtskraft-berechnen with descriptive blocks only, and the apps of that competency's strand practise it; remove the exercise, or make it a page of the app's own competencies",
+    ],
+    [
+      "an exercise on a page that repeats several",
+      (root) => writeFileSync(join(root, "src/kapitel/wdh.yaml"), `${RECAP_SEVERAL}${EXERCISE}`),
+      "src/kapitel/wdh.yaml:10: blocks[0].blocks[1]: the exercise generated is not allowed on a recap page: it repeats physik/gewichtskraft-berechnen, physik/masse with descriptive blocks only, and the apps of those competencies' strands practise them; remove the exercise, or make it a page of the app's own competencies",
     ],
   ];
 
@@ -363,8 +412,9 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     const notice = /<aside class="explainer-recap"[\s\S]*?<\/aside>/.exec(page)?.[0] ?? "";
     expect(notice).toContain("Wiederholung");
     expect(notice).toContain(
-      '<a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">Baustein auf der Lernlandkarte von lernapps.net</a>',
+      'nennt sie beim Baustein <a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a>.',
     );
+    expect(notice).not.toContain("<ul>");
     // at the top: before the first section
     expect(page.indexOf("explainer-recap")).toBeLessThan(page.indexOf('id="gewichtskraft"'));
     expect(body("en", "en/kapitel/wdh/")).toContain(">Recap<");
@@ -378,6 +428,23 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     );
   });
 
+  test("repeating several, links each competency on the learning map, in a list", () => {
+    const site = loadSite(withRecap(v2(), RECAP_SEVERAL), 0);
+    const body = (lang: string, path: string) =>
+      renderPage(site, routes(site).find((route) => route.lang === lang && route.path === path) ?? routes(site)[0]!)
+        .body;
+    const notice = (lang: string, path: string) =>
+      /<aside class="explainer-recap"[\s\S]*?<\/aside>/.exec(body(lang, path))?.[0] ?? "";
+    expect(notice("de", "kapitel/wdh/")).toContain(
+      [
+        "<p>Diese Seite wiederholt mehrere Dinge, die du schon können solltest. Üben kannst du sie in anderen Apps; die Lernlandkarte von lernapps.net nennt sie bei diesen Bausteinen:</p>",
+        '<ul><li><a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a></li>' +
+          '<li><a href="https://lernapps.net/apps/map/physik/c/masse/" rel="noopener">physik/masse</a></li></ul>',
+      ].join("\n"),
+    );
+    expect(notice("en", "en/kapitel/wdh/")).toContain("This page goes over several things you should already know.");
+  });
+
   test("tells the tutor that it is a recap, with the link to the learning map", () => {
     const site = loadSite(withRecap(v2()), 0);
     const page = site.chapters[0]?.pages[2];
@@ -387,6 +454,12 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
       "Diese Seite ist eine Wiederholung: Sie wiederholt etwas, das das Kind schon können sollte, und hat keine Übung.",
     );
     expect(markdown).toContain("https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/");
+    const several = loadSite(withRecap(v2(), RECAP_SEVERAL), 0);
+    const recapPage = several.chapters[0]?.pages[2];
+    if (recapPage === undefined) throw new Error("no recap page");
+    expect(tutorPage(several, recapPage, "de", new Map()).markdown).toContain(
+      "https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/, https://lernapps.net/apps/map/physik/c/masse/",
+    );
   });
 
   test("is left out of the self-assessment", () => {
@@ -472,6 +545,16 @@ describe("the page list for the catalog", () => {
       });
     }
   }, 60_000);
+
+  test("names the competencies of a recap page that repeats several as a list", async () => {
+    const dist = await built(withRecap(v2(), RECAP_SEVERAL));
+    const list = JSON.parse(readFileSync(join(dist, PAGE_LIST), "utf8")) as { pages: unknown[] };
+    expect(list.pages.at(-1)).toEqual({
+      path: "kapitel/wdh/",
+      title: { de: "Gewichtskraft – kurz wiederholt", en: "Weight – a short recap" },
+      recap: ["physik/gewichtskraft-berechnen", "physik/masse"],
+    });
+  }, 30_000);
 
   test("format 1 writes no list", async () => {
     const dist = await built(app());

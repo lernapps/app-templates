@@ -1,7 +1,7 @@
 // Reads an explainer's content from src/ at build time and validates it: each file against its part of the schema of
 // its format (explainer.v1.schema.json without `format` in src/app.yaml, explainer.v2.schema.json with `format: 2`),
 // then what a schema cannot say. In format 2, every page names its competencies when the app has a strand or a subject
-// (or is a recap page, recap: <subject>/<competency>), and none when its strand is none; a recap page has no exercise, and
+// (or is a recap page, recap: <subject>/<competency> or a list of them), and none when its strand is none; a recap page has no exercise, and
 // every other page at least one. The order lists are complete and unique, the depth is
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
@@ -19,6 +19,7 @@ import { checkBlocks } from "./check-page.ts";
 import { readComponents } from "./components/read.ts";
 import {
   isExercise,
+  recaps,
   type App,
   type AudioFile,
   type Block,
@@ -365,7 +366,13 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         complete = false;
         continue;
       }
-      const page = yaml.value as Omit<Page, "id" | "chapter" | "file">;
+      // recap as written: one competency or a list of them; the page keeps the list
+      const written = yaml.value as Omit<Page, "id" | "chapter" | "file" | "recap"> & {
+        recap?: string | readonly string[];
+      };
+      const { recap: _written, ...rest } = written;
+      const recap = recaps(written.recap);
+      const page: Omit<Page, "id" | "chapter" | "file"> = { ...rest, ...(recap === undefined ? {} : { recap }) };
       // format 2: the competencies a page practises, by the app's strand or subject
       if (app.strand === "none" && page.competencies !== undefined) {
         problems.at(
@@ -381,7 +388,7 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         problems.at(
           yaml,
           [],
-          `competencies is missing; src/app.yaml names the ${app.strand === undefined ? `subject ${app.subject}` : `strand ${app.strand}`}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats a competency the app does not practise says recap: <subject>/<competency> instead`,
+          `competencies is missing; src/app.yaml names the ${app.strand === undefined ? `subject ${app.subject}` : `strand ${app.strand}`}, so each page names the competencies of its subject that it practises, e.g. competencies: [laplace]; a page that only repeats competencies the app does not practise says recap: <subject>/<competency>, or recap: [<subject>/<competency>, …] for several, instead`,
         );
       }
       texts.check(yaml, ["title"], "plain");
@@ -410,14 +417,14 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         0,
       );
       if (page.recap !== undefined) {
-        // a recap page repeats a competency the app does not practise: no exercise, not even a component's
+        // a recap page repeats competencies the app does not practise: no exercise, not even a component's
         for (const [block, path] of blockPaths(page.blocks, ["blocks"])) {
           const component = uses.find((use) => use.block === block && use.component.exercise);
           if (!isExercise(block) && component === undefined) continue;
           problems.at(
             yaml,
             path,
-            `${component === undefined ? `the exercise ${block.type}` : `the exercise component ${component.component.name}`} is not allowed on a recap page: it repeats ${page.recap} with descriptive blocks only, and the apps of that competency's strand practise it; remove the exercise, or make it a page of the app's own competencies`,
+            `${component === undefined ? `the exercise ${block.type}` : `the exercise component ${component.component.name}`} is not allowed on a recap page: it repeats ${page.recap.join(", ")} with descriptive blocks only, and the apps of ${page.recap.length === 1 ? "that competency's strand practise it" : "those competencies' strands practise them"}; remove the exercise, or make it a page of the app's own competencies`,
           );
         }
       } else if (![...allBlocks(page.blocks)].some(isExercise)) {

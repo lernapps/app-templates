@@ -72,5 +72,5 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   ([schema](../runtime/explainer/explainer.v2.schema.json), format 2); Vue components in `src/components/` where
   no block fits.
 - Its place on the catalog's learning map (format 2): the app's strand, or the subject of a unit app across the
-  strands of a subject whose map allows it, and the competencies each page practises. A recap page repeats a competency from elsewhere that the app needs, without exercises. Format 1
+  strands of a subject whose map allows it, and the competencies each page practises. A recap page repeats one or several competencies from elsewhere that the app needs (`recap: physik/kraft`, or `recap: [physik/kraft, physik/masse]` for one short recap at the start of a chapter), without exercises; the runtime links each on the learning map, and the page's text names each. Format 1
   ([schema](../runtime/explainer/explainer.v1.schema.json)) stays valid, without a place on the map.

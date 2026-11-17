@@ -69,11 +69,11 @@ Phasengrenzen. Er meldet sich nur bei scheiternden Prüfungen oder offenen Entsc
 - Der Owner hat Ziel, KD-01 bis KD-03 und die Reihenfolge bestätigt.
 
 ### Tasks
-- [ ] app-templates: Schema `recap` = competency | Liste (minItems 1, uniqueItems); Fehlermeldungen in `schema.ts`
-- [ ] app-templates: `content.ts` normalisiert auf eine Liste (`recaps()`), `mapUrl` je Baustein
-- [ ] app-templates: `load.ts`, `render.ts` (Hinweis mit Liste der Links; Text für einen und für mehrere),
+- [x] app-templates: Schema `recap` = competency | Liste (minItems 1, uniqueItems); Fehlermeldungen in `schema.ts`
+- [x] app-templates: `content.ts` normalisiert auf eine Liste (`recaps()`), `mapUrl` je Baustein
+- [x] app-templates: `load.ts`, `render.ts` (Hinweis mit Liste der Links; Text für einen und für mehrere),
   `tutorpage.ts`, `assessment.ts`, `page-list.ts`; Meldungen de/en
-- [ ] app-templates: Tests (einer, mehrere, doppelt, leer, mit Übung), README, Entscheidung im arc42
+- [x] app-templates: Tests (einer, mehrere, doppelt, leer, mit Übung), README, Entscheidung im arc42
 - [ ] app-templates: PR, grüne Checks, squash, merge, Release abwarten
 - [ ] tooling: eigener Branch/Plan; app-templates anheben; `explainer-map.ts`, Regeln, Tests; neue Prüfung KD-04; Skills (Sammel-Wiederholung
   am Kapitelanfang, sehr kompakt, Selbstprüfung von Hand, Bausteine aus der Karte ablesen); PR, merge
@@ -89,10 +89,14 @@ Phasengrenzen. Er meldet sich nur bei scheiternden Prüfungen oder offenen Entsc
 - Der Plan ist vom Owner bestätigt.
 
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [ ] app-templates: PR, Merge, Release (siehe Plan)
 
 ### Completed
-*None yet*
+- [x] app-templates: Laufzeit, Schema, Meldungen, Tests, README, arc42; `vp check`, `check:vue`, `vp test run`
+  (603 Tests) und `scripts/arc42.ts` lokal grün
+- [x] Linktext ist die Id des Bausteins, auch bei einem Baustein; die Meldung `recapLink` entfällt, neu
+  `recapTextSeveral` (Hinweis mit Liste der Links). Eine Liste mit einem Eintrag gilt wie ein einzelner Baustein:
+  die Seitenliste schreibt dann eine Zeichenkette (KD-03).
 
 ## Commit
 ### Entrance Criteria

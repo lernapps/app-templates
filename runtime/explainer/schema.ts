@@ -84,6 +84,42 @@ const questionFields = (type: string): Set<string> => {
   return new Set([...own, ...branch]);
 };
 
+/** What recap names: <subject>/<competency>, or a list of several. */
+const RECAP_FORM =
+  "write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen, or a list of several, e.g. [physik/kraft, physik/masse]";
+
+/**
+ * The errors of a recap page's recap (one competency, or a list of them): the branch that the value's form chose says
+ * what is wrong; the other branch and the oneOf say nothing. Undefined for an error that is not about recap's value.
+ */
+function recapProblem(
+  error: Parameters<DescribeError>[0],
+  path: Parameters<DescribeError>[1],
+  value: unknown,
+): ReturnType<DescribeError> {
+  const recap = path.length === 1;
+  switch (error.keyword) {
+    case "oneOf":
+      if (!recap) return undefined;
+      // a string or a list: the branch of its form says what is wrong
+      return typeof value === "string" || Array.isArray(value)
+        ? null
+        : { message: `${JSON.stringify(value)} is no competency; ${RECAP_FORM}` };
+    case "type":
+      // recap of the other form, or an entry of the list that is no text
+      return recap ? null : { message: `${JSON.stringify(value)} is no competency; ${RECAP_FORM}` };
+    case "pattern":
+      return {
+        message: `${String(value)} is no competency of the learning map; ${RECAP_FORM}`,
+      };
+    case "minItems":
+      return recap ? { message: `is an empty list; name at least one competency: ${RECAP_FORM}` } : undefined;
+    case "uniqueItems":
+      return recap ? { message: "names a competency twice; name each competency once" } : undefined;
+  }
+  return undefined;
+}
+
 /** What `required` names as missing, with why it is needed. */
 function missing(property: string, object: unknown): string {
   const type = isObject(object) ? object["type"] : undefined;
@@ -103,6 +139,11 @@ const STRAND_OR_SUBJECT =
 
 /** The explainer's own words for the errors of its schema: what a block or an exercise lacks, or may not have. */
 const describe: DescribeError = (error, path, value) => {
+  // a recap page's recap: one competency or a list of them; said once, in the explainer's words
+  if (path[0] === "recap" && path.length <= 2) {
+    const problem = recapProblem(error, path, value);
+    if (problem !== undefined) return problem;
+  }
   switch (error.keyword) {
     case "anyOf": {
       // the address of a link of an exercise of the question types: an https address, or a map of them by language
@@ -124,7 +165,7 @@ const describe: DescribeError = (error, path, value) => {
       return {
         path: ["recap"],
         message:
-          "a page has competencies or recap, never both: a page practises competencies of the app's strand or subject, a recap page only repeats a competency the app does not practise; remove one of them",
+          "a page has competencies or recap, never both: a page practises competencies of the app's strand or subject, a recap page only repeats competencies the app does not practise; remove one of them",
       };
     case "const":
       // the format of the content: 2, or none at all for format 1
@@ -162,12 +203,6 @@ const describe: DescribeError = (error, path, value) => {
       if (path.length === 1 && path[0] === "subject") {
         return {
           message: `${String(value)} is no subject; write the subject's id in the learning map, e.g. franzoesisch, without a strand`,
-        };
-      }
-      // the competency a recap page repeats: <subject>/<competency>
-      if (path.length === 1 && path[0] === "recap") {
-        return {
-          message: `${String(value)} is no competency of the learning map; write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen`,
         };
       }
       // a competency of a page: an id of the learning map
