@@ -4,13 +4,16 @@
 // the list itself (format 1), the app's strand (<subject>/<strand>, or none) or, for a unit app across the strands of
 // a subject, its subject instead, and the content pages in the order of the app, each with its address relative to the
 // app's root as the app links it, its title as a text (a string, or by language) and, unless the strand is none, the
-// competencies it practises; a recap page names instead the competency it repeats (recap: <subject>/<competency>),
-// with any strand or subject. A page that comes before some of its prerequisites on purpose lists them in ahead.
+// competencies it practises; a recap page names instead the competencies it repeats (recap: <subject>/<competency>
+// for one, a list of them for several), with any strand or subject. A page that comes before some of its prerequisites on purpose lists them in ahead.
 import { contentPages } from "./routes.ts";
 import type { Site, Text } from "./content.ts";
 
 /** The file's name, at the root of the bundle. */
 export const PAGE_LIST = "lernapps-pages.json";
+
+/** What a recap page repeats: one competency, <subject>/<competency>, or a list of several. */
+export type Recap = string | readonly string[];
 
 export interface PageList {
   /** The version of this list's own format. */
@@ -19,7 +22,7 @@ export interface PageList {
   strand?: string;
   /** The subject of a unit app; never with strand. */
   subject?: string;
-  pages: { path: string; title: Text; competencies?: readonly string[]; ahead?: readonly string[]; recap?: string }[];
+  pages: { path: string; title: Text; competencies?: readonly string[]; ahead?: readonly string[]; recap?: Recap }[];
 }
 
 /** The list of the pages of `site`; undefined for an app of format 1, which has none. */
@@ -33,7 +36,7 @@ export function pageList(site: Site): PageList | undefined {
       path: `${page.chapter}/${page.id}/`,
       title: page.title,
       ...(page.recap !== undefined
-        ? { recap: page.recap }
+        ? { recap: page.recap.length === 1 ? (page.recap[0] ?? "") : page.recap }
         : strand === "none" || page.competencies === undefined
           ? {}
           : { competencies: page.competencies, ...(page.ahead !== undefined ? { ahead: page.ahead } : {}) }),
