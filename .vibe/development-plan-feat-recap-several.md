@@ -30,6 +30,15 @@ dazu an. Keine Abhängigkeit des Builds von der Karte.
 `lernapps-pages.json` schreibt `recap` so, wie es in der Seite steht: als Zeichenkette bei einem Baustein, als Liste
 bei mehreren. Bestehende Listen bleiben gültig; Leser (tooling, apps) nehmen beides an. Kein Formatwechsel der Liste.
 
+### KD-04: Check, dass die Recap-Seite ihre Bausteine nennt (Owner, 2026-11-17)
+Die Laufzeit zeigt nur die Ids als Links. `lernapps check` (tooling) prüft deshalb, dass der Text der Recap-Seite
+jeden wiederholten Baustein nennt: seinen Namen (`name.de` der Karte) oder seinen Satz „Ich kann …“ (`iCan`),
+ohne Groß-/Kleinschreibung. Fehlt er, ist das eine Warnung. Die Karte lädt die Regel `competencies-on-map` schon.
+
+### KD-05: Autonom durch Agenten (Owner, 2026-11-17)
+Ein Agent setzt das Feature in app-templates, tooling und apps um und merged in dieser Reihenfolge, ohne Halt an den
+Phasengrenzen. Er meldet sich nur bei scheiternden Prüfungen oder offenen Entscheidungen.
+
 ## Notes
 - Fundstellen app-templates: `runtime/explainer/explainer.v2.schema.json` (`recap` → `$defs/competency`),
   `schema.ts` (Fehlermeldungen), `content.ts` (`recap?: string`, `mapUrl`), `load.ts` (keine Übung auf Recap-Seiten),
@@ -48,10 +57,10 @@ bei mehreren. Bestehende Listen bleiben gültig; Leser (tooling, apps) nehmen be
 
 ## Explore
 ### Tasks
-- [ ] Owner: Plan und Reihenfolge bestätigen; offene Frage Linktext (siehe Plan)
 
 ### Completed
 - [x] Created development plan file
+- [x] Owner: Plan, Reihenfolge, Linktext (KD-04) und autonomer Ablauf (KD-05) bestätigt
 - [x] Fundstellen in app-templates, tooling, apps, docs gesucht
 - [x] Plattform: KD-18 (Apps sammeln nichts) bleibt unberührt; Recap ohne Speicherung
 
@@ -66,7 +75,7 @@ bei mehreren. Bestehende Listen bleiben gültig; Leser (tooling, apps) nehmen be
   `tutorpage.ts`, `assessment.ts`, `page-list.ts`; Meldungen de/en
 - [ ] app-templates: Tests (einer, mehrere, doppelt, leer, mit Übung), README, Entscheidung im arc42
 - [ ] app-templates: PR, grüne Checks, squash, merge, Release abwarten
-- [ ] tooling: eigener Branch/Plan; app-templates anheben; `explainer-map.ts`, Regeln, Tests; Skills (Sammel-Wiederholung
+- [ ] tooling: eigener Branch/Plan; app-templates anheben; `explainer-map.ts`, Regeln, Tests; neue Prüfung KD-04; Skills (Sammel-Wiederholung
   am Kapitelanfang, sehr kompakt, Selbstprüfung von Hand, Bausteine aus der Karte ablesen); PR, merge
 - [ ] apps: eigener Branch/Plan; Vertrag, `lib/map.js`, Listing, Karte, Tests; Pin von tooling; PR, merge
 - [ ] Branch der Explainer-Entwürfe in apps: Skill `map-explainers` nennt Sammel-Wiederholung; Regel für Sprachen
