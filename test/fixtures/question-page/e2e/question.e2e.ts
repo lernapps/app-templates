@@ -23,15 +23,16 @@ test.describe("with JavaScript", () => {
   test.use({ reducedMotion: "reduce" });
 
   for (const item of questions) {
-    test(`${item.id} (${item.type}): the right answer counts, the background shows`, async ({ page }) => {
+    test(`${item.id} (${item.type}): the right answer counts, only the explanation shows for options`, async ({ page }) => {
       await page.goto("./");
       await answerQuestion(page, item, rightAnswer(item));
       await expect(exercise(page, item).locator(".question-feedback")).toHaveText(messages.right);
       await expectFeedbackInView(page, item);
       const reveal = exercise(page, item).locator(".question-reveal");
-      await expectBackground(reveal, item);
+      await expectBackground(reveal, item, { right: true });
       if (item.type === "single-choice" || item.type === "multiple-choice") {
-        await expect(reveal.locator(".question-badge-right")).toHaveCount(item.options.filter((o) => o.correct).length);
+        // a right answer does not repeat the options' background
+        await expect(reveal.locator(".question-badge-right:visible")).toHaveCount(0);
       } else {
         await expect(reveal).toContainText(messages.rightAnswer);
       }

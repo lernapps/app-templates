@@ -115,11 +115,10 @@ function quizSuite(bank: string, part: "content" | "runtime"): void {
           }
           await expect(next).toBeFocused();
           const reveal = question(page, item).locator(".question-reveal");
-          await expectBackground(reveal, item);
+          await expectBackground(reveal, item, { right: true });
           if (item.type === "single-choice" || item.type === "multiple-choice") {
-            const right = item.options.filter((option) => option.correct).length;
-            await expect(reveal.locator(".question-badge-right")).toHaveCount(right);
-            await expect(reveal.locator(".question-badge-right").first()).toHaveText(de.rightOption);
+            // a right answer does not repeat the options' background
+            await expect(reveal.locator(".question-badge-right:visible")).toHaveCount(0);
           } else {
             await expect(reveal).toContainText(de.rightAnswer);
           }
@@ -262,7 +261,7 @@ function quizSuite(bank: string, part: "content" | "runtime"): void {
             await expect(question(page, item)).toBeVisible();
             await answerQuestion(page, item, rightAnswer(item), lang);
             await expect(question(page, item).locator(".question-feedback")).toContainText(words.right);
-            await expectBackground(question(page, item).locator(".question-reveal"), item);
+            await expectBackground(question(page, item).locator(".question-reveal"), item, { right: true });
           });
       });
     }
