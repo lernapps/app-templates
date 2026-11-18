@@ -163,10 +163,18 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     select.removeAttribute("aria-invalid");
   });
 
-  /** The solution: every option's background, the right ones marked, the learner's last choice marked too. */
-  const reveal = () => {
+  /**
+   * The solution: every option's background, the right ones marked, the learner's last choice marked too. A right
+   * answer to a question with options needs no background of the options: it would only repeat what the learner knew,
+   * so only the explanation and the links show.
+   */
+  const reveal = (right = false) => {
     answered = true;
     const solution = item.querySelector<HTMLElement>(".question-reveal");
+    if (right && (question.type === "single-choice" || question.type === "multiple-choice")) {
+      const infos = solution?.querySelector<HTMLElement>(".question-infos");
+      if (infos) infos.hidden = true;
+    }
     for (const index of last === undefined ? [] : chosenOptions(question, last)) {
       const option = solution?.querySelector<HTMLElement>(`[data-option="${index}"]`);
       if (!option) continue;
@@ -219,7 +227,7 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     const told = said.join(" ");
     if (!right && options.retry === true) line(t("tryAgain"));
     options.onAnswer?.(answer, right, told);
-    if (right || options.retry !== true) reveal();
+    if (right || options.retry !== true) reveal(right);
     else if (solve) solve.hidden = false;
     // the focus on the feedback, not on the button below the background: the feedback stays in view, a screen
     // reader reads it, and the next tab stops are the links of the background, then the button

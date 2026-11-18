@@ -46,17 +46,24 @@ export async function giveAnswer(page: Page, item: Question, answer: Answer): Pr
   }
 }
 
-/** What the learner learns about a question shows in `where`: each option's background, the explanation, the links. */
-export async function expectBackground(where: Locator, item: Question): Promise<void> {
+/**
+ * What the learner learns about a question shows in `where`: each option's background, the explanation, the links.
+ * After a right answer (`right`) the options' background stays hidden: it would only repeat what the learner knew.
+ */
+export async function expectBackground(where: Locator, item: Question, { right = false } = {}): Promise<void> {
   if (item.type === "single-choice" || item.type === "multiple-choice") {
-    for (const option of item.options) {
-      await expect(where.getByText(option.info, { exact: true })).toBeVisible();
-      if (option.link) await expect(where.locator(`a[href="${option.link.url}"]`).first()).toBeVisible();
+    if (right) {
+      await expect(where.locator(".question-infos")).toBeHidden();
+    } else {
+      for (const option of item.options) {
+        await expect(where.getByText(option.info, { exact: true })).toBeVisible();
+        if (option.link) await expect(where.locator(`a[href="${option.link.url}"]`).first()).toBeVisible();
+      }
     }
   }
   await expect(where.getByText(item.explanation, { exact: true })).toBeVisible();
   for (const link of item.links) {
-    const anchor = where.locator(`a[href="${link.url}"]`).first();
+    const anchor = where.locator(`a[href="${link.url}"]:visible`).first();
     await expect(anchor).toBeVisible();
     await expect(anchor).toHaveAttribute("rel", "noopener");
   }
