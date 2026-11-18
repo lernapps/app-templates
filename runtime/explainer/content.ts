@@ -138,11 +138,12 @@ export interface Page {
    */
   ahead?: readonly string[];
   /**
-   * Format 2: makes the page a recap page, which repeats this competency (one the app does not practise), <subject>/<competency>,
-   * instead of practising competencies of its own: no exercise, a link to the competency on the learning map, left
-   * out of the self-assessment.
+   * Format 2: makes the page a recap page, which repeats these competencies (ones the app does not practise),
+   * <subject>/<competency>, instead of practising competencies of its own: no exercise, a link to each competency on the
+   * learning map, left out of the self-assessment. The page names one (recap: <subject>/<competency>) or several
+   * (recap: [<subject>/<competency>, …]); here always a list (recaps).
    */
-  recap?: string;
+  recap?: readonly string[];
   /** What the page teaches, for the tutor's scope (scope.ts). */
   scope?: Text;
   blocks: readonly Block[];
@@ -300,6 +301,12 @@ export function* allBlocks(blocks: readonly Block[]): Generator<Block> {
     yield block;
     if (block.type === "section" || block.type === "example" || block.type === "note") yield* allBlocks(block.blocks);
   }
+}
+
+/** The competencies a recap page repeats, as a list: `recap` as written in the page, one or several (format 2). */
+export function recaps(recap: string | readonly string[] | undefined): readonly string[] | undefined {
+  if (recap === undefined) return undefined;
+  return typeof recap === "string" ? [recap] : recap;
 }
 
 /** The page of a competency on the learning map of lernapps.net, from <subject>/<competency> (a recap page's recap). */

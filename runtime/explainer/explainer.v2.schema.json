@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:lernapps:schema:explainer.v2",
   "title": "Content of a lernapps explainer, format 2",
-  "description": "Format 2 of an explainer's content, as YAML in src/: src/app.yaml, src/<chapter>/chapter.yaml, src/<chapter>/<page>.yaml and src/data/<name>.yaml. It is format 1 (explainer.v1.schema.json) plus the app's place on the learning map: format: 2 and either strand or subject in src/app.yaml, and on each page the competencies it practises, or recap on a page that repeats a competency from elsewhere. An app.yaml without format is format 1.",
+  "description": "Format 2 of an explainer's content, as YAML in src/: src/app.yaml, src/<chapter>/chapter.yaml, src/<chapter>/<page>.yaml and src/data/<name>.yaml. It is format 1 (explainer.v1.schema.json) plus the app's place on the learning map: format: 2 and either strand or subject in src/app.yaml, and on each page the competencies it practises, or recap on a page that repeats competencies from elsewhere. An app.yaml without format is format 1.",
   "allOf": [
     {
       "if": {
@@ -155,8 +155,20 @@
           }
         },
         "recap": {
-          "description": "Makes the page a recap page: it repeats a competency that the app's competencies require but the app does not practise, e.g. physik/gewichtskraft-berechnen. Use it instead of competencies, also with strand: none. A recap page has descriptive blocks only, no exercise; the link to the competency on the learning map is added for you.",
-          "$ref": "#/$defs/competency"
+          "description": "Makes the page a recap page: it repeats competencies that the app's competencies require but the app does not practise. One competency, e.g. physik/gewichtskraft-berechnen, or a list of several, e.g. [physik/kraft, physik/masse], each once: one short recap at the start of the chapter that needs them. Use it instead of competencies, also with strand: none. A recap page has descriptive blocks only, no exercise; the link to each competency on the learning map is added for you.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/competency"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/competency"
+              }
+            }
+          ]
         },
         "blocks": {
           "$ref": "urn:lernapps:schema:explainer.v1#/$defs/page/properties/blocks"

@@ -468,20 +468,24 @@ addresses: qg-checkable, con-runtime-unchanged
 :::
 ```
 
-## A Recap Page Repeats a Competency the App Does Not Practise
+## A Recap Page Repeats Competencies the App Does Not Practise
 
-A competency may require one the app does not practise; its learners may need it again. A recap page repeats it with
-descriptive blocks only: practising stays the job of the apps the map lists for it. The runtime, not the author, links
-the competency on the map, so the link cannot be missing; the catalog checks that the competency exists. Rejected:
-exercises on a recap page (the app would practise a competency the map does not show for it); a link the author writes
-(it could be missing or wrong).
+A competency may require others the app does not practise; its learners may need them again. A recap page repeats
+one of them, or several at once: one compact recap at the start of the chapter that needs them, instead of a page
+each. It has descriptive blocks only: practising stays the job of the apps the map lists for each competency. The
+runtime, not the author, links each competency on the map, with its id as the link's text, so no link can be
+missing; the content of the page, what the learner should already know, is the author's, and `lernapps check` warns
+when it does not name a competency it repeats. The catalog checks that each competency exists. Rejected: exercises on
+a recap page (the app would practise a competency the map does not show for it); a link the author writes (it could
+be missing or wrong); the runtime writing the competencies' names and sentences from the map (the build would depend
+on the map); several values in `competencies` for the same purpose (a page practises, as a rule, one competency).
 
 ```arc42
 :::decision
 id: dec-explainer-recap-page
-title: A recap page repeats a competency of another strand without exercises and links it on the learning map
+title: A recap page repeats one or several competencies of other strands without exercises and links each on the learning map
 status: accepted
-date: 2026-11-03
+date: 2026-11-17
 addresses: qg-understandable, qg-checkable, con-no-request-before-click
 :::
 ```
