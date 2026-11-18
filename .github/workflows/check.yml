@@ -25,9 +25,9 @@ concurrency:
 
 jobs:
   changes:
-    uses: lernapps/tooling/.github/workflows/changes.yml@0e4be177a607fd67cf1de7b9d84ca1b42262a982 # main
+    uses: lernapps/tooling/.github/workflows/changes.yml@1e23576b49767e10f9a4784fedc060bec1afda9a # main
     with:
-      tooling-ref: 0e4be177a607fd67cf1de7b9d84ca1b42262a982 # the classifier the pre-push hook runs (TOOLING_REF)
+      tooling-ref: 1e23576b49767e10f9a4784fedc060bec1afda9a # the classifier the pre-push hook runs (TOOLING_REF)
 
   runtime:
     needs: changes
