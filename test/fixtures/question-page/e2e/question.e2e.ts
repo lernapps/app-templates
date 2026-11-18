@@ -23,7 +23,9 @@ test.describe("with JavaScript", () => {
   test.use({ reducedMotion: "reduce" });
 
   for (const item of questions) {
-    test(`${item.id} (${item.type}): the right answer counts, only the explanation shows for options`, async ({ page }) => {
+    test(`${item.id} (${item.type}): the right answer counts, only the explanation shows for options`, async ({
+      page,
+    }) => {
       await page.goto("./");
       await answerQuestion(page, item, rightAnswer(item));
       await expect(exercise(page, item).locator(".question-feedback")).toHaveText(messages.right);
