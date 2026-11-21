@@ -83,10 +83,10 @@ describe("the page without JavaScript", () => {
     expect(solutions).toContain("Niagarafälle – USA und Kanada");
   });
 
-  test("further reading is a plain link by its title, opened without access to the page", () => {
-    expect(solutions).toContain("Mehr dazu:");
+  test("further reading is a small link named by its title, opened without access to the page", () => {
+    expect(solutions).toContain("Mehr dazu: Grand Canyon (Wikipedia)");
     expect(body).toContain(
-      '<a href="https://de.wikipedia.org/wiki/Grand_Canyon" rel="noopener">Grand Canyon (Wikipedia)</a>',
+      '<a class="question-more-link" href="https://de.wikipedia.org/wiki/Grand_Canyon" rel="noopener" title="Grand Canyon (Wikipedia)">',
     );
   });
 

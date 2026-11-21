@@ -108,8 +108,7 @@
   color: var(--page-wrong);
 }
 
-.question-infos,
-.question-links {
+.question-infos {
   padding-left: 0;
   list-style: none;
 }
@@ -154,13 +153,67 @@
   border: 1px solid var(--page-border);
 }
 
-.question-links li {
-  margin: 0.25rem 0;
+/* Further reading: small, below the solution; with JavaScript only its "i", laid over the right end of the feedback's
+   first line (engine.ts) but outside its live region, the words its name and tooltip. */
+.question-more {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
 }
 
-.question-more {
-  margin-bottom: 0;
-  font-weight: 600;
+.question-more-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.question-more-icon {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.question-feedback-row {
+  display: grid;
+}
+
+.question-feedback-row > * {
+  grid-area: 1 / 1;
+}
+
+/* level with the first line: below the feedback's margin, border and padding */
+.question-feedback-row > .question-more {
+  justify-self: end;
+  align-self: start;
+  margin: calc(0.75rem + 1px + 0.25rem) 0.75rem 0 0;
+  font-size: inherit;
+}
+
+.question-feedback-row:has(> .question-more) > .question-feedback {
+  padding-right: 2.75rem;
+}
+
+.question-feedback-row > .question-more .question-more-link {
+  justify-content: center;
+  min-height: 2rem;
+}
+
+.question-right + .question-more .question-more-link {
+  color: var(--page-right);
+}
+
+.question-wrong + .question-more .question-more-link {
+  color: var(--page-wrong);
+}
+
+.question-feedback-row > .question-more .question-more-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .question button {

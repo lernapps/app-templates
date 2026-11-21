@@ -185,6 +185,11 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
       option.querySelector(".question-info-head")?.append(" ", badge);
     }
     if (solution) solution.hidden = false;
+    // further reading: a small "i" at the right of the feedback's first line, its words its name and tooltip; beside
+    // the feedback, not in it, so that the status a screen reader announces is the feedback alone
+    const more = solution?.querySelector<HTMLElement>(".question-more");
+    const row = feedback.parentElement;
+    if (more && row?.classList.contains("question-feedback-row") && feedback.textContent !== "") row.append(more);
     for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")) {
       control.disabled = true;
     }

@@ -6,7 +6,7 @@
   "$defs": {
     "question": {
       "type": "object",
-      "required": ["id", "type", "text", "explanation", "links"],
+      "required": ["id", "type", "text", "explanation"],
       "properties": {
         "id": {
           "description": "Stable name of the question, used in its address (#frage-<id>): lower-case letters, digits and hyphens. Keep it when the text changes, so links to the question keep working.",
@@ -34,9 +34,8 @@
           "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
         },
         "links": {
-          "description": "Further reading on the question, at least one link, e.g. to the article in the German Wikipedia; in a quiz or on a page in several languages to the article in each language's Wikipedia, with url as a map by language.",
+          "description": "Optional further reading, shown small beside the feedback. Leave it out unless a source adds something worth reading to exactly this question that the explanation does not say, e.g. the article on the very term or event asked about. A general article on the subject (e.g. \"Französische Sprache\" for any question about French) adds nothing: leave the links out. In a quiz or on a page in several languages link the article in each language's Wikipedia, with url as a map by language.",
           "type": "array",
-          "minItems": 1,
           "items": {
             "$ref": "#/$defs/link"
           }

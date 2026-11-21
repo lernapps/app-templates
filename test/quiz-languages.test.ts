@@ -87,7 +87,7 @@ describe("a bank in several languages", () => {
     const colorado = (quiz: Quiz) => (quiz.questions[0]?.type === "single-choice" ? quiz.questions[0].options : [])[0];
     expect(colorado(en)?.link?.url).toBe("https://en.wikipedia.org/wiki/Colorado_River");
     expect(colorado(quizIn(all, "de"))?.link?.url).toBe("https://de.wikipedia.org/wiki/Colorado_River");
-    expect(en.questions[0]?.links[0]?.url).toBe("https://de.wikipedia.org/wiki/Grand_Canyon");
+    expect(en.questions[0]?.links?.[0]?.url).toBe("https://de.wikipedia.org/wiki/Grand_Canyon");
     expect(quizIn(all, "de").title).toBe("Naturwunder der Welt");
     // the German quiz of the build step, as before
     expect(parseBank(bilingual, "src/quiz.json").questions[2]?.text).toContain("Wie hoch ist der Mount Everest?");

@@ -84,7 +84,7 @@ describe("language maps in a question", () => {
     const wiki = both("https://de.wikipedia.org/wiki/Uluru", "https://en.wikipedia.org/wiki/Uluru");
     const linked = { ...number, links: [{ title: both("Uluru (Wikipedia)", "Uluru (Wikipedia)"), url: wiki }] };
     expect(validateQuestion(linked, "blocks[0]", ["de", "en"])).toEqual([]);
-    expect(questionIn(linked, "en").links[0]?.url).toBe("https://en.wikipedia.org/wiki/Uluru");
+    expect(questionIn(linked, "en").links?.[0]?.url).toBe("https://en.wikipedia.org/wiki/Uluru");
     expect(renderSolution(questionIn(linked, "en"), { lang: "en" })).toContain(
       'href="https://en.wikipedia.org/wiki/Uluru"',
     );

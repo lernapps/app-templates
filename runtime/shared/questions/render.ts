@@ -166,7 +166,7 @@ export function renderQuestion(
       : [`<div class="question-material">${materialHtml}</div>`]),
     controls(question, words, format, describe),
     `</fieldset>`,
-    `<div class="question-feedback" role="status"></div>`,
+    `<div class="question-feedback-row"><div class="question-feedback" role="status"></div></div>`,
     `<div class="question-reveal" hidden>`,
     renderSolution(question, { lang, format, ...(explanationHtml === undefined ? {} : { explanationHtml }) }),
     `</div>`,
@@ -209,6 +209,21 @@ function rightAnswerText(question: Question, { t, numbers }: Words, format: Form
 /** A link to another site: opened like any link, never loaded before a click, without access to this page. */
 export const external = (link: Link) => `<a href="${escape(link.url)}" rel="noopener">${escape(link.title)}</a>`;
 
+/** An "i" in a circle, in the colour of the text around it. */
+const INFO_ICON =
+  `<svg class="question-more-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">` +
+  `<circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>` +
+  `<circle cx="8" cy="4.75" r="1" fill="currentColor"/>` +
+  `<path d="M8 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+
+/**
+ * A link for further reading: a small "i" with "Mehr dazu: <title>". In the solution the words show beside the "i";
+ * moved beside the feedback (engine.ts) only the "i" shows, the words stay its name and tooltip.
+ */
+function moreLink(link: Link, more: string): string {
+  return `<a class="question-more-link" href="${escape(link.url)}" rel="noopener" title="${escape(link.title)}">${INFO_ICON}<span class="question-more-text">${escape(more)} ${escape(link.title)}</span></a>`;
+}
+
 /** Every option with its background, the right ones marked; the engine marks the learner's choice. */
 function optionInfo(question: Question, words: Words, format: Format): string {
   const { t } = words;
@@ -239,17 +254,13 @@ export function renderSolution(
   { lang = "de", explanationHtml, format = escape }: RenderSolutionOptions = {},
 ): string {
   const words = questionWords(lang);
-  const links =
-    question.links.length === 0
+  const links = question.links ?? [];
+  const more =
+    links.length === 0
       ? []
-      : [
-          `<p class="question-more">${words.t("moreReading")}</p>`,
-          `<ul class="question-links">`,
-          ...question.links.map((link) => `<li>${external(link)}</li>`),
-          `</ul>`,
-        ];
+      : [`<p class="question-more">${links.map((link) => moreLink(link, words.t("moreReading"))).join(" ")}</p>`];
   const explanation =
     explanationHtml ??
     (question.explanation === "" ? "" : `<p class="question-explanation">${format(question.explanation)}</p>`);
-  return [optionInfo(question, words, format), explanation, ...links].filter((part) => part !== "").join("\n");
+  return [optionInfo(question, words, format), explanation, ...more].filter((part) => part !== "").join("\n");
 }
