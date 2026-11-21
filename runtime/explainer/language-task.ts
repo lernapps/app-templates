@@ -34,7 +34,7 @@ function fieldHtml(id: string, label: string, lang: string, width: number, long:
   const common = `id="${id}" aria-label="${escape(label)}" lang="${escape(lang)}" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"`;
   return long
     ? `<textarea class="explainer-language-field" rows="2" ${common}></textarea>`
-    : `<input type="text" class="explainer-language-field" size="${Math.max(4, Math.min(width + 2, 40))}" ${common}>`;
+    : `<input type="text" class="explainer-language-field" size="${Math.max(4, Math.min(width + 2, 40))}" style="--chars: ${Math.max(2, Math.min(width, 40))}" ${common}>`;
 }
 
 /** A choice of a gap: an empty first option, then the options. */

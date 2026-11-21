@@ -1502,63 +1502,68 @@ button.explainer-help:focus-visible {
 
 .explainer-language-input {
   margin: 0;
-  line-height: 2.5;
+  line-height: 1.6;
 }
 
-/* A gap as a blank: a line below and short ticks at both ends, a third of the field's height, so that two gaps that wrap
-   side by side do not run into each other. The colour is --blank, which a verdict changes. Without JavaScript the same
-   blank is a span. */
+/* A gap as a blank in the line of text: a line below on the text's baseline, as high as the line, with a light
+   background, so that two gaps side by side stay apart. The colour is --blank, which a verdict changes; the focus
+   colours line and background in the accent. Without JavaScript the same blank is a span. */
 .explainer-language-blank,
 .explainer-language-unit .explainer-language-gapped .explainer-language-field,
 .explainer-language-unit[data-state] .explainer-language-gapped .explainer-language-field {
   --blank: var(--page-text);
+  box-sizing: border-box;
+  min-width: 3em;
+  min-height: 0;
+  margin: 0 0.15em;
+  padding: 0 0.3em;
   border: 0;
   border-bottom: 2px solid var(--blank);
   border-radius: 0;
-  background-color: transparent;
-  background-image: linear-gradient(var(--blank), var(--blank)), linear-gradient(var(--blank), var(--blank));
-  background-position:
-    left bottom,
-    right bottom;
-  background-size:
-    2px 33%,
-    2px 33%;
-  background-repeat: no-repeat;
+  background: color-mix(in srgb, var(--blank) 5%, transparent);
+  font: inherit;
+  line-height: inherit;
   text-align: center;
+  vertical-align: baseline;
 }
 
 .explainer-language-blank {
   display: inline-block;
-  min-width: 3.5rem;
-  min-height: 1.5rem;
-  vertical-align: bottom;
 }
 
-.explainer-language-unit .explainer-language-gapped .explainer-language-field {
-  min-width: 4rem;
-  min-height: 1.75rem;
-  margin: 0.25rem 0.25rem;
-  padding: 0 0.5rem;
+/* As wide as the longest answer of the task (--chars, language-task.ts), never wider than the line minus the word
+   that goes with it. */
+.explainer-language-unit .explainer-language-gapped input.explainer-language-field {
+  width: calc(var(--chars, 4) * 1ch + 0.6em);
+  max-width: calc(100% - 3.5em);
 }
 
-/* A choice in a gap: the same blank with an arrow, drawn in the same colour. */
+.explainer-language-unit .explainer-language-gapped select.explainer-language-field {
+  max-width: calc(100% - 3.5em);
+}
+
+.explainer-language-unit .explainer-language-gapped .explainer-language-field:focus-visible {
+  --blank: var(--page-accent);
+  outline: none;
+  border-bottom-width: 3px;
+  background-color: color-mix(in srgb, var(--page-accent) 14%, transparent);
+}
+
+/* A choice in a gap: the same blank with a small arrow, drawn in the same colour. */
 .explainer-language-unit .explainer-language-gapped select.explainer-language-field {
   appearance: none;
-  padding: 0.25rem 1.75rem 0 0.5rem;
+  padding-right: 1.1em;
+  cursor: pointer;
   background-image:
-    linear-gradient(var(--blank), var(--blank)), linear-gradient(var(--blank), var(--blank)),
     linear-gradient(45deg, transparent 50%, var(--blank) 50%),
     linear-gradient(135deg, var(--blank) 50%, transparent 50%);
   background-position:
-    left bottom,
-    right bottom,
-    calc(100% - 0.9rem) 55%,
-    calc(100% - 0.6rem) 55%;
+    calc(100% - 0.55em) 55%,
+    calc(100% - 0.3em) 55%;
   background-size:
-    2px 33%,
-    2px 33%,
-    0.3rem 0.3rem,
-    0.3rem 0.3rem;
+    0.25em 0.25em,
+    0.25em 0.25em;
+  background-repeat: no-repeat;
 }
 
 .explainer-language-unit[data-state="richtig"] .explainer-language-gapped .explainer-language-field {
