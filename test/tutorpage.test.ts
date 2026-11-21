@@ -87,31 +87,27 @@ describe("the tutor page of a content page", () => {
     expect(text).toContain("Frag zuerst, was das Kind über das Thema schon weiß.");
     expect(text).toContain("geh die Seite der Reihe nach durch, ein Abschnitt pro Nachricht");
     expect(text).toContain("ein „Ja“ reicht nicht");
-    expect(text).toContain("Schlag Übung und Nummer unten nach und setz bei dieser Aufgabe an.");
+    expect(text).toContain("Schlag Aufgabe und Nummer unten nach und setz bei dieser Nummer an.");
     // help after a wrong input, in the order of what the message brings: the app's message, the input, else a question
     expect(text).toContain(
-      "Steht da „Die App sagt: …“, such den Fehler (F1, F2 …) der Übung, zu dem die Meldung passt: Das ist der Fehler des Kindes. Nennt die Nachricht eine Eingabe und steht sie bei dieser Nummer in einer Spalte F…, bestätigt das den Fehler. Sag in einem Satz, was an genau dieser Eingabe nicht zur Aufgabe passt, und wiederhol die Meldung nicht. Fehlt beides, frag, was das Kind eingegeben oder gebaut hat und wo es hängt.",
+      "Steht da „Die App sagt: …“, such den Fehler (F1, F2 …) der Aufgabe, zu dem die Meldung passt: Das ist der Fehler des Kindes. Nennt die Nachricht eine Eingabe und steht sie bei dieser Nummer in einer Spalte F…, bestätigt das den Fehler. Sag in einem Satz, was an genau dieser Eingabe nicht passt, und wiederhol die Meldung nicht. Fehlt beides, frag, was das Kind eingegeben oder gebaut hat und wo es hängt.",
     );
     // what the child does not see, and what it can do, for an exercise component
+    expect(text).toContain("„(verdeckt)“ heißt, steht nicht in ihrem Text: Das Kind sieht ihn nicht, nenn ihn nicht.");
     expect(text).toContain(
-      "„(verdeckt)“ heißt, steht nicht im Text der Aufgabe: Das Kind sieht ihn nicht, nenn ihn nicht.",
-    );
-    expect(text).toContain(
-      "steht bei der Übung unter „Was zu tun ist“ und „Antwortformat“. Beschreib keine anderen Knöpfe",
+      "steht bei der Aufgabe unter „Was zu tun ist“ und „Antwortformat“. Beschreib keine anderen Knöpfe",
     );
     expect(text).toContain("Erfinde keine eigenen.");
     expect(text).toContain("Verrate keine Lösung.");
     expect(text).toContain("Bitte das Kind nie, eine Aufgabe abzuschreiben.");
     expect(text).toContain("## Wo das Kind gerade ist");
-    expect(text).toContain(
-      "je Übung die Nummer der Aufgabe, die das Kind gerade vor sich hat, z. B. `?prozent-rechnen=12`",
-    );
-    expect(text).toContain("Schlag die Nummern unten bei den Übungen nach.");
+    expect(text).toContain("je Aufgabe die Nummer, die das Kind gerade vor sich hat, z. B. `?prozent-rechnen=12`");
+    expect(text).toContain("Schlag die Nummern unten bei den Aufgaben nach.");
     expect(text).toContain("Gerechnet wird in der App");
     expect(text).toContain("Rechne nichts selbst aus");
     expect(text).toContain("dieser Tutor-Seite ohne `tutor/` und ohne `?…`");
     expect(text).toContain("z. B. `…/zahlen/zahlen-01/?prozent-rechnen=12&via=tutor#prozent-rechnen`");
-    expect(text).toContain("nimm eine andere Nummer der Übung");
+    expect(text).toContain("nimm eine andere Nummer der Aufgabe");
     expect(text).toContain("„Die App sagt: …“");
     expect(text).toContain("kommt von „Zurück“ in der App");
     expect(text).toContain("„Löse sie in der App und drück dann ‚Zurück‘. Füg die Zeile hier ein.“");
@@ -169,7 +165,7 @@ describe("the tutor page of a content page", () => {
       .flatMap((candidate) => (candidate.type === "section" ? candidate.blocks : [candidate]))
       .find((candidate) => candidate.type === "generated");
     if (block?.type !== "generated") throw new Error("no generated exercise");
-    expect(text).toContain("### Übung prozent-rechnen\n");
+    expect(text).toContain("### Aufgabe prozent-rechnen\n");
     expect(text).toContain("- Aufgabe: „Wie viel sind {p} % von {G}?“");
     expect(text).toContain("  - F1: „Du hast nicht durch 100 geteilt.“");
     expect(text).toContain("- Tipp der App: „1 % von {G} ist $\\frac{{G}}{100}$.“");
@@ -194,7 +190,7 @@ describe("the tutor page of a content page", () => {
     // never a task's text by number
     expect(text).not.toMatch(/Wie viel sind (?!1 % von 200\?)\d+ % von \d+\?/);
     // a question without numbers: in full, linked as the exercise on its page
-    expect(text).toContain("### Übung prozent-von-200\n");
+    expect(text).toContain("### Aufgabe prozent-von-200\n");
     expect(text).toContain("- Link: [../?via=tutor#prozent-von-200](../?via=tutor#prozent-von-200)");
   });
 
@@ -206,7 +202,7 @@ describe("the tutor page of a content page", () => {
     // all numbers, however small the budget
     const { markdown: text, cut } = tutorPage(site, page, "de", descriptions, 1000);
     expect(cut).toEqual([]);
-    const part = text.slice(text.indexOf("### Übung assign-labels"));
+    const part = text.slice(text.indexOf("### Aufgabe assign-labels"));
     expect(part).toContain("- Was zu tun ist: Jede Stufe einer Pyramide");
     expect(part).toContain(
       "- Aufgabe: „Welcher Stand gehört auf welche Stufe der Pyramide? Die Stufen, von oben nach unten: Stufe 1, Stufe 2, Stufe 3. Zur Wahl stehen, in dieser Reihenfolge: {Wahl}.“",
@@ -242,7 +238,7 @@ describe("the tutor page of a content page", () => {
     const page = contentPages(site).find((candidate) => candidate.id === "staende");
     if (page === undefined) throw new Error("no page staende");
     const { markdown: text } = tutorPage(site, page, "de", descriptions);
-    const part = text.slice(text.indexOf("### Übung assign-labels"));
+    const part = text.slice(text.indexOf("### Aufgabe assign-labels"));
     // F2 stays as the description of a mistake, without a column
     expect(part).toContain("  - F2: Eine Beschriftung zweimal gewählt.");
     expect(part).toContain("```\nNr. | Wahl | Erste (verdeckt) | Lösung | F1\n1 | ");
@@ -255,7 +251,7 @@ describe("the tutor page of a content page", () => {
     if (page === undefined || use === undefined) throw new Error("no page staende");
     const { markdown: text, cut } = tutorPage(site, page, "de", descriptions);
     expect(cut).toEqual([]);
-    expect(text).toContain("### Übung assign-labels");
+    expect(text).toContain("### Aufgabe assign-labels");
     expect(text).toContain(
       "- Was als richtig zählt: Richtig ist es nur, wenn jede Stufe ihre eigene Beschriftung hat.",
     );

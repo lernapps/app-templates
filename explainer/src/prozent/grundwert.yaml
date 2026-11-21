@@ -71,7 +71,7 @@ blocks:
             text: "Über 1 %: 30 € : 12 = 2,50 € sind 1 %. Dann 2,50 € · 100 = 250 €."
   - type: section
     id: uebung
-    title: Übung
+    title: Aufgaben
     blocks:
       - type: matching
         id: klammern

@@ -246,9 +246,9 @@ describe("the pages of a self-assessment", () => {
     expect(markdown).toContain("- „Formen 2“ · nicht abgefragt");
     // no link but the one back to the self-assessment for parents and teachers
     expect(markdown.match(/\]\(/g)).toHaveLength(1);
-    expect(markdown).toContain("- A1: Übung prozent-rechnen der Seite „Zahlen 1“");
+    expect(markdown).toContain("- A1: Aufgabe prozent-rechnen der Seite „Zahlen 1“");
     // a question is the same task in every round: the tutor knows right may be remembered
-    expect(markdown).toContain("- A2: Übung prozent-von-200 der Seite „Zahlen 1“ (immer dieselbe Aufgabe");
+    expect(markdown).toContain("- A2: Aufgabe prozent-von-200 der Seite „Zahlen 1“ (immer dieselbe Aufgabe");
     expect(markdown).not.toContain("prozent-rechnen der Seite „Zahlen 1“ (immer");
     // a guide: no tables of solutions
     expect(markdown).not.toContain("```");
@@ -329,7 +329,7 @@ describe("a run in the browser", () => {
     expect(lines.slice(1)).toEqual([
       "- „Feste“: Schau sie dir noch einmal an (1 von 3 richtig, 1 teilweise).",
       "Meine Aufgaben:",
-      "- A1 (Feste, Übung x): teilweise richtig. Nicht erreicht: P2, P4. Eingabe: Der Sabbat ist ein Ruhetag.",
+      "- A1 (Feste, Aufgabe x): teilweise richtig. Nicht erreicht: P2, P4. Eingabe: Der Sabbat ist ein Ruhetag.",
     ]);
   });
 
@@ -352,9 +352,9 @@ describe("a run in the browser", () => {
         "- „Grundwert“: Lies sie genau (0 von 1 richtig).",
         "- „Zinsen“: nicht abgefragt.",
         "Meine Aufgaben:",
-        "- A1 (Prozentwert, Übung x, Nr. 17): falsch. Eingabe: 120",
-        "- A2 (Prozentwert, Übung y): richtig.",
-        "- A3 (Grundwert, Übung z, Nr. 3): nicht beantwortet.",
+        "- A1 (Prozentwert, Aufgabe x, Nr. 17): falsch. Eingabe: 120",
+        "- A2 (Prozentwert, Aufgabe y): richtig.",
+        "- A3 (Grundwert, Aufgabe z, Nr. 3): nicht beantwortet.",
       ].join("\n"),
     );
   });
@@ -371,9 +371,9 @@ describe("a run in the browser", () => {
       "Ich habe die Selbsteinschätzung gemacht. Mein Ergebnis je Seite:",
       "- „Prozentwert“: Schau sie dir noch einmal an (1 von 2 richtig).",
       "Meine Aufgaben:",
-      "- A1 (Prozentwert, Übung x, Nr. 17): falsch. Eingabe: 120",
-      "- A2 (Prozentwert, Übung y): richtig.",
-      "- A3 (Grundwert, Übung z, Nr. 3): nicht beantwortet.",
+      "- A1 (Prozentwert, Aufgabe x, Nr. 17): falsch. Eingabe: 120",
+      "- A2 (Prozentwert, Aufgabe y): richtig.",
+      "- A3 (Grundwert, Aufgabe z, Nr. 3): nicht beantwortet.",
       "Tutor-Seite: https://a.example/einschaetzung/tutor/?a1=x",
     ]);
   });

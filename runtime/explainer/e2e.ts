@@ -1402,7 +1402,7 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
         );
         expect(`${new URL(address).origin}${new URL(address).pathname}`).toBe(new URL("tutor/", page.url()).href);
         expect(markdown.join("\n"), "the tutor page's Markdown, with the guide").toContain("## So leitest du an");
-        expect(markdown.join("\n"), "and the exercise").toContain(`### Übung ${first}`);
+        expect(markdown.join("\n"), "and the exercise").toContain(`### Aufgabe ${first}`);
         // the way stays on, on this device
         await page.reload();
         await expect(tutor.locator(".explainer-tutor-go")).toBeVisible();

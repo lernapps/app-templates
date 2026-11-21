@@ -62,7 +62,7 @@ describe("a speaking task on the page", () => {
       /<span class="explainer-ai-voice" tabindex="0" role="note" data-info="KI-Stimme\. Modell kokoro-v1\.0, Stimme ff_siwis\. Erzeugt am \d{4}-\d{2}-\d{2}\. Lizenz: CC BY-SA 4\.0\. Namensnennung: SIWIS[^"]*" aria-label="KI-Stimme\.[^"]*">KI<\/span>/,
     );
     expect(task).toContain('<span class="explainer-speaking-sentence" lang="fr">Je m\'appelle Marie.</span>');
-    expect(task).toContain("Zum Aufnehmen braucht diese Übung JavaScript.");
+    expect(task).toContain("Zum Aufnehmen braucht diese Aufgabe JavaScript.");
     expect(task).toContain('<div class="explainer-speaking-live" hidden></div>');
     expect(task).toContain("Sprich langsam.");
   });

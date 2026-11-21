@@ -63,7 +63,7 @@ blocks:
             text: "Über 1 %: 250 € : 100 = 2,50 € sind 1 %. Dann 2,50 € · 12 = 30 €."
   - type: section
     id: uebung
-    title: Übung
+    title: Aufgaben
     blocks:
       - type: generated
         id: prozentwert-ueben

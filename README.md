@@ -106,11 +106,11 @@ feature: assistants read it before they choose an archetype.
   assistant is on, every exercise (generated, question, exercise component) has one help button with its symbol, in
   the row of "Prüfen" and "Lösung" (below an exercise component): "Hilfe" before an answer and after the right one,
   "Warum?", standing out, after a wrong one. It gives the lines of that task ([`stuck.ts`](runtime/explainer/stuck.ts)),
-  in the learner's voice too: without a chat (B1) "Lade <tutor page>?… und hilf mir bei Übung <id>, Nr. <n>. Ich komme
+  in the learner's voice too: without a chat (B1) "Lade <tutor page>?… und hilf mir bei Aufgabe <id>, Nr. <n>. Ich komme
   nicht weiter.", then `Ich habe <input> eingegeben (<n> Versuche).`, `Die App sagt: „<message>“` (word for word
   what the feedback said: a generated exercise's message of its mistake or the general one, a question's reasons, an
   exercise component's `message`, else its `reason`) and the hint or solution opened; on a page opened with
-  `via=tutor` (B2), where the button is there without an assistant switched on, it copies `Übung <id>, Nr. <n>:`,
+  `via=tutor` (B2), where the button is there without an assistant switched on, it copies `Aufgabe <id>, Nr. <n>:`,
   the same lines and `Tutor-Seite: <tutor page>?…` for the running chat, as "Zurück zum Tutor" does, and once the task
   is right or its solution shown it is "Zurück", which copies the result line. No prompt and no line carries a rule
   for the tutor: the tutor page has them. After a wrong answer a sentence under the row says that input and message

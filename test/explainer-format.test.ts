@@ -451,7 +451,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     if (page === undefined) throw new Error("no recap page");
     const { markdown } = tutorPage(site, page, "de", new Map());
     expect(markdown).toContain(
-      "Diese Seite ist eine Wiederholung: Sie wiederholt etwas, das das Kind schon können sollte, und hat keine Übung.",
+      "Diese Seite ist eine Wiederholung: Sie wiederholt etwas, das das Kind schon können sollte, und hat keine Aufgabe.",
     );
     expect(markdown).toContain("https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/");
     const several = loadSite(withRecap(v2(), RECAP_SEVERAL), 0);
