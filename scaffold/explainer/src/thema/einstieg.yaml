@@ -10,15 +10,12 @@ blocks:
         text: Ersetze diese Seite durch die erste geplante.
   - type: section
     id: uebung
-    title: Übung
+    title: Aufgaben
     blocks:
       - type: single-choice
         id: platzhalter
         text: Welche Antwort ist richtig?
-        explanation: Diese Übung ist ein Platzhalter. Ersetze sie durch die erste geplante.
-        links:
-          - title: lernapps.net
-            url: https://lernapps.net/
+        explanation: Diese Aufgabe ist ein Platzhalter. Ersetze sie durch die erste geplante.
         options:
           - text: Diese
             correct: true

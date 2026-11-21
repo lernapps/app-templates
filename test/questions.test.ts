@@ -265,10 +265,24 @@ describe("one question's solution without JavaScript", () => {
         for (const option of item.options) expect(plain(html)).toContain(plain(option.info));
       }
       expect(plain(html)).toContain(plain(item.explanation));
-      expect(plain(html)).toContain(messages.moreReading);
-      for (const link of item.links) expect(html).toContain(`<a href="${link.url}" rel="noopener">`);
+      const links = item.links ?? [];
+      if (links.length === 0) expect(html).not.toContain("question-more");
+      for (const link of links) {
+        expect(html).toContain(
+          `<a class="question-more-link" href="${link.url}" rel="noopener" title="${link.title}">`,
+        );
+        expect(plain(html)).toContain(`${messages.moreReading} ${link.title}`);
+      }
     },
   );
+
+  test("links are optional: a question without them is valid and its solution has no further reading", () => {
+    const [first] = questions;
+    if (first === undefined) throw new Error("no question");
+    const { links: _links, ...without } = first;
+    expect(validateQuestion(without, "questions[0]")).toEqual([]);
+    expect(renderSolution(without)).not.toContain("question-more");
+  });
 
   test.each(questions.map((question) => [question.id, question] as const))(
     "%s: a fragment that can sit in a <details>: no ids, no controls, nothing hidden",

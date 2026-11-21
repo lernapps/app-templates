@@ -6,7 +6,7 @@ A quiz about things to know: one page of questions with options, feedback on eve
 
 - Six question types: single choice, multiple choice, true or false, a number within a tolerance, putting items in
   order, matching pairs.
-- Background on every option, an explanation for every question, links to further reading, an optional hint, typical
+- Background on every option, an explanation for every question, optional links to further reading, an optional hint, typical
   wrong numbers with their message.
 - One question at a time with feedback; at the end the score and all solutions. Without JavaScript: a worksheet with
   the solutions.

@@ -192,7 +192,7 @@
       }
     },
     "page": {
-      "description": "src/<chapter>/<page>.yaml: a page, its address /<chapter>/<page>/. Its blocks in order; structure by section blocks (h2), with at most one level of sections inside them (h3). Every page has at least one exercise (one of the quiz's question types, or generated), e.g. in a last section Übung.",
+      "description": "src/<chapter>/<page>.yaml: a page, its address /<chapter>/<page>/. Its blocks in order; structure by section blocks (h2), with at most one level of sections inside them (h3). Every page has at least one exercise (one of the quiz's question types, or generated), e.g. in a last section Aufgaben.",
       "type": "object",
       "additionalProperties": false,
       "required": ["title", "blocks"],

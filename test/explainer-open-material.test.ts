@@ -91,7 +91,7 @@ describe("the material of an open task", () => {
     const page = contentPages(site).find((candidate) => candidate.chapter === "zahlen" && candidate.id === "zahlen-01");
     if (page === undefined) throw new Error("no page zahlen/zahlen-01");
     const text = tutorPageMarkdown(site, page, "de", new Map());
-    const task = text.split("### Übung erklaeren")[1] ?? "";
+    const task = text.split("### Aufgabe erklaeren")[1] ?? "";
     expect(task).toContain("Ein Umriss als Hilfe zur Aufgabe");
     expect(task).toContain("Der Umriss hilft beim Erklären.");
   });

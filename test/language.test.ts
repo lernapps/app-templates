@@ -322,6 +322,38 @@ describe("the table of a language task fits at 360 px (#151)", () => {
   });
 });
 
+describe("a gap sits in its line of text", () => {
+  const css = readFileSync(new URL("../runtime/explainer/explainer.css", import.meta.url), "utf8");
+  const rule = (selector: string) => {
+    const start = css.indexOf(`\n${selector} {`);
+    expect(start, `a rule for ${selector}`).toBeGreaterThan(-1);
+    return css.slice(start, css.indexOf("}", start));
+  };
+  const gapped = ".explainer-language-unit .explainer-language-gapped";
+
+  test("a blank on the baseline, as high as the line: a line below, no ticks at its ends, no frame on focus", () => {
+    const at = css.indexOf("\n.explainer-language-blank,\n");
+    expect(at, "a rule for the blank and the fields in a gap").toBeGreaterThan(-1);
+    const blank = css.slice(at, css.indexOf("}", at));
+    expect(blank).toContain("vertical-align: baseline");
+    expect(blank).toContain("line-height: inherit");
+    expect(blank).toContain("min-height: 0");
+    expect(blank).not.toContain("linear-gradient");
+    const focus = rule(`${gapped} .explainer-language-field:focus-visible`);
+    expect(focus).toContain("outline: none");
+    expect(focus).toContain("border-bottom-width: 3px");
+    expect(rule(".explainer-language-input")).toContain("line-height: 1.6");
+  });
+
+  test("a field to write in is as wide as the longest answer, never wider than its line", () => {
+    const field = rule(`${gapped} input.explainer-language-field`);
+    expect(field).toContain("width: calc(var(--chars, 4) * 1ch + 0.6em)");
+    expect(field).toContain("max-width: calc(100% - 3.5em)");
+    const source = readFileSync(new URL("../runtime/explainer/language-task.ts", import.meta.url), "utf8");
+    expect(source).toContain('style="--chars: ${Math.max(2, Math.min(width, 40))}"');
+  });
+});
+
 describe("the text of a gap task as pieces (language-task.ts)", () => {
   test("the word before a gap and the full stop behind it go with the gap", () => {
     expect(keepWithGaps(["Je ", 0, " de ", 1, "."])).toEqual([

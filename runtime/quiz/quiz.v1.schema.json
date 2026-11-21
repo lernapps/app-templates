@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:lernapps:schema:quiz.v1",
   "title": "Question bank of a lernapps quiz",
-  "description": "The questions of a quiz built from the archetype quiz (runtime @lernapps/app-templates), in src/quiz.json: a quiz about things to know. Each option carries short background knowledge, each question links to further reading. The build validates the bank against this schema and fails with a message naming each problem. Every text is for learners: German, plain language, in your own words. A quiz in several languages declares them in languages, German first, and writes every text for learners as a map of texts by language ({ \"de\": …, \"en\": … }) with each of them, and the address of a link as one for every language or as a map by language; the build then writes a page per language.",
+  "description": "The questions of a quiz built from the archetype quiz (runtime @lernapps/app-templates), in src/quiz.json: a quiz about things to know. Each option carries short background knowledge; a question links to further reading only where a source adds something to exactly it. The build validates the bank against this schema and fails with a message naming each problem. Every text is for learners: German, plain language, in your own words. A quiz in several languages declares them in languages, German first, and writes every text for learners as a map of texts by language ({ \"de\": …, \"en\": … }) with each of them, and the address of a link as one for every language or as a map by language; the build then writes a page per language.",
   "type": "object",
   "additionalProperties": false,
   "required": ["title", "intro", "questions"],

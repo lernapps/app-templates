@@ -57,7 +57,7 @@ blocks:
             text: "Probe: 75 % von 24 sind 24 · 0,75 = 18. Passt."
   - type: section
     id: uebung
-    title: Übung
+    title: Aufgaben
     blocks:
       - type: single-choice
         id: welche-rechnung

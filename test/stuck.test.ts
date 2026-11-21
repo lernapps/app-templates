@@ -6,7 +6,7 @@ import { describe, expect, test } from "vite-plus/test";
 import { Progress } from "../runtime/explainer/result.ts";
 import { stuckLines, stuckPrompt } from "../runtime/explainer/stuck.ts";
 
-const TASK = "Übung prozentwert-ueben, Nr. 27:";
+const TASK = "Aufgabe prozentwert-ueben, Nr. 27:";
 const CHAPTER =
   "https://lernapps.net/mathe-arithmetik/prozent/prozentwert/tutor/?prozentwert-ueben=27&uebung=prozentwert-ueben";
 const STUCK = { exercise: "prozentwert-ueben", number: 27, tutor: CHAPTER };
@@ -26,7 +26,7 @@ describe("the lines of „Hilfe“", () => {
     progress.answered("prozentwert-ueben", 27, false, "1071", MESSAGE);
     expect(stuckPrompt({ ...STUCK, state: progress.state("prozentwert-ueben", 27) }, "de")).toBe(
       [
-        `Lade ${CHAPTER} und hilf mir bei Übung prozentwert-ueben, Nr. 27. Ich komme nicht weiter.`,
+        `Lade ${CHAPTER} und hilf mir bei Aufgabe prozentwert-ueben, Nr. 27. Ich komme nicht weiter.`,
         "Ich habe 1071 eingegeben (2 Versuche).",
         `Die App sagt: „${MESSAGE}“`,
       ].join("\n"),
@@ -36,10 +36,10 @@ describe("the lines of „Hilfe“", () => {
   test("B1 before the first input: the sentence alone; an exercise without numbers", () => {
     const progress = new Progress();
     expect(stuckPrompt({ ...STUCK, state: progress.state("prozentwert-ueben", 27) }, "de")).toBe(
-      `Lade ${CHAPTER} und hilf mir bei Übung prozentwert-ueben, Nr. 27. Ich komme nicht weiter.`,
+      `Lade ${CHAPTER} und hilf mir bei Aufgabe prozentwert-ueben, Nr. 27. Ich komme nicht weiter.`,
     );
     expect(stuckPrompt({ exercise: "frage", tutor: CHAPTER, state: progress.state("frage", undefined) }, "de")).toBe(
-      `Lade ${CHAPTER} und hilf mir bei Übung frage. Ich komme nicht weiter.`,
+      `Lade ${CHAPTER} und hilf mir bei Aufgabe frage. Ich komme nicht weiter.`,
     );
   });
 

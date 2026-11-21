@@ -32,7 +32,8 @@ interface Base<T extends Text> {
   material?: readonly MaterialBlock<T>[];
   /** Why the right answer is right; for types without options also their background. */
   explanation: T;
-  links: Link<T>[];
+  /** Further reading, only where a source adds something to exactly this question; often none. */
+  links?: Link<T>[];
   /** What to look at again after a wrong answer, without giving the answer away. */
   hint?: T;
   /** Test cases for the build, never shown to learners: answers the text allows, and typical wrong ones. */
@@ -143,7 +144,7 @@ export function questionTexts(question: Question<Text>): { path: (string | numbe
   const texts: { path: (string | number)[]; text: Text }[] = [
     { path: ["text"], text: question.text },
     { path: ["explanation"], text: question.explanation },
-    ...question.links.map((link, index) => ({ path: ["links", index, "title"], text: link.title })),
+    ...(question.links ?? []).map((link, index) => ({ path: ["links", index, "title"], text: link.title })),
     ...(question.hint === undefined ? [] : [{ path: ["hint"], text: question.hint }]),
   ];
   switch (question.type) {
@@ -182,7 +183,7 @@ export function questionTexts(question: Question<Text>): { path: (string | numbe
 export function questionAddresses(question: Question<Text>): { path: (string | number)[]; text: Text }[] {
   const options = question.type === "single-choice" || question.type === "multiple-choice" ? question.options : [];
   return [
-    ...question.links.map((link, index) => ({ path: ["links", index, "url"], text: link.url })),
+    ...(question.links ?? []).map((link, index) => ({ path: ["links", index, "url"], text: link.url })),
     ...options.flatMap((option, index) =>
       option.link === undefined ? [] : [{ path: ["options", index, "link", "url"], text: option.link.url }],
     ),
@@ -197,7 +198,7 @@ export function questionIn(question: Question<Text>, lang: string): Question {
     id: question.id,
     text: t(question.text),
     explanation: t(question.explanation),
-    links: question.links.map(link),
+    links: (question.links ?? []).map(link),
     ...(question.hint === undefined ? {} : { hint: t(question.hint) }),
     ...(question.material === undefined ? {} : { material: materialIn(question.material, lang) }),
   };

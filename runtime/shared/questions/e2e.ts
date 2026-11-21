@@ -47,7 +47,8 @@ export async function giveAnswer(page: Page, item: Question, answer: Answer): Pr
 }
 
 /**
- * What the learner learns about a question shows in `where`: each option's background, the explanation, the links.
+ * What the learner learns about a question shows in `where`: each option's background, the explanation, the links (in an
+ * answered question beside its feedback).
  * After a right answer (`right`) the options' background stays hidden: it would only repeat what the learner knew.
  */
 export async function expectBackground(where: Locator, item: Question, { right = false } = {}): Promise<void> {
@@ -62,8 +63,12 @@ export async function expectBackground(where: Locator, item: Question, { right =
     }
   }
   await expect(where.getByText(item.explanation, { exact: true })).toBeVisible();
-  for (const link of item.links) {
-    const anchor = where.locator(`a[href="${link.url}"]:visible`).first();
+  // further reading: in a question that was answered, a small "i" beside its feedback, outside its live region; in a
+  // solution on its own, below it
+  const live = await where.evaluate((element) => element.classList.contains("question-reveal"));
+  const reading = live ? where.locator("xpath=..").locator(".question-feedback-row > .question-more") : where;
+  for (const link of item.links ?? []) {
+    const anchor = reading.locator(`a[href="${link.url}"]:visible`).first();
     await expect(anchor).toBeVisible();
     await expect(anchor).toHaveAttribute("rel", "noopener");
   }
