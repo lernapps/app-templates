@@ -267,10 +267,11 @@ describe("what the mode keeps and writes", () => {
     ]);
   });
 
-  test("the new issue: the app's repository, its title in the address", () => {
-    expect(issueAddress("lernapps/prozent", "Prozentrechnung", "de")).toBe(
-      "https://github.com/lernapps/prozent/issues/new?title=Feedback%3A%20Prozentrechnung",
-    );
+  test("the new issue: the app's repository, its title and a comment to paste the notes in the address", () => {
+    const address = new URL(issueAddress("lernapps/prozent", "Prozentrechnung", "de"));
+    expect(`${address.origin}${address.pathname}`).toBe("https://github.com/lernapps/prozent/issues/new");
+    expect(address.searchParams.get("title")).toBe("Feedback: Prozentrechnung");
+    expect(address.searchParams.get("body")).toMatch(/^<!-- Füg hier den Text ein, den die App .* -->$/);
   });
 
   test("?feedback in the address switches the mode on", () => {

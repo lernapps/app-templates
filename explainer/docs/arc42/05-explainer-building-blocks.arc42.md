@@ -556,7 +556,8 @@ switches the mode on too. While it is on, kept on the device until "Beenden", ev
 holds the form, with the text marked in the block as its quote, and the app's notes by page, each with "Zur Stelle"
 and "Löschen"; "Alle löschen …" asks first. "Kopieren" puts the export on the clipboard: Markdown, the pages in the
 app's order, the blocks in the page's, each note with where it is, the block's id, its beginning and the marked text,
-the commit as an unseen comment. "Issue auf GitHub öffnen" opens a new issue titled "Feedback: <App>". A note whose
+the commit as an unseen comment. "Issue auf GitHub öffnen" copies the same text at once and opens a new issue titled
+"Feedback: <App>", whose body is a comment that says to paste it. A note whose
 block id the page no longer has is marked as changed. Nothing leaves the page but what the person copies.
 
 ```arc42

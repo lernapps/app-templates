@@ -321,10 +321,10 @@ feedback mode lets them note it where it is, block by block, and hand all notes 
 issue in the app's repository, where the creator works anyway. The notes stay on the device under the app's prefix
 (`con-state-on-device`) and only after the mode is switched on; the app sends nothing: the person copies the text and
 pastes it with their own GitHub account. A block is addressed by its position and by a hash of its source, so that a
-note still finds its block when others are added, and is marked as changed when the block itself changed. The new
-issue's address carries only its title, "Feedback: <App>": the text is too long for an address, there is no issue
-template every app has, and no label every repository has (GitHub sets one from the address only for people with
-triage rights). The way in is part of the app's content, at the end of each page and on the start page, not the
+note still finds its block when others are added, and is marked as changed when the block itself changed. Opening
+the new issue copies the text at once; the issue's address carries its title, "Feedback: <App>", and as its body a
+comment that says to paste it: the text itself is too long for an address, there is no issue template every app has,
+and no label every repository has (GitHub sets one from the address only for people with triage rights). The way in is part of the app's content, at the end of each page and on the start page, not the
 footer, which is the platform's. Rejected: a server that collects feedback (accounts, data, cost); an issue template
 in every app's repository (not there in the existing apps); the body in the address (length).
 

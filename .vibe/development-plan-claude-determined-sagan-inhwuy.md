@@ -203,6 +203,8 @@ Entscheidung (09: Hash statt Position, kein Label). README bleibt unverändert (
 ### Completed
 - [x] Aufräumen: keine Debug-Ausgaben, keine TODOs
 - [x] Branch zu einem Commit zusammengefasst, auf main rebased, PR eröffnet
+- [x] Review PR #180 (Owner): „Issue auf GitHub öffnen“ kopiert sofort und setzt als Beschreibung einen Kommentar,
+      der zum Einfügen auffordert (`feedbackIssueBody`)
 
 
 

@@ -188,10 +188,15 @@ export function exportMarkdown(notes: readonly Note[], context: ExportContext): 
   return `${lines.join("\n")}\n`;
 }
 
-/** The address of a new issue in `repository` (owner/repo) on GitHub, its title "Feedback: <app>". */
+/**
+ * The address of a new issue in `repository` (owner/repo) on GitHub: its title "Feedback: <app>", and as its body a
+ * comment that says to paste the text the app copied when it opened the issue. The notes themselves go by the
+ * clipboard: an address is too short for them.
+ */
 export function issueAddress(repository: string, app: string, lang: string): string {
   const title = message(lang, "feedbackIssueTitle", { app });
-  return `https://github.com/${repository}/issues/new?title=${encodeURIComponent(title)}`;
+  const body = message(lang, "feedbackIssueBody");
+  return `https://github.com/${repository}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
 }
 
 /** Whether the address `href` switches the mode on: it has ?feedback (with any value but "0"). */

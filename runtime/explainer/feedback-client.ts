@@ -4,7 +4,8 @@
 // device) until "Beenden". While it is on, every block of a content page (the build's wrapper, block-id.ts) has a
 // button "Notiz", the bar beside the page (below it on a narrow screen) has the form of a note, with the text marked in
 // the block as its quote, and the app's notes: each with where it is, "Zur Stelle" and "Löschen"; "Kopieren" puts the
-// export on the clipboard, "Issue auf GitHub öffnen" opens a new issue in the app's repository with its title, and
+// export on the clipboard, "Issue auf GitHub öffnen" copies it too and opens a new issue in the app's repository with
+// its title and a comment in its body that says to paste it, and
 // "Alle löschen …" asks first. The first time, the bar opens on its help. A note on a block the page no longer has
 // (its id changed with its content) is marked as changed. Nothing leaves the page but what the person copies; the mode
 // stores nothing until it is switched on.
@@ -344,24 +345,25 @@ class Feedback {
     });
   }
 
-  async #copy(): Promise<void> {
+  /** Puts the export on the clipboard; `copied` is what the status says then. Without the clipboard, the text to copy by hand. */
+  async #copy(copied: "feedbackCopied" | "feedbackCopiedForIssue" = "feedbackCopied"): Promise<void> {
     const text = this.#export();
     const field = this.#part<HTMLTextAreaElement>("textarea.explainer-feedback-export");
-    let copied = false;
+    let done = false;
     try {
       await navigator.clipboard.writeText(text);
-      copied = true;
+      done = true;
     } catch {
-      copied = false;
+      done = false;
     }
     if (field) {
       field.value = text;
-      field.hidden = copied;
-      if (!copied) field.select();
+      field.hidden = done;
+      if (!done) field.select();
     }
     this.#status(
-      copied
-        ? this.#t(this.#data.repository === undefined ? "feedbackCopiedNoIssue" : "feedbackCopied")
+      done
+        ? this.#t(this.#data.repository === undefined ? "feedbackCopiedNoIssue" : copied)
         : this.#t("feedbackCopyFailed"),
     );
   }
@@ -526,6 +528,11 @@ class Feedback {
       if (collapse) moveFocus(collapse);
     });
     this.#part<HTMLButtonElement>("button.explainer-feedback-copy")?.addEventListener("click", () => void this.#copy());
+    // opening the issue copies the notes at once, within the click: the new issue's body says to paste them
+    this.#part<HTMLAnchorElement>("a.explainer-feedback-issue")?.addEventListener(
+      "click",
+      () => void this.#copy("feedbackCopiedForIssue"),
+    );
     this.#part<HTMLButtonElement>("button.explainer-feedback-delete-all")?.addEventListener("click", () =>
       this.#deleteAll(),
     );

@@ -87,8 +87,9 @@ A teacher reads the app and chooses "Feedback zu „<App>“ geben" at the end o
 or opens a link with `?feedback`. The bar opens on its help the first time; the mode stays on for the app, on the
 device. On a block, "Notiz" opens the form with the place and, if the teacher marked text in the block before, that
 text as a quote; "Speichern" keeps the note on the device. On every page of the app the bar lists all notes by page.
-"Kopieren" puts them on the clipboard as Markdown, "Issue auf GitHub öffnen" opens a new issue with the title
-"Feedback: <App>" in the app's repository, where the teacher pastes the text with their own GitHub account. "Alle
+"Kopieren" puts them on the clipboard as Markdown; "Issue auf GitHub öffnen" does so too and opens a new issue with
+the title "Feedback: <App>" in the app's repository, whose body says to paste the text, which the teacher does with
+their own GitHub account. "Alle
 löschen …" and "Beenden" clear the device.
 
 ```arc42

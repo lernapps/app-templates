@@ -1945,13 +1945,22 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
         expect(text.indexOf(`### ${first.title}`)).toBeLessThan(text.indexOf(`### ${second.title}`));
         expect(text).toContain(`> ${t("feedbackMarked", { text: shorten(marked, SELECTION_LENGTH) })}`);
         expect(text.indexOf("Erste Notiz")).toBeLessThan(text.indexOf("Zweite Notiz"));
-        // the link to a new issue, where the build found the repository
+        // the link to a new issue, where the build found the repository: it copies the notes at once and opens the
+        // issue with a comment in its body that says to paste them (nothing is loaded from GitHub here)
         const issue = panel.locator("a.explainer-feedback-issue");
-        if ((await issue.count()) > 0)
-          await expect(issue).toHaveAttribute(
-            "href",
-            /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/new\?title=Feedback%3A%20/,
-          );
+        if ((await issue.count()) > 0) {
+          const href = new URL((await issue.getAttribute("href")) ?? "");
+          expect(href.pathname).toMatch(/^\/[^/]+\/[^/]+\/issues\/new$/);
+          expect(href.searchParams.get("title")).toMatch(/^Feedback: /);
+          expect(href.searchParams.get("body")).toBe(t("feedbackIssueBody"));
+          await page.context().route("https://github.com/**", (route) => route.abort());
+          const before = copied.length;
+          const opened = page.context().waitForEvent("page");
+          await issue.click();
+          await (await opened).close();
+          await expect(panel.locator(".explainer-feedback-status")).toHaveText(t("feedbackCopiedForIssue"));
+          expect(copied.slice(before), "copied on opening the issue").toEqual([text]);
+        }
         // one deleted, then all, after the question
         await panel
           .locator(".explainer-feedback-note")
