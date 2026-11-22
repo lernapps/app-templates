@@ -44,17 +44,23 @@ mehr zu sehen.
 
 ## Plan
 ### Tasks
-- [ ] *To be added when this phase becomes active*
 
 ### Completed
-*None yet*
+- [x] Aufgaben für Code festgelegt (siehe unten); Nutzer: „zieh durch bis zum PR“ (autonom, PR ausdrücklich gewünscht)
 
 ## Code
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [x] `open-task.ts`: Block `.explainer-open-yours` (Überschrift `openTaskAnswer`, Text per `textContent`, Foto per
+      Object-URL), sichtbar nur beim Vergleichen; Foto beim Neuaufnehmen aktualisieren
+- [x] `explainer.css`: Stil `.explainer-open-yours` (pre-wrap, Rahmen, Foto-Größe)
+- [x] `e2e.ts` (`checkOpenTask`): Eigene Antwort ist beim Vergleichen sichtbar
+- [x] arc42 `bb-open-tasks`: ein Satz
+- [x] Tests laufen lassen (`vp test`, soweit möglich)
 
-### Completed
-*None yet*
+
+
+Hinweis: `vp test` hat im Container dieselben 27 Dateien / 3 Tests rot wie ohne Änderung (Peer-Abhängigkeiten
+`@lernapps/tooling` und `playwright` fehlen); die e2e-Prüfung konnte hier nicht laufen.
 
 ## Commit
 ### Tasks
