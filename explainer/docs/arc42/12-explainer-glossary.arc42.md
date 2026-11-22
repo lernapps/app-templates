@@ -26,6 +26,18 @@ definition: An explainer exercise in which the learner writes a word, a form or 
 :::
 ```
 
+## Vocabulary Block
+
+The words of a page in two languages, as a vocabulary book shows them (`dec-vocabulary`).
+
+```arc42
+:::glossary-term
+id: term-vocabulary
+title: Vocabulary block
+definition: A block of an explainer page that lists words in the target and the source language as written, each with its language and optional further forms, gender, example, note, false friend and folded tables of its forms; the learner may cover one language to practise, unchecked.
+:::
+```
+
 ## Island
 
 Only a page with a component loads Vue.

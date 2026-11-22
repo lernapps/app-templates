@@ -271,6 +271,9 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
       case "video":
         // the schema checks its id, title and channel; they are YouTube's, in the video's own language
         break;
+      case "vocabulary":
+        checkVocabulary(check, block, at);
+        break;
       default:
         checkExerciseId(check, block.id, at);
         for (const problem of questionDetails(block, texts.languages, undefined, appChecks(check, at))) {
@@ -291,6 +294,34 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
           }
         }
     }
+  });
+}
+
+/**
+ * A vocabulary block: its texts, and the tables of forms of its entries: every row as long as the others and as the
+ * header, so that each form stands in its column. The words themselves are strings in their own language.
+ */
+function checkVocabulary(check: PageCheck, block: BlockOf<"vocabulary">, at: Path): void {
+  const { yaml, texts, problems } = check;
+  texts.check(yaml, [...at, "caption"], "plain");
+  block.entries.forEach((entry, index) => {
+    const here = [...at, "entries", index];
+    if (entry.note !== undefined) texts.check(yaml, [...here, "note"], "markdown");
+    if (entry.falseFriend !== undefined) texts.check(yaml, [...here, "falseFriend"], "markdown");
+    entry.inflection?.forEach((forms, place) => {
+      const table = [...here, "inflection", place];
+      texts.check(yaml, [...table, "caption"], "plain");
+      forms.header?.forEach((_cell, column) => texts.check(yaml, [...table, "header", column], "plain"));
+      const width = forms.header?.length ?? forms.rows[0]?.length ?? 0;
+      forms.rows.forEach((row, line) => {
+        if (row.length !== width)
+          problems.at(
+            yaml,
+            [...table, "rows", line],
+            `this row has ${row.length} cells, the ${forms.header === undefined ? "first row" : "header"} ${width}; give every row as many cells`,
+          );
+      });
+    });
   });
 }
 

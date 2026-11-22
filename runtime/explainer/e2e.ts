@@ -7,9 +7,9 @@
 //
 // Without JavaScript every page as its content says, in every language; previous and next (at desktop width); the
 // app's own components and the checks of its exercise components. explainerRuntimeTests() tests the runtime, the same
-// in every app: the exercises of each type, the videos, the tutor ways, the start page, the self-assessments and what
-// is stored. Only this repo runs it, on the template and its fixtures (explainer/e2e/runtime.e2e.ts, not in the
-// scaffold). What follows is what the two parts check together.
+// in every app: the exercises of each type, the videos, covering a vocabulary block, the tutor ways, the start page,
+// the self-assessments and what is stored. Only this repo runs it, on the template and its fixtures
+// (explainer/e2e/runtime.e2e.ts, not in the scaffold). What follows is what the two parts check together.
 // What they expect comes from the content in src/ (outline.ts), not from the rendered pages. Without JavaScript, for
 // every page in every language: the heading levels follow the nesting (page h1, section h2, subsection h3, a box one
 // below its place), every section heading is visible, the number of <math> elements is the number of formulas in the
@@ -293,6 +293,60 @@ async function expectVideos(page: Page, item: PageOutline): Promise<void> {
     await expect(figure.locator(".explainer-video-controls"), "no button without JavaScript").toBeHidden();
   }
   await expect(page.locator("iframe"), `${item.url}: no player without JavaScript`).toHaveCount(0);
+}
+
+/**
+ * Without JavaScript: each vocabulary block is its whole table, a row per word, the middle column only when it has
+ * one, the tables of forms folded; the buttons to cover a column hidden.
+ */
+async function expectVocabularies(page: Page, item: PageOutline): Promise<void> {
+  if (item.vocabularies.length === 0) return;
+  const blocks = page.locator("main .explainer-vocabulary");
+  await expect(blocks, `${item.url}: one table per vocabulary block`).toHaveCount(item.vocabularies.length);
+  for (const [index, vocabulary] of item.vocabularies.entries()) {
+    const block = blocks.nth(index);
+    await expect(block.locator("tr.explainer-vocabulary-entry"), "a row per word").toHaveCount(vocabulary.entries);
+    await expect(block.locator(".explainer-vocabulary-scroll > table > thead th"), "the columns").toHaveCount(
+      vocabulary.middle ? 3 : 2,
+    );
+    await expect(block.locator("details.explainer-vocabulary-forms"), "the forms, folded").toHaveCount(
+      vocabulary.forms,
+    );
+    await expect(block.locator("details.explainer-vocabulary-forms[open]")).toHaveCount(0);
+    await expect(block.locator(".explainer-vocabulary-tools"), "no buttons without JavaScript").toBeHidden();
+  }
+}
+
+/**
+ * With JavaScript: the first vocabulary block of a page covers the words of one language and uncovers each on its
+ * own, switches to the other language, and uncovers all when its button is pressed again.
+ */
+async function checkVocabulary(page: Page, item: PageOutline): Promise<void> {
+  const [first] = item.vocabularies;
+  if (first === undefined) return;
+  await page.goto(`./${item.url}`);
+  const block = page.locator("main .explainer-vocabulary").first();
+  const target = block.locator('.explainer-vocabulary-cover[data-side="target"]');
+  const source = block.locator('.explainer-vocabulary-cover[data-side="source"]');
+  const reveals = block.locator(".explainer-vocabulary-reveal");
+  await expect(target, "the buttons show").toBeVisible();
+  await target.click();
+  await expect(target).toHaveAttribute("aria-pressed", "true");
+  await expect(reveals, "a button per covered word").toHaveCount(first.entries);
+  const word = block.locator('[data-side="target"][data-row="1"] .explainer-vocabulary-word');
+  await expect(word, "the word is covered").toBeHidden();
+  await reveals.first().click();
+  await expect(word, "uncovered on its own").toBeVisible();
+  await expect(reveals).toHaveCount(first.entries - 1);
+  await source.click();
+  await expect(source).toHaveAttribute("aria-pressed", "true");
+  await expect(target).toHaveAttribute("aria-pressed", "false");
+  await expect(word, "the other language covered instead").toBeVisible();
+  await expect(block.locator('[data-side="source"][data-row="1"] > span'), "its words are covered").toBeHidden();
+  await expect(reveals).toHaveCount(first.entries);
+  await source.click();
+  await expect(source).toHaveAttribute("aria-pressed", "false");
+  await expect(reveals, "pressed again, every word shows").toHaveCount(0);
 }
 
 /** Whether `url` is of YouTube or Google: a player, a thumbnail, a script or a beacon of theirs. */
@@ -1203,6 +1257,7 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
               await expectExercises(page, item);
               await expectNojs(page, item);
               await expectVideos(page, item);
+              await expectVocabularies(page, item);
             });
           }
 
@@ -1351,6 +1406,13 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
             baseURL,
           }) => {
             await checkVideos(page, item, new URL(baseURL ?? page.url()).origin);
+          });
+        }
+      if (!content)
+        for (const item of app.pages["de"] ?? []) {
+          if (item.vocabularies.length === 0) continue;
+          test(`${item.url}: a vocabulary block covers a language and uncovers each word`, async ({ page }) => {
+            await checkVocabulary(page, item);
           });
         }
       if (content)

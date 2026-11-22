@@ -130,6 +130,23 @@ blocks:
             youtube: rkLmLaFHodo
             title: einstufiger Zufallsversuch | Wahrscheinlichkeitsrechnung - einfach erklärt
             channel: Lehrerschmidt
+          - type: vocabulary
+            caption: { de: "Lektion 3", en: "Lesson 3" }
+            languages: { source: de, target: la }
+            entries:
+              - target: rex
+                source: der König
+                gender: m
+                forms: [regis]
+                inflection:
+                  - caption: { de: "Deklination", en: "Declension" }
+                    header: [{ de: Kasus, en: Case }, { de: Singular, en: singular }, { de: Plural, en: plural }]
+                    rows:
+                      - [Nominativ, rex, "reg**es**"]
+                      - [Genitiv, "reg**is**", "reg**um**"]
+              - target: magnus
+                source: groß
+                forms: ["-a", "-um"]
   - type: section
     id: uebung
     title: { de: "Übung", en: "Exercise" }

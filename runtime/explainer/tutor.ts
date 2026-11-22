@@ -28,6 +28,7 @@ import { message } from "./messages.ts";
 import { kindOf } from "./generated/comparator.ts";
 import { type Generated } from "./generated/types.ts";
 import { allBlocks } from "./routes.ts";
+import { vocabularyLines } from "./vocabulary.ts";
 import { videoLine } from "./video.ts";
 
 interface Words {
@@ -53,6 +54,8 @@ interface Words {
   labels: string;
   interactive: string;
   video: string;
+  /** A vocabulary block: its words, and the parts of an entry. */
+  vocabulary: { vocabulary: string; example: string; note: string; falseFriend: string };
   exerciseHere: string;
   /** An open task: its points, the model answer, the ways to answer, how to help. */
   points: string;
@@ -96,6 +99,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     labels: "Beschriftungen",
     interactive: "Interaktiv",
     video: "Video",
+    vocabulary: { vocabulary: "Vokabeln", example: "Beispiel", note: "Hinweis", falseFriend: "Falscher Freund" },
     exerciseHere: "Aufgabe `{id}` (unten)",
     points: "Eine gute Antwort enthält (P1, P2 … wie die App sie nennt)",
     pointContent: "Inhalt",
@@ -163,6 +167,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     labels: "Labels",
     interactive: "Interactive",
     video: "Video",
+    vocabulary: { vocabulary: "Vocabulary", example: "Example", note: "Note", falseFriend: "False friend" },
     exerciseHere: "Exercise `{id}` (below)",
     points: "A good answer has (P1, P2 … as the app names them)",
     pointContent: "content",
@@ -487,6 +492,9 @@ export function contentLines(
           break;
         case "video":
           add(videoLine(block, words.video));
+          break;
+        case "vocabulary":
+          add(...vocabularyLines(block, lang, one, words.vocabulary));
           break;
         case "vue-component": {
           const use = site.components.find((candidate) => candidate.block === block);

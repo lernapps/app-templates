@@ -620,3 +620,30 @@ date: 2026-11-12
 addresses: qg-checkable, qg-understandable
 :::
 ```
+
+## Vocabulary Is a Block of the Page, Shown as Written
+
+Language explainers listed their words in a table, which knows neither the languages of its columns nor what a cell
+holds: a screen reader read French words with a German voice, and the creator wrote a gender as "(f.)" in a cell. A
+block `vocabulary` holds the words of a page in both languages of the page (`languages`, as a language task), each
+entry with optional further forms, a gender, an example, a note, a false friend and tables of its forms. It shows them as
+a vocabulary book does: the target language heading each row, a middle column with example and hint only when an entry
+has one, the source language at the end, every word with its language; tables of forms fold under their word, an ending
+marked by the creator highlighted. The words are shown as written: a noun is written with its article, since no rule
+derives the article in every language (h aspiré in French, el agua in Spanish, der/die/das in German); the gender only
+adds (m), (f) or (n) where the article does not show it (l'eau). Tables of forms are for grammar the learners already
+know. Practising is covering the column of one language and uncovering each word, unchecked and stored nowhere; words to
+write and check are a language task (`dec-language-task`). The block is the content of one page, not the word list of a
+textbook that `dec-language-task` rejected. Not in the first version: audio for each word, the block as material of a
+task, colours for the gender. Rejected: deriving the article from the gender; a part of speech; a table block with a
+language per column, which would read the languages but know no forms.
+
+```arc42
+:::decision
+id: dec-vocabulary
+title: Vocabulary is a block of the page that shows each word as written, with its language and optional forms
+status: accepted
+date: 2026-11-22
+addresses: qg-understandable, qg-accessibility, qg-explainer-readable-without-js
+:::
+```
