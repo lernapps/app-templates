@@ -141,7 +141,7 @@ Fehlerfälle in `explainer-broken.test.ts` (Zeilenlänge).
 - [x] Unit-Tests, Fehlerfälle, E2E (`e2e.ts`)
 - [x] arc42: Entscheidung und Glossar
 - [x] Typprüfung, Lint (`vp check`) und Unit-Tests (`vp test run`, 632) grün
-- [ ] `lernapps check --pre-push` auf Französisch-Beispiel und Fixture `explainer-all-blocks` (E2E)
+- [x] `lernapps check --pre-push` auf Französisch-Beispiel und Fixture `explainer-all-blocks` (E2E) grün
 
 ### Entscheidungen in der Umsetzung
 - Kopf der Formentabelle als `text` (Map je App-Sprache), Zellen als Strings; die erste Zelle heißt die Zeile.
@@ -157,10 +157,13 @@ Fehlerfälle in `explainer-broken.test.ts` (Zeilenlänge).
 
 ## Commit
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [x] Aufräumen: keine Debug-Ausgaben, keine TODOs
+- [x] Doku geprüft: arc42 (`dec-vocabulary`, Glossar, Seiten-Rendering) beschreibt den Endstand; README unverändert (Owner)
+- [x] Tests nach dem Aufräumen grün (632 Unit-Tests, `vp check`, `lernapps check --pre-push` im Hook)
+- [x] Pull Request anlegen
 
 ### Completed
-*None yet*
+- [x] Feature committet und gepusht
 
 
 
