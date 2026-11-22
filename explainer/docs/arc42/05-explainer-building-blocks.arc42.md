@@ -544,21 +544,11 @@ path: runtime/explainer/video.ts
 
 ### Feedback mode
 
-Built. Teachers and parents note what to improve, block by block, and hand all their notes over as the text of one new
-issue in the app's repository (`dec-explainer-feedback-issue`). The page rendering gives every block of a content page
-but a section a wrapper with its address: its position among the sections and boxes (`regel/3`, `regel/4/1`), an id
-that is the first 8 digits of the SHA-256 of its source (every language, keys sorted: it stays when blocks are added
-before it and changes with the block), its type and its order on the page. The build finds the app's repository and
-commit itself, from GitHub Actions' variables or git; without them the bar has no link to an issue. The ways in are a
-line at the end of each content page, inside its content, and a section on the start page; the bar and that section
-are in `<template>`s, so that without JavaScript no heading is hidden and there is no mode. `?feedback` in the address
-switches the mode on too. While it is on, kept on the device until "Beenden", every block has "Notiz", and the bar
-holds the form, with the text marked in the block as its quote, and the app's notes by page, each with "Zur Stelle"
-and "Löschen"; "Alle löschen …" asks first. "Kopieren" puts the export on the clipboard: Markdown, the pages in the
-app's order, the blocks in the page's, each note with where it is, the block's id, its beginning and the marked text,
-the commit as an unseen comment. "Issue auf GitHub öffnen" copies the same text at once and opens a new issue titled
-"Feedback: <App>", whose body is a comment that says to paste it. A note whose
-block id the page no longer has is marked as changed. Nothing leaves the page but what the person copies.
+Built. Lets teachers and parents note what to improve in an app's content, at the block it concerns, and hand the
+notes over to the creator as one new issue in the app's repository (`dec-explainer-feedback-issue`). It relies on
+the page rendering for an address of each block and on the build for the app's repository, keeps the notes on the
+device and takes its texts from the runtime texts. The client module starts it on every page. Without JavaScript
+there is no mode, and the pages stay complete. Nothing leaves the page but what the person copies.
 
 ```arc42
 :::building-block
@@ -566,7 +556,7 @@ id: bb-feedback-mode
 title: Feedback mode
 parent: bb-archetype-runtime
 path: runtime/explainer/feedback.ts
-technology: TypeScript, DOM, Clipboard API
+technology: TypeScript, DOM
 requires: if-runtime-texts, if-device-storage
 implements: concept-readable-without-js
 :::
@@ -574,13 +564,12 @@ implements: concept-readable-without-js
 
 #### Feedback mode interface
 
-`startFeedback(document)` of `feedback-client.ts`, which the client module calls on every page: it puts the bar and
-the start page's section from their templates into the page and starts the mode where it is on.
+What the client module calls on every page to start the feedback mode where it is on.
 
 ```arc42
 :::interface
 id: if-feedback-mode
-title: startFeedback(document)
+title: Start of the feedback mode
 provider: bb-feedback-mode
 protocol: TypeScript import
 path: runtime/explainer/feedback-client.ts
