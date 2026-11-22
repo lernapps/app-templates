@@ -82,6 +82,13 @@ Manchmal ist es umgekehrt: Du liest Französisch und sagst, was es heißt.
 
 - Aufgabe `formen-bilden` (unten)
 
+Vokabeln (Französisch – Deutsch): Die Wörter zum Vorstellen
+- s'appeler – heißen. Beispiel: Je m'appelle Léa. – Ich heiße Léa.
+- avoir – haben. Beispiel: J'ai douze ans. – Ich bin zwölf Jahre alt.. Hinweis: Dein Alter *hast* du auf Französisch.
+- un an, des ans (m) – ein Jahr
+- être – sein. Beispiel: Je suis de Berlin. – Ich komme aus Berlin.
+  - Präsens: je | suis; tu | es; il / elle | est; nous | sommes; vous | êtes; ils / elles | sont
+
 ### Hören und aufschreiben
 
 Hör genau zu und schreibe auf, was du hörst. Die Stimme ist eine KI-Stimme. Mit den Tasten unter dem Player
