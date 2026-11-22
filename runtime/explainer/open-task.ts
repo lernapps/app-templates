@@ -5,7 +5,8 @@
 // model answer ("Lösung"), which stays shut before the learner's own answer. Ticking makes the learner read each point;
 // the ticks give right (all), partly right (some) or wrong (none) for the result line, at once, without a step of
 // their own. In a self-assessment there is no model answer: the ticks are the
-// answer, read at "Auswerten" of the whole run. The photo is shown from memory (an object URL), never stored or sent.
+// answer, read at "Auswerten" of the whole run. The learner's own answer (text or photo) stays in view above the
+// points while comparing, so that the two can be held against each other. The photo is shown from memory (an object URL), never stored or sent.
 // On a content page the text, the way chosen and the ticks are kept while the tab is open (sessionStorage through
 // @lernapps/tooling/storage, under the app's prefix), so that a reload loses no answer and a new day starts afresh; a
 // self-assessment keeps nothing of its own (each run starts empty).
@@ -116,6 +117,9 @@ export function startOpenTask(
     `<p class="explainer-open-need" aria-live="polite"></p>`,
     `<p class="explainer-open-locked"><small>${t("openTaskLocked")}</small></p>`,
     `</div>`,
+    `<div class="explainer-open-yours" hidden><h4>${t("openTaskAnswer")}</h4>`,
+    `<p class="explainer-open-yours-text"></p>`,
+    `<img class="explainer-open-yours-photo" alt="${t("openTaskPhotoAlt")}" hidden></div>`,
     `<fieldset class="explainer-open-check" hidden><legend>${t("openTaskCheck")}</legend>`,
     `<p>${t("openTaskCheckHow")}</p>`,
     points
@@ -144,6 +148,9 @@ export function startOpenTask(
   const shoot = part<HTMLElement>(".explainer-open-shoot span");
   const need = part<HTMLElement>(".explainer-open-need");
   const check = part<HTMLFieldSetElement>(".explainer-open-check");
+  const yours = part<HTMLElement>(".explainer-open-yours");
+  const yoursText = part<HTMLElement>(".explainer-open-yours-text");
+  const yoursPhoto = part<HTMLImageElement>(".explainer-open-yours-photo");
   const compare = part<HTMLButtonElement>(".explainer-open-compare");
   const change = part<HTMLButtonElement>(".explainer-open-change");
 
@@ -160,6 +167,16 @@ export function startOpenTask(
     if (photoPart) photoPart.hidden = way !== "photo";
     if (write) write.hidden = compared;
     if (check) check.hidden = !compared;
+    // the learner's own answer stays in view while comparing (text as plain text, the photo from memory)
+    if (yours) yours.hidden = !compared;
+    if (yoursText) {
+      yoursText.hidden = way !== "text";
+      yoursText.textContent = text.trim();
+    }
+    if (yoursPhoto) {
+      yoursPhoto.hidden = way !== "photo" || photo === undefined;
+      if (photo !== undefined && yoursPhoto.src !== photo) yoursPhoto.src = photo;
+    }
     if (compare) compare.hidden = compared;
     // the model answer opens with the comparing, after the learner's own answer
     if (solution) solution.hidden = !compared;

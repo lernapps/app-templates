@@ -817,6 +817,10 @@ async function checkOpenTask(
   ).toHaveValue(OPEN_ANSWER);
   await answerOpenTask(item, exercise, exercise.points.length);
   await expect(item.locator("details.explainer-solution"), `${exercise.id}: the Lösung after the answer`).toBeVisible();
+  await expect(
+    item.locator(".explainer-open-yours-text"),
+    `${exercise.id}: the learner's own answer is shown while comparing`,
+  ).toHaveText(OPEN_ANSWER);
   await item.getByRole("button", { name: messageOf("de", "openTaskChange") }).click();
   await expect(item.locator("details.explainer-solution"), `${exercise.id}: no Lösung while writing`).toBeHidden();
   await item.getByRole("button", { name: messageOf("de", "openTaskCompare") }).click();
