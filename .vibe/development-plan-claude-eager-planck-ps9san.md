@@ -15,7 +15,13 @@ Mockup (vom Owner abgestimmt): https://claude.ai/artifact/3msvaRXf86YJ3CYv1qUA6f
 - Kein Pull Request, bis der Owner ihn ausdrücklich verlangt.
 - Block `type: vocabulary` mit `caption`, `languages: { source, target }` (wie `language-task`) und `entries`.
 - Pflichtfelder je Eintrag: `target`, `source`.
-- Optionale Felder: `audio`, `example: { target, source }`, `note`, `falseFriend`, `forms`, `gender`, `inflection`.
+- Optionale Felder: `example: { target, source }`, `note`, `falseFriend`, `forms`, `gender`, `inflection`.
+- Owner: Kein Audio in der ersten Version.
+- Owner: Der Block steht nicht als `material` einer Aufgabe (erste Version).
+- Owner: `gender` wird kurz hinter dem Begriff angezeigt: `(m)`, `(f)`, `(n)`.
+- Owner: Keine Änderung am README.
+- Block nur im Explainer (`explainer.v1.schema.json`), nicht in `shared/blocks`.
+- arc42: neue Entscheidung `dec-vocabulary` (grenzt ab gegen die abgelehnte Wortliste in `dec-language-task`) und ein Glossar-Begriff.
 - `target` wird so angezeigt, wie es geschrieben ist. Bei Nomen steht der Artikel im Begriff (`le pain`). Nichts wird aus Regeln erzeugt.
 - `gender` (m, f, n) kommt ins Schema. Die Beschreibung im Schema sagt: Bei Nomen trotzdem den Artikel zum Begriff schreiben.
 - Keine Farben, keine Legende, keine Wortart (`pos`).
@@ -25,14 +31,13 @@ Mockup (vom Owner abgestimmt): https://claude.ai/artifact/3msvaRXf86YJ3CYv1qUA6f
 - Anzeige: Vokabelheft mit drei Spalten (Zielsprache | Beispiel · Hinweis | Ausgangssprache). Die mittlere Spalte fehlt, wenn kein Eintrag
   ein Beispiel oder einen Hinweis hat. Formen klappen unter dem Eintrag auf (`<details>`, ohne JavaScript). Schmal: Karten.
 - Üben: Eine Spalte lässt sich abdecken und je Zelle aufdecken (nur mit JavaScript, ohne Bewertung).
-- `lang`-Attribut an jedem Wort; Knopf zum Anhören, wenn `audio` angegeben ist.
+- `lang`-Attribut an jedem Wort der Zielsprache.
 
 ## Notes
 - Entrance criteria:
   - Plan: Explore abgeschlossen; Einordnung in Plattform-Design und Architektur (arc42) vom Owner bestätigt.
   - Code: Plan vom Owner freigegeben.
   - Commit: Tests, Typprüfung und Build der Beispiele laufen grün.
-- Offen: Wie `gender` angezeigt wird (z. B. als ausgeschriebenes Wort „weiblich“ hinter dem Begriff).
 
 ## Explore
 ### Befunde (Architektur)
@@ -59,19 +64,19 @@ Mockup (vom Owner abgestimmt): https://claude.ai/artifact/3msvaRXf86YJ3CYv1qUA6f
 
 ### Vorschlag zur Einordnung (zur Abstimmung)
 - Neuer Block nur im Explainer (`explainer.v1.schema.json`), nicht in `shared/blocks`: Quiz und interaktive Apps brauchen ihn nicht.
-- Neue Entscheidung `dec-vocabulary` (arc42 Kap. 9), Glossar-Begriff, README; Hinweis an den Skill `lernapps-explainer` (lernapps/tooling).
+- Neue Entscheidung `dec-vocabulary` (arc42 Kap. 9), Glossar-Begriff (README nicht, Owner); Hinweis an den Skill `lernapps-explainer` (lernapps/tooling).
 - Kein eigener Baustein in Kap. 5: Der Block ist Teil von Seiten-Rendering und Validierung.
 
-### Offene Fragen an den Owner
-- Audio je Wort: kleiner Knopf (braucht JavaScript) mit Link zur MP3 ohne JavaScript, „KI“ einmal je Block? Oder der Player des Browsers je Zeile?
-- Darf der Block auch als `material` einer Aufgabe stehen? (Vorschlag: nein, erste Version nicht.)
-- Anzeige von `gender` (Vorschlag: ausgeschriebenes Wort hinter dem Begriff, z. B. „weiblich“).
+### Offene Fragen an den Owner (geklärt)
+- Audio: erst einmal weglassen. Damit entfällt die Medienübersicht (`media.ts`).
+- Als `material` einer Aufgabe: erst einmal nicht.
+- `gender`: Anzeige `(m)`, `(f)`, `(n)` hinter dem Begriff.
 
 ### Tasks
 - [x] Plattform-Design und Architektur einordnen (arc42 des Explainers; Skills nicht verfügbar)
 - [x] Code lesen: Block-Schemas, `table`-Rendering, `language-task`, Audio, Tutor-Seite, Validierung
 - [x] Prüfen, ob der Block in `blocks` (gemeinsam) oder nur im Explainer liegt
-- [ ] Einordnung und offene Punkte mit dem Owner klären
+- [x] Einordnung und offene Punkte mit dem Owner klären
 - [ ] Phasenwechsel zu Plan vom Owner bestätigen lassen
 
 ### Completed
