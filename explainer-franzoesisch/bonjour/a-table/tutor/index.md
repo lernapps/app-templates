@@ -54,6 +54,12 @@ Apfel.
 Hier geht es um *das* Brot auf dem Tisch. Wie du sagst, dass du *etwas* Brot isst (*du pain*), steht auf der
 Lernlandkarte beim [Teilungsartikel](https://lernapps.net/apps/map/franzoesisch/c/teilungsartikel/).
 
+Vokabeln (Französisch – Deutsch): Die Wörter auf dem Tisch
+- le pain (m) – das Brot. Beispiel: Le pain est bon. – Das Brot ist gut.
+- la pomme (f) – der Apfel. Beispiel: La pomme est rouge. – Der Apfel ist rot.. Hinweis: Ein anderes Geschlecht als im Deutschen: *la* pomme, aber *der* Apfel.
+- le fromage (m) – der Käse
+- l'eau (f) – das Wasser. Hinweis: Vor einem Vokal wird *la* zu *l'*. Das Wort ist weiblich.
+
 - Aufgabe `tisch-beschriften` (unten)
 
 ### le, la oder l'?
