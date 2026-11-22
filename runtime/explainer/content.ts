@@ -181,6 +181,10 @@ export interface Site {
   components: readonly ComponentUse[];
   /** The app's name for what it keeps on the device (its package.json name; @lernapps/tooling/storage). */
   storage?: string;
+  /** The app's repository on GitHub, `owner/repo`, when the build found it (repository.ts): the feedback mode's issue. */
+  repository?: string;
+  /** The commit the build is of, 7 digits, when the build found it: named, unseen, in the feedback mode's export. */
+  revision?: string;
 }
 
 // What the build reads of a component (components.ts). Declared here, not there: the client module reaches this file,

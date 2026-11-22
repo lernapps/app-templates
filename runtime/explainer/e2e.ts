@@ -50,7 +50,10 @@
 // answer says each page asked is to be read, stays on the device across a reload (the offer then names the last
 // result), takes the result to the tutor in the address of its tutor page, which answers, and goes on "Ergebnis
 // löschen". Opened by a tutor (via=tutor), a run keeps nothing, and its own "Zurück zum Tutor" copies the result with
-// the tutor page; a copy for a running chat keeps the tab open, its button says "✓ Kopiert", and a line below it where to paste. No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
+// the tutor page; a copy for a running chat keeps the tab open, its button says "✓ Kopiert", and a line below it where to paste. The feedback mode, at desktop width: switched on at the end of a page, by ?feedback or on the start
+// page, it opens on its help, keeps notes with the marked text across pages and a reload, copies them in the app's
+// order, marks a note whose block changed, deletes one and all after a question, and leaves nothing once ended.
+// No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
 import {
@@ -70,6 +73,7 @@ import { fill, plainText, taskText } from "./generated/texts.ts";
 import { generate } from "./generated/values.ts";
 import { taskSeeds } from "./exercises.ts";
 import { message as messageOf } from "./messages.ts";
+import { SELECTION_LENGTH, shorten } from "./feedback.ts";
 import { ASSESSMENT_TASK_EVENT, nextTaskNumber, taskNumber } from "./tasks.ts";
 import {
   outline,
@@ -1869,6 +1873,145 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
           expect(await storedKeys(page)).toEqual([]);
         });
       }
+    });
+
+    test.describe("the feedback mode", () => {
+      const [first, second] = app.pages["de"] ?? [];
+      const notesOf = (page: Page) =>
+        page.evaluate(() => {
+          const key = Object.keys(localStorage).find((name) => name.endsWith(":feedback-notes"));
+          return key === undefined ? [] : (JSON.parse(localStorage.getItem(key) ?? "[]") as { text: string }[]);
+        });
+      const t = (key: Parameters<typeof messageOf>[1], params?: Record<string, string>) => messageOf("de", key, params);
+
+      test("switched on at the end of a page, notes on two pages, kept, copied in the app's order, deleted, ended", async ({
+        page,
+      }) => {
+        desktopOnly(page);
+        test.skip(first === undefined || second === undefined, "needs two content pages");
+        if (first === undefined || second === undefined) return;
+        const copied = await recordClipboard(page);
+        await page.goto(`./${first.url}`);
+        const panel = page.locator("aside.explainer-feedback");
+        await expect(panel).toBeHidden();
+        expect(await page.evaluate(() => Object.keys(localStorage)), "nothing before the switch").toEqual([]);
+        // the way in, at the end of the page's content; the first time, the bar opens on its help
+        await page.locator("main .explainer-feedback-invite button").click();
+        await expect(panel).toBeVisible();
+        await expect(panel.locator(".explainer-feedback-help")).toBeVisible();
+        await panel.getByRole("button", { name: t("feedbackHelpDone"), exact: true }).click();
+        await expect(panel.locator(".explainer-feedback-help")).toBeHidden();
+        // a note on the first text block, with the text marked in it as its quote
+        const block = page.locator('main .explainer-block[data-block-type="text"]').first();
+        const marked = await block.evaluate((element) => {
+          const paragraph = element.querySelector("p") ?? element;
+          const range = document.createRange();
+          range.selectNodeContents(paragraph);
+          const selection = document.getSelection();
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+          return selection?.toString().replace(/\s+/g, " ").trim() ?? "";
+        });
+        expect(marked, "the block has text to mark").not.toBe("");
+        await block.hover();
+        await block.locator(":scope > .explainer-feedback-add").click();
+        const form = panel.locator("form.explainer-feedback-form");
+        await expect(form).toBeVisible();
+        await expect(form.locator(".explainer-feedback-quote")).toContainText(marked.slice(0, 40));
+        await form.getByLabel(t("feedbackYourNote")).fill("Erste Notiz");
+        await form.getByRole("button", { name: t("feedbackSave"), exact: true }).click();
+        await expect(form).toBeHidden();
+        await expect(panel.locator(".explainer-feedback-note")).toHaveCount(1);
+        await expect(block.locator(":scope > .explainer-feedback-add .explainer-feedback-badge")).toHaveText("1");
+        // on the next page the mode is still on, and the note is listed
+        await page.goto(`./${second.url}`);
+        await expect(panel).toBeVisible();
+        await expect(panel.locator(".explainer-feedback-help")).toBeHidden();
+        await expect(panel.locator(".explainer-feedback-note")).toHaveCount(1);
+        const other = page.locator("main .explainer-block").first();
+        await other.hover();
+        await other.locator(":scope > .explainer-feedback-add").click();
+        await expect(form.locator(".explainer-feedback-quote")).toBeHidden();
+        await form.getByLabel(t("feedbackYourNote")).fill("Zweite Notiz");
+        await form.getByRole("button", { name: t("feedbackSave"), exact: true }).click();
+        await page.reload();
+        await expect(panel.locator(".explainer-feedback-note")).toHaveCount(2);
+        // copied: the first page before the second, the marked text quoted, then the note
+        await panel.getByRole("button", { name: t("feedbackCopy"), exact: true }).click();
+        await expect(panel.locator(".explainer-feedback-status")).not.toBeEmpty();
+        const text = copied.at(-1) ?? "";
+        expect(text).toContain(t("feedbackCount", { count: "2" }));
+        expect(text.indexOf(`### ${first.title}`), "the first page first").toBeGreaterThan(-1);
+        expect(text.indexOf(`### ${first.title}`)).toBeLessThan(text.indexOf(`### ${second.title}`));
+        expect(text).toContain(`> ${t("feedbackMarked", { text: shorten(marked, SELECTION_LENGTH) })}`);
+        expect(text.indexOf("Erste Notiz")).toBeLessThan(text.indexOf("Zweite Notiz"));
+        // the link to a new issue, where the build found the repository
+        const issue = panel.locator("a.explainer-feedback-issue");
+        if ((await issue.count()) > 0)
+          await expect(issue).toHaveAttribute(
+            "href",
+            /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/new\?title=Feedback%3A%20/,
+          );
+        // one deleted, then all, after the question
+        await panel
+          .locator(".explainer-feedback-note")
+          .first()
+          .getByRole("button", { name: t("feedbackDelete") })
+          .click();
+        await expect(panel.locator(".explainer-feedback-note")).toHaveCount(1);
+        page.once("dialog", (dialog) => void dialog.accept());
+        await panel.getByRole("button", { name: t("feedbackDeleteAll"), exact: true }).click();
+        await expect(panel.locator(".explainer-feedback-note")).toHaveCount(0);
+        expect(await notesOf(page)).toEqual([]);
+        // ended: the bar and the buttons go, and nothing stays on the device
+        await panel.getByRole("button", { name: t("feedbackOff"), exact: true }).click();
+        await expect(panel).toBeHidden();
+        await expect(page.locator(".explainer-feedback-add")).toHaveCount(0);
+        expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+      });
+
+      test("?feedback switches it on; a note whose block changed is marked so", async ({ page }) => {
+        desktopOnly(page);
+        if (first === undefined) return;
+        await page.goto(`./${first.url}?feedback`);
+        const panel = page.locator("aside.explainer-feedback");
+        await expect(panel).toBeVisible();
+        expect(new URL(page.url()).searchParams.has("feedback"), "the address without the parameter").toBe(false);
+        await page.evaluate(() => {
+          const key = Object.keys(localStorage).find((name) => name.endsWith(":feedback"));
+          if (key === undefined) throw new Error("the mode's state is not kept");
+          const notes = [
+            {
+              id: "x",
+              created: "2026-01-01T00:00:00.000Z",
+              lang: "de",
+              url: `${location.origin}${location.pathname}`,
+              page: document.title,
+              pageOrder: 0,
+              position: "1",
+              blockId: "00000000",
+              blockType: "text",
+              blockOrder: 1,
+              excerpt: "",
+              text: "Zu einem alten Stand",
+            },
+          ];
+          localStorage.setItem(key.replace(/:feedback$/, ":feedback-notes"), JSON.stringify(notes));
+        });
+        await page.reload();
+        await expect(panel.locator(".explainer-feedback-note[data-changed] .explainer-feedback-changed")).toHaveText(
+          t("feedbackChanged"),
+        );
+      });
+
+      test("the start page offers it to teachers and parents", async ({ page }) => {
+        desktopOnly(page);
+        await page.goto("./");
+        const about = page.locator("main .explainer-feedback-about");
+        await expect(about.getByRole("heading", { name: t("feedbackStartTitle") })).toBeVisible();
+        await about.getByRole("button", { name: t("feedbackStartOn") }).click();
+        await expect(page.locator("aside.explainer-feedback")).toBeVisible();
+      });
     });
 
     test("nothing is stored on the device", async ({ page, context }) => {

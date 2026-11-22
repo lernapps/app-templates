@@ -25,6 +25,7 @@ import {
   type Descriptions,
 } from "./content.ts";
 import { renderExercise } from "./exercises.ts";
+import { blockId, blockPosition } from "./block-id.ts";
 import { isSizeless } from "../shared/blocks/image.ts";
 import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
 import { localeOf } from "../shared/languages.ts";
@@ -72,6 +73,8 @@ class Context {
   readonly material: MaterialContext;
   /** Whether a component was rendered. */
   hasIslands = false;
+  /** The blocks of the page wrapped so far, for the order of the next (renderBlocks). */
+  blockOrder = 0;
   constructor(site: Site, route: Route, islands: Islands, descriptions: Descriptions) {
     this.site = site;
     this.route = route;
@@ -172,19 +175,45 @@ function renderEvents(context: Context, events: readonly Event[]): string {
   return `<ol class="explainer-timeline">${items.join("")}</ol>`;
 }
 
-/** The blocks, at heading level `level` (the level of the heading they are under: 1 for the page). */
-function renderBlocks(context: Context, blocks: readonly Block[], level: number, anchor: string[] = []): string {
-  return blocks.map((block) => renderBlock(context, block, level, anchor)).join("\n");
+/**
+ * The blocks, at heading level `level` (the level of the heading they are under: 1 for the page), in the sections
+ * `anchor`. Every block but a section is in a wrapper with its address for the feedback mode (block-id.ts): its
+ * position under `at` (the sections and the places of the boxes it is in), its id, its type and its order on the page.
+ */
+function renderBlocks(
+  context: Context,
+  blocks: readonly Block[],
+  level: number,
+  anchor: string[] = [],
+  at: readonly (string | number)[] = anchor,
+): string {
+  let place = 0;
+  return blocks
+    .map((block) => {
+      if (block.type === "section") return renderBlock(context, block, level, anchor, at);
+      place += 1;
+      const position = blockPosition(at, place);
+      const order = ++context.blockOrder;
+      const attributes = `data-block="${position}" data-block-id="${blockId(block)}" data-block-type="${block.type}" data-block-order="${order}"`;
+      return `<div class="explainer-block" ${attributes}>\n${renderBlock(context, block, level, anchor, [...at, place])}\n</div>`;
+    })
+    .join("\n");
 }
 
-function renderBlock(context: Context, block: Block, level: number, anchor: string[]): string {
+function renderBlock(
+  context: Context,
+  block: Block,
+  level: number,
+  anchor: string[],
+  at: readonly (string | number)[],
+): string {
   switch (block.type) {
     case "section": {
       const id = [...anchor, block.id];
       return [
         `<section class="explainer-section">`,
         `<h${level + 1} id="${id.join("/")}">${context.text(block.title)}</h${level + 1}>`,
-        renderBlocks(context, block.blocks, level + 1, id),
+        renderBlocks(context, block.blocks, level + 1, id, [...at, block.id]),
         `</section>`,
       ].join("\n");
     }
@@ -193,7 +222,7 @@ function renderBlock(context: Context, block: Block, level: number, anchor: stri
       return [
         `<div class="explainer-box explainer-${block.type}">`,
         `<h${level + 1} class="explainer-box-title">${context.text(block.title)}</h${level + 1}>`,
-        renderBlocks(context, block.blocks, level + 1, anchor),
+        renderBlocks(context, block.blocks, level + 1, anchor, at),
         `</div>`,
       ].join("\n");
     case "text":
@@ -452,6 +481,7 @@ function main(context: Context): string {
         glossary,
         media,
         tutorAbout(context),
+        feedbackAbout(context),
         sources,
       ]
         .filter((part) => part !== "")
@@ -503,6 +533,7 @@ function main(context: Context): string {
         page.recap === undefined ? "" : recapNotice(context, page.recap),
         pageContents(context, page.blocks),
         renderBlocks(context, page.blocks, 1),
+        feedbackInvite(context),
       ].join("\n");
     }
   }
@@ -748,6 +779,112 @@ function tutorSection(context: Context): string {
     .join("\n");
 }
 
+/**
+ * The way into the feedback mode at the end of a content page, inside its content, so that it is clearly about this
+ * app (the footer is the platform's): "Fehler gefunden oder eine Idee für diese App? Feedback zu „<App>“ geben".
+ * Hidden until the client module runs (feedback-client.ts): the mode needs JavaScript.
+ */
+function feedbackInvite(context: Context): string {
+  const app = inLanguage(context.site.app.title, context.lang);
+  return [
+    `<p class="explainer-feedback-invite" hidden>`,
+    `<span>${plain(context.t("feedbackInvite"))}</span> `,
+    `<button type="button" class="explainer-feedback-switch">${plain(context.t("feedbackSwitch", { app }))}</button>`,
+    `</p>`,
+  ].join("");
+}
+
+/**
+ * The start page's section on the feedback mode, for teachers and parents: in a <template>, which the client module
+ * puts into the page (the mode needs JavaScript, and a page shows no heading that is hidden without it).
+ */
+function feedbackAbout(context: Context): string {
+  return [
+    `<template class="explainer-feedback-about-template">`,
+    `<section class="explainer-feedback-about" aria-labelledby="verbesserungen">`,
+    `<h2 id="verbesserungen">${plain(context.t("feedbackStartTitle"))}</h2>`,
+    `<p>${plain(context.t("feedbackStartText"))}</p>`,
+    `<p class="explainer-feedback-about-privacy">${plain(context.t("feedbackStartPrivacy"))}</p>`,
+    `<p><button type="button" class="explainer-feedback-switch explainer-feedback-start">${FEEDBACK_ICON}${plain(context.t("feedbackStartOn"))}</button></p>`,
+    `</section>`,
+    `</template>`,
+  ].join("\n");
+}
+
+const FEEDBACK_ICON =
+  '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+const COLLAPSE_ICON =
+  '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+
+/** What the client module needs of the page for the feedback mode (feedback-client.ts, FeedbackData). */
+function feedbackData(context: Context): Record<string, unknown> {
+  const { site, route, lang } = context;
+  const page = route.page;
+  const order = page === undefined ? -1 : contentPages(site).indexOf(page);
+  return {
+    storage: site.storage ?? "explainer",
+    app: inLanguage(site.app.title, lang).replace(/\s+/g, " ").trim(),
+    root: context.to(""),
+    ...(site.repository === undefined ? {} : { repository: site.repository }),
+    ...(site.revision === undefined ? {} : { revision: site.revision }),
+    ...(page === undefined ? {} : { page: { title: route.title, order } }),
+  };
+}
+
+/**
+ * The bar of the feedback mode, on every page, in a <template> that the client module puts into the page, hidden until
+ * the mode is on (feedback-client.ts): its help, the form of a note, the notes of the app with copying and the link to
+ * a new issue, deleting, and "Beenden". The client module fills the notes; the page's data for it is in a script in it.
+ */
+function feedbackPanel(context: Context): string {
+  const t = (key: keyof Messages) => plain(context.t(key));
+  const issue =
+    context.site.repository === undefined
+      ? ""
+      : `<a class="explainer-feedback-issue" href="#" target="_blank" rel="noopener">${t("feedbackIssue")}</a>`;
+  return [
+    `<template class="explainer-feedback-template">`,
+    `<aside class="explainer-feedback" aria-labelledby="feedback-titel" hidden>`,
+    `<div class="explainer-feedback-head">`,
+    `<h2 id="feedback-titel">${t("feedbackPanel")}</h2>`,
+    `<button type="button" class="explainer-feedback-help-open" aria-expanded="false" aria-controls="feedback-hilfe">${t("feedbackHelpOpen")}</button>`,
+    `<button type="button" class="explainer-feedback-collapse" aria-expanded="true" aria-controls="feedback-inhalt" aria-label="${t("feedbackCollapse")}" title="${t("feedbackCollapse")}">${COLLAPSE_ICON}</button>`,
+    `</div>`,
+    `<button type="button" class="explainer-feedback-expand" hidden>${FEEDBACK_ICON}<span>${t("feedbackExpand")}</span></button>`,
+    `<div class="explainer-feedback-body" id="feedback-inhalt">`,
+    `<section class="explainer-feedback-help" id="feedback-hilfe" aria-labelledby="feedback-hilfe-titel" hidden>`,
+    `<h3 id="feedback-hilfe-titel">${t("feedbackHelpTitle")}</h3>`,
+    `<ol><li>${t("feedbackHelpStep1")}</li><li>${t("feedbackHelpStep2")}</li><li>${t("feedbackHelpStep3")}</li></ol>`,
+    `<p class="explainer-feedback-privacy">${t("feedbackHelpPrivacy")}</p>`,
+    `<p><button type="button" class="explainer-feedback-help-done">${t("feedbackHelpDone")}</button></p>`,
+    `</section>`,
+    `<form class="explainer-feedback-form" hidden>`,
+    `<p class="explainer-feedback-new">${t("feedbackNew")}</p>`,
+    `<p class="explainer-feedback-where"></p>`,
+    `<blockquote class="explainer-feedback-quote" hidden></blockquote>`,
+    `<label for="feedback-text">${t("feedbackYourNote")}</label>`,
+    `<textarea id="feedback-text" class="explainer-feedback-text" rows="5" required></textarea>`,
+    `<p class="explainer-feedback-buttons"><button type="submit" class="explainer-feedback-save">${t("feedbackSave")}</button> <button type="button" class="explainer-feedback-cancel">${t("feedbackCancel")}</button></p>`,
+    `</form>`,
+    `<p class="explainer-feedback-status" role="status" aria-live="polite"></p>`,
+    `<section class="explainer-feedback-notes" aria-labelledby="feedback-notizen">`,
+    `<h3 id="feedback-notizen" class="explainer-feedback-count"></h3>`,
+    `<p class="explainer-feedback-actions"><button type="button" class="explainer-feedback-copy">${t("feedbackCopy")}</button> ${issue}</p>`,
+    `<textarea class="explainer-feedback-export" readonly rows="6" aria-label="${t("feedbackExportLabel")}" hidden></textarea>`,
+    `<div class="explainer-feedback-list"></div>`,
+    `</section>`,
+    `</div>`,
+    `<div class="explainer-feedback-foot">`,
+    `<button type="button" class="explainer-feedback-delete-all">${t("feedbackDeleteAll")}</button>`,
+    `<span class="explainer-feedback-local">${t("feedbackLocal")}</span>`,
+    `<button type="button" class="explainer-feedback-off">${t("feedbackOff")}</button>`,
+    `</div>`,
+    `<script type="application/json" class="explainer-feedback-data">${json(feedbackData(context))}</script>`,
+    `</aside>`,
+    `</template>`,
+  ].join("\n");
+}
+
 function head(context: Context): string {
   const { route, site } = context;
   const app = inLanguage(site.app.title, context.lang);
@@ -789,6 +926,7 @@ export function renderPage(
     `<main class="explainer" id="inhalt-der-seite">`,
     main(context),
     `</main>`,
+    feedbackPanel(context),
     pager(context),
     footer(context),
   ]

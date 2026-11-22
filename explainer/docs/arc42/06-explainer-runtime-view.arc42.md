@@ -81,6 +81,25 @@ involves: bb-render, bb-shell, bb-video, bb-runtime-texts, bb-tooling
 :::
 ```
 
+## Giving feedback
+
+A teacher reads the app and chooses "Feedback zu „<App>“ geben" at the end of a page, or the button on the start page,
+or opens a link with `?feedback`. The bar opens on its help the first time; the mode stays on for the app, on the
+device. On a block, "Notiz" opens the form with the place and, if the teacher marked text in the block before, that
+text as a quote; "Speichern" keeps the note on the device. On every page of the app the bar lists all notes by page.
+"Kopieren" puts them on the clipboard as Markdown, "Issue auf GitHub öffnen" opens a new issue with the title
+"Feedback: <App>" in the app's repository, where the teacher pastes the text with their own GitHub account. "Alle
+löschen …" and "Beenden" clear the device.
+
+```arc42
+:::runtime-scenario
+id: scenario-explainer-feedback
+title: Giving feedback on an app as an issue
+trigger: A teacher or parent switches the feedback mode on, notes what to improve and hands the notes over
+involves: bb-render, bb-shell, bb-feedback-mode, bb-runtime-texts, bb-tooling
+:::
+```
+
 ## Doing a self-assessment
 
 The start page, or a chapter's page, offers the self-assessment once the client module runs; it names the last result

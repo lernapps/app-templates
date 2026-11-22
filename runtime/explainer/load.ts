@@ -35,6 +35,7 @@ import { allBlocks } from "./routes.ts";
 import { ASSESSMENT, drawsTasks, exerciseOf, parseRef } from "./assessment.ts";
 import { formatOf, SCHEMA_FILES, validate, type Format } from "./schema.ts";
 import { appName } from "../shared/appname.ts";
+import { repositoryOf, revisionOf } from "../shared/repository.ts";
 import { readAudio } from "../shared/audio.ts";
 import { isObject, Problems, readYaml, Texts, type Path, type YamlFile } from "../shared/content.ts";
 import { isLanguage, LANGUAGES, languageListProblems } from "../shared/languages.ts";
@@ -527,11 +528,17 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       audio,
       components: uses,
       storage: appName(root, "explainer"),
+      ...found("repository", repositoryOf(root)),
+      ...found("revision", revisionOf(root)),
     },
     problems: [],
     format,
   };
 }
+
+/** `{ [key]: value }`, or nothing when the build did not find the value. */
+const found = <K extends string>(key: K, value: string | undefined): Partial<Record<K, string>> =>
+  value === undefined ? {} : ({ [key]: value } as Record<K, string>);
 
 /**
  * The content in `root`/src, its generated exercises tested over `seeds` seeds (0: not at all, for a reader of content
