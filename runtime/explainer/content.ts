@@ -101,12 +101,39 @@ export interface Event {
   text?: Text;
 }
 
+/** A table of forms of a word of a vocabulary block: a conjugation, a declension (vocabulary.ts). */
+export interface VocabularyForms {
+  caption: Text;
+  header?: readonly Text[];
+  /** Its rows as written; the first cell heads the row, **…** marks an ending. */
+  rows: readonly (readonly string[])[];
+}
+
+/** A word of a vocabulary block, in the target and the source language, shown as written (vocabulary.ts). */
+export interface VocabularyEntry {
+  target: string;
+  source: string;
+  gender?: "m" | "f" | "n";
+  forms?: readonly string[];
+  example?: { target: string; source: string };
+  note?: Text;
+  falseFriend?: Text;
+  inflection?: readonly VocabularyForms[];
+}
+
 export type Block =
   | MaterialBlock<Text>
   | { type: "timeline"; events?: readonly Event[]; data?: string }
   | { type: "definition"; term: Text; explanation: Text }
   /** A YouTube video behind two clicks (video.ts): its id, and its title and channel as YouTube names them. */
   | { type: "video"; youtube: string; title: string; channel: string }
+  /** Words to learn as a vocabulary book shows them (vocabulary.ts). */
+  | {
+      type: "vocabulary";
+      caption: Text;
+      languages: { source: string; target: string };
+      entries: readonly VocabularyEntry[];
+    }
   | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
   | { type: "section"; id: string; title: Text; blocks: readonly Block[] }
   | {

@@ -77,22 +77,80 @@ Mockup (vom Owner abgestimmt): https://claude.ai/artifact/3msvaRXf86YJ3CYv1qUA6f
 - [x] Code lesen: Block-Schemas, `table`-Rendering, `language-task`, Audio, Tutor-Seite, Validierung
 - [x] Prüfen, ob der Block in `blocks` (gemeinsam) oder nur im Explainer liegt
 - [x] Einordnung und offene Punkte mit dem Owner klären
-- [ ] Phasenwechsel zu Plan vom Owner bestätigen lassen
+- [x] Phasenwechsel zu Plan: Owner arbeitet autonom bis zum PR („zieh durch bis zum pr“)
 
 ### Completed
 - [x] Created development plan file
 - [x] Anforderungen mit Mockup geklärt (siehe Key Decisions)
 
 ## Plan
+### Umsetzungsstrategie
+Vorbild ist der Video-Block: ein eigenes Modul `runtime/explainer/vocabulary.ts` mit Rendering (Build), Zeilen für die
+Tutor-Seite und dem Client-Teil (Abdecken). Die übrigen Module bekommen je einen `case "vocabulary"`.
+
+**Schema (`explainer.v1.schema.json`, `$defs/vocabulary`)**
+- Pflicht: `caption` (text), `languages` (wie `language-task`), `entries` (1 bis 50).
+- Eintrag (`vocabularyEntry`, `additionalProperties: false`): Pflicht `target`, `source` (Strings in ihrer Sprache).
+  Optional `gender` (m, f, n), `forms` (Strings), `example` ({ target, source }), `note` und `falseFriend` (markdown),
+  `inflection` (1 bis 4 Tabellen: `caption` text, `header` Liste von text, `rows` Liste von Zeilen aus Strings mit `**…**`).
+- Beschreibungen: Artikel bei Nomen in `target` schreiben, auch mit `gender`; `inflection` nur, wenn die Grammatik bekannt ist.
+
+**HTML (Build, ohne JavaScript vollständig)**
+- `<div class="explainer-vocabulary">` mit Werkzeugleiste (`hidden`, Client zeigt sie) und einer Tabelle in einem Scroll-Container.
+- `<caption>`; Kopf: Name der Zielsprache, (Beispiel · Hinweis), Name der Ausgangssprache (`languageName`).
+- Zeile: `<th scope="row" data-side="target" lang>` Begriff, Formen, `(m)`; Mitte: Beispiel (kursiv, `lang`), Übersetzung,
+  Hinweis, „Falscher Freund:“; rechts `<td data-side="source" lang>`.
+- Die mittlere Spalte nur, wenn ein Eintrag Beispiel, Hinweis oder falschen Freund hat.
+- Formen: eigene Zeile darunter, `<details>` mit `<summary>` „<Überschriften>: <Begriff>“, darin kleine Tabellen; erste Zelle
+  jeder Zeile `th scope=row`; `**…**` hervorgehoben (fett, unterstrichen) und ein Satz, was das heißt.
+- Schmal (Container-Query): Karten.
+
+**Client (`startVocabulary`)**: Werkzeugleiste zeigen; „<Sprache> abdecken“ (`aria-pressed`) deckt die Zellen einer Seite ab;
+jede abgedeckte Zelle bekommt einen Knopf „aufdecken“; beim Abdecken der Zielsprache gehen die Formen zu. Nichts wird gespeichert.
+
+**Prüfung (`check-page.ts`)**: Texte (caption, note, falseFriend, Formen-Überschriften); jede Formen-Zeile so lang wie die
+anderen und wie der Kopf.
+
+**Tutor (`tutor.ts`)**: Block als Liste „Begriff (m) – Übersetzung“ mit Beispiel, Hinweis, falschem Freund und Formen.
+
+**Outline und E2E**: `vocabularies` je Seite; ohne JavaScript: Zeilen, Spalten, Formen zu, Werkzeuge versteckt; mit JavaScript:
+abdecken, aufdecken.
+
+**Texte**: `de.json`/`en.json` (Spalte Mitte, abdecken, aufdecken, falscher Freund, Formen, Hervorhebung).
+
+**Doku**: arc42 `dec-vocabulary` (Kap. 9), Glossar-Begriff; Kopfkommentar des Moduls. Kein README (Owner).
+
+**Beispiel und Tests**: Französisch-Beispiel bekommt einen Vokabel-Block (mit Formen); Fixture `explainer-all-blocks` einen
+Block auf jeder Seite (de/en); Unit-Test `test/explainer-vocabulary.test.ts` (HTML, mittlere Spalte, Formen, Tutor);
+Fehlerfälle in `explainer-broken.test.ts` (Zeilenlänge).
+
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [x] Code der betroffenen Module lesen und Strategie festlegen
+- [x] Tasks für die Code-Phase anlegen
 
 ### Completed
-*None yet*
+- [x] Strategie dokumentiert
 
 ## Code
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [x] Schema `vocabulary` und Typ in `content.ts`
+- [x] `vocabulary.ts`: Rendering, Tutor-Zeilen, Client
+- [x] `render.ts`, `check-page.ts`, `tutor.ts`, `outline.ts`, `explainer.ts` anbinden
+- [x] Texte `de.json`, `en.json`; CSS in `explainer.css`
+- [x] Fixture und Französisch-Beispiel
+- [x] Unit-Tests, Fehlerfälle, E2E (`e2e.ts`)
+- [x] arc42: Entscheidung und Glossar
+- [x] Typprüfung, Lint (`vp check`) und Unit-Tests (`vp test run`, 632) grün
+- [ ] `lernapps check --pre-push` auf Französisch-Beispiel und Fixture `explainer-all-blocks` (E2E)
+
+### Entscheidungen in der Umsetzung
+- Kopf der Formentabelle als `text` (Map je App-Sprache), Zellen als Strings; die erste Zelle heißt die Zeile.
+- Prüfung der Zeilenlänge gegen den Kopf oder, ohne Kopf, gegen die erste Zeile.
+- Beim Abdecken der Zielsprache klappen die Formen zu; „aufdecken“ setzt den Fokus auf die Zelle.
+- Französisch-Beispiel: Formen nur bei *être*, das die Seite vorher lehrt (Regel aus dem Schema).
+- Screenshot-Prüfung fand einen Fehler: Die Übersetzung war ein Textknoten und blieb beim Abdecken sichtbar. Jetzt in `<span>`;
+  der E2E-Test prüft beide Seiten.
+- CI-Kommentar des Französisch-Jobs nennt die Vokabel-Blöcke.
 
 ### Completed
 *None yet*

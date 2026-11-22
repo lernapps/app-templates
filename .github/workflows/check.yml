@@ -195,7 +195,7 @@ jobs:
 
   # The example of an explainer for a foreign language (explainer/examples/franzoesisch, dec-language-task): language
   # tasks of each mode, write, gap, choice and table, in both directions, with a labelled figure labelled by writing,
-  # and a self-assessment with them. The build, the checks of the built app, the unit tests and the end-to-end tests
+  # a self-assessment with them, and vocabulary blocks (dec-vocabulary). The build, the checks of the built app, the unit tests and the end-to-end tests
   # of every explainer pass on it.
   explainer-example-franzoesisch:
     needs: changes

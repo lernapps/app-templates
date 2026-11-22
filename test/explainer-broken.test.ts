@@ -177,6 +177,17 @@ const cases: [string, (root: string) => void, string][] = [
     "src/kapitel/eins.yaml:18: blocks[0].blocks[2].blocks[1].youtube: https://www.youtube.com/watch?v=rkLmLaFHodo is no YouTube id; give the 11 characters after watch?v= in the video's address, e.g. rkLmLaFHodo",
   ],
   [
+    "a table of forms of a word with a row shorter than the first",
+    (root) =>
+      edit(
+        root,
+        "kapitel/eins.yaml",
+        "            text: { de: Noch ein Text., en: Another text. }\n",
+        "            text: { de: Noch ein Text., en: Another text. }\n          - type: vocabulary\n            caption: { de: Lektion 3, en: Lesson 3 }\n            languages: { source: de, target: la }\n            entries:\n              - target: rex\n                source: der König\n                inflection:\n                  - caption: { de: Deklination, en: Declension }\n                    rows:\n                      - [Nominativ, rex, reges]\n                      - [Genitiv, regis]\n",
+      ),
+    "src/kapitel/eins.yaml:27: blocks[0].blocks[2].blocks[1].entries[0].inflection[0].rows[1]: this row has 2 cells, the first row 3; give every row as many cells",
+  ],
+  [
     "an extra file in src/",
     (root) => writeFileSync(join(root, "src/notizen.txt"), "Ideen\n"),
     "src/notizen.txt: not part of an explainer; src/ holds only app.yaml, the chapter folders, data/, images/, audio/, components/ and main.ts",

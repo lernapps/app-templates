@@ -38,6 +38,8 @@ export interface PageOutline {
   figures: string[];
   /** The videos, in order: each shows its title, channel and link without JavaScript, its player only after a click. */
   videos: { youtube: string; title: string; channel: string }[];
+  /** The vocabulary blocks, in order: how many words, whether the middle column shows, how many have tables of forms. */
+  vocabularies: { entries: number; middle: boolean; forms: number }[];
   /** The speaking tasks, in order: no answer to check, so they are no exercises of the outline (explainer.ts). */
   speaking: { id: string; task: string; items: { audio: string; text?: string }[] }[];
   /** The audio files the page's tasks start from (audio/<name>.mp3), in order, each as often as a task uses it. */
@@ -210,6 +212,15 @@ function walk(
       case "video":
         into.videos.push({ youtube: block.youtube, title: block.title, channel: block.channel });
         break;
+      case "vocabulary":
+        into.vocabularies.push({
+          entries: block.entries.length,
+          middle: block.entries.some(
+            (entry) => entry.example !== undefined || entry.note !== undefined || entry.falseFriend !== undefined,
+          ),
+          forms: block.entries.filter((entry) => entry.inflection !== undefined).length,
+        });
+        break;
       case "vue-component": {
         const use = site.components.find((candidate) => candidate.block === block);
         const nojs = block.nojs === undefined ? "" : text(block.nojs);
@@ -349,6 +360,7 @@ export function outline(root = "."): Outline {
       formulas: 0,
       figures: [],
       videos: [],
+      vocabularies: [],
       audio: [],
       speaking: [],
       exercises: [],

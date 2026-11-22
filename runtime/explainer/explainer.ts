@@ -22,6 +22,7 @@
 // says where to paste them, and once the task is done it is "Zurück", which copies the result line. Copying instead
 // of an assistant adds the tutor page's Markdown. Input and message leave the page only with the click. A video gets its
 // button, which loads its player, and the choice "Videos immer direkt laden" (video.ts), kept on the device too. A
+// vocabulary block gets the buttons that cover the column of one language (vocabulary.ts), stored nowhere. A
 // self-assessment runs on its own page, offered on the start page or its chapter's page (assessment-client.ts); its
 // way to the tutor is the one switched on, or one chosen there.
 import { moveFocus } from "@lernapps/tooling/a11y";
@@ -61,6 +62,7 @@ import {
 } from "./tasks.ts";
 import { escape } from "../shared/html.ts";
 import { startVideos } from "./video.ts";
+import { startVocabulary } from "./vocabulary.ts";
 import { startAssessment } from "./assessment-client.ts";
 import { startFeedback } from "./feedback-client.ts";
 
@@ -774,6 +776,7 @@ export function startExplainer(root: Document = document): void {
     );
   });
   startVideos(root);
+  startVocabulary(root);
   startAudio(root);
   startFeedback(root);
   startAssessment(root, {

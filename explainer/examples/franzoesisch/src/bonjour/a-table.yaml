@@ -30,6 +30,26 @@ blocks:
 
           Hier geht es um *das* Brot auf dem Tisch. Wie du sagst, dass du *etwas* Brot isst (*du pain*), steht auf der
           Lernlandkarte beim [Teilungsartikel](https://lernapps.net/apps/map/franzoesisch/c/teilungsartikel/).
+      - type: vocabulary
+        caption: Die Wörter auf dem Tisch
+        languages: { source: de, target: fr }
+        entries:
+          - target: le pain
+            source: das Brot
+            gender: m
+            example: { target: "Le pain est bon.", source: "Das Brot ist gut." }
+          - target: la pomme
+            source: der Apfel
+            gender: f
+            example: { target: "La pomme est rouge.", source: "Der Apfel ist rot." }
+            note: "Ein anderes Geschlecht als im Deutschen: *la* pomme, aber *der* Apfel."
+          - target: le fromage
+            source: der Käse
+            gender: m
+          - target: l'eau
+            source: das Wasser
+            gender: f
+            note: "Vor einem Vokal wird *la* zu *l'*. Das Wort ist weiblich."
       - type: language-task
         id: tisch-beschriften
         languages: { source: de, target: fr }

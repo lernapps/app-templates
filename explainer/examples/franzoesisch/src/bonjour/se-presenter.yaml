@@ -110,6 +110,33 @@ blocks:
               rejected: ["je ai", "jai"]
           - cue: "être · nous · présent"
             target: sommes
+      - type: vocabulary
+        caption: Die Wörter zum Vorstellen
+        languages: { source: de, target: fr }
+        entries:
+          - target: s'appeler
+            source: heißen
+            example: { target: "Je m'appelle Léa.", source: "Ich heiße Léa." }
+          - target: avoir
+            source: haben
+            example: { target: "J'ai douze ans.", source: "Ich bin zwölf Jahre alt." }
+            note: "Dein Alter *hast* du auf Französisch."
+          - target: un an
+            source: ein Jahr
+            gender: m
+            forms: [des ans]
+          - target: être
+            source: sein
+            example: { target: "Je suis de Berlin.", source: "Ich komme aus Berlin." }
+            inflection:
+              - caption: Präsens
+                rows:
+                  - [je, suis]
+                  - [tu, es]
+                  - [il / elle, est]
+                  - [nous, sommes]
+                  - [vous, êtes]
+                  - [ils / elles, sont]
   - type: section
     id: hoeren
     title: Hören und aufschreiben

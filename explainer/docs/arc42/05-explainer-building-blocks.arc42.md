@@ -201,7 +201,8 @@ requires: if-archetype-content, if-data-files, if-component-rules, if-questions
 ### Page rendering
 
 Built. Renders every YAML page to static HTML in each language: text in restricted Markdown, formulas as MathML,
-figures as SVG, tables, timelines, code, videos as links (`bb-video`), the exercises with their solution folded (a generated one with three worked
+figures as SVG, tables, timelines, code, videos as links (`bb-video`), vocabulary with its forms folded
+(`dec-vocabulary`), the exercises with their solution folded (a generated one with three worked
 tasks), the navigation and the glossary, and each Vue component's island as the server renderer drew it, with its
 `nojs` text. Without JavaScript every page is complete.
 

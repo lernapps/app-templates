@@ -134,6 +134,35 @@ blocks:
             youtube: D_D4gvqNDdE
             title: 1.binomische Formel – mit grafischer Erklärung
             channel: Lehrerschmidt
+          - type: vocabulary
+            caption: { de: "Am Tisch", en: "At the table" }
+            languages: { source: de, target: fr }
+            entries:
+              - target: le pain
+                source: das Brot
+                gender: m
+                example: { target: "Le pain est encore chaud.", source: "Das Brot ist noch warm." }
+              - target: l'eau
+                source: das Wasser
+                gender: f
+                note: { de: "*l'* steht vor einem Vokal.", en: "*l'* comes before a vowel." }
+              - target: l'œil
+                source: das Auge
+                forms: [les yeux]
+              - target: manger
+                source: essen
+                inflection:
+                  - caption: { de: "Konjugation im Präsens", en: "Present tense" }
+                    rows:
+                      - [je, mange]
+                      - [tu, manges]
+                      - [il / elle, mange]
+                      - [nous, "mang**e**ons"]
+                      - [vous, mangez]
+                      - [ils / elles, mangent]
+              - target: la carte
+                source: die Speisekarte
+                falseFriend: { de: "Nicht nur die Karte.", en: "Not just the map." }
   - type: section
     id: uebung
     title: { de: "Übung", en: "Exercise" }

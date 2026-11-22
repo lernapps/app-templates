@@ -1,7 +1,7 @@
 // Renders every page of an explainer at build time into static HTML: the text, every formula as MathML, every figure
-// as inline SVG or an image, tables, timelines, definitions, quotes, highlighted code, the exercises (exercises.ts:
-// each with its solution in a <details>, a generated one with three worked tasks), and the navigation (contents,
-// breadcrumbs, previous and next, the contents of a page with three or more sections, the glossary, the language
+// as inline SVG or an image, tables, timelines, definitions, quotes, highlighted code, vocabulary (vocabulary.ts), the
+// exercises (exercises.ts: each with its solution in a <details>, a generated one with three worked tasks), and the
+// navigation (contents, breadcrumbs, previous and next, the contents of a page with three or more sections, the glossary, the language
 // switch; a recap page marked in the contents, and at its top its notice with a link to the learning map for each competency it repeats). Without
 // JavaScript the page is complete; the client module only adds. A vue-component block is its island:
 // the component's markup as the build rendered it (`hidden` until it hydrates), its nojs text, its props in the page's
@@ -39,6 +39,7 @@ import { BASE, placeholderPrompt, plainAddress, PROVIDERS, QUERY, startPrompt } 
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
 import { renderVideo, watchAddress } from "./video.ts";
+import { renderVocabulary } from "./vocabulary.ts";
 import { mediaOf, type MediaItem } from "./media.ts";
 import { languageOfAudio } from "../shared/audio.ts";
 import { renderCredit } from "../shared/blocks/render.ts";
@@ -247,6 +248,11 @@ function renderBlock(
       return renderMaterial([block], context.material);
     case "video":
       return renderVideo(block, context.lang, context.site.storage ?? "explainer");
+    case "vocabulary":
+      return renderVocabulary(
+        { lang: context.lang, text: (text) => context.text(text), inline: (text) => context.inline(text) },
+        block,
+      );
     case "vue-component":
       return renderComponent(context, block);
     default:

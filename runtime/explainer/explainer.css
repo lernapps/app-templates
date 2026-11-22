@@ -1,6 +1,6 @@
 /* The look of an explainer (@lernapps/app-templates/explainer/style.css): the frame and the questions are shared
    (page.css, questions.css); this is the explainer's page: chapters and pages with sections, formulas, figures, tables,
-   timelines, definitions, quotes, code, videos and exercises, complete without JavaScript. */
+   timelines, definitions, quotes, code, videos, vocabulary and exercises, complete without JavaScript. */
 @import "../shared/page.css";
 @import "../shared/blocks/blocks.css";
 @import "../shared/questions/questions.css";
@@ -1150,6 +1150,254 @@ button.explainer-help:focus-visible {
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+/* A vocabulary block (vocabulary.ts): a table like a vocabulary book, the word of the target language heading each row,
+   the middle column smaller and muted. Tables of forms fold under their word, the highlighted part bold and underlined
+   (no colour, so that it reads alike for everyone). With JavaScript the buttons to cover one language; a covered cell
+   shows only its button "aufdecken". Narrow: each word is a card, the word and its translation in a row, the hint below. */
+.explainer-vocabulary {
+  margin: 1.25rem 0;
+  container-type: inline-size;
+}
+
+.explainer-vocabulary-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+}
+
+.explainer-vocabulary-tools[hidden] {
+  display: none;
+}
+
+.explainer-vocabulary-cover,
+.explainer-vocabulary-reveal {
+  font: inherit;
+  font-size: 0.9375rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-accent);
+  cursor: pointer;
+}
+
+.explainer-vocabulary-cover[aria-pressed="true"] {
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-vocabulary-reveal {
+  width: 100%;
+  border-style: dashed;
+  border-color: var(--page-border);
+  background: var(--page-surface);
+  color: var(--page-text);
+  text-align: left;
+}
+
+.explainer-vocabulary-cover:focus-visible,
+.explainer-vocabulary-reveal:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-vocabulary-scroll {
+  overflow-x: auto;
+}
+
+.explainer-vocabulary-scroll > table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.explainer-vocabulary-scroll > table > caption {
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.explainer-vocabulary-scroll > table > * > tr > th,
+.explainer-vocabulary-scroll > table > * > tr > td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--page-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.explainer-vocabulary-scroll > table > thead th {
+  background: var(--page-surface);
+}
+
+.explainer-vocabulary-entry > th {
+  font-weight: 400;
+}
+
+.explainer-vocabulary-word {
+  font-weight: 600;
+}
+
+.explainer-vocabulary-more,
+.explainer-vocabulary-gender {
+  color: var(--page-muted);
+}
+
+.explainer-vocabulary-hint {
+  color: var(--page-muted);
+  font-size: 0.9375rem;
+}
+
+.explainer-vocabulary-hint p {
+  margin: 0;
+}
+
+.explainer-vocabulary-hint p + p {
+  margin-top: 0.25rem;
+}
+
+.explainer-vocabulary-example span {
+  display: block;
+}
+
+.explainer-vocabulary-false-friend strong {
+  color: var(--page-text);
+}
+
+/* the covered cell keeps its place; only its button shows */
+.explainer-vocabulary-covered > :not(.explainer-vocabulary-reveal) {
+  display: none;
+}
+
+/* a word with tables of forms: its row and the row of its forms read as one */
+.explainer-vocabulary-has-forms > th,
+.explainer-vocabulary-has-forms > td {
+  border-bottom: 0;
+}
+
+.explainer-vocabulary-scroll > table > tbody > .explainer-vocabulary-forms-row > td {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.explainer-vocabulary-forms summary {
+  width: fit-content;
+  color: var(--page-accent);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.explainer-vocabulary-tables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+}
+
+.explainer-vocabulary-tables table {
+  border-collapse: collapse;
+}
+
+.explainer-vocabulary-tables caption {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-align: left;
+}
+
+.explainer-vocabulary-tables th,
+.explainer-vocabulary-tables td {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--page-border);
+  text-align: left;
+}
+
+.explainer-vocabulary-tables th {
+  background: var(--page-surface);
+  font-weight: 400;
+}
+
+.explainer-vocabulary-tables b {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.explainer-vocabulary-marked {
+  margin: 0.4rem 0 0;
+  color: var(--page-muted);
+  font-size: 0.875rem;
+}
+
+@container (max-width: 33rem) {
+  .explainer-vocabulary-scroll > table,
+  .explainer-vocabulary-scroll > table > tbody,
+  .explainer-vocabulary-scroll > table > tbody > tr,
+  .explainer-vocabulary-scroll > table > tbody > tr > th,
+  .explainer-vocabulary-scroll > table > tbody > tr > td {
+    display: block;
+    width: auto;
+  }
+
+  /* the caption stays a heading of the cards; the column heads go to screen readers only */
+  .explainer-vocabulary-scroll > table > caption {
+    display: block;
+  }
+
+  .explainer-vocabulary-scroll > table > thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .explainer-vocabulary-scroll > table > tbody > tr.explainer-vocabulary-entry {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.25rem 0.75rem;
+    margin-top: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--page-border);
+    border-radius: 0.375rem;
+  }
+
+  .explainer-vocabulary-scroll > table > tbody > tr.explainer-vocabulary-has-forms {
+    border-bottom: 0;
+    border-radius: 0.375rem 0.375rem 0 0;
+  }
+
+  .explainer-vocabulary-scroll > table > tbody > tr.explainer-vocabulary-forms-row {
+    padding: 0 0.75rem 0.5rem;
+    border: 1px solid var(--page-border);
+    border-top: 0;
+    border-radius: 0 0 0.375rem 0.375rem;
+  }
+
+  .explainer-vocabulary-scroll > table > tbody > tr > th,
+  .explainer-vocabulary-scroll > table > tbody > tr > td,
+  .explainer-vocabulary-scroll > table > tbody > .explainer-vocabulary-forms-row > td {
+    padding: 0;
+    border: 0;
+  }
+
+  .explainer-vocabulary-entry > [data-side="source"] {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  .explainer-vocabulary-entry > .explainer-vocabulary-hint {
+    grid-column: 1 / -1;
+  }
+
+  .explainer-vocabulary-entry > .explainer-vocabulary-hint:empty {
+    display: none;
+  }
 }
 
 /* The self-assessment (assessment-client.ts): the offer on the start page or a chapter's page, its pages of exercises
