@@ -52,7 +52,8 @@
 // löschen". Opened by a tutor (via=tutor), a run keeps nothing, and its own "Zurück zum Tutor" copies the result with
 // the tutor page; a copy for a running chat keeps the tab open, its button says "✓ Kopiert", and a line below it where to paste. The feedback mode, at desktop width: switched on at the end of a page, by ?feedback or on the start
 // page, it opens on its help, keeps notes with the marked text across pages and a reload, copies them in the app's
-// order, marks a note whose block changed, deletes one and all after a question, and leaves nothing once ended.
+// order, marks a note whose block changed, deletes one and all after a question, and once ended keeps only that its
+// help was seen, so that it does not open on the help again.
 // No page stores anything on the device before a choice of the learner. The tests run in parallel, with reduced motion; the preset runs
 // them at desktop width and at 360 px; `lernapps check` adds axe and the width on the pages it visits.
 import { expect, test, type APIRequestContext, type Locator, type Page } from "playwright/test";
@@ -1972,11 +1973,21 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
         await panel.getByRole("button", { name: t("feedbackDeleteAll"), exact: true }).click();
         await expect(panel.locator(".explainer-feedback-note")).toHaveCount(0);
         expect(await notesOf(page)).toEqual([]);
-        // ended: the bar and the buttons go, and nothing stays on the device
+        // ended: the bar and the buttons go; only that the help was seen stays on the device
         await panel.getByRole("button", { name: t("feedbackOff"), exact: true }).click();
         await expect(panel).toBeHidden();
         await expect(page.locator(".explainer-feedback-add")).toHaveCount(0);
-        expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+        const kept = await page.evaluate(() =>
+          Object.keys(localStorage).map((key) => [
+            key.replace(/^.*:/, ""),
+            JSON.parse(localStorage.getItem(key) ?? ""),
+          ]),
+        );
+        expect(kept).toEqual([["feedback", { on: false, seen: true }]]);
+        // switched on again, the bar does not open on its help
+        await page.locator("main .explainer-feedback-invite button").click();
+        await expect(panel).toBeVisible();
+        await expect(panel.locator(".explainer-feedback-help")).toBeHidden();
       });
 
       test("?feedback switches it on; a note whose block changed is marked so", async ({ page }) => {

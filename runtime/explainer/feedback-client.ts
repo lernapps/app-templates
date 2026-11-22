@@ -154,9 +154,15 @@ class Feedback {
     this.#show();
   }
 
+  /** Ends the mode; that its help was seen stays, so that it does not open on the help again. */
   switchOff(): void {
-    this.#storage.remove(FEEDBACK_KEY);
-    this.#state = undefined;
+    if (this.#state?.seen === true) {
+      this.#state = { on: false, seen: true };
+      this.#storage.save(FEEDBACK_KEY, this.#state);
+    } else {
+      this.#storage.remove(FEEDBACK_KEY);
+      this.#state = undefined;
+    }
     this.#root.documentElement.classList.remove("explainer-feedback-on");
     this.#panel.hidden = true;
     for (const button of this.#root.querySelectorAll(".explainer-feedback-add")) button.remove();
