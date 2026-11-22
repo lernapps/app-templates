@@ -81,6 +81,21 @@ involves: bb-render, bb-shell, bb-video, bb-runtime-texts, bb-tooling
 :::
 ```
 
+## Giving feedback
+
+A teacher or parent switches the feedback mode on in an app and notes what to improve at the blocks it concerns. The
+notes stay on their device. To hand them over, the mode copies them and opens a new issue in the app's repository,
+where the person pastes them with their own GitHub account.
+
+```arc42
+:::runtime-scenario
+id: scenario-explainer-feedback
+title: Giving feedback on an app as an issue
+trigger: A teacher or parent switches the feedback mode on, notes what to improve and hands the notes over
+involves: bb-render, bb-shell, bb-feedback-mode, bb-runtime-texts, bb-tooling
+:::
+```
+
 ## Doing a self-assessment
 
 The start page, or a chapter's page, offers the self-assessment once the client module runs; it names the last result

@@ -314,6 +314,26 @@ addresses: qg-privacy, qg-explainer-readable-without-js, con-no-request-before-c
 :::
 ```
 
+## Feedback Is Noted on the Device and Handed Over as One Issue
+
+Teachers and parents who know the subject are the ones who find what is wrong or unclear in an explainer. The
+feedback mode lets them note it where it is and hand all notes over as one issue in the app's repository, where the
+creator works anyway. The notes stay on the device (`con-state-on-device`) and the app sends nothing: the person hands
+them over with their own GitHub account. A note keeps its place in the content when the content around it changes,
+and shows when its place itself changed. The way in belongs to the app's content, not to the footer, which is the
+platform's. Rejected: a server that collects feedback (accounts, data, cost); an issue template in every app's
+repository; the notes in the issue's address (too long).
+
+```arc42
+:::decision
+id: dec-explainer-feedback-issue
+title: Feedback is noted block by block on the device and handed over as the text of one new issue
+status: accepted
+date: 2026-11-22
+addresses: qg-privacy, qg-explainer-readable-without-js, con-state-on-device, con-no-request-before-click
+:::
+```
+
 ## A Self-Assessment Checked Only as a Whole
 
 A learner may want to know before learning which pages they can skim. So an explainer may offer a self-assessment. A

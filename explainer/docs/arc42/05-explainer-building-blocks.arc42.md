@@ -65,6 +65,7 @@ flowchart TB
         bb-tutor-handoff["Tutor handoff"]
         bb-task-numbers["Task numbers"]
         bb-video["Video block"]
+        bb-feedback-mode["Feedback mode"]
         bb-self-assessment["Self-assessment"]
         bb-e2e["End-to-end tests"]
         bb-runtime-texts["Runtime texts"]
@@ -101,6 +102,9 @@ flowchart TB
     bb-tutor-handoff -->|"if-task-numbers"| bb-task-numbers
     bb-video -->|"if-runtime-texts"| bb-runtime-texts
     bb-video -->|"if-device-storage"| bb-tooling
+    bb-shell -->|"if-feedback-mode"| bb-feedback-mode
+    bb-feedback-mode -->|"if-runtime-texts"| bb-runtime-texts
+    bb-feedback-mode -->|"if-device-storage"| bb-tooling
     bb-build -->|"if-self-assessment"| bb-self-assessment
     bb-shell -->|"if-self-assessment"| bb-self-assessment
     bb-self-assessment -->|"if-archetype-content"| bb-explainer-content
@@ -243,7 +247,7 @@ title: Client module
 parent: bb-archetype-runtime
 path: runtime/explainer/explainer.ts
 technology: TypeScript, DOM
-requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y, if-self-assessment
+requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y, if-self-assessment, if-feedback-mode
 implements: concept-accessibility, concept-determinism
 :::
 ```
@@ -535,6 +539,40 @@ title: Video player request to youtube-nocookie.com
 provider: bb-video
 protocol: HTML iframe over HTTPS, after a click
 path: runtime/explainer/video.ts
+:::
+```
+
+### Feedback mode
+
+Built. Lets teachers and parents note what to improve in an app's content, at the block it concerns, and hand the
+notes over to the creator as one new issue in the app's repository (`dec-explainer-feedback-issue`). It relies on
+the page rendering for an address of each block and on the build for the app's repository, keeps the notes on the
+device and takes its texts from the runtime texts. The client module starts it on every page. Without JavaScript
+there is no mode, and the pages stay complete. Nothing leaves the page but what the person copies.
+
+```arc42
+:::building-block
+id: bb-feedback-mode
+title: Feedback mode
+parent: bb-archetype-runtime
+path: runtime/explainer/feedback.ts
+technology: TypeScript, DOM
+requires: if-runtime-texts, if-device-storage
+implements: concept-readable-without-js
+:::
+```
+
+#### Feedback mode interface
+
+What the client module calls on every page to start the feedback mode where it is on.
+
+```arc42
+:::interface
+id: if-feedback-mode
+title: Start of the feedback mode
+provider: bb-feedback-mode
+protocol: TypeScript import
+path: runtime/explainer/feedback-client.ts
 :::
 ```
 

@@ -62,6 +62,7 @@ import {
 import { escape } from "../shared/html.ts";
 import { startVideos } from "./video.ts";
 import { startAssessment } from "./assessment-client.ts";
+import { startFeedback } from "./feedback-client.ts";
 
 /** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(
@@ -774,6 +775,7 @@ export function startExplainer(root: Document = document): void {
   });
   startVideos(root);
   startAudio(root);
+  startFeedback(root);
   startAssessment(root, {
     chosen: (storage, ways) => new WayChoice(storage, ways).get(),
     needs: chosenNeeds,
