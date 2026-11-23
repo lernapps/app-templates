@@ -1247,10 +1247,14 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
                 await expect(heading, `section ${section.id}`).toBeVisible();
                 await expect(heading).toHaveText(section.title);
               }
-              // the formulas of the content; an exercise component's no-JS task, from its describe, is not content
+              // the formulas of the content; an exercise component's no-JS task, from its describe, and what a component draws itself
+              // (a fraction as <math> in its island) are not content
               const formulas = await main
                 .locator("math")
-                .evaluateAll((elements) => elements.filter((math) => !math.closest(".explainer-described")).length);
+                .evaluateAll(
+                  (elements) =>
+                    elements.filter((math) => !math.closest(".explainer-described, .explainer-island")).length,
+                );
               expect(formulas, "one <math> per formula").toBe(item.formulas);
               for (const name of item.figures) {
                 await expect(
