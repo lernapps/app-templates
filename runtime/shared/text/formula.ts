@@ -83,6 +83,9 @@ export const COMMANDS: readonly string[] = [
   "\\arccos",
   "\\arctan",
   "\\circ",
+  // geometry: an angle (\angle ABC) and a line over a segment or a repeating decimal (\overline{AB}, 0{,}\overline{3})
+  "\\angle",
+  "\\overline",
   // Greek letters
   ...GREEK.map((letter) => `\\${letter}`),
 ];

@@ -86,7 +86,7 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "an unknown LaTeX command",
     (root) => edit(root, "kapitel/eins.yaml", `"a^2 + b^2 = c^2"`, `'\\foo{a} + b'`),
-    `src/kapitel/eins.yaml:10: blocks[0].blocks[1].formula: \\foo is not in the formula command list; use only these commands, besides ^, _, braces and parentheses: \\frac, \\cdot, \\times, \\div, \\%, \\text, \\sqrt, \\approx, \\pm, \\le, \\ge, \\neq, \\,, \\{, \\}, \\ce, \\pu, \\  (a space), \\quad, \\qquad, \\Rightarrow, \\Leftrightarrow, \\left, \\right, \\sin, \\cos, \\tan, \\arcsin, \\arccos, \\arctan, \\circ, ${GREEK}`,
+    `src/kapitel/eins.yaml:10: blocks[0].blocks[1].formula: \\foo is not in the formula command list; use only these commands, besides ^, _, braces and parentheses: \\frac, \\cdot, \\times, \\div, \\%, \\text, \\sqrt, \\approx, \\pm, \\le, \\ge, \\neq, \\,, \\{, \\}, \\ce, \\pu, \\  (a space), \\quad, \\qquad, \\Rightarrow, \\Leftrightarrow, \\left, \\right, \\sin, \\cos, \\tan, \\arcsin, \\arccos, \\arctan, \\circ, \\angle, \\overline, ${GREEK}`,
   ],
   [
     "raw HTML",
