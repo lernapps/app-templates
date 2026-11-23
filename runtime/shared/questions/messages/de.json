@@ -4,6 +4,8 @@
   "right": "Richtig!",
   "wrong": "Leider nicht richtig.",
   "incomplete": "Antworte zuerst: Wähle, tippe oder ordne alles zu.",
+  "incompleteNumber": "Antworte zuerst: Tippe eine Zahl ein.",
+  "unreadableNumber": "Das lese ich nicht als Zahl. Schreibe nur die Zahl, mit Komma oder Punkt, ohne Bruchstrich und ohne Wörter, zum Beispiel 2,5.",
   "tryAgain": "Versuche es noch einmal oder lass dir die Lösung zeigen.",
   "lookAgain": "Lies dazu noch einmal den Text über der Aufgabe.",
   "missingRight": "Es fehlt noch mindestens eine richtige Antwort.",

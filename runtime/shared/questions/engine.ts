@@ -204,7 +204,12 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     if (answered) return;
     const answer = readAnswer(question, form);
     if (!isComplete(question, answer)) {
-      feedback.textContent = t("incomplete");
+      // a number field says what is missing: nothing, or something that is no number ("1/6", "115 Grad")
+      const given = readAnswer(question, form);
+      const typed = question.type === "number" && typeof given === "string" ? given.trim() : undefined;
+      feedback.textContent = t(
+        typed === undefined ? "incomplete" : typed === "" ? "incompleteNumber" : "unreadableNumber",
+      );
       feedback.className = "question-feedback";
       return;
     }
