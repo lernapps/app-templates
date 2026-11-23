@@ -287,7 +287,7 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
   const markup = context.islands.get(block)?.get(context.lang) ?? "";
   const messages = questionMessagesIn(context.lang);
   const feedback = component.exercise
-    ? `<p class="question-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}"></p>`
+    ? `<p class="question-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}" data-incomplete="${plain(messages.incomplete)}"></p>`
     : "";
   const first = context.descriptions.get(block)?.tasks[context.lang]?.[0];
   const number = (seed: number) => plain(context.t("taskNumber", { n: String(seed) }));
@@ -320,7 +320,7 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
     `<div class="explainer-component" ${attributes.join(" ")}>`,
     controls,
     component.exercise
-      ? `<form class="explainer-component-form" novalidate><div class="explainer-island" hidden>${markup}</div><p class="question-actions" hidden><button type="submit" class="question-check" disabled>${plain(messages.check)}</button></p></form>`
+      ? `<form class="explainer-component-form" novalidate><div class="explainer-island" hidden>${markup}</div><p class="question-actions" hidden><button type="submit" class="question-check">${plain(messages.check)}</button></p></form>`
       : `<div class="explainer-island" hidden>${markup}</div>`,
     `<div class="explainer-nojs">${nojs}</div>`,
     feedback,

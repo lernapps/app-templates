@@ -184,7 +184,8 @@ async function hydrate(
     const answer = shallowRef<unknown>(undefined);
     const checked = ref(false);
     const sync = () => {
-      if (check) check.disabled = answer.value === undefined || checked.value;
+      // enabled without an answer, as in the questions: it then says to answer first; disabled once this answer is judged
+      if (check) check.disabled = checked.value;
     };
     const onAnswer = (value: unknown) => {
       answer.value = value;
@@ -204,7 +205,14 @@ async function hydrate(
     }).mount(island);
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
-      if (answer.value === undefined || checked.value) return;
+      if (checked.value) return;
+      if (answer.value === undefined) {
+        if (feedback) {
+          feedback.className = "question-feedback";
+          feedback.textContent = feedback.dataset["incomplete"] ?? "";
+        }
+        return;
+      }
       const task = logic.generate(seed.value, props);
       const correct = logic.check(task, answer.value) === true;
       const message = correct ? undefined : textOf(logic.reason?.(task, answer.value, props, lang));
