@@ -189,6 +189,7 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     // the feedback, not in it, so that the status a screen reader announces is the feedback alone
     const more = solution?.querySelector<HTMLElement>(".question-more");
     const row = feedback.parentElement;
+    row?.querySelector(".question-more-early")?.remove();
     if (more && row?.classList.contains("question-feedback-row") && feedback.textContent !== "") row.append(more);
     for (const control of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>("input, select")) {
       control.disabled = true;
@@ -235,6 +236,16 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
       // a matching question that may be tried again: how many pairs are right, and the wrong ones marked; the solution
       // stays hidden, so the right entries are not given away
       if (options.retry === true) markPairs(answer);
+    }
+    // further reading shows at once after a wrong answer too, not only under "Lösung"
+    if (!right && options.retry === true && !item.querySelector(".question-feedback-row > .question-more")) {
+      const more = item.querySelector<HTMLElement>(".question-reveal .question-more");
+      const row = feedback.parentElement;
+      if (more && row?.classList.contains("question-feedback-row")) {
+        const copy = more.cloneNode(true) as HTMLElement;
+        copy.classList.add("question-more-early");
+        row.append(copy);
+      }
     }
     const told = said.join(" ");
     if (!right && options.retry === true) line(t("tryAgain"));
