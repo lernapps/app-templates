@@ -74,6 +74,21 @@ describe("expressions", () => {
   });
 });
 
+describe("max and min", () => {
+  test("of two numbers, exact", () => {
+    expect(number("max(3, 7)")).toBe("7");
+    expect(number("min(3, 7)")).toBe("3");
+    expect(number("max(1 / 3, 0.25)")).toBe("1/3");
+    expect(number("min(-2, 1 / 2)")).toBe("-2");
+    expect(number("max(4, 4)")).toBe("4");
+    expect(number("round(max(0, 5 - 8), 0)")).toBe("0");
+  });
+  test("take two arguments, numbers", () => {
+    expect(() => number("max(1)")).toThrow(/max/);
+    expect(() => number('max("a", 1)')).toThrow();
+  });
+});
+
 describe("roots, powers and trigonometry in degrees", () => {
   test("sqrt and pow are exact where the result is rational", () => {
     expect(number("sqrt(9 / 4)")).toBe("3/2");

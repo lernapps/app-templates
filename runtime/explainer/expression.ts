@@ -5,6 +5,7 @@
 // - comparisons == != < <= > >=, and, or, not; true, false; strings in quotes;
 // - record fields (e.year), list index (xs[0]), list literals ([1, 2, 3]);
 // - the functions round(x, n), decimals(x), map(xs, field), sortBy(xs, field), reverse(xs);
+// - the functions max(a, b) and min(a, b) of two numbers;
 // - the functions sqrt(x), pow(x, n), sin(x), cos(x), tan(x) and asin(x), acos(x), atan(x), with angles in degrees as
 //   in school (sin(30) is 1/2). A result is exact where it is rational (sqrt(9/4), pow(2, 10), sin(30), cos(60),
 //   tan(45), asin(1/2)); otherwise it is the value to 12 decimal places, which an exercise rounds with round(x, n).
@@ -52,6 +53,8 @@ const FUNCTIONS: Readonly<Record<string, { arity: number; field?: number }>> = {
   map: { arity: 2, field: 1 },
   sortBy: { arity: 2, field: 1 },
   reverse: { arity: 1 },
+  max: { arity: 2 },
+  min: { arity: 2 },
   sqrt: { arity: 1 },
   pow: { arity: 2 },
   sin: { arity: 1 },
@@ -453,6 +456,11 @@ function call(fn: string, args: readonly Node[], env: Readonly<Record<string, Va
     }
     case "reverse":
       return [...asList(value(0), "reverse")].reverse();
+    case "max":
+    case "min": {
+      const [a, b] = [asNumber(value(0), fn), asNumber(value(1), fn)];
+      return a.compare(b) >= 0 === (fn === "max") ? a : b;
+    }
     case "sqrt":
       return sqrt(asNumber(value(0), "sqrt"));
     case "pow":
