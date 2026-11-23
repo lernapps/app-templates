@@ -39,6 +39,7 @@ import { BASE, placeholderPrompt, plainAddress, PROVIDERS, QUERY, startPrompt } 
 import { pageExercises, sectionsOf, TUTOR_MARKDOWN } from "./tutorpage.ts";
 import { NEW_TASK_ICON } from "./tasks.ts";
 import { renderVideo, watchAddress } from "./video.ts";
+import { renderSelfTest } from "./selftest.ts";
 import { renderVocabulary } from "./vocabulary.ts";
 import { mediaOf, type MediaItem } from "./media.ts";
 import { languageOfAudio } from "../shared/audio.ts";
@@ -253,6 +254,8 @@ function renderBlock(
         { lang: context.lang, text: (text) => context.text(text), inline: (text) => context.inline(text) },
         block,
       );
+    case "self-test":
+      return renderSelfTest({ lang: context.lang, inline: (text) => context.inline(text) }, block);
     case "vue-component":
       return renderComponent(context, block);
     default:

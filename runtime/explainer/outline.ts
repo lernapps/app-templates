@@ -40,6 +40,8 @@ export interface PageOutline {
   videos: { youtube: string; title: string; channel: string }[];
   /** The vocabulary blocks, in order: how many words, whether the middle column shows, how many have tables of forms. */
   vocabularies: { entries: number; middle: boolean; forms: number }[];
+  /** The self-test blocks, in order: how many options each has (nothing is checked or stored). */
+  selfTests: { options: number }[];
   /** The speaking tasks, in order: no answer to check, so they are no exercises of the outline (explainer.ts). */
   speaking: { id: string; task: string; items: { audio: string; text?: string }[] }[];
   /** The audio files the page's tasks start from (audio/<name>.mp3), in order, each as often as a task uses it. */
@@ -212,6 +214,14 @@ function walk(
       case "video":
         into.videos.push({ youtube: block.youtube, title: block.title, channel: block.channel });
         break;
+      case "self-test":
+        formulas(block.question);
+        for (const option of block.options) {
+          formulas(option.text);
+          formulas(option.info);
+        }
+        into.selfTests.push({ options: block.options.length });
+        break;
       case "vocabulary":
         into.vocabularies.push({
           entries: block.entries.length,
@@ -361,6 +371,7 @@ export function outline(root = "."): Outline {
       figures: [],
       videos: [],
       vocabularies: [],
+      selfTests: [],
       audio: [],
       speaking: [],
       exercises: [],

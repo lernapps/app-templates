@@ -115,6 +115,7 @@ const TYPE_KEYS: Readonly<Record<string, keyof Messages>> = {
   quote: "feedbackTypeQuote",
   code: "feedbackTypeCode",
   video: "feedbackTypeVideo",
+  "self-test": "feedbackTypeSelfTest",
   note: "feedbackTypeNote",
   example: "feedbackTypeExample",
   "vue-component": "feedbackTypeComponent",

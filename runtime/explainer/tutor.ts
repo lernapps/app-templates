@@ -28,6 +28,7 @@ import { message } from "./messages.ts";
 import { kindOf } from "./generated/comparator.ts";
 import { type Generated } from "./generated/types.ts";
 import { allBlocks } from "./routes.ts";
+import { selfTestLines } from "./selftest.ts";
 import { vocabularyLines } from "./vocabulary.ts";
 import { videoLine } from "./video.ts";
 
@@ -54,6 +55,8 @@ interface Words {
   labels: string;
   interactive: string;
   video: string;
+  /** The label of a self-test block. */
+  selfTest: string;
   /** A vocabulary block: its words, and the parts of an entry. */
   vocabulary: { vocabulary: string; example: string; note: string; falseFriend: string };
   exerciseHere: string;
@@ -99,6 +102,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     labels: "Beschriftungen",
     interactive: "Interaktiv",
     video: "Video",
+    selfTest: "Kurztest",
     vocabulary: { vocabulary: "Vokabeln", example: "Beispiel", note: "Hinweis", falseFriend: "Falscher Freund" },
     exerciseHere: "Aufgabe `{id}` (unten)",
     points: "Eine gute Antwort enthält (P1, P2 … wie die App sie nennt)",
@@ -167,6 +171,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     labels: "Labels",
     interactive: "Interactive",
     video: "Video",
+    selfTest: "Short test",
     vocabulary: { vocabulary: "Vocabulary", example: "Example", note: "Note", falseFriend: "False friend" },
     exerciseHere: "Exercise `{id}` (below)",
     points: "A good answer has (P1, P2 … as the app names them)",
@@ -492,6 +497,9 @@ export function contentLines(
           break;
         case "video":
           add(videoLine(block, words.video));
+          break;
+        case "self-test":
+          add(...selfTestLines(block, one, words.selfTest));
           break;
         case "vocabulary":
           add(...vocabularyLines(block, lang, one, words.vocabulary));

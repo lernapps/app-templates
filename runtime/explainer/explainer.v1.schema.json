@@ -281,6 +281,7 @@
             "code",
             "video",
             "vocabulary",
+            "self-test",
             "example",
             "note",
             "section",
@@ -437,6 +438,20 @@
           },
           "then": {
             "$ref": "#/$defs/video"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "self-test"
+              }
+            },
+            "required": ["type"],
+            "type": "object"
+          },
+          "then": {
+            "$ref": "#/$defs/selfTest"
           }
         },
         {
@@ -759,6 +774,50 @@
           "type": "string",
           "minLength": 1,
           "pattern": "\\S"
+        }
+      },
+      "type": "object"
+    },
+    "selfTest": {
+      "description": "A short self-test for a recap page: one question, two to five options, exactly one of them right, each with its reason. The learner picks an option and sees at once whether it was right and why; nothing is counted, stored or sent, so it is no exercise, and a recap page may have it. Each option is a button with its own tab stop (Enter or Space picks it), so the arrow keys do not answer by accident. Without JavaScript the page shows the question, the options and, folded, the answer with every reason. Put the sentence that says what to do after a wrong answer (the name of the competency and its page on the learning map) in a text block below it. An app whose pages use the component Kurztest (src/components/Kurztest.vue) may delete it: a vue-component block of that name with the props question, options, right and wrong is this block when the app has no such component.",
+      "required": ["question", "options"],
+      "properties": {
+        "question": {
+          "description": "The question, restricted Markdown without a paragraph, formulas as $…$. One or two sentences.",
+          "$ref": "#/$defs/text"
+        },
+        "options": {
+          "description": "The options, two to five, in the order shown; exactly one has correct: true. Every option gives its reason in info, also the right one.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text", "correct", "info"],
+            "properties": {
+              "text": {
+                "description": "The option as the learner reads it.",
+                "$ref": "#/$defs/text"
+              },
+              "correct": {
+                "description": "Whether this is the right option.",
+                "type": "boolean"
+              },
+              "info": {
+                "description": "Why the option is right or wrong, in one sentence; a typical mistake is named as one.",
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        },
+        "right": {
+          "description": "The start of the feedback for the right option. Default: Richtig.",
+          "$ref": "#/$defs/text"
+        },
+        "wrong": {
+          "description": "The start of the feedback for a wrong option. Default: Nicht richtig.",
+          "$ref": "#/$defs/text"
         }
       },
       "type": "object"
