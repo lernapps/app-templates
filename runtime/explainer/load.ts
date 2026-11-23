@@ -397,6 +397,19 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       }
       texts.check(yaml, ["title"], "plain");
       texts.check(yaml, ["description"], "plain");
+      // the titles of a recap page's competencies: only of competencies it repeats
+      for (const id of Object.keys(page.recapTitles ?? {})) {
+        if (page.recap?.includes(id) === true) texts.check(yaml, ["recapTitles", id], "plain");
+        else {
+          problems.at(
+            yaml,
+            ["recapTitles", id],
+            page.recap === undefined
+              ? "recapTitles needs recap: it names the competencies the page repeats"
+              : `${id} is not in recap (${page.recap.join(", ")}); give a title only to a competency the page repeats`,
+          );
+        }
+      }
       // the component Kurztest of the mathe-explainers, which the runtime now has as a block (selftest.ts)
       page.blocks = kurztestAsSelfTest(page.blocks, components?.names.has("Kurztest") ?? false);
       const pageAnchors = new Set<string>();

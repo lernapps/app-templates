@@ -170,6 +170,16 @@
             }
           ]
         },
+        "recapTitles": {
+          "description": "Only with recap: the title of each competency of recap as a learner knows it, by its id, e.g. { physik/masse: Masse }. The notice at the top of the recap page names each competency by it instead of by its id. A competency without a title is named by its id. A text, or a map by language when the app has several.",
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/competency"
+          },
+          "additionalProperties": {
+            "$ref": "urn:lernapps:schema:text.v1#/$defs/text"
+          }
+        },
         "blocks": {
           "$ref": "urn:lernapps:schema:explainer.v1#/$defs/page/properties/blocks"
         },
