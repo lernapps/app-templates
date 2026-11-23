@@ -1235,7 +1235,13 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
                   text: (element.textContent ?? "").replace(/\s+/g, " ").trim(),
                 })),
               );
-              expect(headings, "the heading levels follow the nesting").toEqual(item.headings);
+              // as the page's text folds: a no-break or narrow no-break space in a title (a protected unit, a grouped
+              // number) is white space to the browser, so it is folded in the content's heading too
+              const folded = item.headings.map(({ level, text }) => ({
+                level,
+                text: text.replace(/\s+/g, " ").trim(),
+              }));
+              expect(headings, "the heading levels follow the nesting").toEqual(folded);
               for (const section of item.sections) {
                 const heading = page.locator(`[id="${section.id}"]`);
                 await expect(heading, `section ${section.id}`).toBeVisible();
