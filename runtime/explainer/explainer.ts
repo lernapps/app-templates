@@ -94,7 +94,7 @@ function startGenerated(
     const steps = stepsOf(spec, task, lang, templates);
     live.innerHTML = [
       `<p class="explainer-practice">${escape(texts.practice)}</p>`,
-      `<p class="explainer-task-number">${escape(texts.taskNumber.replace("{n}", String(number)))} <button type="button" class="explainer-new-task" aria-label="${escape(texts.newTask)}" title="${escape(texts.newTask)}">${NEW_TASK_ICON}</button></p>`,
+      `<p class="explainer-task-number">${escape(texts.taskNumber.replace("{n}", String(number)))} <button type="button" class="explainer-new-task" title="${escape(texts.newTask)}">${NEW_TASK_ICON}<span class="explainer-new-task-text">${escape(texts.newTask)}</span></button></p>`,
       renderQuestion(question, {
         lang,
         textHtml: taskText(spec, task, lang, templates),

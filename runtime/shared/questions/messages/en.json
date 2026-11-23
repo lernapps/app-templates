@@ -4,6 +4,8 @@
   "right": "Right!",
   "wrong": "Sorry, that is not right.",
   "incomplete": "Answer first: choose, type or match everything.",
+  "incompleteNumber": "Answer first: type a number.",
+  "unreadableNumber": "I cannot read that as a number. Type only the number, with a decimal comma or point, no fraction bar and no words, for example 2.5.",
   "tryAgain": "Try again, or show the solution.",
   "lookAgain": "Read the text above the exercise again.",
   "missingRight": "At least one right answer is still missing.",

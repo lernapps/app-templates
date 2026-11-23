@@ -303,7 +303,7 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
         ].join("");
   const nojs = (block.nojs === undefined ? "" : context.markdown(block.nojs)) + described;
   const controls = component.exercise
-    ? `<p class="explainer-task-controls" hidden><span class="explainer-task-number" tabindex="-1" data-template="${plain(context.t("taskNumber"))}">${number(1)}</span> <button type="button" class="explainer-new-task" aria-label="${plain(context.t("newTask"))}" title="${plain(context.t("newTask"))}">${NEW_TASK_ICON}</button></p>`
+    ? `<p class="explainer-task-controls" hidden><span class="explainer-task-number" tabindex="-1" data-template="${plain(context.t("taskNumber"))}">${number(1)}</span> <button type="button" class="explainer-new-task" title="${plain(context.t("newTask"))}">${NEW_TASK_ICON}<span class="explainer-new-task-text">${plain(context.t("newTask"))}</span></button></p>`
     : "";
   const attributes = [
     ...(use.id === undefined ? [] : [`id="${use.id}"`]),

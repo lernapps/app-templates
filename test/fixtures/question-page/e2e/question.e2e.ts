@@ -59,7 +59,7 @@ test.describe("with JavaScript", () => {
     test(`${item.id} (${item.type}): no answer is asked for, then the right one counts`, async ({ page }) => {
       await page.goto("./");
       await exercise(page, item).getByRole("button", { name: messages.check }).click();
-      await expect(exercise(page, item).locator(".question-feedback")).toHaveText(messages.incomplete);
+      await expect(exercise(page, item).locator(".question-feedback")).toHaveText(item.type === "number" ? messages.incompleteNumber : messages.incomplete);
       await expect(exercise(page, item).locator(".question-reveal")).toBeHidden();
       await answerQuestion(page, item, rightAnswer(item));
       await expect(exercise(page, item).locator(".question-feedback")).toHaveText(messages.right);
