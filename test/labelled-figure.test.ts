@@ -59,7 +59,7 @@ describe("the markers and the legend of a labelled figure", () => {
     expect(html).toContain(`alt="${ALT}"`);
   });
 
-  test("without marker and legend: the numbers and the legend, byte for byte as before", () => {
+  test("without marker and legend: the numbers and the legend, the credit as an overlay on the image", () => {
     expect(render(figure({}))).toBe(
       [
         `<figure class="block-figure block-labelled">`,
@@ -68,9 +68,9 @@ describe("the markers and the legend of a labelled figure", () => {
           ([x, y], index) =>
             `<span class="block-marker" style="left: ${x}%; top: ${y}%" aria-hidden="true">${index + 1}</span>`,
         ),
-        `</div>`,
+        `<span class="block-credit" tabindex="0" role="img" data-info="Quelle: eigene Zeichnung. Lizenz: CC-BY-4.0." aria-label="Quelle: eigene Zeichnung. Lizenz: CC-BY-4.0.">©</span></div>`,
         `<ol class="block-legend">${TEXTS.map((text) => `<li>${text}</li>`).join("")}</ol>`,
-        `<figcaption><p>Beschrifte A bis E.</p> <span class="block-credit"><span class="block-credit-mark" tabindex="0" role="img" data-info="Quelle: eigene Zeichnung. Lizenz: CC-BY-4.0." aria-label="Quelle: eigene Zeichnung. Lizenz: CC-BY-4.0.">©</span></span></figcaption>`,
+        `<figcaption><p>Beschrifte A bis E.</p></figcaption>`,
         `</figure>`,
       ].join(""),
     );

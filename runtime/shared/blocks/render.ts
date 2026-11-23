@@ -47,8 +47,9 @@ export interface AudioRef {
 
 /**
  * The credit of an image or a quotation: its source and its licence, as a small "©" with the credit as its tooltip
- * (at once on hover and on focus, and as its name for a screen reader). A source that is a URL makes the "©" a link
- * to it, so that the credit stays one click from its source.
+ * (at once on hover and on focus, and as its name for a screen reader); "" without a credit. A source that is a URL
+ * makes the "©" a link to it, so that the credit stays one click from its source. On an image the style lays it as an
+ * overlay on the lower right corner (overlaid); in a quotation it stands at the end of the caption.
  */
 export function renderCredit(item: Credit<Text>, lang: string): string {
   if (item.source === undefined || item.licence === undefined) return "";
@@ -58,11 +59,14 @@ export function renderCredit(item: Credit<Text>, lang: string): string {
       .credit.replace("{licence}", () => item.licence ?? "")
       .replace("{source}", () => given),
   );
-  const mark = isUrl(given)
-    ? `<a class="block-credit-mark" href="${escape(given)}" rel="noopener" data-info="${text}" aria-label="${text}">©</a>`
-    : `<span class="block-credit-mark" tabindex="0" role="img" data-info="${text}" aria-label="${text}">©</span>`;
-  return ` <span class="block-credit">${mark}</span>`;
+  return isUrl(given)
+    ? `<a class="block-credit" href="${escape(given)}" rel="noopener" data-info="${text}" aria-label="${text}">©</a>`
+    : `<span class="block-credit" tabindex="0" role="img" data-info="${text}" aria-label="${text}">©</span>`;
 }
+
+/** An image (or drawing) with its credit as an overlay on its lower right corner; the image alone without a credit. */
+const withCredit = (picture: string, credit: string): string =>
+  credit === "" ? picture : `<div class="block-image-credit">${picture}${credit}</div>`;
 
 function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): string {
   const { lang } = context;
@@ -82,7 +86,7 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
       else if (block.draw?.kind === "bar") picture = bar(block.draw.part, block.draw.whole, alt, localeOf(lang));
       else if (block.image !== undefined)
         picture = `<img src="${escape(context.href(block.image))}" alt="${escape(alt)}" loading="lazy" decoding="async">`;
-      return `<figure class="block-figure">${picture}<figcaption>${markdown(block.caption)}${renderCredit(block, lang)}</figcaption></figure>`;
+      return `<figure class="block-figure">${withCredit(picture, renderCredit(block, lang))}<figcaption>${markdown(block.caption)}</figcaption></figure>`;
     }
     case "labelled-figure": {
       const markers = block.labels
@@ -103,11 +107,12 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
           : `<ol class="block-legend${named ? " block-legend-named" : ""}">${block.labels.map(item).join("")}</ol>`;
       const caption = block.caption === undefined ? "" : markdown(block.caption);
       const fill = context.sizeless?.(block.image) === true ? " block-labelled-fill" : "";
+      // without a caption the figure has no name of its own (the credit used to be its figcaption): its alt text names it
       return [
-        `<figure class="block-figure block-labelled">`,
-        `<div class="block-labelled-image${fill}"><img src="${escape(context.href(block.image))}" alt="${plain(block.alt)}" loading="lazy" decoding="async">${markers}</div>`,
+        `<figure class="block-figure block-labelled"${caption === "" ? ` aria-label="${plain(block.alt)}"` : ""}>`,
+        `<div class="block-labelled-image${fill}"><img src="${escape(context.href(block.image))}" alt="${plain(block.alt)}" loading="lazy" decoding="async">${markers}${renderCredit(block, lang)}</div>`,
         legend,
-        `<figcaption>${caption}${renderCredit(block, lang)}</figcaption>`,
+        caption === "" ? "" : `<figcaption>${caption}</figcaption>`,
         `</figure>`,
       ].join("");
     }
@@ -138,7 +143,8 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
         ...(work === undefined ? [] : [`<cite>${plain(work)}</cite>`]),
         ...(year === undefined ? [] : [typeof year === "number" ? String(year) : plain(year)]),
       ].join(", ");
-      return `<figure class="block-quote"><blockquote>${markdown(block.text)}</blockquote><figcaption>— ${origin}.${renderCredit(block, lang)}</figcaption></figure>`;
+      const credit = renderCredit(block, lang);
+      return `<figure class="block-quote"><blockquote>${markdown(block.text)}</blockquote><figcaption>— ${origin}.${credit === "" ? "" : ` ${credit}`}</figcaption></figure>`;
     }
     case "code": {
       const label = textsIn(BLOCK_MESSAGES, lang).code.replace("{language}", () => block.language);
