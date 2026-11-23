@@ -75,6 +75,17 @@ describe("formulas in the texts of a question", () => {
     expect(html).toContain("α");
   });
 
+  test("geometry: an angle and a line over a segment or the period of a decimal", () => {
+    for (const formula of [
+      "$\\angle ABC = 40^\\circ$",
+      "$\\overline{AB} = 5\\ \\text{cm}$",
+      "$\\frac{1}{3} = 0{,}\\overline{3}$",
+    ]) {
+      expect(formulaProblems(formula), formula).toEqual([]);
+      expect(renderWithFormulas(formula), formula).toContain("<math");
+    }
+  });
+
   test("a command outside the list is named, with the list of those it may use", () => {
     const [problem] = formulaProblems("$\\sinh x$");
     expect(problem).toContain("\\sinh is not in the formula command list");
