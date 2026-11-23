@@ -8,6 +8,7 @@
 //   `<details><summary>${messages.solution}</summary>${renderSolution(question)}</details>`
 //
 // Links to other sites are plain links with rel="noopener": nothing is loaded from another server before a click.
+import { numberFormatter } from "../numbers.ts";
 import { translator } from "@lernapps/tooling/i18n";
 import de from "./messages/de.json" with { type: "json" };
 import en from "./messages/en.json" with { type: "json" };
@@ -25,7 +26,7 @@ export const questionMessagesIn = (lang: string): QuestionMessages => textsIn(QU
 /** What rendering in one language needs: its texts and its numbers. */
 export interface Words {
   t: (key: keyof QuestionMessages, params?: Readonly<Record<string, string | number>>) => string;
-  numbers: Intl.NumberFormat;
+  numbers: { format: (value: number) => string };
 }
 const languages = new Map<string, Words>();
 export function questionWords(lang = "de"): Words {
@@ -34,7 +35,7 @@ export function questionWords(lang = "de"): Words {
     const locale = localeOf(lang);
     found = {
       t: translator(questionMessagesIn(lang), locale),
-      numbers: new Intl.NumberFormat(locale, { maximumFractionDigits: 10 }),
+      numbers: numberFormatter(lang, locale),
     };
     languages.set(lang, found);
   }

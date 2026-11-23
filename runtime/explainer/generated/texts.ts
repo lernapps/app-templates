@@ -1,5 +1,6 @@
 // The texts of a task: its template filled in with the values (the placeholders ⟦name⟧ the build leaves), the numbers
 // as a locale writes them, the checks of the placeholders, the steps and the hint.
+import { numberFormatter } from "../../shared/numbers.ts";
 import { evaluate, ExpressionError, Localized, parse, type Value, variables } from "../expression.ts";
 import { Fraction } from "../fraction.ts";
 import { inLanguage, localeOf, type Text } from "../../shared/languages.ts";
@@ -23,16 +24,15 @@ const CHEM = new RegExp(String.raw`\\ce\{\{\{(${PATH})\}\}\}`, "g");
 /** The start of the token of a placeholder that is the whole argument of \ce: ⟦ce:e.gl⟧. */
 const CHEM_TOKEN = "ce:";
 
-const formats = new Map<string, Intl.NumberFormat>();
-/** A number as the page shows it: up to six decimals, no grouping (a learner would type 1500, not 1.500). */
+const formats = new Map<string, { format: (value: number) => string }>();
+/** A number as the page shows it: up to six decimals, in the writing of the language (runtime/shared/numbers.ts). */
 export function formatNumber(value: Fraction, lang: string, decimals?: number): string {
   const key = `${lang}:${decimals ?? ""}`;
   let format = formats.get(key);
   if (format === undefined) {
-    format = new Intl.NumberFormat(localeOf(lang), {
+    format = numberFormatter(lang, localeOf(lang), {
       maximumFractionDigits: decimals ?? 6,
       ...(decimals === undefined ? {} : { minimumFractionDigits: decimals }),
-      useGrouping: false,
     });
     formats.set(key, format);
   }

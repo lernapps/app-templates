@@ -78,7 +78,7 @@ describe("the page without JavaScript", () => {
     expect(solutions).toContain("Victoriafälle richtige Antwort");
     expect(solutions).toContain("Richtige Antwort: Die Aussage stimmt.");
     expect(solutions).toContain("Richtige Antwort: Die Aussage stimmt nicht.");
-    expect(solutions).toContain("Richtige Antwort: 8.848 m (erlaubte Abweichung: 100 m)");
+    expect(solutions).toContain("Richtige Antwort: 8848 m (erlaubte Abweichung: 100 m)");
     expect(solutions).toContain("Richtige Antwort: 1. Zugspitze, 2. Mont Blanc, 3. Kilimandscharo, 4. Mount Everest");
     expect(solutions).toContain("Niagarafälle – USA und Kanada");
   });
