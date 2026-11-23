@@ -250,7 +250,7 @@ describe("one question's solution without JavaScript", () => {
     expect(plain(solution("weltnaturerbe"))).toContain(messages.rightOption);
     expect(plain(solution("totes-meer"))).toContain(`${messages.rightAnswer} ${messages.statementTrue}`);
     expect(plain(solution("uluru"))).toContain(`${messages.rightAnswer} ${messages.statementFalse}`);
-    expect(plain(solution("everest-hoehe"))).toContain("Richtige Antwort: 8.848 m (erlaubte Abweichung: 100 m)");
+    expect(plain(solution("everest-hoehe"))).toContain("Richtige Antwort: 8848 m (erlaubte Abweichung: 100 m)");
     expect(plain(solution("berge-ordnen"))).toContain(
       "Richtige Antwort: 1. Zugspitze, 2. Mont Blanc, 3. Kilimandscharo, 4. Mount Everest",
     );
