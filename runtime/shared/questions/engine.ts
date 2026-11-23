@@ -229,7 +229,9 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
       for (const reason of reasons) line(reason.text, reason.option);
       const missing = missesRight(question, answer);
       if (diagnosis === undefined && missing) line(t("missingRight"));
-      if (options.retry === true && reasons.length === 0 && !missing) line(t("lookAgain"));
+      if (options.retry === true && reasons.length === 0 && !missing) {
+        line(t(question.type === "true-false" ? "lookAgainStatement" : "lookAgain"));
+      }
       // a matching question that may be tried again: how many pairs are right, and the wrong ones marked; the solution
       // stays hidden, so the right entries are not given away
       if (options.retry === true) markPairs(answer);
