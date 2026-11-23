@@ -45,17 +45,23 @@ export interface AudioRef {
   text?: string;
 }
 
-const external = (url: string) => `<a href="${escape(url)}" rel="noopener">${escape(url)}</a>`;
-
-/** The credit of an image or a quotation: its source, as a link when it is a URL, and its licence. */
+/**
+ * The credit of an image or a quotation: its source and its licence, as a small "©" with the credit as its tooltip
+ * (at once on hover and on focus, and as its name for a screen reader). A source that is a URL makes the "©" a link
+ * to it, so that the credit stays one click from its source.
+ */
 export function renderCredit(item: Credit<Text>, lang: string): string {
   if (item.source === undefined || item.licence === undefined) return "";
   const given = inLanguage(item.source, lang);
-  const source = isUrl(given) ? external(given) : escape(given);
-  const text = textsIn(BLOCK_MESSAGES, lang)
-    .credit.replace("{licence}", () => escape(item.licence ?? ""))
-    .replace("{source}", () => source);
-  return ` <span class="block-credit">${text}</span>`;
+  const text = escape(
+    textsIn(BLOCK_MESSAGES, lang)
+      .credit.replace("{licence}", () => item.licence ?? "")
+      .replace("{source}", () => given),
+  );
+  const mark = isUrl(given)
+    ? `<a class="block-credit-mark" href="${escape(given)}" rel="noopener" data-info="${text}" aria-label="${text}">©</a>`
+    : `<span class="block-credit-mark" tabindex="0" role="img" data-info="${text}" aria-label="${text}">©</span>`;
+  return ` <span class="block-credit">${mark}</span>`;
 }
 
 function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): string {
