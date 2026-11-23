@@ -17,6 +17,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { checkBlocks } from "./check-page.ts";
 import { readComponents } from "./components/read.ts";
+import { kurztestAsSelfTest } from "./selftest.ts";
 import {
   isExercise,
   recaps,
@@ -396,6 +397,8 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
       }
       texts.check(yaml, ["title"], "plain");
       texts.check(yaml, ["description"], "plain");
+      // the component Kurztest of the mathe-explainers, which the runtime now has as a block (selftest.ts)
+      page.blocks = kurztestAsSelfTest(page.blocks, components?.names.has("Kurztest") ?? false);
       const pageAnchors = new Set<string>();
       const exercises = new Map<string, Path>();
       checkBlocks(
