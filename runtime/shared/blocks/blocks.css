@@ -121,6 +121,11 @@ figcaption p {
   max-width: 100%;
 }
 
+/* a picture without a width of its own fills the column */
+.block-image-fill {
+  width: auto;
+}
+
 .block-image-credit > .block-credit,
 .block-labelled-image > .block-credit {
   position: absolute;

@@ -64,9 +64,15 @@ export function renderCredit(item: Credit<Text>, lang: string): string {
     : `<span class="block-credit" tabindex="0" role="img" data-info="${text}" aria-label="${text}">©</span>`;
 }
 
-/** An image (or drawing) with its credit as an overlay on its lower right corner; the image alone without a credit. */
-const withCredit = (picture: string, credit: string): string =>
-  credit === "" ? picture : `<div class="block-image-credit">${picture}${credit}</div>`;
+/**
+ * An image (or drawing) with its credit as an overlay on its lower right corner; the image alone without a credit. A
+ * picture without a width of its own (an SVG with only a viewBox, a bar) fills the width, as in a labelled figure, so
+ * that the corner is the one of the column.
+ */
+const withCredit = (picture: string, credit: string, fill = false): string =>
+  credit === ""
+    ? picture
+    : `<div class="block-image-credit${fill ? " block-image-fill" : ""}">${picture}${credit}</div>`;
 
 function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): string {
   const { lang } = context;
@@ -86,7 +92,9 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
       else if (block.draw?.kind === "bar") picture = bar(block.draw.part, block.draw.whole, alt, localeOf(lang));
       else if (block.image !== undefined)
         picture = `<img src="${escape(context.href(block.image))}" alt="${escape(alt)}" loading="lazy" decoding="async">`;
-      return `<figure class="block-figure">${withCredit(picture, renderCredit(block, lang))}<figcaption>${markdown(block.caption)}</figcaption></figure>`;
+      const fill =
+        block.draw?.kind === "bar" || (block.image !== undefined && context.sizeless?.(block.image) === true);
+      return `<figure class="block-figure">${withCredit(picture, renderCredit(block, lang), fill)}<figcaption>${markdown(block.caption)}</figcaption></figure>`;
     }
     case "labelled-figure": {
       const markers = block.labels
