@@ -554,7 +554,9 @@ function main(context: Context): string {
  * missing; what the page repeats, its content says. Plain links, nothing loaded before a click.
  */
 function recapNotice(context: Context, recap: readonly string[]): string {
-  const link = (competency: string) => external(mapUrl(competency), competency);
+  // the link leaves the app: the page says so, as a link to another site should
+  const link = (competency: string) =>
+    `${external(mapUrl(competency), competency)} <span class="explainer-recap-hint">(${plain(context.t("recapLinkHint"))})</span>`;
   const label = plain(context.t("recap"));
   let text: string;
   if (recap.length === 1) {

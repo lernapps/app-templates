@@ -412,7 +412,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     const notice = /<aside class="explainer-recap"[\s\S]*?<\/aside>/.exec(page)?.[0] ?? "";
     expect(notice).toContain("Wiederholung");
     expect(notice).toContain(
-      'nennt sie beim Baustein <a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a>.',
+      'nennt sie beim Baustein <a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a> <span class="explainer-recap-hint">(externe Seite, die Lernlandkarte auf lernapps.net)</span>.',
     );
     expect(notice).not.toContain("<ul>");
     // at the top: before the first section
@@ -438,8 +438,8 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     expect(notice("de", "kapitel/wdh/")).toContain(
       [
         "<p>Diese Seite wiederholt mehrere Dinge, die du schon können solltest. Üben kannst du sie in anderen Apps; die Lernlandkarte von lernapps.net nennt sie bei diesen Bausteinen:</p>",
-        '<ul><li><a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a></li>' +
-          '<li><a href="https://lernapps.net/apps/map/physik/c/masse/" rel="noopener">physik/masse</a></li></ul>',
+        '<ul><li><a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a> <span class="explainer-recap-hint">(externe Seite, die Lernlandkarte auf lernapps.net)</span></li>' +
+          '<li><a href="https://lernapps.net/apps/map/physik/c/masse/" rel="noopener">physik/masse</a> <span class="explainer-recap-hint">(externe Seite, die Lernlandkarte auf lernapps.net)</span></li></ul>',
       ].join("\n"),
     );
     expect(notice("en", "en/kapitel/wdh/")).toContain("This page goes over several things you should already know.");
