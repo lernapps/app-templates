@@ -67,9 +67,54 @@ figcaption p {
   margin: 0;
 }
 
+/* the credit of an image or a quotation: a small "©" that says source and licence at once on hover and on focus (a title
+   would show late, and not on a touch screen) */
 .block-credit {
   display: block;
   font-size: 0.875rem;
+}
+
+.block-credit-mark {
+  position: relative;
+  display: inline-block;
+  min-width: 1.5rem;
+  color: var(--page-muted);
+  text-align: center;
+  text-decoration: none;
+  cursor: help;
+}
+
+.block-credit-mark::after {
+  content: attr(data-info);
+  position: absolute;
+  bottom: calc(100% + 0.375rem);
+  left: 0;
+  z-index: 10;
+  width: max-content;
+  max-width: min(20rem, 80vw);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  background: var(--page-text);
+  color: var(--page-background);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.block-credit-mark:hover::after,
+.block-credit-mark:focus::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.block-credit-mark:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
 }
 
 .block-labelled-image {

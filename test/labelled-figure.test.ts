@@ -70,7 +70,7 @@ describe("the markers and the legend of a labelled figure", () => {
         ),
         `</div>`,
         `<ol class="block-legend">${TEXTS.map((text) => `<li>${text}</li>`).join("")}</ol>`,
-        `<figcaption><p>Beschrifte A bis E.</p> <span class="block-credit">Quelle: eigene Zeichnung. Lizenz: CC-BY-4.0.</span></figcaption>`,
+        `<figcaption><p>Beschrifte A bis E.</p> <span class="block-credit"><span class="block-credit-mark" tabindex="0" role="img" data-info="Quelle: eigene Zeichnung. Lizenz: CC-BY-4.0." aria-label="Quelle: eigene Zeichnung. Lizenz: CC-BY-4.0.">©</span></span></figcaption>`,
         `</figure>`,
       ].join(""),
     );
