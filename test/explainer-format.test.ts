@@ -340,6 +340,17 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
       "src/kapitel/wdh.yaml:28: blocks[0].blocks[3]: the exercise generated is one too many on a recap page: it repeats physik/gewichtskraft-berechnen and has at most 2 exercises, to check what it repeats, and the apps of that competency's strand practise it; remove the exercise, or make it a page of the app's own competencies",
     ],
     [
+      "a title for a competency the page does not repeat",
+      (root) =>
+        edit(
+          root,
+          "kapitel/wdh.yaml",
+          "recap: physik/gewichtskraft-berechnen",
+          "recap: physik/gewichtskraft-berechnen\nrecapTitles:\n  physik/masse: { de: Masse, en: Mass }",
+        ),
+      "src/kapitel/wdh.yaml:4: recapTitles.physik/masse: physik/masse is not in recap (physik/gewichtskraft-berechnen); give a title only to a competency the page repeats",
+    ],
+    [
       "a third exercise on a page that repeats several",
       (root) =>
         writeFileSync(
@@ -450,6 +461,19 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     expect(start).toMatch(
       /Gewichtskraft – kurz wiederholt<\/a> <span class="explainer-recap-note">\(Wiederholung\)<\/span>/,
     );
+  });
+
+  test("names a competency by its title when the page gives one, else by its id", () => {
+    const titled = RECAP_SEVERAL.replace(
+      "recap: [physik/gewichtskraft-berechnen, physik/masse]",
+      "recap: [physik/gewichtskraft-berechnen, physik/masse]\nrecapTitles:\n  physik/masse: { de: Masse messen, en: Measuring mass }",
+    );
+    const site = loadSite(withRecap(v2(), titled), 0);
+    const route = routes(site).find((candidate) => candidate.lang === "de" && candidate.path === "kapitel/wdh/");
+    const body = renderPage(site, route ?? routes(site)[0]!).body;
+    const notice = /<aside class="explainer-recap"[\s\S]*?<\/aside>/.exec(body)?.[0] ?? "";
+    expect(notice).toContain('rel="noopener">Masse messen</a>');
+    expect(notice).toContain('rel="noopener">physik/gewichtskraft-berechnen</a>');
   });
 
   test("repeating several, links each competency on the learning map, in a list", () => {

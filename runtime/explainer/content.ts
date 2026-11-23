@@ -188,6 +188,12 @@ export interface Page {
    * (recap: [<subject>/<competency>, …]); here always a list (recaps).
    */
   recap?: readonly string[];
+  /**
+   * Format 2, on a recap page: the title of a competency of `recap` as the page's readers know it, by its id (a plain
+   * text or a map by language). The notice at the top of the page names the competency by it; without one it names the
+   * id, as before.
+   */
+  recapTitles?: Readonly<Record<string, Text>>;
   /** What the page teaches, for the tutor's scope (scope.ts). */
   scope?: Text;
   blocks: readonly Block[];

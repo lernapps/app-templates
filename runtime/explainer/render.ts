@@ -534,12 +534,13 @@ function main(context: Context): string {
       const page = route.page;
       if (page === undefined) return title;
       // the title and way A in one row: beside it on a wide screen, below it on a narrow one (explainer.css)
+      const recapBlock = page.recap === undefined ? "" : recapNotice(context, page.recap, page.recapTitles);
       return [
         `<div class="explainer-title-row">`,
         title,
         tutorSection(context),
         `</div>`,
-        page.recap === undefined ? "" : recapNotice(context, page.recap),
+        recapBlock,
         pageContents(context, page.blocks),
         renderBlocks(context, page.blocks, 1),
         feedbackInvite(context),
@@ -553,10 +554,10 @@ function main(context: Context): string {
  * apps are that practise it; the link's text is the competency's id. The runtime writes it, so that it cannot be
  * missing; what the page repeats, its content says. Plain links, nothing loaded before a click.
  */
-function recapNotice(context: Context, recap: readonly string[]): string {
+function recapNotice(context: Context, recap: readonly string[], titles: Readonly<Record<string, Text>> = {}): string {
   // the link leaves the app: the page says so, as a link to another site should
   const link = (competency: string) =>
-    `${external(mapUrl(competency), competency)} <span class="explainer-recap-hint">(${plain(context.t("recapLinkHint"))})</span>`;
+    `${external(mapUrl(competency), titles[competency] === undefined ? competency : inLanguage(titles[competency], context.lang))} <span class="explainer-recap-hint">(${plain(context.t("recapLinkHint"))})</span>`;
   const label = plain(context.t("recap"));
   let text: string;
   if (recap.length === 1) {
