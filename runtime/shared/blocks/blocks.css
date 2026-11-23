@@ -68,30 +68,31 @@ figcaption p {
 }
 
 /* the credit of an image or a quotation: a small "©" that says source and licence at once on hover and on focus (a title
-   would show late, and not on a touch screen) */
+   would show late, and not on a touch screen). On an image it lies on the lower right corner, on a chip that reads on
+   any picture; in a quotation it stands at the end of the caption. The tooltip is not there until it shows (so that it
+   never widens the page), opens upwards and ends at the "©", so that it grows into the picture and the page. */
 .block-credit {
-  display: inline;
-  font-size: 1rem;
-}
-
-.block-credit-mark {
   position: relative;
   display: inline-block;
   min-width: 1.5rem;
+  min-height: 1.5rem;
+  line-height: 1.5rem;
   color: var(--page-muted);
+  font-size: 1rem;
   text-align: center;
   text-decoration: none;
   cursor: help;
 }
 
-.block-credit-mark::after {
+.block-credit::after {
   content: attr(data-info);
   position: absolute;
+  right: 0;
   bottom: calc(100% + 0.375rem);
-  left: 0;
   z-index: 10;
+  display: none;
   width: max-content;
-  max-width: min(20rem, 80vw);
+  max-width: min(20rem, calc(100vw - 2rem));
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
   background: var(--page-text);
@@ -101,20 +102,38 @@ figcaption p {
   text-align: left;
   white-space: normal;
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
-  opacity: 0;
-  visibility: hidden;
   pointer-events: none;
 }
 
-.block-credit-mark:hover::after,
-.block-credit-mark:focus::after {
-  opacity: 1;
-  visibility: visible;
+.block-credit:hover::after,
+.block-credit:focus::after {
+  display: block;
 }
 
-.block-credit-mark:focus-visible {
+.block-credit:focus-visible {
   outline: 3px solid var(--page-text);
   outline-offset: 2px;
+}
+
+.block-image-credit {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.block-image-credit > .block-credit,
+.block-labelled-image > .block-credit {
+  position: absolute;
+  right: 0.375rem;
+  bottom: 0.375rem;
+  border-radius: 0.25rem;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+}
+
+.block-image-credit > .block-credit::after,
+.block-labelled-image > .block-credit::after {
+  right: -0.375rem;
 }
 
 .block-labelled-image {
