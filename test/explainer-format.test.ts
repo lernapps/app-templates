@@ -447,7 +447,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     const notice = /<aside class="explainer-recap"[\s\S]*?<\/aside>/.exec(page)?.[0] ?? "";
     expect(notice).toContain("Wiederholung");
     expect(notice).toContain(
-      'nennt sie beim Baustein <a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a> <span class="explainer-recap-hint">(externe Seite, die Lernlandkarte auf lernapps.net)</span>.',
+      'Das brauchst du für dieses Kapitel: <a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a> <span class="explainer-recap-hint">(externe Seite, die Lernlandkarte auf lernapps.net)</span>.',
     );
     expect(notice).not.toContain("<ul>");
     // at the top: before the first section
@@ -463,7 +463,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     );
   });
 
-  test("names a competency by its title when the page gives one, else by its id", () => {
+  test("names a competency by its title when the page gives one, else by its id; the notice comes before the tutor", () => {
     const titled = RECAP_SEVERAL.replace(
       "recap: [physik/gewichtskraft-berechnen, physik/masse]",
       "recap: [physik/gewichtskraft-berechnen, physik/masse]\nrecapTitles:\n  physik/masse: { de: Masse messen, en: Measuring mass }",
@@ -474,6 +474,9 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     const notice = /<aside class="explainer-recap"[\s\S]*?<\/aside>/.exec(body)?.[0] ?? "";
     expect(notice).toContain('rel="noopener">Masse messen</a>');
     expect(notice).toContain('rel="noopener">physik/gewichtskraft-berechnen</a>');
+    // what a recap page says first is what it is for: the tutor and the first section follow the notice
+    expect(body.indexOf("explainer-recap")).toBeLessThan(body.indexOf("explainer-tutor-page"));
+    expect(body).not.toContain("explainer-toc");
   });
 
   test("repeating several, links each competency on the learning map, in a list", () => {
@@ -485,12 +488,12 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
       /<aside class="explainer-recap"[\s\S]*?<\/aside>/.exec(body(lang, path))?.[0] ?? "";
     expect(notice("de", "kapitel/wdh/")).toContain(
       [
-        "<p>Diese Seite wiederholt mehrere Dinge, die du schon können solltest. Üben kannst du sie in anderen Apps; die Lernlandkarte von lernapps.net nennt sie bei diesen Bausteinen:</p>",
+        "<p>Das brauchst du für dieses Kapitel:</p>",
         '<ul><li><a href="https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/" rel="noopener">physik/gewichtskraft-berechnen</a> <span class="explainer-recap-hint">(externe Seite, die Lernlandkarte auf lernapps.net)</span></li>' +
           '<li><a href="https://lernapps.net/apps/map/physik/c/masse/" rel="noopener">physik/masse</a> <span class="explainer-recap-hint">(externe Seite, die Lernlandkarte auf lernapps.net)</span></li></ul>',
       ].join("\n"),
     );
-    expect(notice("en", "en/kapitel/wdh/")).toContain("This page goes over several things you should already know.");
+    expect(notice("en", "en/kapitel/wdh/")).toContain("You need these for this chapter:");
   });
 
   test("tells the tutor that it is a recap, with the link to the learning map", () => {

@@ -534,13 +534,26 @@ function main(context: Context): string {
       const page = route.page;
       if (page === undefined) return title;
       // the title and way A in one row: beside it on a wide screen, below it on a narrow one (explainer.css)
-      const recapBlock = page.recap === undefined ? "" : recapNotice(context, page.recap, page.recapTitles);
+      // a recap page says first what it is for; the tutor comes after that, and its sections are short enough to need
+      // no table of contents
+      if (page.recap !== undefined) {
+        return [
+          `<div class="explainer-title-row explainer-title-row-recap">`,
+          title,
+          `</div>`,
+          recapNotice(context, page.recap, page.recapTitles),
+          `<div class="explainer-title-row explainer-title-row-recap">`,
+          tutorSection(context),
+          `</div>`,
+          renderBlocks(context, page.blocks, 1),
+          feedbackInvite(context),
+        ].join("\n");
+      }
       return [
         `<div class="explainer-title-row">`,
         title,
         tutorSection(context),
         `</div>`,
-        recapBlock,
         pageContents(context, page.blocks),
         renderBlocks(context, page.blocks, 1),
         feedbackInvite(context),
