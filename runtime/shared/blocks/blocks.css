@@ -70,8 +70,8 @@ figcaption p {
 /* the credit of an image or a quotation: a small "©" that says source and licence at once on hover and on focus (a title
    would show late, and not on a touch screen) */
 .block-credit {
-  display: block;
-  font-size: 0.875rem;
+  display: inline;
+  font-size: 1rem;
 }
 
 .block-credit-mark {
