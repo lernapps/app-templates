@@ -224,12 +224,17 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
           return {
             id: element.id,
             texts: own.map((text) => fold(text.textContent)),
-            // what a learner sees of each "Lösung": nothing while it is closed
+            // what a learner sees of each "Lösung": nothing while it is closed (innerText shows a lone variable in the
+            // italic of mathematics, U+1D43A for G, which the NFKC form of the comparison folds back)
             shown: solutions.map((details) => (details.open ? fold((details as HTMLElement).innerText) : "")),
           };
         }),
       )
-    ).map((item) => ({ ...item, texts: item.texts.map(squash), shown: item.shown.map(squash) }));
+    ).map((item) => ({
+      ...item,
+      texts: item.texts.map(squash),
+      shown: item.shown.map((shown) => squash(shown.normalize("NFKC"))),
+    }));
   const before = await read();
   expect(
     before.map(({ id, texts }) => ({ id, texts })),
@@ -246,7 +251,7 @@ async function expectExercises(page: Page, item: PageOutline): Promise<void> {
         expect(
           after[index]?.shown[at] ?? "",
           `${item.url}: ${exercise.id}, Lösung ${at + 1} shows ${answer}`,
-        ).toContain(squash(answer));
+        ).toContain(squash(answer.normalize("NFKC")));
       }
     });
   }

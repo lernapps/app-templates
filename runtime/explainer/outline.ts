@@ -336,7 +336,7 @@ function walk(
           answers:
             question.type === "single-choice" || question.type === "multiple-choice"
               ? question.options.filter((option) => option.correct).map((option) => shownText(option.text))
-              : [plainText(answerText(question, lang))],
+              : [plainText(answerText(question, lang, renderWithFormulas))],
         });
       }
     }
