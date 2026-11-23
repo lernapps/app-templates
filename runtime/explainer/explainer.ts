@@ -62,6 +62,7 @@ import {
 } from "./tasks.ts";
 import { escape } from "../shared/html.ts";
 import { startVideos } from "./video.ts";
+import { startSelfTests } from "./selftest.ts";
 import { startVocabulary } from "./vocabulary.ts";
 import { startAssessment } from "./assessment-client.ts";
 import { startFeedback } from "./feedback-client.ts";
@@ -777,6 +778,7 @@ export function startExplainer(root: Document = document): void {
   });
   startVideos(root);
   startVocabulary(root);
+  startSelfTests(root);
   startAudio(root);
   startFeedback(root);
   startAssessment(root, {

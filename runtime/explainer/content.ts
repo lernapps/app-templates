@@ -121,6 +121,13 @@ export interface VocabularyEntry {
   inflection?: readonly VocabularyForms[];
 }
 
+/** An option of a self-test block: the text, whether it is the right one, and why (selftest.ts). */
+export interface SelfTestOption {
+  text: Text;
+  correct: boolean;
+  info: Text;
+}
+
 export type Block =
   | MaterialBlock<Text>
   | { type: "timeline"; events?: readonly Event[]; data?: string }
@@ -133,6 +140,16 @@ export type Block =
       caption: Text;
       languages: { source: string; target: string };
       entries: readonly VocabularyEntry[];
+    }
+  /** A short question with options and immediate feedback, for a recap page; no exercise (selftest.ts). */
+  | {
+      type: "self-test";
+      question: Text;
+      options: readonly SelfTestOption[];
+      right?: Text;
+      wrong?: Text;
+      /** Set when the block stands for a vue-component Kurztest: its texts are written under props. */
+      viaComponent?: true;
     }
   | { type: "example" | "note"; title: Text; blocks: readonly Block[] }
   | { type: "section"; id: string; title: Text; blocks: readonly Block[] }

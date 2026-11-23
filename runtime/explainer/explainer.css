@@ -2592,3 +2592,78 @@ html.explainer-feedback-on main .explainer-block[data-noting] {
     display: none !important;
   }
 }
+
+/* A self-test (selftest.ts): the question, the options as buttons, the feedback; folded answer without JavaScript. */
+.explainer-selftest {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.4rem;
+}
+
+.explainer-selftest-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--page-muted, var(--page-text));
+}
+
+.explainer-selftest-question {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.explainer-selftest-options {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-selftest-option {
+  margin: 0.25rem 0;
+}
+
+.explainer-selftest-pick {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--page-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.explainer-selftest-pick:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
+}
+
+.explainer-selftest-pick[aria-pressed="true"] {
+  border-width: 3px;
+  padding: calc(0.5rem - 2px) calc(0.75rem - 2px);
+  font-weight: 600;
+}
+
+.explainer-selftest-feedback {
+  margin: 0.5rem 0 0;
+  min-height: 1.5rem;
+}
+
+.explainer-selftest-feedback.question-right,
+.explainer-selftest-feedback.question-wrong {
+  padding: 0.4rem 0.6rem;
+}
+
+.explainer-selftest-answer {
+  margin-top: 0.5rem;
+}
+
+.explainer-selftest-answer ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}

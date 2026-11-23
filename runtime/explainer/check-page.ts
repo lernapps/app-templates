@@ -274,6 +274,9 @@ export function checkBlocks(check: PageCheck, blocks: readonly Block[], path: Pa
       case "vocabulary":
         checkVocabulary(check, block, at);
         break;
+      case "self-test":
+        checkSelfTest(check, block, at);
+        break;
       default:
         checkExerciseId(check, block.id, at);
         for (const problem of questionDetails(block, texts.languages, undefined, appChecks(check, at))) {
@@ -323,6 +326,29 @@ function checkVocabulary(check: PageCheck, block: BlockOf<"vocabulary">, at: Pat
       });
     });
   });
+}
+
+/**
+ * A self-test block: its texts, and exactly one right option (a test with none or two right options is a content
+ * mistake). A block that stands for a Kurztest component has its texts under props, where it was written.
+ */
+function checkSelfTest(check: PageCheck, block: BlockOf<"self-test">, at: Path): void {
+  const { yaml, texts, problems } = check;
+  const here: Path = block.viaComponent === true ? [...at, "props"] : at;
+  texts.check(yaml, [...here, "question"], "markdown");
+  if (block.right !== undefined) texts.check(yaml, [...here, "right"], "markdown");
+  if (block.wrong !== undefined) texts.check(yaml, [...here, "wrong"], "markdown");
+  block.options.forEach((_option, index) => {
+    texts.check(yaml, [...here, "options", index, "text"], "markdown");
+    texts.check(yaml, [...here, "options", index, "info"], "markdown");
+  });
+  const right = block.options.filter((option) => option.correct).length;
+  if (right !== 1)
+    problems.at(
+      yaml,
+      [...here, "options"],
+      `${right === 0 ? "no option is" : `${right} options are`} correct: true; a self-test has exactly one right option, each with its reason in info`,
+    );
 }
 
 /** A language task: its texts, its material, and what language.ts finds in its answers, prompts and examples. */

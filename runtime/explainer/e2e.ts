@@ -323,6 +323,35 @@ async function expectVocabularies(page: Page, item: PageOutline): Promise<void> 
 }
 
 /**
+ * With JavaScript: each self-test shows its options as buttons and hides the folded answer; the arrow keys answer
+ * nothing, a pick (Enter) says whether it was right and why, and another pick replaces that feedback.
+ */
+async function checkSelfTests(page: Page, item: PageOutline): Promise<void> {
+  await page.goto(`./${item.url}`);
+  const blocks = page.locator("main .explainer-selftest");
+  await expect(blocks, `${item.url}: one block per self-test`).toHaveCount(item.selfTests.length);
+  for (const [index, selfTest] of item.selfTests.entries()) {
+    const block = blocks.nth(index);
+    const picks = block.locator(".explainer-selftest-pick");
+    await expect(picks, "an option is a button each").toHaveCount(selfTest.options);
+    await expect(picks.first()).toBeVisible();
+    await expect(
+      block.locator(".explainer-selftest-answer"),
+      "the folded answer is for readers without JavaScript",
+    ).toBeHidden();
+    const feedback = block.locator(".explainer-selftest-feedback");
+    await picks.first().focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(feedback, "an arrow key answers nothing").toHaveText("");
+    await page.keyboard.press("Enter");
+    await expect(feedback, "a pick gives feedback with the reason").not.toHaveText("");
+    await expect(picks.first()).toHaveAttribute("aria-pressed", "true");
+    const box = await picks.first().boundingBox();
+    expect(box?.height ?? 0, "an option is at least 44 px high").toBeGreaterThanOrEqual(44);
+  }
+}
+
+/**
  * With JavaScript: the first vocabulary block of a page covers the words of one language and uncovers each on its
  * own, switches to the other language, and uncovers all when its button is pressed again.
  */
@@ -1428,6 +1457,13 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
           if (item.vocabularies.length === 0) continue;
           test(`${item.url}: a vocabulary block covers a language and uncovers each word`, async ({ page }) => {
             await checkVocabulary(page, item);
+          });
+        }
+      if (!content)
+        for (const item of app.pages["de"] ?? []) {
+          if (item.selfTests.length === 0) continue;
+          test(`${item.url}: a self-test gives feedback on a pick, no arrow key answers`, async ({ page }) => {
+            await checkSelfTests(page, item);
           });
         }
       if (content)
