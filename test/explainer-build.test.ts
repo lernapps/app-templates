@@ -137,12 +137,12 @@ describe("one build writes every page", () => {
         }
         if (component !== undefined && withComponents.includes(route.path)) {
           expect(html).toMatch(component.island);
-          // in a form with the explainer's "Prüfen", hidden and disabled until it hydrates and there is an answer
+          // in a form with the explainer's "Prüfen", hidden until it hydrates
           expect(html).toContain(
             '<form class="explainer-component-form" novalidate><div class="explainer-island" hidden>',
           );
           expect(html).toMatch(
-            /<\/div><p class="question-actions" hidden><button type="submit" class="question-check" disabled>(Prüfen|Check)<\/button><\/p><\/form>/,
+            /<\/div><p class="question-actions" hidden><button type="submit" class="question-check">(Prüfen|Check)<\/button><\/p><\/form>/,
           );
           // an exercise component: its anchor, its task number with "Neue Aufgabe" for JavaScript, and without it
           // the task of number 1 as its describe states it, with the solution folded

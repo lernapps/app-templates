@@ -24,7 +24,7 @@
 // it rejects a wrong one (a mistake, with its message), shows its solution on "Lösung zeigen",
 // "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
 // console error, folds a nojs text it keeps, and an exercise component has the explainer's "Prüfen" under it, styled as
-// the questions' and disabled until there is an answer, which checks the first accepted and the first rejected example
+// the questions' (it asks for an answer first when there is none), which checks the first accepted and the first rejected example
 // of its block, as the component emits them, and gives the feedback, in view with the focus; at its address ?<id>=<n> it shows "Aufgabe
 // Nr. n" and gets the seed of task number n from its table, and "Neue Aufgabe", the arrow beside the number, moves to
 // the next number in the address and on the page.
@@ -699,7 +699,13 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     });
     expect(look.height, `${component.name}: "Prüfen" is at least 44 px high`).toBeGreaterThanOrEqual(44);
     expect(look.background, `${component.name}: "Prüfen" is filled with the accent`).toBe(look.filled);
-    await expect(check, `${component.name}: "Prüfen" waits for an answer`).toBeDisabled();
+    // as in the questions, "Prüfen" is there without an answer and then says to answer first
+    await expect(check, `${component.name}: "Prüfen" shows before an answer`).toBeEnabled();
+    await check.click();
+    await expect(
+      element.locator(":scope > .question-feedback"),
+      `${component.name}: "Prüfen" without an answer asks for one`,
+    ).toHaveText(questionMessagesIn("de").incomplete);
     // the block's examples, as the component emits them: "Prüfen" checks each with the logic module, one feedback, in
     // view with the focus, and waits for the next answer
     const feedback = element.locator(":scope > .question-feedback");
