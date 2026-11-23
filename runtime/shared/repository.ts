@@ -23,8 +23,12 @@ export function githubRepository(remote: string): string | undefined {
 /** The output of git in `root`, trimmed; undefined when git fails or is missing. */
 function git(root: string, args: readonly string[]): string | undefined {
   try {
+    // a hook (pre-push in a linked worktree) runs with GIT_DIR and its kin set, which would answer for the hook's
+    // repository instead of the one in `root`
+    const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith("GIT_")));
     const output = execFileSync("git", ["-C", root, ...args], {
       encoding: "utf8",
+      env,
       stdio: ["ignore", "pipe", "ignore"],
     });
     return output.trim() || undefined;
