@@ -10,6 +10,8 @@ Zweck: Pull Requests an Explainern deutlich schneller validieren.
 
 ## Key Decisions
 - Workflow `epcc` (neues Feature, Aufgabe ist klar umrissen).
+- Entscheidungen des Nutzers: (1) Geänderte Blöcke: alter Stand einklappbar; auf breitem Bildschirm nebeneinander und standardmäßig ausgeklappt. (2) Zuerst Preview, Prinzip aber weiter verwendbar (lokal, CLI). (3) Umfang gleich komplett: Blöcke, Seiten, Kapitel, app.yaml, damit die Architektur trägt. (4) Erst Runtime in app-templates, CI-Anbindung in lernapps/tooling danach.
+- Nächster Schritt auf Wunsch des Nutzers: Mock-up der Darstellung.
 - Gewünschte Darstellung (vom Nutzer): Ziel-App lauffähig, Änderungen inline pro Block. Kein reiner Text-Bericht.
 
 ## Notes
@@ -29,10 +31,12 @@ Zweck: Pull Requests an Explainern deutlich schneller validieren.
 ### Phase Entrance Criteria
 - Der Nutzer hat ein Ziel genannt (erfüllt).
 ### Tasks
-- [ ] Offene Fragen mit dem Nutzer klären (siehe Notes) und Einordnung in arc42 (ch. 5, 7, 8) bestätigen
+- [ ] Mock-up der Darstellung vom Nutzer bestätigen lassen
+- [ ] Einordnung in arc42 (ch. 5, 7, 8) bestätigen
 
 ### Completed
 - [x] Created development plan file
+- [x] Offene Fragen vom Nutzer beantwortet (siehe Key Decisions)
 - [x] Block-Modell verstanden (Block-IDs, Positionen, Verschachtelung)
 - [x] Render-Pipeline verstanden (Wrapper pro Block in `render.ts`)
 - [x] Matching Basis <-> Ziel über Position und ID als machbar eingeschätzt
