@@ -492,11 +492,11 @@ addresses: qg-checkable, con-runtime-unchanged
 
 A competency may require others the app does not practise; its learners may need them again. A recap page repeats
 one of them, or several at once: one compact recap at the start of the chapter that needs them, instead of a page
-each. It has descriptive blocks only: practising stays the job of the apps the map lists for each competency. The
+each. It is mostly descriptive blocks, with at most two exercises to check what it repeats: practising stays the job of the apps the map lists for each competency. The
 runtime, not the author, links each competency on the map, with its id as the link's text, so no link can be
 missing; the content of the page, what the learner should already know, is the author's, and `lernapps check` warns
-when it does not name a competency it repeats. The catalog checks that each competency exists. Rejected: exercises on
-a recap page (the app would practise a competency the map does not show for it); a link the author writes (it could
+when it does not name a competency it repeats. The catalog checks that each competency exists. Rejected: more than two exercises on
+a recap page (the app would practise a competency the map does not show for it; with no exercise at all, authors built full pages with exercises that only claim to repeat, instead of using a recap page); a link the author writes (it could
 be missing or wrong); the runtime writing the competencies' names and sentences from the map (the build would depend
 on the map); several values in `competencies` for the same purpose (a page practises, as a rule, one competency).
 

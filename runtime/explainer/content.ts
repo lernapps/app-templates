@@ -166,7 +166,7 @@ export interface Page {
   ahead?: readonly string[];
   /**
    * Format 2: makes the page a recap page, which repeats these competencies (ones the app does not practise),
-   * <subject>/<competency>, instead of practising competencies of its own: no exercise, a link to each competency on the
+   * <subject>/<competency>, instead of practising competencies of its own: at most two exercises, a link to each competency on the
    * learning map, left out of the self-assessment. The page names one (recap: <subject>/<competency>) or several
    * (recap: [<subject>/<competency>, …]); here always a list (recaps).
    */

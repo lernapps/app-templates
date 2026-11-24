@@ -1,12 +1,12 @@
 // Reads an explainer's content from src/ at build time and validates it: each file against its part of the schema of
 // its format (explainer.v1.schema.json without `format` in src/app.yaml, explainer.v2.schema.json with `format: 2`),
 // then what a schema cannot say. In format 2, every page names its competencies when the app has a strand or a subject
-// (or is a recap page, recap: <subject>/<competency> or a list of them), and none when its strand is none; a recap page has no exercise, and
+// (or is a recap page, recap: <subject>/<competency> or a list of them), and none when its strand is none; a recap page has at most two exercises, and
 // every other page at least one. The order lists are complete and unique, the depth is
 // app, chapter, page and two section levels, ids are unique per level, every text is complete in each declared
 // language and in no other, texts hold restricted Markdown without raw HTML or headings, formulas are in the command
 // list, bundled images and quotes name source and licence, an audio file carries its marking as AI-generated speech, links to pages of the app find their page and section,
-// every page but a recap page has an exercise, a question of the question types passes the validation of a question in every declared language,
+// every page but a recap page has an exercise (a recap page at most two), a question of the question types passes the validation of a question in every declared language,
 // a generated exercise declares what it uses and passes its property test over fixed seeds (generated.ts), the check
 // of each exercise judges its examples as they are listed, a vue-component block names a component of src/components/
 // that passes its checks (components.ts), its props match the component's prop types, it has its nojs text (an exercise
@@ -47,6 +47,8 @@ export const RULE_URL = "https://lernapps.net/tooling/rules/#explainer-content-v
 const SRC = "src/ holds only app.yaml, the chapter folders, data/, images/, audio/, components/ and main.ts";
 /** Chapter ids that would collide with other addresses: data files, images, the glossary, the scope, language trees. */
 const RESERVED = new Set(["data", "images", "audio", "glossar", "medien", "components", "assets", "scope", ASSESSMENT]);
+/** The exercises a recap page may have, components included: enough to check what it repeats, not to practise it. */
+export const MAX_RECAP_EXERCISES = 2;
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const IMAGE = /^[a-z0-9]+(-[a-z0-9]+)*\.(svg|png|jpg|webp)$/;
 const AUDIO = /^[a-z0-9]+(-[a-z0-9]+)*\.mp3$/;
@@ -136,7 +138,7 @@ function checkAssessment(
         problems.at(
           yaml,
           path,
-          `${ref} is on a recap page, which has no exercise and is left out of the self-assessment; choose an exercise of a page of the app's own competencies`,
+          `${ref} is on a recap page, whose exercises are left out of the self-assessment; choose an exercise of a page of the app's own competencies`,
         );
         return;
       }
@@ -418,14 +420,17 @@ export function check(root: string, seeds = SEEDS): { site?: Site; problems: str
         0,
       );
       if (page.recap !== undefined) {
-        // a recap page repeats competencies the app does not practise: no exercise, not even a component's
-        for (const [block, path] of blockPaths(page.blocks, ["blocks"])) {
+        // a recap page repeats competencies the app does not practise: at most MAX_RECAP_EXERCISES exercises, a
+        // component's included, to check what it repeats; more is a page of the app's own competencies
+        const exercisesOf = [...blockPaths(page.blocks, ["blocks"])].filter(
+          ([block]) => isExercise(block) || uses.some((use) => use.block === block && use.component.exercise),
+        );
+        for (const [block, path] of exercisesOf.slice(MAX_RECAP_EXERCISES)) {
           const component = uses.find((use) => use.block === block && use.component.exercise);
-          if (!isExercise(block) && component === undefined) continue;
           problems.at(
             yaml,
             path,
-            `${component === undefined ? `the exercise ${block.type}` : `the exercise component ${component.component.name}`} is not allowed on a recap page: it repeats ${page.recap.join(", ")} with descriptive blocks only, and the apps of ${page.recap.length === 1 ? "that competency's strand practise it" : "those competencies' strands practise them"}; remove the exercise, or make it a page of the app's own competencies`,
+            `${component === undefined ? `the exercise ${block.type}` : `the exercise component ${component.component.name}`} is one too many on a recap page: it repeats ${page.recap.join(", ")} and has at most ${MAX_RECAP_EXERCISES} exercises, to check what it repeats, and the apps of ${page.recap.length === 1 ? "that competency's strand practise it" : "those competencies' strands practise them"}; remove the exercise, or make it a page of the app's own competencies`,
           );
         }
       } else if (![...allBlocks(page.blocks)].some(isExercise)) {

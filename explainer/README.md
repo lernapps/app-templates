@@ -60,7 +60,7 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - No timer, no game.
 - At most two section levels in a page.
 - An exercise component does not count as a page's required exercise: each page also needs a question or a generated
-  exercise. A recap page has none at all.
+  exercise. A recap page has none required and at most two, to check what it repeats.
 - Stores nothing but the learner's choice of AI tutor, if they make it, the choice to load videos directly, and the
   last result of each self-assessment they do.
 - A self-assessment needs JavaScript (without it, it is not offered).

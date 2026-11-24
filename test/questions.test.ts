@@ -85,6 +85,13 @@ describe("the validation of one question", () => {
       },
     ],
     ["a link that is not https", { ...copy("uluru"), links: [{ title: "Uluru", url: "http://example.org" }] }],
+    [
+      "a link to the learning map",
+      {
+        ...copy("uluru"),
+        links: [{ title: "Lernlandkarte", url: "https://lernapps.net/apps/map/geografie/c/orientierung/" }],
+      },
+    ],
     ["an item twice", { ...copy("berge-ordnen"), items: ["Zugspitze", "Zugspitze"] }],
     ["an empty hint", { ...copy("berge-ordnen"), hint: "" }],
     [
@@ -122,6 +129,21 @@ describe("the validation of one question", () => {
     const found = validateQuestion(item, "questions[0]");
     expect(found.length).toBeGreaterThan(0);
     expect(found).toEqual(inBank(item));
+  });
+
+  test("a link for further reading does not point to the learning map, but another page of lernapps.net may", () => {
+    const linked = (url: string) => ({ ...copy("uluru"), links: [{ title: "Mehr", url }] });
+    expect(validateQuestion(linked("https://lernapps.net/apps/map/geografie/"), "questions[0]")).toEqual([
+      'questions[0] (question "uluru"): a link for further reading must not point to the learning map (https://lernapps.net/apps/map/geografie/): the map is an index of competencies, not a source on this question; link a page that explains exactly what the question asks, e.g. an encyclopedia article or a textbook page, or leave the link out',
+    ]);
+    expect(validateQuestion(linked("https://lernapps.net/apps/map"), "questions[0]")).toHaveLength(1);
+    expect(validateQuestion(linked("https://lernapps.net/apps/other-app/"), "questions[0]")).toEqual([]);
+    // an option's link and the address of one language are checked too
+    const option = copy("galapagos");
+    const options = (option["options"] as Record<string, unknown>[]).map((o, index) =>
+      index === 0 ? { ...o, link: { title: "Karte", url: "https://lernapps.net/apps/map/x/c/y/" } } : o,
+    );
+    expect(validateQuestion({ ...option, options }, "questions[0]")).toHaveLength(1);
   });
 
   test("a number's mistake names its number", () => {
