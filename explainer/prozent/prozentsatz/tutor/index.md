@@ -41,7 +41,7 @@ Nennt die Adresse dieser Seite `bedarf=`, gilt jeder Abschnitt, den sie nennt, m
 
 ## Kontext: die Seite „Prozentsatz“
 
-Den Prozentsatz berechnen: p = W : G · 100, mit einem Beispiel und dem Prozentstreifen.
+Den Prozentsatz berechnen: p = W : G · 100, mit Beispiel, Prozentstreifen und Aufgaben.
 
 ### Warum
 

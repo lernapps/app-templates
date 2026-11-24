@@ -58,9 +58,15 @@ $W = \frac{G \cdot p}{100}$
 Der **Grundwert** $G$ ist das Ganze, also 100 %. Der **Prozentsatz** $p\,\%$ sagt, welcher Anteil gemeint
 ist. mAh (Milliamperestunden) gibt an, wie viel Ladung ein Akku speichert.
 
+Zum Überschlagen:
+- Prozentsatz | Teil des Grundwerts
+- 10 % | ein Zehntel
+- 25 % | ein Viertel
+- 50 % | die Hälfte
+
 **Merke: Merkhilfe**
 
-Erst 1 % ausrechnen ($G$ geteilt durch 100), dann mal $p$ nehmen.
+Erst 1 % ausrechnen ($G$ geteilt durch 100), dann mal $p$ nehmen. Ist $p$ kleiner als 100, muss $W$ kleiner als $G$ sein.
 
 ### Beispiel
 
@@ -75,8 +81,6 @@ Der Prozentwert beim Skateboard:
 - Prozentwert $W$ | **30 €** Rabatt
 
 Bild: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt. Bildunterschrift: Das Hunderterfeld ist der Grundwert, 100 Kästchen sind 100 %. Die 12 gefärbten Kästchen sind der Prozentwert.
-
-Über 1 %: 250 € : 100 = 2,50 € sind 1 %. Dann 2,50 € · 12 = 30 €.
 
 ### Aufgaben
 
