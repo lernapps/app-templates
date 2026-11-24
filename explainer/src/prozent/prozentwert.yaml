@@ -33,11 +33,19 @@ blocks:
         text: |
           Der **Grundwert** $G$ ist das Ganze, also 100 %. Der **Prozentsatz** $p\,\%$ sagt, welcher Anteil gemeint
           ist. mAh (Milliamperestunden) gibt an, wie viel Ladung ein Akku speichert.
+      - type: table
+        caption: Zum Überschlagen
+        header: [Prozentsatz, Teil des Grundwerts]
+        rowHeaders: true
+        rows:
+          - [10 %, ein Zehntel]
+          - [25 %, ein Viertel]
+          - [50 %, die Hälfte]
       - type: note
         title: Merkhilfe
         blocks:
           - type: text
-            text: Erst 1 % ausrechnen ($G$ geteilt durch 100), dann mal $p$ nehmen.
+            text: Erst 1 % ausrechnen ($G$ geteilt durch 100), dann mal $p$ nehmen. Ist $p$ kleiner als 100, muss $W$ kleiner als $G$ sein.
   - type: section
     id: beispiel
     title: Beispiel
@@ -59,8 +67,6 @@ blocks:
             draw: { kind: hundred-grid, filled: 12 }
             alt: Ein Hunderterfeld mit 100 Kästchen, 12 davon sind gefärbt.
             caption: Das Hunderterfeld ist der Grundwert, 100 Kästchen sind 100 %. Die 12 gefärbten Kästchen sind der Prozentwert.
-          - type: text
-            text: "Über 1 %: 250 € : 100 = 2,50 € sind 1 %. Dann 2,50 € · 12 = 30 €."
   - type: section
     id: uebung
     title: Aufgaben

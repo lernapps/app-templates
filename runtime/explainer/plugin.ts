@@ -37,6 +37,7 @@ import { ContentError, loadSite } from "./load.ts";
 import { dataOf, taskSeeds } from "./exercises.ts";
 import { MAX_TASKS } from "./tasks.ts";
 import { renderSite, type Islands, type RenderedPage } from "./render.ts";
+import { diffSites, type SiteDiff } from "./diff.ts";
 import { fromDepth, languageRoot, notFoundPage, withLanguage } from "../shared/pages.ts";
 import { type Load, VUE_OPTIONS, vueAlias, withServer } from "../shared/vue.ts";
 import { allBlocks, contentPages, routes } from "./routes.ts";
@@ -113,6 +114,24 @@ function vueWhenComponents(): Plugin {
       return { ...own, resolve: { ...own.resolve, alias: vueAlias() } };
     },
   } as Plugin;
+}
+
+/**
+ * The diff mode (diff.ts): with EXPLAINER_BASE set to the folder of another version of this app (the one with its src/;
+ * a checkout of the branch a pull request merges into), the pages are written with what this version changes against
+ * it, marked in the page. Without it nothing changes. Relative to the app's folder, or absolute.
+ */
+function diffAgainstBase(content: Site, root: string): SiteDiff | undefined {
+  const given = process.env["EXPLAINER_BASE"];
+  if (given === undefined || given.trim() === "") return undefined;
+  const base = resolve(root, given.trim());
+  if (!existsSync(join(base, "src")))
+    throw new Error(`EXPLAINER_BASE ${base} has no src/: it is the folder of the base app`);
+  try {
+    return diffSites(loadSite(base), content);
+  } catch (error) {
+    throw new Error(`EXPLAINER_BASE ${base}: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 const reason = (error: unknown) => (error instanceof Error ? error.message : String(error)).split("\n")[0] ?? "";
@@ -241,11 +260,17 @@ export function explainer(): Plugin[] {
   let root = process.cwd();
   let command: "build" | "serve" = "build";
   let site: Site | undefined;
+  let diff: SiteDiff | undefined | null = null;
   let islands: Islands = new Map();
   let descriptions: Descriptions = new Map();
   let islandsChunk: string | undefined;
   let devServer: ViteDevServer | undefined;
   const load = () => (site ??= loadSite(root));
+  /** What this version changes against EXPLAINER_BASE, once per build and per change of the content. */
+  const changes = (): SiteDiff | undefined => {
+    if (diff === null) diff = diffAgainstBase(load(), root);
+    return diff;
+  };
   const main: Plugin = {
     name: "lernapps-explainer",
     enforce: "post",
@@ -255,6 +280,7 @@ export function explainer(): Plugin[] {
     },
     async buildStart() {
       site = undefined;
+      diff = null;
       islands = new Map();
       descriptions = new Map();
       islandsChunk = undefined;
@@ -288,7 +314,7 @@ export function explainer(): Plugin[] {
         islandsChunk === undefined
           ? ""
           : `<script type="module" crossorigin src="./${this.getFileName(islandsChunk)}"></script>`;
-      for (const page of renderSite(content, islands, descriptions)) {
+      for (const page of renderSite(content, islands, descriptions, changes())) {
         const html = fill(shell, page, page.islands ? script : "");
         if (page.route.path === "") index.source = html;
         else this.emitFile({ type: "asset", fileName: `${page.route.path}index.html`, source: html });
@@ -424,6 +450,7 @@ export function explainer(): Plugin[] {
       server.watcher.on("all", (_event, file) => {
         if (file.startsWith(join(root, "src")) && !file.endsWith(".ts")) {
           site = undefined;
+          diff = null;
           server.ws.send({ type: "full-reload" });
         }
       });
@@ -501,7 +528,9 @@ export function explainer(): Plugin[] {
               response.end(markdown ? page.markdown : page.html);
               return undefined;
             }
-            const page = renderSite(content, rendered, described).find((candidate) => candidate.route.path === path);
+            const page = renderSite(content, rendered, described, changes()).find(
+              (candidate) => candidate.route.path === path,
+            );
             if (page === undefined) return next();
             const shell = readFileSync(join(root, "index.html"), "utf8");
             const head = page.islands

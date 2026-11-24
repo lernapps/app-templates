@@ -14,6 +14,12 @@ Zweck: Pull Requests an Explainern deutlich schneller validieren.
 - Nächster Schritt auf Wunsch des Nutzers: Mock-up der Darstellung.
 - Gewünschte Darstellung (vom Nutzer): Ziel-App lauffähig, Änderungen inline pro Block. Kein reiner Text-Bericht.
 
+- Plan-Entscheidung: Diff beim Build, Schalter per Umgebungsvariable `EXPLAINER_BASE`; Matching per LCS über Block-IDs (robust gegen Einfügungen), Verschiebungen über gleiche ID erkannt.
+
+- Umsetzung: Die Navigation schwebt per `position: sticky` (schmal: Leiste oben, Gliederung als Fläche per Knopf) und `position: fixed` (ab 72rem links Seitenliste, rechts Leiste). Ohne JavaScript bleibt alles lesbar (Liste, Links, Markierungen).
+- Umsetzung: Der Test der Runtime braucht `@lernapps/tooling` (Peer), lokal per `npm install --no-save` nachinstalliert, nicht committet.
+- Offen für später (Entscheidung 4): Anbindung für echte Apps in `lernapps/tooling` (Action `app-preview` / Generator `pages.yml`), e2e-Test des Diff-Modus im Browser.
+
 ## Notes
 - Entwurf (zu bestätigen): Build-Zeit-Diff. Neue Umgebungsvariable oder Option, z. B. `EXPLAINER_BASE=<Pfad zur Basis-src>`. Das Plugin lädt Basis und Ziel, vergleicht pro Seite die Blöcke und schreibt im Ziel an jeden Wrapper `data-diff="added|changed"`. Gelöschte Blöcke werden als `data-diff="removed"` an alter Stelle eingefügt. Das Stylesheet markiert sie (Farbe plus Textlabel, nicht nur Farbe). Eine Leiste "Änderungen" (Vorbild: Feedback-Leiste) zählt und springt von Änderung zu Änderung. Geänderte Blöcke zeigen auf Wunsch den alten Text.
 - Offene Fragen: (1) Gelöschte Blöcke als Geister-Block im Text (Empfehlung)? (2) Geänderte Blöcke: nur markieren oder zusätzlich alten Stand einklappbar zeigen? (3) Nur Preview der PR oder auch lokal (`vp dev` mit Basis-Branch)? (4) Erst in `app-templates` (Runtime) oder gleich mit der CI-Anbindung in `lernapps/tooling`? (5) Gilt der Diff auch für Seiten, Kapitel und `app.yaml` (neue/gelöschte Seiten), oder nur für Blöcke?
@@ -31,11 +37,10 @@ Zweck: Pull Requests an Explainern deutlich schneller validieren.
 ### Phase Entrance Criteria
 - Der Nutzer hat ein Ziel genannt (erfüllt).
 ### Tasks
-- [ ] Mock-up der Darstellung vom Nutzer bestätigen lassen
-- [ ] Einordnung in arc42 (ch. 5, 7, 8) bestätigen
 
 ### Completed
 - [x] Created development plan file
+- [x] Mock-up vom Nutzer bestätigt (Navigation schwebt: Handy oben fixiert mit Inhalt-Knopf, Desktop links/rechts fixiert). Arbeit läuft autonom bis zum PR; danach kleine Demo-Änderungen im PR sichtbar machen.
 - [x] Offene Fragen vom Nutzer beantwortet (siehe Key Decisions)
 - [x] Block-Modell verstanden (Block-IDs, Positionen, Verschachtelung)
 - [x] Render-Pipeline verstanden (Wrapper pro Block in `render.ts`)
@@ -45,27 +50,51 @@ Zweck: Pull Requests an Explainern deutlich schneller validieren.
 ## Plan
 ### Phase Entrance Criteria
 - Block-Modell, Render-Pipeline und Preview-Ablauf sind verstanden.
-- Offene Fragen sind mit dem Nutzer geklärt.
+- Offene Fragen sind mit dem Nutzer geklärt, Mock-up bestätigt.
+### Design
+- Einordnung: Der Diff-Modus ist ein Build-Zeit-Feature der Explainer-Runtime (arc42 ch. 5 Bausteine "Explainer", ch. 7 PR-Preview, ch. 8 Konzept "Readable without JavaScript": die Markierung ist statisches HTML, JS nur für Springen/Filtern).
+- Eingabe: Umgebungsvariable `EXPLAINER_BASE=<Wurzel der Basis-App>` (Ordner mit `src/`). Ohne sie ändert sich nichts. Wirkt im Build und in `vp dev`.
+- `runtime/explainer/diff.ts` (rein, ohne Node): `diffSites(base, target)` liefert `SiteDiff`.
+  - Seiten und Kapitel werden über ihre IDs gepaart (`<chapter>/<page>`): hinzugefügt, gelöscht, geändert (Titel, Beschreibung, Kompetenzen, Blöcke), unverändert.
+  - Blöcke je Seite: Geschwisterlisten per LCS über den Schlüssel (Block-ID bzw. `section:<id>`). Lücken: gleicher Typ in Reihenfolge = geändert (Container wie Section/Beispiel/Hinweis rekursiv), Rest = hinzugefügt/gelöscht. Danach: gelöschter und hinzugefügter Block mit gleicher ID (auch seitenübergreifend) = verschoben.
+  - Ergebnis in Form für das Rendern: `changes: Map<Block, Change>` für Zielblöcke (status, alter Block), `ghosts: Map<Block|list, Block[]>` für gelöschte Blöcke vor einem Zielblock bzw. am Ende einer Liste, `pages`, `chapters`, `app` (geänderte Felder).
+  - Wort-Diff (`words.ts`-Funktion in diff.ts) über den sichtbaren Text von alt und neu für den Unterschied.
+- `render.ts`: `Context` bekommt optional `diff`. `renderBlocks` setzt `data-diff` und Label-Chip, hängt `<details class="explainer-diff-old">` mit Vorher-Darstellung und Textunterschied an und fügt Geister-Blöcke ein. Alter Block wird mit demselben Renderer gerendert (try/catch, Rückfall auf Textzusammenfassung, z. B. für Vue-Komponenten). Navigation markiert Seiten/Kapitel (Chip, gelöschte durchgestrichen). Neue Route `aenderungen/` (kind `diff`) pro Sprache: Übersicht aller Änderungen der App, auch gelöschte Seiten und `app.yaml`-Änderungen.
+- Schwebende Leiste "Änderungen" (statisches Markup, `<template>`/Panel wie der Feedback-Modus) und Client `diff-client.ts` (Vorige/Nächste, Filter, Inhalt-Knopf auf schmal, Vorher-Stand breit offen/schmal zu). CSS in `explainer.css`: sticky statt fixed.
+- `plugin.ts`: liest `EXPLAINER_BASE`, lädt Basis mit `loadSite`, berechnet den Diff einmal, reicht ihn an `renderSite`. Ohne Basis keine Änderung am Ausgabe-HTML.
+- CI: `preview.yml` checkt die Basis des PR aus und baut die Previews mit `EXPLAINER_BASE` (Template und Französisch-Beispiel). Anbindung für echte Apps in `lernapps/tooling` folgt später (Entscheidung 4).
+- Demo: kleine inhaltliche Änderungen in `explainer/src/prozent/*.yaml` und `explainer/examples/franzoesisch/src`, damit der PR den Diff zeigt.
+- Tests: Unit-Tests der Diff-Logik (hinzugefügt, geändert, gelöscht, verschoben, Einfügung am Anfang, Container, Seiten, Kapitel, app.yaml); Build-Test: Zwei Fixtures, Seite enthält `data-diff`, Geister-Block, Übersichtsseite, ohne Basis identisches HTML wie vorher.
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [x] Design festgelegt (siehe oben)
+- [x] Entscheidungen im Abschnitt Key Decisions festgehalten
 
 ### Completed
-*None yet*
+- [x] Entwurf aus dem bestätigten Mock-up abgeleitet
 
 ## Code
 ### Phase Entrance Criteria
-- Der Plan (Diff-Algorithmus, Markierung, Auslieferung, Tests) ist vom Nutzer bestätigt.
+- Der Plan (Diff-Algorithmus, Markierung, Auslieferung, Tests) liegt vor; der Nutzer hat autonome Arbeit bis zum PR freigegeben.
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [ ] *Alles erledigt, siehe Completed*
 
 ### Completed
-*None yet*
+- [x] `diff.ts`: Diff-Logik (LCS über Block-IDs, Paarung gleicher Typen, Container rekursiv, Verschiebungen seitenübergreifend, Seiten, Kapitel, App-Felder, Wort-Diff) mit 14 Unit-Tests
+- [x] `render.ts`, `routes.ts`, `diff-render.ts`: Markierung der Blöcke, Vorher-Stand (Details), Geister-Blöcke, Seiten-/Kapitel-Chips, Übersichtsseite `aenderungen/`, Leiste, Seitenliste; Ghosts ohne Live-Teile (Zusammenfassung für Aufgaben, Komponenten, Video), Ids entfernt
+- [x] Texte de/en, CSS (sticky auf schmal, fixiert links/rechts ab 72rem), Client `diff-client.ts` (Springen, Filter, Menü, Vorher-Stand breit offen/schmal zu, Markierung aus), Einbindung in `explainer.ts`
+- [x] `plugin.ts`: `EXPLAINER_BASE` für Build und `vp dev`; Fehlermeldung bei falschem Pfad
+- [x] Build-Tests mit der All-Blocks-Fixture (de/en): Markierungen, Ghost, Übersicht, ohne Basis unverändert, falscher Pfad
+- [x] `preview.yml`: Basis des PR (erster Elternteil des Merge-Commits) auschecken, beide Explainer-Previews mit `EXPLAINER_BASE` bauen, Links zur Übersicht
+- [x] Demo-Änderungen: Prozentwert (neue Tabelle, geänderte Merkhilfe, gelöschter Absatz), Prozentsatz (Beschreibung), Französisch (ergänzter Satz); `lernapps check` ohne neue Befunde
+- [x] arc42: Baustein `bb-diff-mode`, Schnittstelle, Szenario, Entscheidung `dec-explainer-diff-mode`, Deployment, README
+- [x] Prüfungen: `vp check`, `vue-tsc`, 671 Tests, `node scripts/arc42.ts`, axe in 4 Modi (breit/schmal, hell/dunkel) ohne Verstöße, Screenshots geprüft
 
 ## Commit
 ### Phase Entrance Criteria
 - Implementierung fertig, Tests und Checks grün.
 ### Tasks
-- [ ] *To be added when this phase becomes active*
+- [ ] Commit nach Vorgabe des commit-Skills, Push auf den Feature-Branch
+- [ ] Pull Request öffnen (Nutzer hat ihn verlangt)
 
 ### Completed
 *None yet*

@@ -26,13 +26,15 @@ import {
 } from "./content.ts";
 import { renderExercise } from "./exercises.ts";
 import { blockId, blockPosition } from "./block-id.ts";
+import { countsOf, hasChanges, total, type Ghost, type PageDiff, type SiteDiff } from "./diff.ts";
+import * as markup from "./diff-render.ts";
 import { isSizeless } from "../shared/blocks/image.ts";
 import { renderMaterial, type MaterialContext } from "../shared/blocks/index.ts";
 import { localeOf } from "../shared/languages.ts";
 import { plain, renderInline, renderMarkdown } from "../shared/text/markdown.ts";
 import { message, type Messages } from "./messages.ts";
 import { alternateLinks, languageRoot, pageFooter, pageHeader, relative } from "../shared/pages.ts";
-import { contentPages, hiddenChapter, routes, terms, type Route } from "./routes.ts";
+import { contentPages, DIFF_LOCAL, hiddenChapter, routes, terms, type Route } from "./routes.ts";
 import { tutorPageOf } from "./tutor.ts";
 import { LANGUAGES, languageName, NEEDS, OTHER_LANGUAGE, type Need } from "./needs.ts";
 import { BASE, placeholderPrompt, plainAddress, PROVIDERS, QUERY, startPrompt } from "./prompt.ts";
@@ -77,7 +79,16 @@ class Context {
   hasIslands = false;
   /** The blocks of the page wrapped so far, for the order of the next (renderBlocks). */
   blockOrder = 0;
-  constructor(site: Site, route: Route, islands: Islands, descriptions: Descriptions) {
+  /** What the version differs in from its base, when the build compares (diff.ts), and for this page. */
+  readonly diff: SiteDiff | undefined;
+  readonly pageDiff: PageDiff | undefined;
+  /** More than 0 while an earlier version or a removed block is rendered: no marks, addresses or live parts (quiet). */
+  quiet = 0;
+  /** The marks written on this page so far, for its list of changes (diff-render.ts, bar). */
+  readonly marks: markup.Entry[] = [];
+  constructor(site: Site, route: Route, islands: Islands, descriptions: Descriptions, diff?: SiteDiff) {
+    this.diff = diff;
+    this.pageDiff = route.page === undefined ? undefined : diff?.of(route.page);
     this.site = site;
     this.route = route;
     this.islands = islands;
@@ -189,17 +200,137 @@ function renderBlocks(
   anchor: string[] = [],
   at: readonly (string | number)[] = anchor,
 ): string {
+  const diff = context.quiet === 0 ? context.pageDiff : undefined;
   let place = 0;
-  return blocks
-    .map((block) => {
-      if (block.type === "section") return renderBlock(context, block, level, anchor, at);
-      place += 1;
-      const position = blockPosition(at, place);
-      const order = ++context.blockOrder;
-      const attributes = `data-block="${position}" data-block-id="${blockId(block)}" data-block-type="${block.type}" data-block-order="${order}"`;
-      return `<div class="explainer-block" ${attributes}>\n${renderBlock(context, block, level, anchor, [...at, place])}\n</div>`;
-    })
-    .join("\n");
+  const parts: string[] = [];
+  const ghosts = (list: readonly Ghost[] | undefined) => {
+    for (const ghost of list ?? []) parts.push(renderGhost(context, ghost, level, anchor, at));
+  };
+  for (const block of blocks) {
+    ghosts(diff?.before.get(block));
+    if (context.quiet > 0) {
+      parts.push(renderBlock(context, block, level, anchor, at));
+      continue;
+    }
+    if (block.type === "section") {
+      parts.push(renderBlock(context, block, level, anchor, at));
+      continue;
+    }
+    place += 1;
+    const position = blockPosition(at, place);
+    const order = ++context.blockOrder;
+    const change = diff?.changes.get(block);
+    const attributes = `data-block="${position}" data-block-id="${blockId(block)}" data-block-type="${block.type}" data-block-order="${order}"`;
+    const inner = renderBlock(context, block, level, anchor, [...at, place]);
+    if (change === undefined) {
+      parts.push(`<div class="explainer-block" ${attributes}>\n${inner}\n</div>`);
+      continue;
+    }
+    // a block that the version adds, changes or moves: marked, with its earlier version when it changed
+    const where = `${block.type} · ${markup.shorten(markup.visibleText(inner), 60)}`;
+    const id = markPlace(context, change.status, where);
+    const from =
+      change.from === undefined
+        ? undefined
+        : change.from === diff?.key
+          ? plain(context.t("diffMovedHere"))
+          : plain(context.t("diffMovedFrom", { page: titleOfKey(context, change.from) }));
+    const old =
+      change.status === "changed" && change.old !== undefined
+        ? markup.earlierVersion(
+            context.lang,
+            quietHtml(context, change.old, level, anchor, [...at, place]),
+            markup.differenceOf(change.old, block, context.lang),
+          )
+        : "";
+    parts.push(
+      `<div class="explainer-block" id="${id}" data-diff="${change.status}" ${attributes}>\n${markup.blockLabel(context.lang, change.status, `${block.type} · ${position}`, from)}\n${inner}\n${old}\n</div>`,
+    );
+  }
+  if (diff !== undefined) ghosts(diff.atEnd.get(blocks));
+  return parts.join("\n");
+}
+
+/** The title, in the page's language, of the page with the key <chapter>/<page> of either version. */
+function titleOfKey(context: Context, key: string): string {
+  const page = context.diff?.pages.find((candidate) => candidate.key === key);
+  const found = page?.target ?? page?.base;
+  return found === undefined ? key : inLanguage(found.title, context.lang);
+}
+
+/** Notes a mark on the page: the id its block gets (the list of changes links to it). */
+function markPlace(context: Context, mark: markup.Mark, text: string): string {
+  const id = `aenderung-${context.marks.length + 1}`;
+  context.marks.push({ id, mark, text });
+  return id;
+}
+
+/** The block types that render without a live part: an earlier version or a removed block shows these as they were. */
+const STILL = new Set([
+  "text",
+  "formula",
+  "figure",
+  "labelled-figure",
+  "table",
+  "timeline",
+  "definition",
+  "quote",
+  "code",
+  "vocabulary",
+  "example",
+  "note",
+  "section",
+]);
+
+/** A block that has a live part (an exercise, a component, a video) as a line: its type and its first words. */
+function summaryOf(context: Context, block: Block): string {
+  const fields = ["question", "task", "title", "text", "term", "caption", "component"];
+  const found = fields
+    .map((field) => (block as unknown as Record<string, unknown>)[field])
+    .find((value) => value !== undefined);
+  let words = "";
+  try {
+    words = typeof found === "string" ? found : found === undefined ? "" : inLanguage(found as Text, context.lang);
+  } catch {
+    words = "";
+  }
+  return `<p class="explainer-diff-summary"><code>${plain(block.type)}</code> ${plain(markup.shorten(words, 120))}</p>`;
+}
+
+/**
+ * A block of the base as it was, without what makes it live: no addresses for the feedback mode, no ids that the page
+ * has once already, and a block with a live part (an exercise, a component, a video) as a line.
+ */
+function quietHtml(
+  context: Context,
+  block: Block,
+  level: number,
+  anchor: string[],
+  at: readonly (string | number)[],
+): string {
+  context.quiet += 1;
+  try {
+    return renderBlock(context, block, level, anchor, at).replace(/\s(?:id|for|aria-[a-z]+)="[^"]*"/g, "");
+  } catch {
+    return summaryOf(context, block);
+  } finally {
+    context.quiet -= 1;
+  }
+}
+
+/** A block the base has and the version has not: shown where it was, marked as removed (a moved block is not shown). */
+function renderGhost(
+  context: Context,
+  ghost: Ghost,
+  level: number,
+  anchor: string[],
+  at: readonly (string | number)[],
+): string {
+  if (ghost.moved) return "";
+  const html = quietHtml(context, ghost.block, level, anchor, at);
+  const where = `${ghost.block.type} · ${markup.shorten(markup.visibleText(html), 60)}`;
+  const id = markPlace(context, "removed", where);
+  return `<div class="explainer-diff-ghost" id="${id}" data-diff="removed">\n${markup.blockLabel(context.lang, "removed", ghost.block.type)}\n<div class="explainer-diff-ghost-body">${html}</div>\n</div>`;
 }
 
 function renderBlock(
@@ -209,12 +340,23 @@ function renderBlock(
   anchor: string[],
   at: readonly (string | number)[],
 ): string {
+  if (context.quiet > 0 && !STILL.has(block.type)) return summaryOf(context, block);
   switch (block.type) {
     case "section": {
       const id = [...anchor, block.id];
+      const change = context.quiet === 0 ? context.pageDiff?.changes.get(block) : undefined;
+      const mark =
+        change === undefined
+          ? ""
+          : ` id="${markPlace(context, change.status, `section · ${plain(inLanguage(block.title, context.lang))}`)}" data-diff="${change.status}"`;
+      const chip = change === undefined ? "" : ` ${markup.chip(context.lang, change.status)}`;
+      const before =
+        change?.old?.type === "section"
+          ? ` <span class="explainer-diff-before-title"><del>${context.text(change.old.title)}</del></span>`
+          : "";
       return [
-        `<section class="explainer-section">`,
-        `<h${level + 1} id="${id.join("/")}">${context.text(block.title)}</h${level + 1}>`,
+        `<section class="explainer-section"${mark}>`,
+        `<h${level + 1} id="${id.join("/")}">${context.text(block.title)}${chip}${before}</h${level + 1}>`,
         renderBlocks(context, block.blocks, level + 1, id, [...at, block.id]),
         `</section>`,
       ].join("\n");
@@ -554,12 +696,138 @@ function main(context: Context): string {
         title,
         tutorSection(context),
         `</div>`,
+        diffPageNote(context),
         pageContents(context, page.blocks),
         renderBlocks(context, page.blocks, 1),
         feedbackInvite(context),
       ].join("\n");
     }
+    case "diff":
+      return diffOverview(context);
   }
+}
+
+/** On a page that the version adds or changes: the chip, and the page's own fields (title, description …) that differ. */
+function diffPageNote(context: Context): string {
+  const diff = context.pageDiff;
+  const mark = diff === undefined ? undefined : markup.pageMark(diff);
+  if (diff === undefined || mark === undefined) return "";
+  // a page whose blocks changed says so in its bar and in the blocks themselves
+  if (diff.status === "changed" && diff.fields.length === 0) return "";
+  const fields =
+    diff.fields.length === 0
+      ? ""
+      : `<p>${plain(context.t("diffPageFields"))}</p>${markup.fieldTable(context.lang, diff.fields)}`;
+  return `<div class="explainer-diff-page-note" data-diff="${mark.mark}">${markup.chip(context.lang, mark.mark, mark.label)}${fields}</div>`;
+}
+
+/** The blocks of a page of the base as they were, quiet (see quietHtml). */
+function quietBlocks(context: Context, blocks: readonly Block[]): string {
+  context.quiet += 1;
+  try {
+    return renderBlocks(context, blocks, 1).replace(/\s(?:id|for|aria-[a-z]+)="[^"]*"/g, "");
+  } finally {
+    context.quiet -= 1;
+  }
+}
+
+const CHAPTER_LABEL = {
+  added: "diffChapterAdded",
+  removed: "diffChapterRemoved",
+  changed: "diffChapterChanged",
+} as const;
+
+/** The overview of what the version changes: the app's fields, and per chapter its changed and its removed pages. */
+function diffOverview(context: Context): string {
+  const { diff, lang } = context;
+  const title = `<h1>${plain(context.route.title)}</h1>`;
+  if (diff === undefined || !hasChanges(diff)) return [title, `<p>${plain(context.t("diffNoChanges"))}</p>`].join("\n");
+  const parts = [title, `<p>${plain(context.t("diffOverviewIntro"))}</p>`];
+  if (diff.app.length > 0)
+    parts.push(`<h2>${plain(context.t("diffAppFields"))}</h2>`, markup.fieldTable(lang, diff.app));
+  parts.push(`<h2>${plain(context.t("diffPages"))}</h2>`);
+  for (const chapter of diff.chapters) {
+    if (chapter.status === "same") continue;
+    const name = (chapter.target ?? chapter.base)?.title ?? chapter.id;
+    parts.push(
+      `<h3>${context.text(name)} ${markup.chip(lang, chapter.status, CHAPTER_LABEL[chapter.status])}</h3>`,
+      markup.fieldTable(lang, chapter.fields),
+    );
+    const items = diff.pages
+      .filter((page) => page.status !== "same" && (page.target ?? page.base)?.chapter === chapter.id)
+      .map((page) => {
+        const current = page.target ?? page.base;
+        if (current === undefined) return "";
+        const pageMark = markup.pageMark(page);
+        const counts = countsOf(page);
+        const link =
+          page.target === undefined
+            ? `<span class="explainer-diff-gone">${context.text(current.title)}</span>`
+            : `<a href="${context.to(`${page.target.chapter}/${page.target.id}/`)}">${context.text(current.title)}</a>`;
+        const chips = [
+          pageMark === undefined ? "" : markup.chip(lang, pageMark.mark, pageMark.label),
+          page.status === "changed" ? markup.countChips(lang, counts) : "",
+        ].join(" ");
+        const content =
+          page.status === "removed" && page.base !== undefined
+            ? `<details class="explainer-diff-old"><summary>${plain(context.t("diffGhostPage"))}</summary><div class="explainer-diff-ghost-body">${quietBlocks(context, page.base.blocks)}</div></details>`
+            : markup.fieldTable(lang, page.fields);
+        return `<li id="seite-${page.key.replace("/", "-")}">${link} ${chips}${content}</li>`;
+      });
+    parts.push(`<ul class="explainer-diff-pages">${items.join("")}</ul>`);
+  }
+  return parts.filter((part) => part !== "").join("\n");
+}
+
+/** The banner, the floating bar of the page's changes and the list of the app's pages: the diff mode's own parts. */
+function diffChrome(context: Context): string[] {
+  const { diff, lang, route, pageDiff } = context;
+  if (diff === undefined) return [];
+  const none = { added: 0, changed: 0, removed: 0, moved: 0 };
+  const entries: markup.NavEntry[] = [];
+  const hidden = hiddenChapter(context.site);
+  for (const chapter of diff.chapters) {
+    const current = chapter.target ?? chapter.base;
+    if (current === undefined) continue;
+    if (!hidden) {
+      const mark = chapter.status === "same" ? undefined : (chapter.status as markup.Mark);
+      entries.push({
+        title: inLanguage(current.title, lang),
+        chapter: true,
+        current: false,
+        ...(mark === undefined ? {} : { mark, label: CHAPTER_LABEL[chapter.status as keyof typeof CHAPTER_LABEL] }),
+      });
+    }
+    for (const page of diff.pages.filter((candidate) => (candidate.target ?? candidate.base)?.chapter === chapter.id)) {
+      const shown = page.target ?? page.base;
+      if (shown === undefined) continue;
+      const marked = markup.pageMark(page);
+      const count = page.status === "changed" ? total(countsOf(page)) : 0;
+      entries.push({
+        title: inLanguage(shown.title, lang),
+        href:
+          page.target === undefined
+            ? context.to(`${DIFF_LOCAL}#seite-${page.key.replace("/", "-")}`)
+            : context.to(`${shown.chapter}/${shown.id}/`),
+        chapter: false,
+        current: page.target !== undefined && page.target === route.page,
+        ...(marked === undefined ? {} : { mark: marked.mark, label: marked.label, count }),
+      });
+    }
+  }
+  entries.push({
+    title: plain(context.t("diffOverviewTitle")),
+    href: context.to(DIFF_LOCAL),
+    chapter: false,
+    current: route.kind === "diff",
+  });
+  return [
+    markup.banner(lang, diff.baseRevision),
+    ...(route.kind === "page"
+      ? [markup.bar(lang, pageDiff === undefined ? none : countsOf(pageDiff), context.marks, context.to(DIFF_LOCAL))]
+      : []),
+    markup.nav(lang, entries),
+  ];
 }
 
 /**
@@ -943,13 +1211,16 @@ export function renderPage(
   route: Route,
   islands: Islands = new Map(),
   descriptions: Descriptions = new Map(),
+  diff?: SiteDiff,
 ): RenderedPage {
-  const context = new Context(site, route, islands, descriptions);
+  const context = new Context(site, route, islands, descriptions, diff);
+  const content = main(context);
   const body = [
+    ...diffChrome(context),
     header(context),
     breadcrumbs(context),
     `<main class="explainer" id="inhalt-der-seite">`,
-    main(context),
+    content,
     `</main>`,
     feedbackPanel(context),
     pager(context),
@@ -965,6 +1236,7 @@ export function renderSite(
   site: Site,
   islands: Islands = new Map(),
   descriptions: Descriptions = new Map(),
+  diff?: SiteDiff,
 ): RenderedPage[] {
-  return routes(site).map((route) => renderPage(site, route, islands, descriptions));
+  return routes(site, diff !== undefined).map((route) => renderPage(site, route, islands, descriptions, diff));
 }

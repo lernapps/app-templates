@@ -2674,3 +2674,519 @@ html.explainer-feedback-on main .explainer-block[data-noting] {
   margin: 0.25rem 0 0;
   padding-left: 1.25rem;
 }
+
+/* The diff mode of a version built against a base (diff.ts, diff-render.ts, diff-client.ts): the marks on blocks, pages
+   and chapters, the earlier version of a changed block, and the bar and the list of pages that float beside the page
+   (sticky under the banner on a narrow screen, fixed on both sides of a wide one) and do not scroll with it. Each mark
+   has its words in its chip: the colour is never the only sign. */
+:root {
+  --diff-added: #14532d;
+  --diff-added-background: #dcfce7;
+  --diff-changed: #6b4500;
+  --diff-changed-background: #fdf1d6;
+  --diff-removed: #7f1d1d;
+  --diff-removed-background: #fee2e2;
+  --diff-moved: #1e3a8a;
+  --diff-moved-background: #e0e7ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --diff-added: #bbf7d0;
+    --diff-added-background: #143522;
+    --diff-changed: #fde68a;
+    --diff-changed-background: #3b2e0a;
+    --diff-removed: #fecaca;
+    --diff-removed-background: #3f1515;
+    --diff-moved: #c7d2fe;
+    --diff-moved-background: #1e2354;
+  }
+}
+
+[data-diff="added"] {
+  --diff-color: var(--diff-added);
+  --diff-fill: var(--diff-added-background);
+}
+
+[data-diff="changed"] {
+  --diff-color: var(--diff-changed);
+  --diff-fill: var(--diff-changed-background);
+}
+
+[data-diff="removed"] {
+  --diff-color: var(--diff-removed);
+  --diff-fill: var(--diff-removed-background);
+}
+
+[data-diff="moved"] {
+  --diff-color: var(--diff-moved);
+  --diff-fill: var(--diff-moved-background);
+}
+
+.explainer-diff-chip {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 1rem;
+  background: var(--diff-fill);
+  color: var(--diff-color);
+  font:
+    700 0.75rem/1.3 system-ui,
+    sans-serif;
+  white-space: nowrap;
+}
+
+.explainer-diff-n {
+  color: var(--page-muted);
+  font-size: 0.8125rem;
+}
+
+.explainer-block[data-diff],
+.explainer-diff-ghost,
+.explainer-section[data-diff],
+.explainer-diff-page-note {
+  margin-block: 0.75rem;
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  border-left: 0.25rem solid var(--diff-color);
+  background: linear-gradient(90deg, var(--diff-fill), transparent 70%);
+  scroll-margin-top: 8rem;
+}
+
+.explainer-diff-label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  align-items: center;
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+}
+
+.explainer-diff-where {
+  color: var(--page-muted);
+  overflow-wrap: anywhere;
+}
+
+.explainer-diff-ghost-body {
+  color: var(--page-muted);
+}
+
+.explainer-diff-ghost .explainer-diff-ghost-body {
+  text-decoration: line-through;
+  text-decoration-color: var(--diff-color);
+}
+
+.explainer-diff-summary code {
+  font-size: 0.875rem;
+}
+
+.explainer-diff-before-title {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.explainer-diff-old {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.explainer-diff-old > summary {
+  cursor: pointer;
+  color: var(--page-muted);
+}
+
+.explainer-diff-compare {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.explainer-diff-compare > div {
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+}
+
+.explainer-diff-compare h3 {
+  margin: 0 0 0.25rem;
+  color: var(--page-muted);
+  font:
+    700 0.75rem/1.2 system-ui,
+    sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 48rem) {
+  .explainer-diff-compare {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.explainer-diff-words p {
+  margin: 0;
+}
+
+.explainer-diff-compare ins,
+.explainer-diff-table ins {
+  background: var(--diff-added-background);
+  color: var(--diff-added);
+  text-decoration: none;
+  border-bottom: 2px solid var(--diff-added);
+}
+
+.explainer-diff-compare del,
+.explainer-diff-table del,
+.explainer-diff-before-title del {
+  background: var(--diff-removed-background);
+  color: var(--diff-removed);
+  text-decoration: line-through;
+}
+
+.explainer-diff-table {
+  max-width: 100%;
+  margin-block: 0.5rem;
+  overflow-x: auto;
+}
+
+.explainer-diff-table table {
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.explainer-diff-table th,
+.explainer-diff-table td {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--page-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.explainer-diff-pages {
+  padding-left: 1.25rem;
+}
+
+.explainer-diff-pages > li {
+  margin-block: 0.75rem;
+}
+
+.explainer-diff-gone {
+  color: var(--page-muted);
+  text-decoration: line-through;
+}
+
+/* the banner on every page, and the bar of the page's changes */
+.explainer-diff-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: var(--page-text);
+  color: var(--page-background);
+  font-size: 0.9375rem;
+}
+
+.explainer-diff-toggle,
+.explainer-diff-step button {
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.375rem;
+  background: var(--page-surface);
+  color: var(--page-text);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.explainer-diff-toggle {
+  min-height: 2.25rem;
+}
+
+.explainer-diff-bar,
+.explainer-diff-nav {
+  box-sizing: border-box;
+  background: var(--page-surface);
+  color: var(--page-text);
+  font-size: 0.9375rem;
+}
+
+.explainer-diff-bar {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.75rem;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--page-border);
+  box-shadow: 0 0.375rem 0.875rem rgb(0 0 0 / 0.12);
+}
+
+.explainer-diff-bar h2,
+.explainer-diff-nav h2 {
+  margin: 0;
+  color: var(--page-muted);
+  font:
+    700 0.75rem/1.2 system-ui,
+    sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.explainer-diff-bar h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.explainer-diff-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.explainer-diff-step {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.explainer-diff-step[hidden],
+.explainer-diff-filters[hidden],
+.explainer-diff-toggle[hidden] {
+  display: none;
+}
+
+.explainer-diff-more {
+  flex-basis: 100%;
+}
+
+.explainer-diff-more[open] {
+  max-height: 40dvh;
+  overflow: auto;
+}
+
+.explainer-diff-more > summary {
+  cursor: pointer;
+  color: var(--page-muted);
+}
+
+.explainer-diff-filters {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.5rem 0;
+}
+
+.explainer-diff-list {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-diff-list a {
+  display: block;
+  padding: 0.25rem 0.375rem;
+  border-radius: 0.25rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.explainer-diff-list a:hover,
+.explainer-diff-list a[aria-current] {
+  outline: 1px solid var(--page-border);
+  background: var(--page-background);
+}
+
+.explainer-diff-nav {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--page-border);
+}
+
+.explainer-diff-nav ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explainer-diff-nav li[data-chapter] {
+  margin-top: 0.5rem;
+  font-weight: 700;
+}
+
+.explainer-diff-current {
+  outline: 3px solid var(--page-accent);
+  outline-offset: 0.25rem;
+}
+
+/* with JavaScript on a narrow screen the list of pages is a sheet that the menu button opens, under the bar */
+html.explainer-diff-js .explainer-diff-nav {
+  position: fixed;
+  z-index: 25;
+  top: var(--diff-bar-height, 6rem);
+  right: 0;
+  left: 0;
+  display: none;
+  max-height: 55dvh;
+  overflow: auto;
+  box-shadow: 0 0.75rem 1.25rem rgb(0 0 0 / 0.2);
+}
+
+html.explainer-diff-menu-open .explainer-diff-nav {
+  display: block;
+}
+
+html.explainer-diff-only main .explainer-block:not([data-diff]):not(:has([data-diff])) {
+  display: none;
+}
+
+/* the marks off */
+html.explainer-diff-off .explainer-diff-label,
+html.explainer-diff-off .explainer-diff-old,
+html.explainer-diff-off .explainer-diff-ghost,
+html.explainer-diff-off .explainer-diff-bar,
+html.explainer-diff-off .explainer-diff-nav,
+html.explainer-diff-off .explainer-diff-page-note,
+html.explainer-diff-off .explainer-section .explainer-diff-chip,
+html.explainer-diff-off .explainer-diff-before-title {
+  display: none;
+}
+
+html.explainer-diff-off .explainer-block[data-diff],
+html.explainer-diff-off .explainer-section[data-diff] {
+  border-left: 0;
+  padding-left: 0;
+  background: none;
+}
+
+/* a wide screen: the list of pages on the left and the bar on the right, both fixed under the banner, with their own scroll */
+@media (min-width: 72rem) {
+  html:has(.explainer-diff-banner):not(.explainer-diff-off) body {
+    padding-right: 17rem;
+    padding-left: 15rem;
+  }
+
+  .explainer-diff-banner {
+    position: sticky;
+    z-index: 40;
+    top: 0;
+    min-height: 2.75rem;
+    margin: 0 -17rem 0 -15rem;
+    padding-inline: 1rem;
+  }
+
+  html.explainer-diff-js .explainer-diff-nav,
+  .explainer-diff-nav {
+    position: fixed;
+    z-index: 20;
+    top: 2.75rem;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    display: block;
+    width: 15rem;
+    max-height: none;
+    overflow: auto;
+    border-right: 1px solid var(--page-border);
+    border-bottom: 0;
+    box-shadow: none;
+  }
+
+  .explainer-diff-bar {
+    position: fixed;
+    z-index: 20;
+    top: 2.75rem;
+    right: 0;
+    bottom: 0;
+    display: block;
+    width: 17rem;
+    overflow: auto;
+    padding: 0.75rem 1rem;
+    border-bottom: 0;
+    border-left: 1px solid var(--page-border);
+    box-shadow: none;
+  }
+
+  .explainer-diff-bar h2 {
+    position: static;
+    width: auto;
+    height: auto;
+    margin-bottom: 0.5rem;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .explainer-diff-menu {
+    display: none;
+  }
+
+  .explainer-diff-step {
+    margin: 0.75rem 0;
+  }
+
+  .explainer-diff-more {
+    max-height: none;
+  }
+
+  .explainer-diff-more[open] {
+    max-height: none;
+  }
+
+  .explainer-block[data-diff],
+  .explainer-diff-ghost,
+  .explainer-section[data-diff],
+  .explainer-diff-page-note {
+    scroll-margin-top: 4rem;
+  }
+}
+
+@media (min-width: 72rem) {
+  html.explainer-diff-off body {
+    padding-inline: 0;
+  }
+}
+
+.explainer-diff-nav a[aria-current] {
+  font-weight: 700;
+}
+
+.explainer-diff-more:not([open]) {
+  flex-basis: auto;
+}
+
+/* a narrow bar is one row of buttons, the counts and "Liste und Filter" beside them: it covers little of the page */
+.explainer-diff-step {
+  order: 1;
+}
+
+.explainer-diff-counts {
+  order: 2;
+}
+
+.explainer-diff-more {
+  order: 3;
+}
+
+@media (max-width: 32rem) {
+  .explainer-diff-btn-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .explainer-diff-step button {
+    min-width: 2.75rem;
+    padding: 0 0.5rem;
+    font-size: 1.125rem;
+  }
+}

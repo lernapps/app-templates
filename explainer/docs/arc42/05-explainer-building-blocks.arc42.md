@@ -66,6 +66,7 @@ flowchart TB
         bb-task-numbers["Task numbers"]
         bb-video["Video block"]
         bb-feedback-mode["Feedback mode"]
+        bb-diff-mode["Diff mode"]
         bb-self-assessment["Self-assessment"]
         bb-e2e["End-to-end tests"]
         bb-runtime-texts["Runtime texts"]
@@ -103,6 +104,11 @@ flowchart TB
     bb-video -->|"if-runtime-texts"| bb-runtime-texts
     bb-video -->|"if-device-storage"| bb-tooling
     bb-shell -->|"if-feedback-mode"| bb-feedback-mode
+    bb-build -->|"if-diff-mode"| bb-diff-mode
+    bb-render -->|"if-diff-mode"| bb-diff-mode
+    bb-shell -->|"if-diff-mode"| bb-diff-mode
+    bb-diff-mode -->|"if-archetype-content"| bb-explainer-content
+    bb-diff-mode -->|"if-runtime-texts"| bb-runtime-texts
     bb-feedback-mode -->|"if-runtime-texts"| bb-runtime-texts
     bb-feedback-mode -->|"if-device-storage"| bb-tooling
     bb-build -->|"if-self-assessment"| bb-self-assessment
@@ -146,7 +152,7 @@ title: Build step
 parent: bb-archetype-runtime
 path: runtime/explainer/plugin.ts
 technology: Vite plugin
-requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-files, if-self-assessment
+requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-files, if-self-assessment, if-diff-mode
 :::
 ```
 
@@ -213,7 +219,7 @@ title: Page rendering
 parent: bb-archetype-runtime
 path: runtime/explainer/render.ts
 technology: TypeScript, Temml, highlight.js, Vue server renderer
-requires: if-archetype-content, if-vue-component, if-runtime-texts, if-questions
+requires: if-archetype-content, if-vue-component, if-runtime-texts, if-questions, if-diff-mode
 implements: concept-readable-without-js, concept-accessibility
 :::
 ```
@@ -248,7 +254,7 @@ title: Client module
 parent: bb-archetype-runtime
 path: runtime/explainer/explainer.ts
 technology: TypeScript, DOM
-requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y, if-self-assessment, if-feedback-mode
+requires: if-questions, if-task-numbers, if-tutor-files, if-runtime-texts, if-device-storage, if-a11y, if-self-assessment, if-feedback-mode, if-diff-mode
 implements: concept-accessibility, concept-determinism
 :::
 ```
@@ -574,6 +580,45 @@ title: Start of the feedback mode
 provider: bb-feedback-mode
 protocol: TypeScript import
 path: runtime/explainer/feedback-client.ts
+:::
+```
+
+### Diff mode
+
+Built. Lets a reviewer see what a version of an explainer changes against another, in the running app: the build is given
+the base (`EXPLAINER_BASE`, the folder of the other version, such as the branch a pull request merges into), compares the
+two contents block by block, and writes the pages of this version with its added, changed, moved and removed blocks
+marked (`dec-explainer-diff-mode`). It matches blocks by their id, not their place, so that a block added at the top
+does not turn the blocks below it into changes. The page rendering writes the marks, the earlier version of a changed
+block with the words that differ, the removed blocks where they were, the bar of the page's changes, the list of the
+app's pages and the overview of all changes (`aenderungen/`, every language); the client module only adds stepping
+from change to change, the filters and the narrow screen's menu. Without the base nothing is written. The preview of a
+pull request builds the two example explainers this way.
+
+```arc42
+:::building-block
+id: bb-diff-mode
+title: Diff mode
+parent: bb-archetype-runtime
+path: runtime/explainer/diff.ts
+technology: TypeScript, DOM
+requires: if-archetype-content, if-runtime-texts
+implements: concept-readable-without-js, concept-accessibility
+:::
+```
+
+#### Diff mode interface
+
+What the build step, the page rendering and the client module use of the diff mode: the difference of two sites, the
+markup of its marks and the start of its controls in the browser.
+
+```arc42
+:::interface
+id: if-diff-mode
+title: Difference of two versions
+provider: bb-diff-mode
+protocol: TypeScript import
+path: runtime/explainer/diff-render.ts
 :::
 ```
 

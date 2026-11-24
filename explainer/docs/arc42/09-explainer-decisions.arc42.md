@@ -334,6 +334,34 @@ addresses: qg-privacy, qg-explainer-readable-without-js, con-state-on-device, co
 :::
 ```
 
+## A Pull Request's Change Is Shown in the Running App, Block by Block
+
+A pull request that changes an explainer is hard to check from the YAML diff: a change is spread over blocks, pages and
+chapters, and what the learner sees is the rendered page. So the build can compare its content with the one of the base
+(`EXPLAINER_BASE`, the folder of the branch the pull request merges into) and write the pages of the version with the
+difference marked in them: new, changed, moved and removed blocks and pages, with the earlier version of a changed block
+beside it (open on a wide screen, folded on a narrow one) and a removed block as a ghost where it was. Blocks are matched
+by the id the feedback mode already gives them (a hash of the block's source), through the longest common subsequence of
+a list's ids, so that a block added at the top does not turn the ones below it into changes; a block that left one place
+for another is moved. The mark is plain HTML with its own words, never colour alone, and the bar that steps from change
+to change floats beside the page and does not scroll with it. It is a build option, not a feature of the published app:
+the preview of a pull request sets it, a production build never does, and without it the pages are the ones they were.
+The base is a folder, so the same mode serves a local check (a checkout of the base next to the app) and any other
+workflow. Rejected: a text report of the changes only (the reviewer must find each place in the app); comparing the
+built HTML (it changes with every hash and every id); a diff in the browser from two deployed apps (a request to another
+version and a runtime that needs both contents); matching blocks by their place (an inserted block would mark the rest of
+the page as changed).
+
+```arc42
+:::decision
+id: dec-explainer-diff-mode
+title: The build writes a version's pages with its difference to a base marked in them
+status: accepted
+date: 2026-11-24
+addresses: qg-explainer-readable-without-js, con-frontend-only
+:::
+```
+
 ## A Self-Assessment Checked Only as a Whole
 
 A learner may want to know before learning which pages they can skim. So an explainer may offer a self-assessment. A

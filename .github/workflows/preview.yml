@@ -11,8 +11,10 @@ name: Preview
 # updated on every push and removed when the pull request is closed or merged; one comment on the pull request links it.
 # The action takes the artifact "app" (what app-check uploads for an app); here the job `bundle` makes it: the quiz,
 # the explainer and the interactive template, each built as an app, below quiz/, explainer/ and interactive/, with a
-# page that links them. check.yml checks the templates; this builds them. It needs GitHub Pages to serve gh-pages from
-# its root (Settings → Pages → Deploy from a branch → gh-pages, / (root)). The actions ask the change scope (a change
+# page that links them. check.yml checks the templates; this builds them. On a pull request the two explainers are built
+# in the explainer's diff mode, against the base of the pull request (EXPLAINER_BASE, runtime/explainer/diff.ts): the
+# pages of the preview mark the blocks the pull request adds, changes, moves and removes, and aenderungen/ lists them
+# all. It needs GitHub Pages to serve gh-pages from its root (Settings → Pages → Deploy from a branch → gh-pages, / (root)). The actions ask the change scope (a change
 # of only the plan .vibe/** or only docs gets no preview; closing always removes it), so there is no paths filter.
 on:
   pull_request:
@@ -44,6 +46,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # a pull request is checked out as its merge with the base: depth 2 has the base as its first parent
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 1 }}
+      - name: The base of the pull request, for the explainer's diff mode
+        if: github.event_name == 'pull_request'
+        run: |
+          # without a base (a checkout that is no merge) the previews are built without marks
+          if git rev-parse --verify --quiet HEAD^1 > /dev/null; then
+            mkdir base
+            git archive HEAD^1 | tar -x -C base
+            # the foreign-language example is built in place of the template's content: its base is the same swap
+            if [ -d base/explainer/examples/franzoesisch/src ]; then
+              mkdir base-franzoesisch
+              cp -r base/explainer/examples/franzoesisch/src base-franzoesisch/src
+            fi
+          fi
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
@@ -55,16 +73,25 @@ jobs:
         run: |
           mkdir preview
           for template in quiz explainer interactive; do
-            (cd "$template" && npm install --no-audit --no-fund && npx vp build --outDir "$GITHUB_WORKSPACE/preview/$template")
+            (cd "$template" && npm install --no-audit --no-fund &&
+              if [ "$template" = explainer ] && [ -d "$GITHUB_WORKSPACE/base/explainer/src" ]; then
+                export EXPLAINER_BASE="$GITHUB_WORKSPACE/base/explainer"
+              fi &&
+              npx vp build --outDir "$GITHUB_WORKSPACE/preview/$template")
           done
           # the explainer's example for a foreign language (explainer/examples/franzoesisch), built in place of the
           # maths example, as check.yml checks it
           (cd explainer && rm -r src/app.yaml src/prozent src/components src/images && cp -r examples/franzoesisch/src/. src/ &&
+            if [ -d "$GITHUB_WORKSPACE/base-franzoesisch/src" ]; then export EXPLAINER_BASE="$GITHUB_WORKSPACE/base-franzoesisch"; fi &&
             npx vp build --outDir "$GITHUB_WORKSPACE/preview/explainer-franzoesisch")
           {
             echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Templates</title></head><body><h1>Templates</h1><ul>'
             for template in quiz explainer interactive; do echo "<li><a href=\"$template/\">$template</a></li>"; done
             echo '<li><a href="explainer-franzoesisch/">explainer: example for a foreign language (French)</a></li>'
+            # on a pull request: where the explainers list what it changes against its base
+            for built in explainer explainer-franzoesisch; do
+              if [ -d "preview/$built/aenderungen" ]; then echo "<li><a href=\"$built/aenderungen/\">$built: changes of this pull request</a></li>"; fi
+            done
             echo '</ul></body></html>'
           } > preview/index.html
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
