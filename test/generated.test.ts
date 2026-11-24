@@ -194,6 +194,23 @@ describe("the property test over fixed seeds", () => {
     ]);
   });
 
+  test("a message of a mistake may hold fractions, no other formula", () => {
+    const good = {
+      ...prozentwert,
+      mistakes: [{ value: "G * p / 100 * 2", message: "Du hast $\\frac{1}{2}$ vergessen." }],
+    };
+    expect(soundness(good, {}, templates(good), ["de"])).toEqual([]);
+    const bad = { ...prozentwert, mistakes: [{ value: "G * p / 100 * 2", message: "Wurzel: $\\sqrt{2}$." }] };
+    expect(soundness(bad, {}, templates(bad), ["de"])).toEqual([
+      {
+        path: ["mistakes", 0, "message"],
+        message: expect.stringMatching(
+          /^for seed 1 the message: \$\\sqrt\{2\}\$: \\sqrt is not supported; feedback may use only/,
+        ),
+      },
+    ]);
+  });
+
   test("a where that starves", () => {
     const spec = { ...prozentwert, where: ["G == 155"] };
     expect(soundness(spec, {}, templates(spec), ["de"])).toEqual([

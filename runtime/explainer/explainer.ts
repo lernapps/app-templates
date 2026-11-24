@@ -29,6 +29,7 @@ import { moveFocus } from "@lernapps/tooling/a11y";
 import { createSettings, createStorage, type SettingScope } from "@lernapps/tooling/storage";
 import { startQuestion } from "../shared/questions/engine.ts";
 import { renderQuestion } from "../shared/questions/render.ts";
+import { fractionHtml } from "../shared/text/fraction.ts";
 import { questionId } from "../shared/questions/question.ts";
 import type { ExerciseData } from "./exercises.ts";
 import { diagnose, questionFor } from "./generated/question.ts";
@@ -115,6 +116,8 @@ function startGenerated(
       startQuestion(item, question, {
         lang,
         retry: true,
+        // the message of a typical mistake may hold fractions, $\frac{3}{4}$ (fraction.ts)
+        format: fractionHtml,
         diagnose: (answer) => diagnose(spec, task, question, answer, lang, templates),
         onAnswer: (answer, right, said) =>
           progress.answered(spec.id, shown, right, answerShown(question, answer, lang), said),

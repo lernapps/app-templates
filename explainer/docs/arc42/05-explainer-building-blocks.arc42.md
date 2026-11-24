@@ -792,6 +792,13 @@ in each language, and what the exercise is for a tutor). For its table of tasks 
 `mistakes` and `show`, all four or none (`dec-component-table`); the build checks them against `check` for every task
 number and gives a hint for a component without them.
 
+The feedback of an exercise is made when the learner answers, so the build cannot render its formulas, and Temml stays out
+of the page. `reason` and the `mistakes` messages of a generated exercise may hold fractions in the notation of the page,
+`$\frac{3}{4}$`, which `shared/text/fraction.ts` sets in the browser as the same MathML: numbers, letters, `+ - = < >`,
+`\cdot \times \div \%`, parentheses and one level of `\frac`. Any other formula in these texts is a problem of the
+build (the property test of the component, the soundness test of the generated exercise); the feedback appears only with
+JavaScript, so the `<math>` count of the page without JavaScript is not touched.
+
 ```arc42
 :::interface
 id: if-exercise-logic

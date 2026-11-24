@@ -383,6 +383,12 @@ describe("the property test of an exercise component's logic", () => {
       ),
     ).toEqual([`for seed 1 reason(task, wrong(task), props, "de") throws: no message`]);
     expect(propertyProblems({ ...sound, ...answers, reason: () => undefined }, props, 50)).toEqual([]);
+    expect(propertyProblems({ ...sound, ...answers, reason: () => "Das sind $\\frac{3}{4}$." }, props, 50)).toEqual([]);
+    expect(propertyProblems({ ...sound, ...answers, reason: () => "Wurzel $\\sqrt{2}$." }, props, 50)).toEqual([
+      expect.stringMatching(
+        /^for seed 1 reason\(task, wrong\(task\), props, "de"\): \$\\sqrt\{2\}\$: \\sqrt is not supported/,
+      ),
+    ]);
   });
 });
 
