@@ -48,8 +48,8 @@ export interface AudioRef {
 /**
  * The credit of an image or a quotation: its source and its licence, as a small "© <licence>" with the credit as its tooltip
  * (at once on hover and on focus, and as its name for a screen reader); "" without a credit. A source that is a URL
- * makes the "©" a link to it, so that the credit stays one click from its source. On an image the style lays it as an
- * overlay on the lower right corner (overlaid); in a quotation it stands at the end of the caption.
+ * makes the "©" a link to it, so that the credit stays one click from its source. In a figure it stands right-aligned in
+ * the caption, in a quotation at the end of the caption.
  */
 export function renderCredit(item: Credit<Text>, lang: string): string {
   if (item.source === undefined || item.licence === undefined) return "";
@@ -67,14 +67,13 @@ export function renderCredit(item: Credit<Text>, lang: string): string {
 }
 
 /**
- * An image (or drawing) with its credit as an overlay on its lower right corner; the image alone without a credit. A
- * picture without a width of its own (an SVG with only a viewBox, a bar) fills the width, as in a labelled figure, so
- * that the corner is the one of the column.
+ * The caption of a figure: its text and, right-aligned in the same line, its credit (the "©" no longer lies on the
+ * picture, where it hid parts of it). Without a credit the caption stands alone; without a caption the credit does.
  */
-const withCredit = (picture: string, credit: string, fill = false): string =>
-  credit === ""
-    ? picture
-    : `<div class="block-image-credit${fill ? " block-image-fill" : ""}">${picture}${credit}</div>`;
+const captionWith = (caption: string, credit: string): string =>
+  caption === "" && credit === ""
+    ? ""
+    : `<figcaption${credit === "" ? "" : ' class="block-caption-credit"'}>${caption}${credit}</figcaption>`;
 
 function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): string {
   const { lang } = context;
@@ -94,9 +93,7 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
       else if (block.draw?.kind === "bar") picture = bar(block.draw.part, block.draw.whole, alt, localeOf(lang));
       else if (block.image !== undefined)
         picture = `<img src="${escape(context.href(block.image))}" alt="${escape(alt)}" loading="lazy" decoding="async">`;
-      const fill =
-        block.draw?.kind === "bar" || (block.image !== undefined && context.sizeless?.(block.image) === true);
-      return `<figure class="block-figure">${withCredit(picture, renderCredit(block, lang), fill)}<figcaption>${markdown(block.caption)}</figcaption></figure>`;
+      return `<figure class="block-figure">${picture}${captionWith(markdown(block.caption), renderCredit(block, lang))}</figure>`;
     }
     case "labelled-figure": {
       const markers = block.labels
@@ -117,12 +114,12 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
           : `<ol class="block-legend${named ? " block-legend-named" : ""}">${block.labels.map(item).join("")}</ol>`;
       const caption = block.caption === undefined ? "" : markdown(block.caption);
       const fill = context.sizeless?.(block.image) === true ? " block-labelled-fill" : "";
-      // without a caption the figure has no name of its own (the credit used to be its figcaption): its alt text names it
+      // without a caption the figure has no name of its own (a credit alone does not name it): its alt text names it
       return [
         `<figure class="block-figure block-labelled"${caption === "" ? ` aria-label="${plain(block.alt)}"` : ""}>`,
-        `<div class="block-labelled-image${fill}"><img src="${escape(context.href(block.image))}" alt="${plain(block.alt)}" loading="lazy" decoding="async">${markers}${renderCredit(block, lang)}</div>`,
+        `<div class="block-labelled-image${fill}"><img src="${escape(context.href(block.image))}" alt="${plain(block.alt)}" loading="lazy" decoding="async">${markers}</div>`,
         legend,
-        caption === "" ? "" : `<figcaption>${caption}</figcaption>`,
+        captionWith(caption, renderCredit(block, lang)),
         `</figure>`,
       ].join("");
     }
