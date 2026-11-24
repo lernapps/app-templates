@@ -72,18 +72,21 @@ jobs:
       - name: Build the templates into preview/
         run: |
           mkdir preview
+          # EXPLAINER_BASE: the base of the pull request for the explainer's diff mode; empty means none
           for template in quiz explainer interactive; do
+            base=""
+            if [ "$template" = explainer ] && [ -d "$GITHUB_WORKSPACE/base/explainer/src" ]; then
+              base="$GITHUB_WORKSPACE/base/explainer"
+            fi
             (cd "$template" && npm install --no-audit --no-fund &&
-              if [ "$template" = explainer ] && [ -d "$GITHUB_WORKSPACE/base/explainer/src" ]; then
-                export EXPLAINER_BASE="$GITHUB_WORKSPACE/base/explainer"
-              fi &&
-              npx vp build --outDir "$GITHUB_WORKSPACE/preview/$template")
+              EXPLAINER_BASE="$base" npx vp build --outDir "$GITHUB_WORKSPACE/preview/$template")
           done
           # the explainer's example for a foreign language (explainer/examples/franzoesisch), built in place of the
           # maths example, as check.yml checks it
+          base=""
+          if [ -d "$GITHUB_WORKSPACE/base-franzoesisch/src" ]; then base="$GITHUB_WORKSPACE/base-franzoesisch"; fi
           (cd explainer && rm -r src/app.yaml src/prozent src/components src/images && cp -r examples/franzoesisch/src/. src/ &&
-            if [ -d "$GITHUB_WORKSPACE/base-franzoesisch/src" ]; then export EXPLAINER_BASE="$GITHUB_WORKSPACE/base-franzoesisch"; fi &&
-            npx vp build --outDir "$GITHUB_WORKSPACE/preview/explainer-franzoesisch")
+            EXPLAINER_BASE="$base" npx vp build --outDir "$GITHUB_WORKSPACE/preview/explainer-franzoesisch")
           {
             echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Templates</title></head><body><h1>Templates</h1><ul>'
             for template in quiz explainer interactive; do echo "<li><a href=\"$template/\">$template</a></li>"; done
