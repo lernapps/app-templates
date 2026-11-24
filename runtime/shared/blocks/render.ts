@@ -46,7 +46,7 @@ export interface AudioRef {
 }
 
 /**
- * The credit of an image or a quotation: its source and its licence, as a small "©" with the credit as its tooltip
+ * The credit of an image or a quotation: its source and its licence, as a small "© <licence>" with the credit as its tooltip
  * (at once on hover and on focus, and as its name for a screen reader); "" without a credit. A source that is a URL
  * makes the "©" a link to it, so that the credit stays one click from its source. On an image the style lays it as an
  * overlay on the lower right corner (overlaid); in a quotation it stands at the end of the caption.
@@ -59,9 +59,11 @@ export function renderCredit(item: Credit<Text>, lang: string): string {
       .credit.replace("{licence}", () => item.licence ?? "")
       .replace("{source}", () => given),
   );
+  // the licence shows in the mark itself, the source in the tooltip
+  const shown = `© ${escape(item.licence)}`;
   return isUrl(given)
-    ? `<a class="block-credit" href="${escape(given)}" rel="noopener" data-info="${text}" aria-label="${text}">©</a>`
-    : `<span class="block-credit" tabindex="0" role="img" data-info="${text}" aria-label="${text}">©</span>`;
+    ? `<a class="block-credit" href="${escape(given)}" rel="noopener" data-info="${text}" aria-label="${text}">${shown}</a>`
+    : `<span class="block-credit" tabindex="0" role="img" data-info="${text}" aria-label="${text}">${shown}</span>`;
 }
 
 /**
