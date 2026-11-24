@@ -94,19 +94,21 @@ function withRecap(root: string, page = RECAP): string {
   return root;
 }
 
-/** The generated exercise of the fixture, as a block of a section of the recap page. */
-const EXERCISE = [
-  "      - type: generated",
-  "        id: summe",
-  "        given:",
-  "          a: { int: [1, 9] }",
-  "          b: { int: [1, 9] }",
-  '        where: ["a != b"]',
-  "        task:",
-  '          text: { de: "Was ist {{a}} + {{b}}?", en: "What is {{a}} + {{b}}?" }',
-  '        answer: { value: "a + b", compare: { number: { format: integer } } }',
-  "",
-].join("\n");
+/** The generated exercise of the fixture (id `summe` by default), as a block of a section of the recap page; 9 lines. */
+const exercise = (id = "summe") =>
+  [
+    "      - type: generated",
+    `        id: ${id}`,
+    "        given:",
+    "          a: { int: [1, 9] }",
+    "          b: { int: [1, 9] }",
+    '        where: ["a != b"]',
+    "        task:",
+    '          text: { de: "Was ist {{a}} + {{b}}?", en: "What is {{a}} + {{b}}?" }',
+    '        answer: { value: "a + b", compare: { number: { format: integer } } }',
+    "",
+  ].join("\n");
+const EXERCISE = exercise();
 
 /** The problem lines of the content, with few seeds: the property tests are not what this file tests. */
 const problemsOf = (root: string) => check(root, 5).problems;
@@ -329,16 +331,32 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
       'src/kapitel/wdh.yaml:2: recap: {"physik":"masse"} is no competency; write <subject>/<competency> with the ids of the learning map, e.g. physik/gewichtskraft-berechnen, or a list of several, e.g. [physik/kraft, physik/masse]',
     ],
     [
-      "an exercise",
-      (root) => writeFileSync(join(root, "src/kapitel/wdh.yaml"), `${RECAP}${EXERCISE}`),
-      "src/kapitel/wdh.yaml:10: blocks[0].blocks[1]: the exercise generated is not allowed on a recap page: it repeats physik/gewichtskraft-berechnen with descriptive blocks only, and the apps of that competency's strand practise it; remove the exercise, or make it a page of the app's own competencies",
+      "a third exercise",
+      (root) =>
+        writeFileSync(
+          join(root, "src/kapitel/wdh.yaml"),
+          `${RECAP}${EXERCISE}${exercise("summe-zwei")}${exercise("summe-drei")}`,
+        ),
+      "src/kapitel/wdh.yaml:28: blocks[0].blocks[3]: the exercise generated is one too many on a recap page: it repeats physik/gewichtskraft-berechnen and has at most 2 exercises, to check what it repeats, and the apps of that competency's strand practise it; remove the exercise, or make it a page of the app's own competencies",
     ],
     [
-      "an exercise on a page that repeats several",
-      (root) => writeFileSync(join(root, "src/kapitel/wdh.yaml"), `${RECAP_SEVERAL}${EXERCISE}`),
-      "src/kapitel/wdh.yaml:10: blocks[0].blocks[1]: the exercise generated is not allowed on a recap page: it repeats physik/gewichtskraft-berechnen, physik/masse with descriptive blocks only, and the apps of those competencies' strands practise them; remove the exercise, or make it a page of the app's own competencies",
+      "a third exercise on a page that repeats several",
+      (root) =>
+        writeFileSync(
+          join(root, "src/kapitel/wdh.yaml"),
+          `${RECAP_SEVERAL}${EXERCISE}${exercise("summe-zwei")}${exercise("summe-drei")}`,
+        ),
+      "src/kapitel/wdh.yaml:28: blocks[0].blocks[3]: the exercise generated is one too many on a recap page: it repeats physik/gewichtskraft-berechnen, physik/masse and has at most 2 exercises, to check what it repeats, and the apps of those competencies' strands practise them; remove the exercise, or make it a page of the app's own competencies",
     ],
   ];
+
+  test("may have one or two exercises", () => {
+    for (const exercises of [EXERCISE, `${EXERCISE}${exercise("summe-zwei")}`]) {
+      const root = withRecap(v2());
+      writeFileSync(join(root, "src/kapitel/wdh.yaml"), `${RECAP}${exercises}`);
+      expect(problemsOf(root)).toEqual([]);
+    }
+  });
 
   test.each(cases)("fails with %s", (_name, breakIt, line) => {
     const root = withRecap(v2());
@@ -346,7 +364,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     expect(problemsOf(root)).toEqual([line]);
   });
 
-  test("has no exercise component either", () => {
+  test("counts an exercise component as an exercise", () => {
     // the template: format 2, with the exercise component ProzentFeld
     const root = mkdtempSync(join(tmpdir(), "explainer-format-recap-"));
     cpSync(join(import.meta.dirname, "../explainer/src"), join(root, "src"), { recursive: true });
@@ -376,9 +394,15 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
       "pages: [prozentwert, prozentsatz, grundwert]",
       "pages: [prozentwert, prozentsatz, grundwert, wdh]",
     );
-    expect(problemsOf(root)).toEqual([
-      "src/prozent/wdh.yaml:11: blocks[0].blocks[1]: the exercise component ProzentFeld is not allowed on a recap page: it repeats mathematik/brueche-erweitern with descriptive blocks only, and the apps of that competency's strand practise it; remove the exercise, or make it a page of the app's own competencies",
-    ]);
+    // one component is within the limit of two exercises
+    expect(problemsOf(root)).toEqual([]);
+    // a second and a third make three: the third is one too many, and it is the exercise component's turn
+    const page = readFileSync(join(root, "src/prozent/wdh.yaml"), "utf8");
+    writeFileSync(
+      join(root, "src/prozent/wdh.yaml"),
+      page.replace(`${block ?? ""}`, `${block ?? ""}${block ?? ""}${block ?? ""}`),
+    );
+    expect(problemsOf(root).some((line) => line.includes("one too many on a recap page"))).toBe(true);
   }, 30_000);
 
   test("is a field of format 2", () => {
@@ -398,7 +422,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
       "pages: [eins, zwei, wdh]\nselfAssessment:\n  pages:\n    - exercises: [/kapitel/eins/#summe, /kapitel/zwei/#punkt, /kapitel/wdh/#gewichtskraft]",
     );
     expect(problemsOf(root)).toEqual([
-      "src/kapitel/chapter.yaml:5: selfAssessment.pages[0].exercises[2]: /kapitel/wdh/#gewichtskraft is on a recap page, which has no exercise and is left out of the self-assessment; choose an exercise of a page of the app's own competencies",
+      "src/kapitel/chapter.yaml:5: selfAssessment.pages[0].exercises[2]: /kapitel/wdh/#gewichtskraft is on a recap page, whose exercises are left out of the self-assessment; choose an exercise of a page of the app's own competencies",
     ]);
   });
 
@@ -451,7 +475,7 @@ describe("a recap page: recap: <subject>/<competency> instead of competencies", 
     if (page === undefined) throw new Error("no recap page");
     const { markdown } = tutorPage(site, page, "de", new Map());
     expect(markdown).toContain(
-      "Diese Seite ist eine Wiederholung: Sie wiederholt etwas, das das Kind schon können sollte, und hat keine Aufgabe.",
+      "Diese Seite ist eine Wiederholung: Sie wiederholt etwas, das das Kind schon können sollte, und hat höchstens zwei Aufgaben zur Kontrolle.",
     );
     expect(markdown).toContain("https://lernapps.net/apps/map/physik/c/gewichtskraft-berechnen/");
     const several = loadSite(withRecap(v2(), RECAP_SEVERAL), 0);

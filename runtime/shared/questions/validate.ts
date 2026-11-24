@@ -116,6 +116,9 @@ export function addressProblem(value: unknown): { lang?: string; message: string
   };
 }
 
+/** An address on the learning map of lernapps.net (https://lernapps.net/apps/map/…): no source for a question. */
+const LEARNING_MAP_ADDRESS = /^https:\/\/(?:www\.)?lernapps\.net\/apps\/map(?:[/?#]|$)/i;
+
 function schemaMessage(error: ErrorObject, at: string): string | undefined {
   switch (error.keyword) {
     // reported by the branch of the question's type, which says more
@@ -473,6 +476,15 @@ export function questionDetails(
   for (const { path, text } of questionAddresses(question)) {
     for (const problem of textLanguages(text, languages, true, declaredIn).problems) {
       problems.push({ path, lang: problem.lang, message: problem.message });
+    }
+    for (const [lang, address] of typeof text === "string" ? [[undefined, text] as const] : Object.entries(text)) {
+      if (LEARNING_MAP_ADDRESS.test(address)) {
+        problems.push({
+          path,
+          ...(lang === undefined ? {} : { lang }),
+          message: `a link for further reading must not point to the learning map (${address}): the map is an index of competencies, not a source on this question; link a page that explains exactly what the question asks, e.g. an encyclopedia article or a textbook page, or leave the link out`,
+        });
+      }
     }
   }
   const german = questionIn(question, "de");

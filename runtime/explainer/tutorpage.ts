@@ -73,7 +73,7 @@ interface Words {
   needsIntro: string;
   needs: Readonly<Record<Need, string>>;
   contextTitle: string;
-  /** On a recap page: that it has no exercise, and where its competencies are practised ({url}: one address each). */
+  /** On a recap page: that it has at most two exercises, and where its competencies are practised ({url}: one address each). */
   recap: string;
   exercise: string;
   steps: string;
@@ -143,7 +143,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     },
     contextTitle: "Kontext: die Seite „{page}“",
     recap:
-      "Diese Seite ist eine Wiederholung: Sie wiederholt etwas, das das Kind schon können sollte, und hat keine Aufgabe. Erklär mit dem Inhalt der Seite und frag nach, ob das Kind ihn verstanden hat. Üben kann es das in anderen Apps; welche das sind, steht hier: {url}",
+      "Diese Seite ist eine Wiederholung: Sie wiederholt etwas, das das Kind schon können sollte, und hat höchstens zwei Aufgaben zur Kontrolle. Erklär mit dem Inhalt der Seite und frag nach, ob das Kind ihn verstanden hat. Üben kann es das in anderen Apps; welche das sind, steht hier: {url}",
     exercise: "Aufgabe",
     steps: "Lösungsweg",
     link: "Link",
@@ -211,7 +211,7 @@ const WORDS: Readonly<Record<string, Words>> = {
     },
     contextTitle: "Context: the page “{page}”",
     recap:
-      "This page is a recap: it goes over something the child should already know, and has no exercise. Explain with the content of the page and ask whether the child has understood it. It can practise it in other apps; which ones, it says here: {url}",
+      "This page is a recap: it goes over something the child should already know, and has at most two exercises to check it. Explain with the content of the page and ask whether the child has understood it. It can practise it in other apps; which ones, it says here: {url}",
     exercise: "Exercise",
     steps: "Steps of the solution",
     link: "Link",
