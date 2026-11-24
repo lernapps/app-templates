@@ -19,7 +19,7 @@ import { assessments, type Assessment } from "./assessment.ts";
 import { mediaOf } from "./media.ts";
 
 export interface Route {
-  kind: "start" | "chapter" | "page" | "glossary" | "media" | "assessment";
+  kind: "start" | "chapter" | "page" | "glossary" | "media" | "assessment" | "diff";
   lang: string;
   /** Where the page is, from the app's root: "", "prozent/", "en/prozent/prozentwert/", "glossar/". */
   path: string;
@@ -58,8 +58,11 @@ export function terms(site: Site): Term[] {
   );
 }
 
-/** Every page of the app, in every language. */
-export function routes(site: Site): Route[] {
+/** The address of the overview of the changes of a diff (aenderungen/), within a language tree. */
+export const DIFF_LOCAL = "aenderungen/";
+
+/** Every page of the app, in every language; with a diff (diff.ts) also the overview of what it changes. */
+export function routes(site: Site, withDiff = false): Route[] {
   const hidden = hiddenChapter(site);
   const glossary = terms(site).length > 0;
   const media = mediaOf(site).length > 0;
@@ -123,6 +126,15 @@ export function routes(site: Site): Route[] {
         path: `${root}medien/`,
         local: "medien/",
         title: message(lang, "media"),
+      });
+    }
+    if (withDiff) {
+      list.push({
+        kind: "diff",
+        lang,
+        path: root + DIFF_LOCAL,
+        local: DIFF_LOCAL,
+        title: message(lang, "diffOverviewTitle"),
       });
     }
     return list;

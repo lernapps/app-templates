@@ -360,6 +360,8 @@ export function outline(root = "."): Outline {
   const pages: Record<string, PageOutline[]> = {};
   const others: Record<string, PageOutline[]> = {};
   for (const route of routes(site)) {
+    // the overview of a diff (routes(site, true)) is not a page of the app
+    if (route.kind === "diff") continue;
     const item: PageOutline = {
       kind: route.kind,
       url: route.path,

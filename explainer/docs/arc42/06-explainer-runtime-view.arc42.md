@@ -96,6 +96,23 @@ involves: bb-render, bb-shell, bb-feedback-mode, bb-runtime-texts, bb-tooling
 :::
 ```
 
+## Reviewing a change in the preview
+
+A reviewer opens the preview of a pull request that changes an explainer. The build compared the content with the one of
+the branch the pull request merges into, so every page marks what changed: new blocks, changed blocks with their earlier
+version beside them on a wide screen, removed blocks where they were, and moved blocks. A bar that floats beside the page
+counts the changes and steps from one to the next; the list of the app's pages shows which pages changed, and the
+overview lists everything, including pages and chapters that are gone.
+
+```arc42
+:::runtime-scenario
+id: scenario-explainer-diff
+title: Reviewing a change to an explainer in the pull request's preview
+trigger: A reviewer opens the preview of a pull request that changes an explainer's content
+involves: bb-build, bb-render, bb-shell, bb-diff-mode, bb-runtime-texts
+:::
+```
+
 ## Doing a self-assessment
 
 The start page, or a chapter's page, offers the self-assessment once the client module runs; it names the last result

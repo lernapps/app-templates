@@ -48,6 +48,12 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
   An exercise component may be in it: it shows the task the run draws, without "Prüfen". The example chapter has
   one, with the exercise component `prozentfeld`, offered on the start page.
 - German, plus English: a page tree per language.
+- A diff mode for reviewing a change: build the app with `EXPLAINER_BASE` set to the folder of another version (the one
+  with its `src/`), and every page marks what this version changes against it: new, changed, moved and removed
+  blocks, with the earlier version of a changed block beside it, and `aenderungen/` lists every change, including pages,
+  chapters and the app's own fields. A bar that floats beside the page steps from change to change. The preview of a
+  pull request is built so. Locally: `git worktree add ../base main && EXPLAINER_BASE=../base npm run dev`. Without
+  `EXPLAINER_BASE` the pages have no marks, and a production build never sets it.
 
 ## What it cannot do
 

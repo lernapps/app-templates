@@ -5,7 +5,8 @@ Where the explainer's blocks run, below the generic nodes.
 ## Explainer build
 
 The explainer's component rules, property tests, tutor pages and self-assessments run in CI and, through the same hooks, on the
-creator's machine; the content, data and components are built into the pages and the bundle there.
+creator's machine; the content, data and components are built into the pages and the bundle there. In the preview of a pull
+request the build also compares the content with the one of the base and marks the difference in the pages (the diff mode).
 
 ```arc42
 :::deployment-node
@@ -13,14 +14,14 @@ id: dn-explainer-build
 title: Explainer build
 type: container
 parent: dn-ci-runner
-hosts: bb-generated-exercises, bb-tutor-handoff, bb-scope, bb-task-numbers, bb-self-assessment, bb-explainer-content, bb-explainer-data, bb-explainer-components
+hosts: bb-generated-exercises, bb-tutor-handoff, bb-scope, bb-task-numbers, bb-self-assessment, bb-diff-mode, bb-explainer-content, bb-explainer-data, bb-explainer-components
 :::
 ```
 
 ## Explainer page
 
 The client module, the islands with the components, the generated exercises' live tasks with the quiz's question
-types, the task numbers, the videos, the feedback mode, a self-assessment's run and the explainer's texts run in the learner's browser on the pages the build
+types, the task numbers, the videos, the feedback mode, the controls of the diff mode (stepping from change to change), a self-assessment's run and the explainer's texts run in the learner's browser on the pages the build
 rendered.
 
 ```arc42
@@ -29,6 +30,6 @@ id: dn-explainer-page
 title: Explainer page
 type: container
 parent: dn-learner-browser
-hosts: bb-islands, bb-generated-exercises, bb-open-tasks, bb-language-tasks, bb-speaking-tasks, bb-audio-player, bb-media, bb-task-numbers, bb-video, bb-feedback-mode, bb-self-assessment, bb-runtime-texts, bb-explainer-components
+hosts: bb-islands, bb-generated-exercises, bb-open-tasks, bb-language-tasks, bb-speaking-tasks, bb-audio-player, bb-media, bb-task-numbers, bb-video, bb-feedback-mode, bb-diff-mode, bb-self-assessment, bb-runtime-texts, bb-explainer-components
 :::
 ```
