@@ -821,7 +821,9 @@ function reasonFor(question: Question, answer: Answer): string {
   if (first !== undefined) {
     return first.option === undefined ? shownText(first.text) : `${shownText(first.option)}: ${shownText(first.text)}`;
   }
-  return missesRight(question, answer) ? quiz.missingRight : quiz.lookAgain;
+  if (missesRight(question, answer)) return quiz.missingRight;
+  // a true/false question is told to read the statement again (engine.ts)
+  return question.type === "true-false" ? quiz.lookAgainStatement : quiz.lookAgain;
 }
 
 /**
