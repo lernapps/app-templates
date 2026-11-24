@@ -195,13 +195,18 @@ export function nav(lang: string, entries: readonly NavEntry[]): string {
   return `<nav class="explainer-diff-nav" id="diff-nav" aria-label="${t(lang, "diffNav")}"><h2>${t(lang, "diffNav")}</h2><ul>${items.join("")}</ul></nav>`;
 }
 
-/** The banner above every page: that this is the view of the changes, and the way to switch the marks off. */
-export function banner(lang: string, revision: string | undefined): string {
+/**
+ * The banner above every page: that this is the view of the changes, and the way to switch the marks off (not on the
+ * overview of the changes, which has nothing but marks).
+ */
+export function banner(lang: string, revision: string | undefined, toggle = true): string {
   const base = revision === undefined ? "" : ` (${t(lang, "diffBaseRevision", { revision })})`;
   return [
     `<p class="explainer-diff-banner" role="status">`,
     `<strong>${t(lang, "diffBanner")}</strong>${base} `,
-    `<button type="button" class="explainer-diff-toggle" data-off="${t(lang, "diffOff")}" data-on="${t(lang, "diffOn")}" hidden>${t(lang, "diffOff")}</button>`,
+    toggle
+      ? `<button type="button" class="explainer-diff-toggle" data-off="${t(lang, "diffOff")}" data-on="${t(lang, "diffOn")}" hidden>${t(lang, "diffOff")}</button>`
+      : "",
     `</p>`,
   ].join("");
 }

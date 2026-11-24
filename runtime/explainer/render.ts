@@ -822,7 +822,7 @@ function diffChrome(context: Context): string[] {
     current: route.kind === "diff",
   });
   return [
-    markup.banner(lang, diff.baseRevision),
+    markup.banner(lang, diff.baseRevision, route.kind !== "diff"),
     ...(route.kind === "page"
       ? [markup.bar(lang, pageDiff === undefined ? none : countsOf(pageDiff), context.marks, context.to(DIFF_LOCAL))]
       : []),

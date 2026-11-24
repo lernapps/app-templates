@@ -127,6 +127,12 @@ describe("the diff in the pages", () => {
     );
     expect(page?.body).toContain("Angaben der App");
     expect(page?.body).toContain("Alle Blöcke (alt)");
+    // the way to switch the marks off is on the pages, not on the overview, which has nothing but marks
+    expect(page?.body).not.toContain("explainer-diff-toggle");
+    const content = renderSite(target, new Map(), new Map(), diff).find(
+      (candidate) => candidate.route.path === "zahlen/zahlen-01/",
+    );
+    expect(content?.body).toContain("explainer-diff-toggle");
     expect(page?.body).toContain('href="../zahlen/zahlen-01/"');
   });
 
