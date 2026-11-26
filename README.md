@@ -29,6 +29,8 @@ feature: assistants read it before they choose an archetype.
   one by one, for other archetypes that embed them as exercises: `@lernapps/app-templates/quiz/question` (schema,
   validation, rendering, checker, messages; a question's texts may be maps by language), `startQuestion` of `@lernapps/app-templates/quiz` and the helpers of
   `@lernapps/app-templates/quiz/e2e`; [`test/fixtures/question-page/`](test/fixtures/question-page/) is a page built so.
+- The `image` of a figure is one path for every language, or a map by language like a text, for an image with words
+  in it: `{ de: images/plan-de.svg, en: images/plan-en.svg }`.
 - How to write the explainer's `generated` exercises, with their placeholders, is in its
   [schema](runtime/explainer/explainer.v1.schema.json) (`$defs/generated`).
 - An explainer's components are Vue single-file components in `src/components/<Name>.vue`, each with

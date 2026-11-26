@@ -39,6 +39,24 @@
       }
     },
     "image": {
+      "description": "A bundled image file in src/images/, as a path from src/: images/<name>.svg (or .png, .jpg, .webp). One path for every language, or, for an image with words in it, a map of paths by language with every declared language, e.g. { de: images/plan-de.svg, en: images/plan-en.svg }. Each language's page shows its own file.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/imageFile"
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "pattern": "^[a-z]{2}$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/imageFile"
+          }
+        }
+      ]
+    },
+    "imageFile": {
       "description": "A bundled image file in src/images/, as a path from src/: images/<name>.svg (or .png, .jpg, .webp).",
       "type": "string",
       "pattern": "^images/[a-z0-9]+(-[a-z0-9]+)*\\.(svg|png|jpg|webp)$"

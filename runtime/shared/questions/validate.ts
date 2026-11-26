@@ -116,6 +116,29 @@ export function addressProblem(value: unknown): { lang?: string; message: string
   };
 }
 
+/** The form of a bundled image's path (blocks.v1.schema.json, $defs/imageFile). */
+const IMAGE_FILE = /^images\/[a-z0-9]+(-[a-z0-9]+)*\.(svg|png|jpg|webp)$/;
+const IMAGE_FORM = "images/<name>.svg (or .png, .jpg, .webp), with a lower-case name of letters, digits and hyphens";
+
+/**
+ * What is wrong with the image of a figure that is neither a path of a bundled image nor a map of them by language:
+ * in which language, when it is one of a map. Also for the explainer, which shows the same blocks.
+ */
+export function imageProblem(value: unknown): { lang?: string; message: string } {
+  if (typeof value === "string") return { message: `${value} is no image path; write ${IMAGE_FORM}` };
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    for (const [lang, image] of Object.entries(value)) {
+      if (!/^[a-z]{2}$/.test(lang)) return { message: `${lang} is not a language code; use two letters, e.g. de, en` };
+      if (typeof image !== "string" || !IMAGE_FILE.test(image)) {
+        return { lang, message: `${String(image)} is no image path; write ${IMAGE_FORM}` };
+      }
+    }
+  }
+  return {
+    message: `must be ${IMAGE_FORM}, or a map of them by language: { de: images/…, en: images/… }`,
+  };
+}
+
 /** An address on the learning map of lernapps.net (https://lernapps.net/apps/map/…): no source for a question. */
 const LEARNING_MAP_ADDRESS = /^https:\/\/(?:www\.)?lernapps\.net\/apps\/map(?:[/?#]|$)/i;
 
@@ -182,8 +205,9 @@ export function schemaMessages(
     .flatMap((error) => {
       if (error.keyword !== "anyOf") return schemaMessage(error, where(error.instancePath)) ?? [];
       const value = valueAt(root, error.instancePath);
-      if (!error.instancePath.endsWith("/url")) return textMessage(value, where(error.instancePath));
-      const { lang, message } = addressProblem(value);
+      const image = /\/material\/\d+\/image$/.test(error.instancePath);
+      if (!image && !error.instancePath.endsWith("/url")) return textMessage(value, where(error.instancePath));
+      const { lang, message } = image ? imageProblem(value) : addressProblem(value);
       return `${where(error.instancePath)}${lang === undefined ? "" : ` (${lang})`}: ${message}`;
     });
 }
