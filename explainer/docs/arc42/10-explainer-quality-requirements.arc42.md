@@ -4,9 +4,8 @@ The explainer's goal and scenarios, besides the generic ones.
 
 ## Readable without JavaScript (explainer)
 
-An explainer is text-heavy, so every page is complete without JavaScript: text, formulas, figures, the navigation,
-every exercise with its solution and every component's `nojs` text (`dec-explainer-complete-without-js`); realised by
-the page rendering and checked by `lernapps check` and the explainer's end-to-end tests.
+An explainer is text-heavy, so every page is complete without JavaScript (`dec-explainer-complete-without-js`). The
+page rendering realises it; `lernapps check` and the end-to-end tests check it.
 
 High priority, because the archetype is text-heavy (owner, 2026-10-16).
 
@@ -70,8 +69,8 @@ metric: 0 requests that send something, 0 requests to another host, 0 keys in lo
 
 ## Every Audio File Is Marked
 
-An audio file of an explainer is synthetic speech and must say so in its own metadata (`dec-audio-marking`), so the build refuses
-a file that lacks any frame of the marking; the audio skill writes them and reads them back.
+An explainer's audio file is synthetic speech and must say so in its own metadata (`dec-audio-marking`). So the build
+refuses a file that lacks any part of the marking.
 
 ```arc42
 :::quality-scenario

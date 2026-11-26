@@ -4,11 +4,10 @@ The explainer's decisions, besides the generic ones.
 
 ## The Creator Writes Only Content
 
-The explainer is a deep scaffold: rendering, navigation, formulas, figures, exercises with feedback, accessibility,
-languages and the page without JavaScript come from the runtime; the creator writes YAML in `src/` and code only as a
-Vue component where no block can say what the page needs. The build fails on any other file in `src/`. So the schema
-fixes the explainer's structure, and an explainer app writes no architecture of its own. Rejected: free code in an
-explainer.
+The explainer is a deep scaffold. The runtime brings rendering, navigation, formulas, figures, exercises, accessibility,
+languages and the page without JavaScript. The creator writes YAML in `src/`, and a Vue component only where no block
+fits. The build fails on any other file in `src/`. So the schema fixes the structure, and an explainer app writes no
+architecture of its own. Rejected: free code in an explainer, which nobody could check.
 
 ```arc42
 :::decision
@@ -22,16 +21,14 @@ addresses: qg-checkable, qg-understandable, con-runtime-unchanged, con-component
 
 ## Every Page Complete Without JavaScript
 
-Every fact is in a block, rendered at build; an exercise shows its solution folded, a component its `nojs` text (an
-exercise component's written from its `describe`), so the page is complete without JavaScript and the client module
-only adds. `lernapps check` opens every explainer page a second time with JavaScript off. Rejected: meaning only
-inside a component or a live exercise. The one exception is the optional self-assessment (`dec-self-assessment`),
-which needs a run in the browser and is no content of its own.
+Every fact is in a block and rendered at build. An exercise shows its solution folded, a component its `nojs` text. So
+the page is complete without JavaScript, and the client only adds to it. `lernapps check` opens every page a second time
+with JavaScript off. The optional self-assessment (`dec-self-assessment`) is the one exception: it needs the browser and
+holds no content of its own.
 
-Formulas, too, are set at build; the browser has no formula renderer. Trade-off for a generated exercise: the build
-sets a chemical formula of a drawn value (`\ce{{{r.gl}}}`) once for every value of its list. That makes the page
-larger and allows only values from a list, and only as the whole formula. Rejected: Temml in the client, which would
-make every page with an exercise larger.
+Formulas are set at build too; the browser has no formula renderer. So a generated exercise may draw a chemical formula
+only from a list, and the page holds it for every value. Rejected: meaning only inside a component or a live exercise;
+a formula renderer in the client, which would make every page with an exercise larger.
 
 ```arc42
 :::decision
@@ -45,9 +42,9 @@ addresses: qg-explainer-readable-without-js, qg-accessibility
 
 ## A Fixed Size per Component
 
-A component stays within a fixed size of its own code, with Vue loaded once per page, so that a text-heavy page stays
-quick to load; a component that needs more is split or becomes a built-in block. The figure is an implementation
-detail of the runtime's build check. Rejected: no limit, which suits interactive apps but not pages read like text.
+Explainer pages are read like text, so they must load quickly. So each component stays within a fixed size of its own
+code, and Vue loads once per page. A component that needs more is split or becomes a built-in block. Rejected: no
+limit, which suits interactive apps but not text-heavy pages.
 
 ```arc42
 :::decision
@@ -61,8 +58,8 @@ addresses: con-component-rules, qg-explainer-readable-without-js
 
 ## Task Numbers in the Address
 
-Every seeded exercise numbers its distinct tasks, and the address holds the number of each exercise of the page, so a
-link shared in class, a deep link and the tutor name the same task; the build ships each exercise's table of seeds.
+A link shared in class, a deep link and the tutor must name the same task. So every seeded exercise numbers its
+distinct tasks, and the page's address holds the number of each exercise.
 
 ```arc42
 :::decision
@@ -76,48 +73,24 @@ addresses: qg-checkable
 
 ## One Tutor Page per Page, the One Source, Two Ways to It
 
-A chat assistant such as claude.ai fetches only addresses that stand word for word in a message of its user; an
-address in a fetched file does not count, absolute or relative. A static host serves the same file for any query.
-So the tutor page of a content page `<chapter>/<page>/tutor/` holds everything the tutor needs, and every way to the
-tutor names just this address, with where the learner is in its query: the page's task numbers as the page's own
-address has them (`?rr-strom=16&rr-teilspannung=7`), and for way B the exercise (`uebung`) and its section
-(`abschnitt`). The tutor reads the query from the message and looks the numbers up on the page. The tutor page is lean HTML with its
-guide visible, so that parents and teachers see what the tutor gets: who the tutor helps (a child at an exercise of
-this page), a few rules for guiding (short answers, the page's own tasks, nothing worked out by itself, explaining in
-the chat and solving in the app), how to start each way, where the child is, then the page's content as
-context and its exercises with every task number. A `generated` exercise is there once as its template, with hint,
-steps and its typical mistakes as F1, F2 … with the app's messages, and below one line per task number with its
-inputs and outputs, all worked out: the values of the placeholders, the solution, what each mistake gives. So the
-tutor fills in and calculates nothing, can give any further task with its link, and never asks the learner to copy
-one. An exercise component has its `about` and the same table from its exercise logic (`dec-component-table`), or
-without one each number's task and solution from its `describe`, as many as fit into 64 kB. The guide stands on the tutor page alone: the prompt of way A, the lines
-of way B and the result line speak in the learner's voice and carry no rule, and the app writes no `llms.txt`, so that
-no two texts can tell the tutor different things. Learners come with one of two needs, and each gets its own way. A, "Mit
-<name> lernen", a bar beside the title of every content page, where the learner is at work, once an assistant is on
-(`dec-tutor-assistant`; a chapter page starts none): one sentence that asks for help with the page, with the page's
-task numbers alone; the tutor asks what the child knows, leads through the page section by section, checks each with
-a question on its content, and only then sends the child to its task. With the exercise in the query of way A, the
-tutor went straight for the task (hand test on claude.ai, 2026-10-26). B, "Hilfe" in
-every exercise, before the first input too, "Warum?" after a wrong one: one sentence that names the task, then the
-input with its tries and the app's message word for word, so the tutor starts from what the learner was told: the
-tutor page tells it to go first, briefly, into exactly that input and the task, which mistake of the table it is;
-without a chat they open a new one, and on a page a tutor opened (`via=tutor`) they are copied for the running chat,
-which a new chat would lose. "Zurück zum Tutor", at the top and the end of the page, copies the page's tutor page with
-the page's task numbers and a line for each task of the session (how far the learner got, a wrong one with its input
-and the app's message), so that the tutor loads the tutor page and coaches on exactly these tasks; "Zurück" at one
-task copies that task's result line. Copying
-instead of an assistant adds the tutor page's Markdown, which lies beside it. Input and message leave the page only
-with the learner's click. Measured on lernapps/elektrizitaet and Mathe-Karte (2026-10-26): with every number, a
-page with two `generated` exercises and a component has 39 kB, the most with `generated` ones alone 54 kB; two
-pages whose components describe each task at length would have 80 kB.
-Rejected: one tutor page per chapter (long, and the tutor answered at length); a task file per task number, which the
-tutor may fetch only from a line the learner pastes, and a tutor file per page beside the tutor page (each a second
-source; the task files were not fetched from a link on the tutor page); a static page per task number (the numbers
-of several exercises on one page multiply); the template with only the values per number (the tutor calculated the
-solution itself); rules in the prompt, the lines, `llms.txt` or a whole-app prompt (they contradicted the tutor
-page); an `llms.txt` with the pages alone (the tutor page and the pages take its part); a prompt that lists every file (one address per page, unreadable as a first message); absolute links in a
-fetched file (not fetched); a Markdown tutor page alone (many browsers download `text/markdown`); hidden instructions
-(look like prompt injection).
+A chat assistant fetches only addresses its user wrote into a message, not addresses inside a fetched file. So each
+content page has one tutor page that holds everything the tutor needs, and every way to the tutor names just this
+address. Its query says where the learner is: the task numbers, and for way B the exercise.
+
+The tutor page is lean HTML with a visible guide, so parents and teachers see what the tutor gets. It says whom the
+tutor helps and how it guides, then gives the page's content and its exercises with every task number, all worked out.
+So the tutor calculates nothing and can hand out any further task. The guide is the only place with rules: prompts and
+lines speak in the learner's voice, and the app writes no `llms.txt`.
+
+Learners come with two needs. Way A, "Mit <name> lernen" beside the page title, asks for help with the page. The tutor
+leads through it section by section. Way B, "Hilfe" or "Warum?" in an exercise, names the task, the input and the app's
+message. The tutor starts from that message. "Zurück zum Tutor" brings the results back into the running chat. Input and
+message leave the page only with the learner's click.
+
+Rejected: one tutor page per chapter (too long); task files or a tutor file beside the page (a second source, not
+fetched); a static page per task number (too many); only the values per number (the tutor calculated wrongly); rules
+in prompts or in `llms.txt` (they contradicted the tutor page); a prompt that lists every file (unreadable); a Markdown
+page alone (browsers download it); hidden instructions (they look like prompt injection).
 
 ```arc42
 :::decision
@@ -131,24 +104,16 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click
 
 ## The Scope Gives the Tutor the Whole Learning Path
 
-To judge an open answer, a tutor needs the exact content of the whole learning path, not only of the page at hand: for
-a test, what the class learnt and what it did not is what counts (lernapps/practice#19). The material, photos of
-worksheets for a made-to-measure app, is seen only while building. So the creator's assistant writes the scope: long
-continuous prose in its own words, beside the content it describes: `scope` in each page's YAML, optionally in a
-chapter's, and in `src/app.yaml` what the app is about and what does not belong to it (what belongs to it is what the pages
-say); with the app's, every
-page has its own, which the build checks. A scope beside its page is kept in step with it and needs no paths that
-could go wrong (owner, 2026-10-30; first built as one file `src/scope.md`). It is no page for the learner: the build writes a scope beside each page
-(`<chapter>/<page>/scope/`, the page's part with what does not belong to the scope), combines all of a
-chapter beside the chapter and the whole beside the app, each linking one level up, for no menu and no search engine;
-each tutor page links its page's scope (`scope/` in place of `tutor/`) with a guide: read it before judging an open
-answer, go up when a point's source is on another page;
-if it cannot be fetched (security settings may block it, which an assistant notices itself), give the learner its full
-address and ask them to allow it, and until then judge no open answer and answer nothing about the content from
-general knowledge. This revises `dec-tutor-page`: the tutor page stays the one source of the task, the scope is the
-source of the content. Rejected: a summary page for the learner (a second content page to keep in step); one file for
-the whole scope (it drifts from the pages, and each part has to name its page by a path); a list instead of prose (the
-exact content is missing).
+To judge an open answer, a tutor needs the content of the whole learning path: for a test, what the class learnt
+counts. The material, such as photos of worksheets, is seen only while building. So the creator's assistant writes the
+scope: continuous prose in its own words, beside the content it describes, in each page, optionally each chapter, and
+the app. The app's scope also says what does not belong to it. A scope beside its page stays in step with it.
+
+The build writes the scope per page, per chapter and for the app, for no menu and no search engine. Each tutor page
+links its page's scope. The tutor reads it before judging an open answer. If it cannot fetch it, it asks the learner to
+allow it and does not answer from general knowledge. This revises `dec-tutor-page`: the tutor page is the source of the
+task, the scope the source of the content. Rejected: a summary page for the learner (a second page to keep in step); one
+file for the whole scope (it drifts from the pages); a list instead of prose (the exact content is missing).
 
 ```arc42
 :::decision
@@ -162,23 +127,13 @@ addresses: qg-understandable
 
 ## An Exercise Component Computes Its Table of Tasks
 
-An exercise component's values and results are in its code (`generate`, `check`, `solution`), not in a declaration
-the build could read, and its `describe` gives each number's task as text of about 1 kB on Mathe-Karte, so two pages
-showed only 49 to 54 of 67 numbers within 64 kB. So the component gives the tutor what a `generated` exercise gives:
-its logic module exports `template(props, lang)`, the task once with `{name}` for each input; `params(task, props,
-lang)`, the inputs of each task; `mistakes(task, props)`, the answer of each typical mistake of `about.mistakes`; and
-`show(answer, task, props, lang)`, an answer as text. The build computes the outputs itself, the solution as
-`show(solution(task))` and each mistake as `show` of its answer, and checks them for every task number: `check`
-accepts the solution and rejects each mistake's answer, the inputs have the same names for every task, and each
-placeholder is one of them. So the table cannot drift from the code. The four exports are optional, all or none; a
-component without them keeps the lines from `describe` within the budget, and the build gives a hint
-(`vue-component-tutor-table`), to become a warning once the apps have them. Measured on Mathe-Karte (`feat/explainer`,
-2026-10-26) with example declarations of `ProzentGrundbegriffe`, `ZufallPfade` and `ZufallTerm`: `grundbegriffe`
-23 kB instead of 64 kB, `pfadregel-2` 35 kB instead of 63 kB, every number on the page. Rejected: the outputs as
-expressions in the language of `generated` (`about.formula`, the first proposal of #80; terms, trees, sets and
-choices have no such expression); shorter texts from `describe` (still one text per number, and the tutor would
-read the values out of prose); a task file per number (fetched only from a line the learner pastes,
-`dec-tutor-page`).
+An exercise component's values and results live in its code, which the build cannot read as a declaration. As prose,
+its tasks did not all fit on the tutor page. So the component's logic module may give the tutor what a `generated`
+exercise gives: the task once as a template, the inputs of each task, the answer of each typical mistake, and an answer
+as text. The build computes the table from these and checks it against the component's check for every task number. So
+the table cannot drift from the code. Without these exports the tutor page keeps the prose, and the build gives a hint.
+Rejected: outputs as expressions (terms, trees and sets have none); shorter prose (the tutor would still read values
+from text); a task file per number (not fetched, `dec-tutor-page`).
 
 ```arc42
 :::decision
@@ -192,22 +147,13 @@ addresses: qg-checkable, qg-understandable
 
 ## The Explainer Checks an Exercise Component's Answer
 
-An exercise component drew its own "Prüfen", called `check` and reported the result with `answered`: every app built
-the same button and its style anew (the questions style only buttons inside `.question`, so it was small and plain),
-the answer reached the tutor as text only when the component sent it, and a component could report a result other
-than its logic's. So a component is the input of its task and nothing more: it emits `answer` with the learner's
-answer each time it changes, and may declare `checked: boolean`, true once its answer is checked. The explainer
-renders its island in a form with "Prüfen" in the row of the questions (Enter in a field checks), enabled while there
-is an answer not checked yet; it calls `check(task, answer)`, `reason(task, answer, props, lang)` for the app's message
-of a wrong answer and, when there, `show` for the answer as text, gives the feedback and passes all three on to "Hilfe"
-and "Zurück". Its logic module gets one export more, `reason`, which the property test calls on the wrong answer.
-`answered` is gone, without a transition: the build names it as an error, with what to do instead. Kept out, until an
-app needs them: texts of the task and the messages in the block (the props hold them, so the component and `reason`
-fill them in), the explainer's own "Lösung" and "Zurücksetzen" for a component, and finding the mistake by comparing
-answers (most components' mistakes are kinds of answers, "Amperemeter parallel", not single values, so `reason` stays
-code). Tried on all exercise components of elektrizitaet, anorganische-chemie, mechanik-explainer and Mathe-Karte
-(2026-10-26). Rejected: the component's own button with shared CSS (#85, a stopgap); "Prüfen" inside the island,
-whose DOM Vue owns (#83); `v-model`, as nothing flows back into the component while there is no "Lösung".
+Each exercise component drew its own "Prüfen" and reported its own result. Every app built the button anew, the tutor
+got the answer only if the component sent it, and a component could report another result than its logic. So a
+component is only the input of its task: it reports the learner's answer. The explainer draws "Prüfen" in the row of
+the other exercises, checks the answer with the logic module, gives the feedback and passes it on to the tutor. The
+old way of reporting a result is an error in the build, with what to do instead. Rejected: the component's own button
+with shared CSS (a stopgap); "Prüfen" inside the component, whose DOM Vue owns; two-way binding, since nothing flows
+back into the component.
 
 ```arc42
 :::decision
@@ -221,13 +167,11 @@ addresses: qg-checkable, qg-accessibility
 
 ## Feedback Holds for the Answer It Judged
 
-A child changed the answer of an exercise component after "Richtig!" and still saw "Richtig!" beside a wrong answer
-(#209): unlike a question, a component does not lock after the right answer. And "Prüfen" without an answer gave the
-same text for every kind of exercise. So the feedback holds only for the answer it judged: "Richtig!" goes when the
-answer changes. A wrong answer's feedback stays until the next "Prüfen", since its reason helps to correct the answer.
-Without an answer, the message says what is missing for that kind of exercise; a component may give its own words.
-Rejected: treating an empty list as no answer, since for some tasks it is the right one; clearing a wrong answer's
-feedback on every change, which would take its reason away.
+A child changed a component's answer after "Richtig!" and still saw "Richtig!" beside a wrong answer. And "Prüfen"
+without an answer said the same for every kind of exercise. So "Richtig!" goes when the answer changes. A wrong answer's
+feedback stays until the next "Prüfen", since its reason helps to correct. Without an answer, the message says what is
+missing for that kind of exercise. Rejected: treating an empty list as no answer (it may be right); clearing a wrong
+answer's feedback on every change (its reason would go).
 
 ```arc42
 :::decision
@@ -241,11 +185,10 @@ addresses: qg-understandable, qg-checkable
 
 ## An Ordering Gives Each Place Once, and Its Wrong Places Are Marked
 
-Every item of an ordering could get "Platz 1", and the feedback did not say which item was wrong (#209). So an
-ordering that gives a place twice counts as incomplete, in a quiz too. In an exercise that may be tried again, a wrong
-ordering marks the items in a wrong place and says how many are right, as a matching does with its pairs; the solution
-stays hidden. Rejected: showing the right place, which would give the solution away; controls that forbid a place given
-twice, which would hide why.
+Every item of an ordering could get "Platz 1", and the feedback did not say which item was wrong. So an ordering that
+gives a place twice is incomplete, in a quiz too. In an exercise that may be tried again, a wrong ordering marks the
+items in a wrong place and says how many are right. The solution stays hidden. Rejected: showing the right place (it
+gives the solution away); controls that forbid a place twice (they hide why).
 
 ```arc42
 :::decision
@@ -259,13 +202,11 @@ addresses: qg-understandable, qg-checkable
 
 ## An Exercise Component Is an Exercise Like the Others
 
-An exercise component stood apart from the other exercises (#209): no frame "Aufgabe", no solution after a wrong
-answer, no explanation after a right one. So it looks and behaves like every exercise: it shows the solution its logic
-already describes, after the right answer or on "Lösung zeigen". An app may mark a prop as no learner text (an id that
-is the same in every language), and may start its exercises at task number 1, where young learners took a random first
-number for tasks they had missed; the random start stays the default, so that a class does not all start with the same
-task. Rejected: a new contract for the explanation of a right answer, since the solution is already there; asking the
-existing message of a wrong answer for a right one, which would show texts the apps never meant for it.
+An exercise component stood apart: no frame "Aufgabe", no solution after a wrong answer, no explanation after a right
+one. So it looks and behaves like every exercise and shows the solution its logic already describes. An app may mark a
+prop as no learner text. It may also start its exercises at task number 1, for young learners; a random start stays the
+default, so a class does not all get the same task. Rejected: a new contract for explaining a right answer (the solution
+is already there); reusing the wrong answer's message (the apps never meant it for that).
 
 ```arc42
 :::decision
@@ -279,30 +220,19 @@ addresses: qg-understandable, qg-checkable, qg-explainer-readable-without-js
 
 ## The Learner Switches an Assistant On Once
 
-Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:
-on the start page ("Dein KI-Assistent", "Keiner" first) or beside the title of a content page, where "Mit einem
-KI-Tutor lernen" stays folded while none is on. The choice is one of the KI assistants the runtime offers, the same for every app,
-or copying the text, and it is kept on the device, per app, as the
-only thing the app keeps; nothing is sent. Once an assistant is on, each content page shows a small bar beside its
-title with one button, "Mit <name> lernen" (way A; changed or switched off on the start page, as it is seldom changed) and one help button in the row of "Prüfen" and "Lösung" of every exercise (way B), with the assistant's
-first letter as its symbol, so that the learner sees where a click leads: "Hilfe", "Warum?" after a wrong answer,
-and "Zurück" on a page a tutor opened once the task is done; one button that changes its text, not two. While none
-is on, an exercise has no help button. Both places say that the learner uses an account of their own and that the
-assistant is no offer of lernapps.net, which only provides the content and the exercises. Rejected: the way chosen
-anew on every page (a box above every page's content); a help button for learners without a tutor (it leads
-nowhere); the providers' logos (their marks; a letter says enough); assistants named per app (`tutor.providers`; no
-app named others, and a learner meets the same choice in every app); one choice for all apps of lernapps.net (each
-app keeps what it stores apart).
+Not every learner wants a KI tutor; one who does wants it on every page. So the learner chooses once, on the start page
+or beside a page title: one of the assistants the runtime offers, or copying the text. The choice stays on the device,
+per app, and nothing is sent. While one is on, each content page has the button of way A and each exercise one help
+button for way B, marked with the assistant's first letter. While none is on, there is no help button. Both places say
+that the learner uses their own account and that the assistant is no offer of lernapps.net.
 
-Mistral Vibe loads no address from a message that arrives through its own address (`?q=`): it counts as not written by the
-learner. So an assistant can carry `paste`: the click copies the start prompt, the one sentence with the address of the
-tutor page, at once, and opens the chat with a short placeholder message ("Ich brauche Hilfe bei einer Lern-Einheit.
-Ich schreibe Dir gleich, worum es geht."), which holds no address. The learner pastes the sentence; it is now their own
-message, and the tutor loads the tutor page from it. The copy starts in the click, as a browser refuses it once the new
-window has the focus (Edge did, after a fetch of the tutor page's Markdown). Choosing such an assistant shows a short
-note on how it works. Rejected: the prompt alone in the address (Mistral Vibe fetches nothing from it); a plain link to Le
-Chat (the learner would write the prompt by hand); copying the Markdown as well (a fetch first, and the copy came too
-late).
+Some assistants do not load an address that arrives through their own link. For them the click copies the start prompt
+and opens the chat with a short message without address; the learner pastes the prompt as their own message.
+
+Rejected: choosing the way anew on every page (a box above every page); help without a tutor (it leads nowhere); the
+providers' logos (their marks); assistants per app (a learner should meet the same choice everywhere); one choice for
+all apps (each app keeps its data apart); for the paste case, the prompt in the link alone (not fetched) or a plain link
+(the learner would write the prompt).
 
 ```arc42
 :::decision
@@ -316,27 +246,14 @@ addresses: qg-privacy, qg-understandable, con-no-request-before-click
 
 ## The Learner Names What Helps; the Tutor Page Holds a Short Section for Each
 
-Some learners learn better when the tutor talks to them in a particular way: in short steps, with
-little to read, with deeper questions, in simple German for another first language, literally, or with numbers as
-amounts. So beside the assistant the learner chooses none, one or several of six needs, each named by what helps,
-never by a diagnosis: `kurze-schritte`, `wenig-lesen`, `mehr-tiefe`, `andere-muttersprache`, `klar-und-woertlich`,
-`rechnen-anschaulich`; with `andere-muttersprache` also the first language, from a list. Beside each need one or two
-sentences say what it does. Unlike the assistant, which each app keeps apart (`dec-tutor-assistant`), the needs are
-the learner's own and the same in every explainer: the choice holds for every explainer of lernapps.net
-(`lernapps:settings:explainer:`) or for this app only (`lernapps:<id>:`, which wins); nothing is sent before a click. Every address the learner hands to a
-tutor that starts a chat, the start prompt of way A, the lines of way B1 and the prompt of a self-assessment, carries the needs in the tutor page's
-query (`bedarf=kurze-schritte,andere-muttersprache`); with `andere-muttersprache` the prompt adds one sentence in the
-learner's voice, "Meine Muttersprache ist Türkisch." A running chat (B2, "Zurück zum Tutor") has them already. The
-tutor page is static, so it holds the section of every need, after its guide under "Besondere Anforderungen": they
-hold when the query names them and go before the guide; each says where it departs from it ("Im Gegensatz zu oben
-…") and has at most two sentences, about 200 characters, so that the six together do not drown the guide. Of two needs that differ, the stricter one holds. The tutor reads the
-query as it reads the task numbers. The sections draw on research on teaching, support and feedback; none of it is
-on tutoring in a chat, so each section is checked by a hand test like the guide.
-Rejected: a page per need or a central page of all needs on the GitHub Pages of lernapps/app-templates (a second
-address to fetch, untested; several needs multiply the addresses); the needs as rules in the prompt (they would
-contradict the tutor page); free text (the same, and nothing to check); names of diagnoses (health data about a child
-in an address sent to the assistant's provider, and a label); learning styles (no evidence); a need for
-encouragement and one for learners who cannot see the figures, not now.
+Some learners learn better when the tutor talks to them in a particular way. So the learner may choose needs, each named
+by what helps, never by a diagnosis: short steps, little to read, more depth, another first language, clear and literal
+words, numbers as amounts. The choice holds for every explainer or for one app, and is sent only with a click. Every
+address that starts a chat carries the needs in the tutor page's query. The static tutor page holds a short section for
+each need, which holds when the query names it. The sections draw on research on teaching and feedback and are checked
+by hand tests. Rejected: a page per need (more addresses to fetch); needs as rules in the prompt (they would contradict
+the tutor page); free text (nothing to check); diagnoses (health data in an address sent to a provider); learning
+styles (no evidence).
 
 ```arc42
 :::decision
@@ -350,17 +267,13 @@ addresses: qg-privacy, qg-understandable, qg-accessibility, con-no-request-befor
 
 ## A Video Loads Only After a Click
 
-A video block is a link to YouTube until the learner asks for the player. Before the click the page shows the title,
-the channel and a note that playing sends data, among them the IP address, to YouTube/Google, and it requests nothing
-from another host: `con-no-request-before-click` holds, and the page needs no consent banner. The click on "Video
-abspielen" is the learner's consent for this one video, given with the note in view; only then does the player load,
-from YouTube's privacy-enhanced host youtube-nocookie.com, with the app's origin as its only referrer, so YouTube never
-sees the task numbers or `via=tutor` in the address. "Videos immer direkt laden" is a standing consent: kept on the
-device under the app's prefix (`con-state-on-device`), shown ticked on every video, and withdrawn by unticking it. No
-thumbnail, as YouTube's image would load before the click and an own one needs the rights to it. An app with a video
-loads from another server after a click, so its catalog entry says `fitness.thirdParty: on-click`. Rejected: a direct
-embed (requests to Google on opening the page, a consent banner); only a link (the learner leaves the page for
-YouTube's recommendations); the video in the bundle (rights, size).
+A video is a link to YouTube until the learner asks for the player. Before the click the page shows the title, the
+channel and a note that playing sends data to YouTube/Google. It requests nothing from another host, so it needs no
+consent banner. The click is consent for this one video. The player then loads from youtube-nocookie.com, with only the
+app's origin as referrer. "Videos immer direkt laden" is a standing consent, kept on the device until unticked. An app
+with a video says so in its catalog entry (`fitness.thirdParty: on-click`). Rejected: a direct embed (requests on
+opening, a banner); only a link (the learner leaves for YouTube's recommendations); the video in the bundle (rights,
+size).
 
 ```arc42
 :::decision
@@ -374,13 +287,11 @@ addresses: qg-privacy, qg-explainer-readable-without-js, con-no-request-before-c
 
 ## Feedback Is Noted on the Device and Handed Over as One Issue
 
-Teachers and parents who know the subject are the ones who find what is wrong or unclear in an explainer. The
-feedback mode lets them note it where it is and hand all notes over as one issue in the app's repository, where the
-creator works anyway. The notes stay on the device (`con-state-on-device`) and the app sends nothing: the person hands
-them over with their own GitHub account. A note keeps its place in the content when the content around it changes,
-and shows when its place itself changed. The way in belongs to the app's content, not to the footer, which is the
-platform's. Rejected: a server that collects feedback (accounts, data, cost); an issue template in every app's
-repository; the notes in the issue's address (too long).
+Teachers and parents who know the subject find what is wrong or unclear. The feedback mode lets them note it where it
+is and hand all notes over as one issue in the app's repository, where the creator works. The notes stay on the device,
+and the person hands them over with their own GitHub account. A note keeps its place when the content around it
+changes. Rejected: a server that collects feedback (accounts, data, cost); an issue template in every repository; the
+notes in the issue's address (too long).
 
 ```arc42
 :::decision
@@ -394,21 +305,13 @@ addresses: qg-privacy, qg-explainer-readable-without-js, con-state-on-device, co
 
 ## A Pull Request's Change Is Shown in the Running App, Block by Block
 
-A pull request that changes an explainer is hard to check from the YAML diff: a change is spread over blocks, pages and
-chapters, and what the learner sees is the rendered page. So the build can compare its content with the one of the base
-(`EXPLAINER_BASE`, the folder of the branch the pull request merges into) and write the pages of the version with the
-difference marked in them: new, changed, moved and removed blocks and pages, with the earlier version of a changed block
-beside it (open on a wide screen, folded on a narrow one) and a removed block as a ghost where it was. Blocks are matched
-by the id the feedback mode already gives them (a hash of the block's source), through the longest common subsequence of
-a list's ids, so that a block added at the top does not turn the ones below it into changes; a block that left one place
-for another is moved. The mark is plain HTML with its own words, never colour alone, and the bar that steps from change
-to change floats beside the page and does not scroll with it. It is a build option, not a feature of the published app:
-the preview of a pull request sets it, a production build never does, and without it the pages are the ones they were.
-The base is a folder, so the same mode serves a local check (a checkout of the base next to the app) and any other
-workflow. Rejected: a text report of the changes only (the reviewer must find each place in the app); comparing the
-built HTML (it changes with every hash and every id); a diff in the browser from two deployed apps (a request to another
-version and a runtime that needs both contents); matching blocks by their place (an inserted block would mark the rest of
-the page as changed).
+A change to an explainer is hard to check in the YAML diff: it spreads over blocks and pages, and the learner sees the
+rendered page. So the build can compare the content with a base and mark the difference in the pages: new, changed,
+moved and removed blocks and pages. Blocks are matched by identity, not by place, so one added block does not mark the
+rest as changed. The marks use words, never colour alone. It is a build option for previews; a production build never
+sets it. The base is a folder, so it also works locally. Rejected: a text report (the reviewer must find each place);
+comparing the built HTML (it changes with every hash); a diff of two deployed apps (more requests and runtime); matching
+by place (see above).
 
 ```arc42
 :::decision
@@ -422,24 +325,14 @@ addresses: qg-explainer-readable-without-js, con-frontend-only
 
 ## A Self-Assessment Checked Only as a Whole
 
-A learner may want to know before learning which pages they can skim. So an explainer may offer a self-assessment. A
-chapter declares its own, the unit a learner works through; the app's is every chapter's together, so that one run
-covers all and a tutor can go on chapter by chapter with the same exercises. It shows exercises of the content pages without the page around
-them, a few on each of its pages (best two to five), and checks no single one: only "Auswerten" checks them all
-together, and the result is per content page, the level at which the learner goes on: probably known (all right),
-look at it again (at least half), read it (less); a page none of whose exercises is asked is "not asked", as some
-content, an open activity for one, cannot be checked. One task alone is too little to call a page known: right, it is
-"look at it again". A generated exercise is preferred, as each run draws a new task, and it may be listed twice for
-two tasks of its own; the options of a choice are mixed anew for each run, so that a second run asks the question,
-not the place of its answer. It is optional for the learner and for the app: the content declares it, and an agent adds it when the content
-and its forms of teaching are known, at the end (tooling skill `lernapps-explainer-self-assessment`). It needs
-JavaScript; without it the offer stays hidden and its page says so in one line. Rejected: feedback after each
-exercise (it would teach, not assess); a result per chapter (too coarse to say where to start); a self-assessment of
-the app declared apart from the chapters' (two lists of the same exercises to keep in step); exercises of its own
-(they would duplicate the pages' and miss the tutor's tables). An exercise component may be in it as well, and may be
-listed twice like a generated exercise: its island shows the task the run draws, without "Prüfen", and judges each
-answer silently for "Auswerten"; its typical mistake comes from its logic's mistakes. Its tasks often check a page
-best, so leaving components out left whole chapters unasked.
+A learner may want to know before learning which pages they can skim. So an explainer may offer a self-assessment, per
+chapter; the app's covers all chapters. It shows a few exercises of each content page and checks them only all
+together. The result is per content page: probably known, look at it again, or read it. One right task alone is too
+little for "known". Each run draws new tasks, so a second run asks the question, not the place of the answer. Exercise
+components take part too, as they often check a page best. It needs JavaScript; without it the offer stays hidden.
+
+Rejected: feedback after each exercise (it would teach, not assess); a result per chapter (too coarse); a separate list
+for the app (two lists to keep in step); exercises of its own (they would duplicate the pages').
 
 ```arc42
 :::decision
@@ -453,11 +346,9 @@ addresses: qg-understandable, qg-explainer-readable-without-js
 
 ## A Partly Right Answer Counts Half
 
-An answer may be partly right: an open answer has some, not all, points of a good answer (lernapps/practice#19). It
-counts half, so that a page with one right and one partly right of three is "look at it again", and its result
-`teilweise` names the points it missed (`P2`) as a wrong one names its mistake (`F1`). An exercise component may say so
-as well (`partly`, `missed`). Rejected: counting it as wrong (writing half an answer would count as writing none) or
-as right (a page would be "known" with points missing).
+An open answer may have some, not all, points of a good answer. It counts half in the self-assessment, and its result
+names the points it missed, as a wrong one names its mistake. An exercise component may report it too. Rejected:
+counting it as wrong (half an answer would count as none) or as right (a page would be "known" with points missing).
 
 ```arc42
 :::decision
@@ -471,21 +362,13 @@ addresses: qg-understandable
 
 ## An Open Task Is Answered First, Then Compared With Points
 
-Some subjects need answers in the learner's own words: German, foreign languages, religion (lernapps/practice#19). An
-example with a model answer beside it was only read, tied to nothing in the material, and gave the self-assessment and
-the tutor nothing to work with. So an open task asks for the answer first, typed or written on paper and photographed
-(the choice "Deine Lösung"), and only then shows the points of a good answer, 2 to 5, each about the content with its
-source in the app, linked to read up, or about the form; the learner ticks those the answer has, which makes them read
-each point; the ticks give right, partly right (`dec-self-assessment-partly`) or wrong at once, without a step of
-their own, and comparing opens the model answer.
-Without JavaScript the page shows the task, the points and the model answer under "Lösung", as every exercise has one.
-The tutor page gives the tutor the points as P1, P2 … with their sources, the model answer and how to help; the result
-line carries the ticked points and the answer, a photo only as a note that the learner attaches it. The answer stays on
-the device: the text, the way chosen and the ticks are kept while the tab is open (sessionStorage through the tooling's
-storage, under the app's prefix), so that a reload loses nothing and a new day starts afresh; the photo is shown from
-memory and never stored or sent; a self-assessment keeps nothing of its own. Rejected: grading by a model (no model runs in
-the browser, `dec-tutor-variant`; a server would collect what learners write); a model answer without the learner's own
-answer first (it is only read); a word search over the answer (easy to fool; at most a hint).
+Some subjects need answers in the learner's own words. An example with a model answer was only read. So an open task
+asks for the answer first, typed or written on paper and photographed. Only then it shows two to five points of a good
+answer, each with its source in the app. The learner ticks the points the answer has; that gives right, partly right or
+wrong. Without JavaScript the page shows the task, the points and the model answer. The tutor page gives the tutor the
+points and the model answer. The answer stays on the device while the tab is open; a photo is never stored or sent.
+Rejected: grading by a model (none runs in the browser, `dec-tutor-variant`; a server would collect what learners
+write); a model answer without the learner's own first (it is only read); a word search (easy to fool).
 
 ```arc42
 :::decision
@@ -499,16 +382,11 @@ addresses: qg-understandable, qg-privacy, qg-explainer-readable-without-js
 
 ## The Last Result of a Self-Assessment Stays on the Device
 
-The learner should find their result again, and a tutor should be able to accompany them from it. So the result of
-the last run stays on the device, under the app's prefix (`con-state-on-device`), one per self-assessment, so the app's
-and a chapter's do not mix; a new run replaces it, and "Ergebnis löschen" removes it. A run a tutor opened
-(`via=tutor`) is no self-assessment of the learner's: it keeps nothing. It holds per exercise its
-reference, its task number, right, wrong or not answered, and the input and typical mistake of a wrong one: nothing
-about the learner, and nothing is sent. The learner takes it to a tutor with a click: the tutor page of the
-self-assessment, its address holding the result (`?a1=17-falsch-F1`), in one sentence with a line per exercise, in the
-address of the assistant chosen or copied with the tutor page's Markdown, as on the content pages
-(`dec-tutor-assistant`). Rejected: keeping every run (a history about the learner); a result only in memory (lost on the way to the
-tutor); the result sent anywhere (`qg-privacy`).
+The learner should find their result again, and a tutor should be able to work from it. So the last run's result stays
+on the device, one per self-assessment. A new run replaces it, and the learner can delete it. A run a tutor opened keeps
+nothing. The result holds only the exercises and how they went, nothing about the learner, and nothing is sent. The
+learner takes it to a tutor with a click, as on the content pages. Rejected: keeping every run (a history about the
+learner); a result only in memory (lost on the way to the tutor); sending the result anywhere (`qg-privacy`).
 
 ```arc42
 :::decision
@@ -522,26 +400,12 @@ addresses: qg-privacy, con-state-on-device, con-no-request-before-click
 
 ## The Tutor Guides Through Chapters and Rounds
 
-After a self-assessment the tutor is a guide, not a teacher: explaining and practising happen on the pages, with their
-"Hilfe" and their own tutor pages. The self-assessment's tutor page tells the tutor to go chapter by chapter: the pages
-that do not stick, each opened with `via=tutor` and ending in "Zurück zum Tutor", then a new round of the chapter's
-self-assessment, also with `via=tutor`, which draws new tasks; after each round the tutor decides on the next chapter
-or another round, and sends a page that does not stick after two rounds to "Mit einem KI-Tutor lernen" on the page.
-When the learner comes back from a page with a wrong task, the guide loads the page's tutor page and coaches on exactly
-those tasks, then guides on. Each round's "Zurück zum Tutor" ends with the link of the next round, which names the task
-numbers of this one (`vorher=a1.28`): the next round draws others where it can. On
-a page a tutor opened, the clipboard is always the way back: the self-assessment's "Zurück zum Tutor" copies the result
-per page, a line per exercise and the tutor page with the result in its address, as the result
-line of a content page does. The tutor page holds every chapter with its pages and the link to its self-assessment, and
-the exercise behind each key; no tables of solutions, which the pages' tutor pages hold. It holds no address: a static
-page does not know where the app is served, and an assistant resolving relative links led the learner to tutor pages
-(ChatGPT, 2026-10-28). The message the learner sends, written by the browser, ends with the full address of every
-page and every self-assessment of the app with `via=tutor`, and the guide takes links only from there. The
-parameter is `via=tutor`, without the old `von=tutor`. A copy for the running chat keeps the tab open: closing it let the browser show
-some other tab, and the learner did not see that something was copied. The button says "✓ Kopiert" for a while, as the tutor
-bar does after copying, and a line below it where to paste. Rejected: the tutor explaining
-the tasks of the self-assessment itself (a second place to teach, and solutions in view); a new chat per round (the
-tutor would lose the course of the learner).
+After a self-assessment the tutor is a guide, not a teacher: explaining and practising happen on the pages. Its tutor
+page tells the tutor to go chapter by chapter. It sends the learner to the pages that do not stick, then into a new
+round, which draws other tasks. After each round it decides on the next chapter or another round. On pages a tutor
+opened, the clipboard is the way back into the running chat. The tutor page holds no address, because a static page
+does not know where the app is served; the learner's first message lists every address. Rejected: the tutor explaining
+the tasks itself (a second place to teach, solutions in view); a new chat per round (the tutor would lose the course).
 
 ```arc42
 :::decision
@@ -555,14 +419,11 @@ addresses: qg-understandable, qg-privacy, con-no-request-before-click
 
 ## Format 2 Places the App on the Learning Map
 
-The catalog's learning map shows which apps practise which competencies. The app owns where it belongs: it names one
-strand (or `none`, so that none forgets), or the subject of a unit app that practises competencies of several strands
-of a subject whose map allows it (`explainerFocus: competency`, lernapps/apps#226); never both. Each page names the
-competencies it practises. The build hands this to the
-catalog (`if-page-list`); the catalog owns the subjects' ids and checks them. The fields are required, so this is a
-new format; format 1 stays valid for apps that do not move, and they are not on the map. Rejected: strand and
-competencies in the catalog entry (the pages would be listed twice); optional fields in format 1 (an app could forget
-them).
+The catalog's learning map shows which apps practise which competencies. The app owns where it belongs. It names one
+strand, or `none`, or for a unit app the subject, never both; each page names the competencies it practises. The build
+hands this to the catalog (`if-page-list`), which owns and checks the ids. The fields are required, so this is a new
+format; format 1 stays valid, without a place on the map. Rejected: the place in the catalog entry (the pages would be
+listed twice); optional fields in format 1 (an app could forget them).
 
 ```arc42
 :::decision
@@ -576,15 +437,12 @@ addresses: qg-checkable, con-runtime-unchanged
 
 ## A Recap Page Repeats Competencies the App Does Not Practise
 
-A competency may require others the app does not practise; its learners may need them again. A recap page repeats
-one of them, or several at once: one compact recap at the start of the chapter that needs them, instead of a page
-each. It is mostly descriptive blocks, with at most two exercises to check what it repeats: practising stays the job of the apps the map lists for each competency. The
-runtime, not the author, links each competency on the map, with its id as the link's text, so no link can be
-missing; the content of the page, what the learner should already know, is the author's, and `lernapps check` warns
-when it does not name a competency it repeats. The catalog checks that each competency exists. Rejected: more than two exercises on
-a recap page (the app would practise a competency the map does not show for it; with no exercise at all, authors built full pages with exercises that only claim to repeat, instead of using a recap page); a link the author writes (it could
-be missing or wrong); the runtime writing the competencies' names and sentences from the map (the build would depend
-on the map); several values in `competencies` for the same purpose (a page practises, as a rule, one competency).
+A competency may require others the app does not practise. A recap page repeats one or several of them at the start of
+the chapter that needs them. It is mostly descriptive, with at most two exercises; practising stays with the apps the
+map lists. The runtime links each competency on the map, so no link is missing. The author writes what the learner
+should already know, and `lernapps check` warns when a competency is not named in it. Rejected: more exercises (the app
+would practise what the map does not show; with none, authors built full pages instead); links by the author (missing
+or wrong); names taken from the map (the build would depend on it); several competencies per page for one purpose.
 
 ```arc42
 :::decision
@@ -598,15 +456,12 @@ addresses: qg-understandable, qg-checkable, con-no-request-before-click
 
 ## A Language Task Is Written, Then Checked Against the Answers It Lists
 
-The learning map has foreign languages: learners should write words, forms and sentences, not only choose. Their
-textbooks differ, so a task carries what it asks: each item names what the learner starts from (the other language,
-a cue, or a marker of a labelled figure) and its answer with its variants. One block, `language-task`, has four
-modes (`write`, `gap`, `choice`, `table`); the direction is part of the task. The check is deterministic and the same
-in browser and build: it evens out what is no mistake, then finds mistakes of form, wrong unless the task loosens
-them, then the item's typical mistakes. Several items give right, partly right (`dec-self-assessment-partly`) or
-wrong. Fields are marked with their language. Rejected: grading by a model (`dec-tutor-variant`); a class for typing
-errors (it would hide wrong endings); mistakes of form right by default; the learner choosing the direction; a
-textbook's word list (a basic vocabulary beside the learning map guides creators instead).
+Foreign-language learners should write words, forms and sentences, not only choose. Their textbooks differ, so a task
+carries what it asks: each item names what the learner starts from and its answer with variants. One block has four
+modes: writing, gaps, choice and table. The check is deterministic and the same in browser and build. It ignores what is
+no mistake, then finds mistakes of form, then the item's typical mistakes. Rejected: grading by a model
+(`dec-tutor-variant`); a class for typing errors (it would hide wrong endings); mistakes of form right by default; the
+learner choosing the direction; a textbook's word list (a basic vocabulary guides creators instead).
 
 ```arc42
 :::decision
@@ -620,19 +475,13 @@ addresses: qg-understandable, qg-checkable, qg-accessibility, qg-privacy, qg-exp
 
 ## Audio Is Synthetic, Marked in Its File, and Made While the App Is Written
 
-Foreign-language learners must hear the language. Every sentence of a dictation is an MP3 file in `src/audio/` that the
-creator makes while writing the app with the audio skill (`lernapps-audio` in lernapps/tooling) and commits with it. The skill
-offers a fixed list of voices that the owner chose by listening (Kokoro, and Piper for one French voice), under licences that
-allow the CC BY-SA content to be copied. The file carries what it is: the EU AI Act asks providers of generated speech to mark
-it machine-readably (Article 50(2)), so the file has, as ID3 frames, that a model made it, which model and voice, the licence
-and the credit its data source asks for, and the text; the build stops when one is missing, because a file without them
-would be published unmarked. MP3 is the only format, because it plays in every browser (AAC only partly in Firefox, Opus
-not in older Safari) and the frames survive. The marking is not signed and has no watermark: the Code of Practice on
-Transparency asks for both for a provider who is bound by it, and whether a creator who runs an open model counts as one
-is open; signing with C2PA was shown to work and comes later. Rejected: the browser's speech synthesis (its voices may be
-remote, a hidden request), speech recognition or a check of the files with a model (Whisper: the owner decided against it, the
-creator listens), a cloud service (audio and text would leave the device), a model in the browser (tens of megabytes
-per voice), and the approval in the file (it is the git commit).
+Foreign-language learners must hear the language. So the creator makes each sentence as an MP3 file in `src/audio/` with
+the audio skill and commits it. The skill offers a fixed list of voices whose licences allow the content's licence. The
+EU AI Act asks to mark generated speech machine-readably. So each file says that a model made it, which model and voice,
+the licence, the credit and the text. The build stops when one is missing. MP3 plays in every browser and keeps the
+marking. The marking is not signed yet; whether a creator counts as a bound provider is open. Rejected: the browser's
+speech synthesis (voices may be remote); a check by speech recognition (the creator listens); a cloud service (text
+would leave the device); a model in the browser (too large); the approval in the file (it is the git commit).
 
 ```arc42
 :::decision
@@ -646,17 +495,11 @@ addresses: qg-privacy, qg-checkable, qg-accessibility
 
 ## A Dictation Is a Language Task That Starts From Audio, Played by the Browser's Own Player
 
-A dictation, a gap dictation and a listening task with a translation are items of the language task that start from `audio`
-instead of the other side, so the check, the rules of form, the typical mistakes and the self-assessment are the ones of every
-language task (`dec-language-task`). The text of the file must be a right answer, or nobody could solve the task: the build
-stops otherwise. The player is the browser's own, so it works without JavaScript, is as accessible as the browser, and loads
-nothing before the learner presses play; the tempo is set in the player, with the pitch kept, because one file then serves every
-pace and the creator has one file to listen to (a model that speaks slower was not better in the owner's listening test). The
-player's own control has a tempo menu in Chrome, Edge, Safari and Firefox on a computer and in Chrome on Android, and none on an
-iPhone or an iPad, so the page shows its three buttons (0.75, 1, 1.25) only there, and a tempo chosen in a control becomes the
-page's tempo: one control for one thing. A voice a model made is labelled "KI", small, with the model, the voice and the licence in
-a tooltip of the page that shows at once on hover, focus and tap (a title attribute shows late and not on a touch screen) and is read
-by a screen reader. The text of the file is the "Lösung" of the task, and the media overview lists it for review.
+A dictation is a language task item that starts from audio, so it shares the check and the self-assessment
+(`dec-language-task`). The file's text must be a right answer, or the build stops. The browser's own player works
+without JavaScript, is accessible and loads nothing before play. The tempo is set in the player with the pitch kept, so
+one file serves every pace. Where the player has no tempo menu, the page adds tempo buttons. A synthetic voice is
+labelled "KI", with model, voice and licence at hand. The file's text is the task's "Lösung".
 
 ```arc42
 :::decision
@@ -670,14 +513,11 @@ addresses: qg-understandable, qg-accessibility, qg-privacy, qg-explainer-readabl
 
 ## A Speaking Task Records in Memory and the Learner Rates It
 
-Speaking is practised by comparing, not by grading: the learner hears a model, records themself, plays the original, their
-own recording or both one after the other, and rates how their pronunciation sounds, "Klingt gleich" (right), "Erkennbar, aber
-holprig" (partly right) or "Nochmal" (wrong), after the model of the open task (`dec-open-task`), whose photo is also kept in memory only.
-The microphone is asked for only when the learner presses "Aufnehmen" and released when the recording stops. The recording is a
-Blob played through an object URL: it is never stored, never sent, and dropped when the learner records again or leaves the page. When
-the microphone is missing or refused the learner says it aloud and still rates. A model never judges the pronunciation, since
-no model runs on the device (`dec-tutor-variant`) and one that recognised words would hide the errors it should show. A speaking
-task is not asked in a chapter's self-assessment, since a rating of a rating would tell nothing; the build says so.
+Speaking is practised by comparing, not by grading. The learner hears a model, records themself, plays both and rates
+the pronunciation as right, partly right or wrong, as in the open task (`dec-open-task`). The microphone is asked for
+only on "Aufnehmen" and released after it. The recording stays in memory: never stored, never sent. Without a microphone
+the learner speaks aloud and still rates. No model judges, since none runs on the device (`dec-tutor-variant`) and
+recognition would hide errors. A self-assessment does not ask speaking tasks: a rating of a rating tells nothing.
 
 ```arc42
 :::decision
@@ -691,11 +531,10 @@ addresses: qg-privacy, qg-understandable, qg-accessibility, qg-explainer-readabl
 
 ## The Media Overview Lists Every Medium of the App
 
-Quality of images, audio and videos is checked where a creator or a reviewer can see all of them: the page "Medienübersicht"
-at `medien/` of every explainer with media, linked from the start page, in each language. It lists each medium once with its credit and
-licence, the pages that use it and, for an AI voice, the label, the model, the voice, the credit and the text with a player that
-loads on press. It is built at build time and readable without JavaScript. An audio file that no page uses is listed too, so that
-it is not forgotten. The approval of a file is not shown: it is the git history.
+Creators and reviewers check images, audio and videos best when they see all of them. So every explainer with media has
+the page "Medienübersicht", linked from the start page. It lists each medium with its credit, licence and the pages that
+use it; for an AI voice also model, voice and text. It is readable without JavaScript. Unused audio is listed too, so it
+is not forgotten. Approval is not shown: it is the git history.
 
 ```arc42
 :::decision
@@ -709,20 +548,12 @@ addresses: qg-checkable, qg-understandable
 
 ## Vocabulary Is a Block of the Page, Shown as Written
 
-Language explainers listed their words in a table, which knows neither the languages of its columns nor what a cell
-holds: a screen reader read French words with a German voice, and the creator wrote a gender as "(f.)" in a cell. A
-block `vocabulary` holds the words of a page in both languages of the page (`languages`, as a language task), each
-entry with optional further forms, a gender, an example, a note, a false friend and tables of its forms. It shows them as
-a vocabulary book does: the target language heading each row, a middle column with example and hint only when an entry
-has one, the source language at the end, every word with its language; tables of forms fold under their word, an ending
-marked by the creator highlighted. The words are shown as written: a noun is written with its article, since no rule
-derives the article in every language (h aspiré in French, el agua in Spanish, der/die/das in German); the gender only
-adds (m), (f) or (n) where the article does not show it (l'eau). Tables of forms are for grammar the learners already
-know. Practising is covering the column of one language and uncovering each word, unchecked and stored nowhere; words to
-write and check are a language task (`dec-language-task`). The block is the content of one page, not the word list of a
-textbook that `dec-language-task` rejected. Not in the first version: audio for each word, the block as material of a
-task, colours for the gender. Rejected: deriving the article from the gender; a part of speech; a table block with a
-language per column, which would read the languages but know no forms.
+Language explainers listed words in tables. A table knows neither the languages of its columns nor what a cell holds: a
+screen reader read French with a German voice. So a vocabulary block holds a page's words in both languages, each with
+optional forms, gender, example, note and false friend. It shows them like a vocabulary book, every word with its
+language. Words are shown as written, a noun with its article, since no rule derives the article in every language.
+Practising means covering one column, unchecked; checked writing is a language task (`dec-language-task`). Rejected:
+deriving the article from the gender; a part of speech; a table block with a language per column (it knows no forms).
 
 ```arc42
 :::decision
@@ -736,11 +567,9 @@ addresses: qg-understandable, qg-accessibility, qg-explainer-readable-without-js
 
 ## An Image May Be Given by Language
 
-An image was one file for every language, so words inside it stayed German on the English page (#209). So an image may
-be given per language, as a text is; one file for every language stays valid, so existing apps do not change. A
-per-language image must name every language of the app, as a text must. Rejected: finding the file of a language by its
-name, which the content would not show; translating the words of an image at build time, which works for no photo and
-breaks the layout of a drawing.
+An image was one file for every language, so its words stayed German on the English page. So an image may be given per
+language, like a text, and then for every language of the app. One file for all stays valid. Rejected: finding the file
+by its name (the content would not show it); translating the image at build (fails for photos, breaks drawings).
 
 ```arc42
 :::decision

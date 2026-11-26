@@ -100,7 +100,7 @@ definition: One checkable sentence a good answer to an open task has, about its 
 
 ## Scope
 
-`scope` in the content, written at `scope/` beside each page, chapter and the app for the tutor.
+Written in the content, published beside each page, chapter and the app for the tutor.
 
 ```arc42
 :::glossary-term
@@ -112,7 +112,7 @@ definition: The whole learning path of an explainer in the creator's own words, 
 
 ## Tutor Page
 
-`<chapter>/<page>/tutor/`, the address a tutor's prompt names for a page.
+The address a tutor's prompt names for a page.
 
 ```arc42
 :::glossary-term
@@ -124,8 +124,7 @@ definition: The one source of what the learner's own AI assistant gets about one
 
 ## Table of Tasks
 
-The inputs and outputs of each task number of a `generated` exercise on the tutor page, one line each:
-`27 | 15 | 1260 | 189 | 18900` under `Nr. | p | G | Lösung | F1`.
+On the tutor page, one line per task number with its inputs and outputs.
 
 ```arc42
 :::glossary-term
@@ -185,8 +184,7 @@ definition: In the learner's voice: the page's tutor page with the page's task n
 
 ## Result Line
 
-What "Zurück" at one task copies for the learner to paste into the chat; "Zurück zum Tutor" copies the tutor page and a
-line like it for each task of the session.
+What the learner pastes into the chat after a task.
 
 ```arc42
 :::glossary-term
