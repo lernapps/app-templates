@@ -2,7 +2,7 @@
 // them: each file against its schema (interactive.v1.schema.json, playthrough.v1.schema.json), then what a schema
 // cannot say: German first and each declared language complete, restricted Markdown in the texts, unique ids, at
 // least one playthrough, each step doing something (keys or inputs, not both, or ticks) and expecting something, a
-// playthrough's route one of the app's. The YAML helpers are
+// playthrough's route one of the app's, its params without seed. The YAML helpers are
 // the explainer's (../explainer/load.ts). Each problem is one line: the file, its line, the place in the file, the
 // language where it matters, and what to do.
 import { existsSync, readdirSync } from "node:fs";
@@ -152,6 +152,9 @@ export function check(root: string): { interactive?: Interactive; problems: stri
           ? `${playthrough.route}: ${APP} has no routes; leave route out`
           : `${playthrough.route} is not a route of ${APP}; use one of ${routes.join(", ")}`,
       );
+    }
+    if (playthrough.params !== undefined && Object.hasOwn(playthrough.params, "seed")) {
+      problems.at(yaml, ["params", "seed"], "the seed has its own field; give it as seed, not in params");
     }
     playthrough.steps.forEach((step, index) => {
       if (step.keys !== undefined && step.inputs !== undefined) {

@@ -176,7 +176,8 @@ implements: concept-readable-without-js, concept-hash-routes, concept-accessibil
 #### Pages interface
 
 Learners, teachers and parents read the start page at `lernapps.net/<repo>/` and play at
-`app/?seed=<n>#<route>`; the catalog entry's topics link to the routes.
+`app/?seed=<n>#<route>`; the catalog entry's topics link to the routes. Another app can link with more parameters of
+the address, `app/?c=…#<route>`, which the shell hands to the core as data (`dec-address-params`).
 
 ```arc42
 :::interface
@@ -191,8 +192,9 @@ path: runtime/interactive/render.ts
 ### Shell
 
 Built. `startInteractive(core, root)` mounts the root component on the app page and holds the core's state; it takes
-the seed from `?seed=<n>` (else a random one) and the route from the hash (else the first route), starts the core
-again on a new route, calls `tick(state, 20)` every 20 ms when the core has `tick`, and routes typed inputs to `step`
+the seed from `?seed=<n>` (else a random one), the route from the hash (else the first route) and the other
+parameters of the address once (`dec-address-params`), starts the core again on a new route with the same seed and
+parameters, calls `tick(state, 20)` every 20 ms when the core has `tick`, and routes typed inputs to `step`
 (`dec-typed-input`): every key typed on the page as a key input, except on links, buttons and form fields or with
 Ctrl, Alt or Meta, and every input the root component emits as `input` (an action, or a key it stands for). When the
 end-to-end tests' clock is on the page (`if-test-clock`), it starts no interval and steps the ticks the tests ask for.
@@ -371,7 +373,9 @@ path: interactive/src/core
 
 ### Core contract
 
-The core exports `start(seed, route)`, `step(state, input)` and, when the app moves on its own, `tick(state, dt)`.
+The core exports `start(seed, route, params)`, `step(state, input)` and, when the app moves on its own,
+`tick(state, dt)`. `params` are the search parameters of the address but `seed`, as text, passed through unchanged;
+the core checks them itself, and a core that needs none keeps `start(seed, route)` (`dec-address-params`).
 The input is typed and extensible (`dec-typed-input`): `{ kind: "key", key }` with the key as `KeyboardEvent.key`, or
 `{ kind: "action", name, value? }` for what the learner does with the pointer or by touch; a core handles the kinds it
 knows and returns the state unchanged for any other, so new kinds can come.
@@ -486,7 +490,7 @@ path: interactive/src/messages
 
 ## Playthroughs
 
-Built in the template. Playthroughs as data: a seed, a route and steps of inputs (`keys` as the short form of key
+Built in the template. Playthroughs as data: a seed, a route, the parameters of the address if any, and steps of inputs (`keys` as the short form of key
 inputs, or `inputs`) and ticks that pass after them, with the state or announcement expected after each step. The
 template's playthrough lets a letter go late and starts a round with the action `again`.
 

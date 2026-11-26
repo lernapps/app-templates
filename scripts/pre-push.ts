@@ -3,8 +3,8 @@
 // (.vibe/**) or only docs (docs/**/*.md; this repo has no site) checks nothing. Any other push runs the root checks
 // (vp check, npm run check:vue, vp test run), and `lernapps check --pre-push` in each template folder the push affects:
 // the positive list TEMPLATE_PATHS below. The fixture jobs of check.yml (quiz-many-questions, quiz-bilingual,
-// explainer-all-blocks, explainer-history, question-page) run only in CI, and CI runs everything a change can affect:
-// it is the superset that catches what this list lets through.
+// explainer-all-blocks, explainer-history, interactive-params, question-page) run only in CI, and CI runs everything
+// a change can affect: it is the superset that catches what this list lets through.
 //
 //   node scripts/pre-push.ts [<remote> [<url>]]   reads git's lines "<local ref> <local sha> <remote ref> <remote sha>"
 //

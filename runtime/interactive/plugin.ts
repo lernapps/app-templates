@@ -14,7 +14,7 @@
 //   a URL), browser globals only in onMounted;
 // - the core (src/core/index.ts, contract.ts), loaded in a Vite server of its own: it exports start and step (and tick,
 //   if any, as a function, which a playthrough with ticks needs), every route starts, and every playthrough plays:
-//   start(seed, route), then for each step step(state, input) for each of its inputs (its keys as key inputs) and
+//   start(seed, route, params), then for each step step(state, input) for each of its inputs (its keys as key inputs) and
 //   tick(state, TICK) for each of its ticks, twice, giving the same states both times (deterministic by its seed),
 //   and after each step the state the playthrough expects. No time passes but the ticks a step names.
 // index.html is Vite's only entry: Vite builds the app's client module (src/main.ts) and stylesheet from it. The built
@@ -39,7 +39,7 @@ const MARKER = "<!-- interactive -->";
 export const CORE = "src/core/index.ts";
 
 const CONTRACT =
-  "the core exports start(seed, route) and step(state, input), and tick(state, dt) when the app moves on its own (interactive-core-contract)";
+  "the core exports start(seed, route, params) and step(state, input), and tick(state, dt) when the app moves on its own (interactive-core-contract)";
 
 /** The shell with the page in it; the start page without the shell's scripts. */
 export function fill(shell: string, rendered: RenderedPage): string {
@@ -78,9 +78,11 @@ function play(
   const states: unknown[] = [];
   let state: unknown;
   try {
-    state = core.start(playthrough.seed, route);
+    state = core.start(playthrough.seed, route, playthrough.params ?? {});
   } catch (error) {
-    const message = `start(${playthrough.seed}, ${JSON.stringify(route)}) throws: ${reason(error)} (interactive-core-contract)`;
+    // the params by name only: a value may be long (a challenge of 2000 characters)
+    const params = playthrough.params === undefined ? "" : ", params";
+    const message = `start(${playthrough.seed}, ${JSON.stringify(route)}${params}) throws: ${reason(error)} (interactive-core-contract)`;
     return { states, error: { path: ["seed"], message } };
   }
   for (const [index, step] of playthrough.steps.entries()) {
@@ -129,7 +131,7 @@ async function coreProblems(root: string, content: Interactive, load: Load): Pro
   const failed = new Set<string>();
   routes.forEach((route, index) => {
     try {
-      core.start(1, route.id);
+      core.start(1, route.id, {});
     } catch (error) {
       failed.add(route.id);
       problems.at(
@@ -164,7 +166,7 @@ async function coreProblems(root: string, content: Interactive, load: Load): Pro
       problems.at(
         yaml,
         ["steps", Math.max(differs, 0)],
-        "the state differs between two plays of the same steps; the core gives the same state for the same seed, route, inputs and ticks, so draw from the seed, never from Math.random or the clock (interactive-core-contract)",
+        "the state differs between two plays of the same steps; the core gives the same state for the same seed, route, params, inputs and ticks, so draw from the seed, never from Math.random or the clock (interactive-core-contract)",
       );
       // a property of the core: once is enough, and no state of it can be trusted
       break;

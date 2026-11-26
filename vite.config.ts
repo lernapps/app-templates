@@ -2,7 +2,8 @@
 // pre-commit hook, and the build of the runtime into dist/ (vp pack, run by `prepare` when an app installs the package
 // from git). The template folders
 // (quiz/, explainer/, interactive/) are apps of their own and checked in their own folder with `lernapps check`, as is the page that
-// embeds the quiz's questions one by one (test/fixtures/question-page/).
+// embeds the quiz's questions one by one (test/fixtures/question-page/) and the interactive template with the parameters
+// of the address (test/fixtures/interactive-params/, laid over interactive/).
 import { defineConfig } from "vite-plus";
 
 const notCode = [
@@ -12,6 +13,7 @@ const notCode = [
   "explainer/**",
   "interactive/**",
   "test/fixtures/question-page/**",
+  "test/fixtures/interactive-params/**",
   "**/*.md",
 ];
 

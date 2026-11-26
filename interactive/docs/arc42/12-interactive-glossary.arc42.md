@@ -11,7 +11,7 @@ own: the shell keeps it.
 :::glossary-term
 id: term-core
 title: Core
-definition: The app's logic, pure TypeScript without DOM, exporting start(seed, route), step(state, input) and optionally tick(state, dt); deterministic by its seed, its state plain JSON.
+definition: The app's logic, pure TypeScript without DOM, exporting start(seed, route, params), step(state, input) and optionally tick(state, dt); deterministic by its seed, its state plain JSON.
 :::
 ```
 
@@ -60,7 +60,19 @@ A YAML file in `src/playthroughs/`. Not a free-form test: it holds only data the
 :::glossary-term
 id: term-playthrough
 title: Playthrough
-definition: A seed, a route and a list of steps, each inputs (keys as their short form) and ticks followed by the state (a part of it) or the announcement expected after them; played by the build against the core and by the browser test.
+definition: A seed, a route, the parameters of the address if any, and a list of steps, each inputs (keys as their short form) and ticks followed by the state (a part of it) or the announcement expected after them; played by the build against the core and by the browser test.
+:::
+```
+
+## Parameters of the Address
+
+What the core's `start` gets as its third argument (`dec-address-params`).
+
+```arc42
+:::glossary-term
+id: term-address-params
+title: Parameters of the address
+definition: Every search parameter of the app page's address but seed, as text (the first value of a name given twice); data another app links with, not routes; the runtime passes them to start(seed, route, params) unchanged, the core checks them.
 :::
 ```
 
