@@ -239,6 +239,24 @@ addresses: qg-understandable, qg-checkable
 :::
 ```
 
+## An Ordering Gives Each Place Once, and Its Wrong Places Are Marked
+
+Every item of an ordering could get "Platz 1", and the feedback did not say which item was wrong (#209). So an
+ordering that gives a place twice counts as incomplete, in a quiz too. In an exercise that may be tried again, a wrong
+ordering marks the items in a wrong place and says how many are right, as a matching does with its pairs; the solution
+stays hidden. Rejected: showing the right place, which would give the solution away; controls that forbid a place given
+twice, which would hide why.
+
+```arc42
+:::decision
+id: dec-ordering-places
+title: An ordering gives each place once, and a wrong ordering marks the items out of place
+status: accepted
+date: 2026-11-26
+addresses: qg-understandable, qg-checkable
+:::
+```
+
 ## The Learner Switches an Assistant On Once
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:
