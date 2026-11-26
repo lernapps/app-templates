@@ -9,7 +9,7 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - YouTube videos behind two clicks: before the click a link with title, channel and a note on privacy, nothing loaded
   from YouTube or Google; "Video abspielen" loads the player from youtube-nocookie.com. The learner may choose to load
   videos directly from then on. The catalog entry of an app with a video says `fitness.thirdParty: on-click`.
-- Exercises of the six question types, with feedback, hints and typical mistakes (a wrong matching or ordering marks its wrong pairs or places, without the solution); a question can show content (`material`: the figures, tables, quotes and code of the page's blocks) between its text and its answers.
+- Exercises of the six question types, with feedback, hints and typical mistakes (a wrong matching or ordering marks what is wrong); a question can show content (`material`: the figures, tables, quotes and code of the page's blocks) between its text and its answers.
 - Language tasks (`language-task`): the learner writes a word, a form or sentences in a language and the page
   checks it against the answers the task lists. An item starts from the other language, a cue or a marker of a
   labelled figure; modes `write`, `gap`, `choice` and `table`; the direction is part of the task. Mistakes of form
