@@ -4,8 +4,8 @@ The quiz's risks, besides the generic ones.
 
 ## Readability Without JavaScript Checked Only by Its Own Tests
 
-`lernapps check` checks pages without JavaScript only for the explainer (`explainer-readable-without-js`); the quiz's
-worksheet is checked by the quiz's end-to-end tests alone, so a deployed quiz is not checked for it again.
+`lernapps check` checks pages without JavaScript only for the explainer.
+Only the quiz's end-to-end tests check the worksheet. Nothing checks it again on a deployed quiz.
 
 ```arc42
 :::ignore H007 accepted without a decision of its own: the quiz's own end-to-end tests check the worksheet before every push and in CI

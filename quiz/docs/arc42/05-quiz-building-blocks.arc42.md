@@ -1,11 +1,12 @@
 # Building Blocks
 
-The quiz's extension of the generic architecture (`docs/arc42/` at the root of `lernapps/app-templates`): a quiz
-about things to know, whose build step, rendering, validation, engine and tests the runtime `runtime/quiz/` ships, and
-whose creator writes only the question bank `src/quiz.json` (`quiz-only-data`) and keeps `src/main.ts` as generated.
-The quiz has no components, no tutor handoff, no task numbers and no exercise contract; its question types are the shared
-runtime's (`bb-questions`), which the explainer builds on alike, and what a question shows besides its text (`material`: figures, tables, quotations, code, ...) is the shared runtime's content blocks (`bb-blocks`). The creator's assistant follows the skill `lernapps-quiz` (`if-skills`). A quiz app writes no
-architecture of its own: the bank's schema fixes its structure.
+The quiz's extension of the generic architecture (`docs/arc42/` at the root of `lernapps/app-templates`).
+A quiz asks about things to know. The runtime ships the build step, rendering, validation, engine and tests.
+The creator writes only the question bank `src/quiz.json` and keeps `src/main.ts` as generated.
+The quiz has no components, no tutor handoff, no task numbers and no exercise contract.
+Its question types and content blocks come from the shared runtime, which the explainer uses too.
+The creator's assistant follows the skill `lernapps-quiz` (`if-skills`).
+A quiz app writes no architecture of its own: the bank's schema fixes its structure.
 
 ## Level 1 (quiz)
 
@@ -69,8 +70,8 @@ flowchart TB
 
 ## Quiz runtime
 
-Built. The runtime of every quiz, which the app does not change: it renders the bank into the page, validates it,
-turns the page into a quiz in the browser and brings the end-to-end tests.
+Built. The runtime of every quiz; the app does not change it.
+It validates and renders the bank, runs the quiz in the browser and brings the end-to-end tests.
 
 ```arc42
 :::building-block
@@ -85,8 +86,8 @@ implements: concept-archetype-extension
 
 ### Build step
 
-Built. The plugin `quiz()` reads and validates the bank and writes the quiz page in every language and the 404 page;
-`vp dev` serves the same pages.
+Built. Reads and validates the bank and writes the quiz page in every language and the 404 page.
+The development server serves the same pages.
 
 ```arc42
 :::building-block
@@ -101,7 +102,7 @@ requires: if-archetype-content
 
 #### Build plugin interface
 
-The app's vite.config.ts adds `quiz()` to the tooling preset.
+The app's Vite configuration adds the plugin to the tooling preset.
 
 ```arc42
 :::interface
@@ -115,8 +116,8 @@ path: runtime/quiz/plugin.ts
 
 ### Bank validation
 
-Built. Validates the bank against its schema, then what a schema cannot say (one correct option in a single choice,
-unique ids, complete languages, the examples through the checker), one line per problem naming the question.
+Built. Checks the bank against its schema and what a schema cannot say, such as unique ids and complete languages.
+It reports one line per problem and names the question.
 
 ```arc42
 :::building-block
@@ -131,9 +132,9 @@ requires: if-archetype-content
 
 ### Quiz rendering
 
-Built. Renders every question into the page with its controls, the hidden background, explanation and further
-reading, the solutions and the sources, a page per language. Without JavaScript the page reads as a worksheet with its
-answer key; the quiz's own tests check it, not `lernapps check`.
+Built. Renders every question with its solution, background and sources into one page per language.
+Without JavaScript the page reads as a worksheet with its answer key.
+The quiz's own tests check this, not `lernapps check`.
 
 ```arc42
 :::building-block
@@ -149,8 +150,8 @@ implements: concept-readable-without-js
 
 #### Pages interface
 
-Learners, teachers and parents read the quiz at `lernapps.net/<repo>/` (and `/<language>/`), with `?seed=<n>` and the
-deep link `#frage-<id>`; the catalog entry links there.
+Learners, teachers and parents open the quiz at `lernapps.net/<repo>/`, one path per language.
+A seed in the address fixes the order, and a deep link opens one question. The catalog entry links there.
 
 ```arc42
 :::interface
@@ -164,9 +165,9 @@ path: runtime/quiz/render.ts
 
 ### Quiz engine
 
-Built. Turns the rendered page into a quiz: one question at a time in the order of the seed in the address, each
-answer checked with the question types' checker, the feedback after each answer, the score and the solutions at the
-end. It stores nothing but the last result, and only when the bank asks for it (`rememberLastResult`).
+Built. Turns the rendered page into a quiz with one question at a time, in the order of the seed.
+It checks each answer, gives feedback, and shows the score and the solutions at the end.
+It stores only the last result, and only when the bank asks for it.
 
 ```arc42
 :::building-block
@@ -182,7 +183,7 @@ implements: concept-determinism, concept-accessibility
 
 #### Start interface
 
-The app's `src/main.ts` imports the quiz's style and calls `startQuiz()`.
+The app's `src/main.ts` imports the quiz's style and starts the quiz.
 
 ```arc42
 :::interface
@@ -196,12 +197,10 @@ path: runtime/quiz/engine.ts
 
 ### End-to-end tests
 
-Built, in two parts. `quizTests()` checks the app's content: each question's deep link with what it shows, the page
-without JavaScript with every question and its solution, and each further language. `quizRuntimeTests()` checks the
-runtime, the same in every app: right and wrong answer with the feedback in view and the focus, the seed and the order,
-the run to the full score, the number of questions, what is stored. Only this repo runs the second part, on the
-template and its fixtures (`quiz/e2e/runtime.e2e.ts`, not in the scaffold): its time grows with the bank, and it tests
-nothing an app writes.
+Built, in two parts. The app's tests check its content: each deep link, the worksheet without JavaScript and every
+language. The runtime's tests check behaviour that is the same in every app, such as feedback, order and score.
+Only this repo runs the runtime's tests, on the template. They take longer with a bigger bank and test nothing an app
+writes.
 
 ```arc42
 :::building-block
@@ -216,7 +215,7 @@ requires: if-archetype-content, if-runtime-texts
 
 #### Tests interface
 
-The app's `e2e/quiz.e2e.ts`, part of the scaffold, only calls `quizTests()`.
+The app's end-to-end test file, part of the scaffold, only calls the app's tests.
 
 ```arc42
 :::interface
@@ -245,7 +244,7 @@ implements: concept-languages
 
 #### Runtime texts interface
 
-The rendering, the engine and the tests take the quiz's texts by language.
+The rendering, the engine and the tests read the quiz's texts by language.
 
 ```arc42
 :::interface
@@ -259,8 +258,8 @@ path: runtime/quiz/messages
 
 ## Question bank
 
-Built in the template, written by the creator: title, intro, languages, sources, `rememberLastResult` and the
-questions; the only file of a quiz the creator changes.
+Built in the template, written by the creator: title, intro, languages, sources, the storage choice and the
+questions. It is the only file of a quiz the creator changes.
 
 ```arc42
 :::building-block
@@ -274,7 +273,7 @@ path: quiz/src/quiz.json
 
 ### Question bank interface
 
-The quiz's content: rendering, validation, build and tests read the bank only through its schema.
+The quiz's content. Rendering, validation, build and tests read the bank only through its schema.
 
 ```arc42
 :::interface

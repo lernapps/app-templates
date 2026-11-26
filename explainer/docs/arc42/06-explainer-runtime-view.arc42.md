@@ -4,14 +4,10 @@ The explainer's own scenarios, besides the generic ones.
 
 ## Practising on a page
 
-The learner opens a page, possibly with `?<id>=<n>` for the task number of an exercise. Without JavaScript the page
-is complete: the text, formulas, figures, each exercise with its solution in a `<details>` "Lösung", a generated one
-with three worked tasks, each component's `nojs` text. With JavaScript `startExplainer()` makes the exercises live: a
-quiz-type exercise gets the quiz's controls and checker, a generated exercise a live task from its task number and
-"Neue Aufgabe", which writes the next number into the address; the islands hydrate their components. A wrong answer
-gets its reason, the solution shows after the right answer or "Lösung", the feedback in view with the focus.
-The worked tasks stay hidden with JavaScript; the sentence above the live
-task is the exercise's `practice`, else a neutral default.
+The learner opens a page, possibly with the task number of an exercise in the address. Without JavaScript the page is
+complete: text, formulas, figures, each exercise with its solution folded, a generated one with worked tasks. With
+JavaScript the exercises become live. A generated exercise shows the task of its number, and "Neue Aufgabe" draws the
+next one. A wrong answer gets its reason. The solution shows after the right answer or on "Lösung".
 
 ```arc42
 :::runtime-scenario
@@ -24,10 +20,9 @@ involves: bb-render, bb-shell, bb-islands, bb-generated-exercises, bb-questions,
 
 ## Building the explainer
 
-The `explainer()` plugin validates the content, its data files and its components, runs the component rules and the
-property test of each generated exercise and exercise component over fixed seeds, and writes the pages and, where the
-tutor is on, the tutor page of each page from its content, each exercise's tasks by number and a component's
-`describe` and `about`; it warns when a component's numbers do not all fit on its tutor page.
+The build validates the content, its data files and its components and tests every generated exercise and exercise
+component. Then it writes the pages and the tutor pages. It warns when a component's tasks do not all fit on its tutor
+page.
 
 ```arc42
 :::runtime-scenario
@@ -40,20 +35,18 @@ involves: bb-archetype-runtime, bb-build, bb-validation, bb-component-rules, bb-
 
 ## Asking the tutor
 
-The learner switches an assistant on once, on the start page or beside the title of a page; the choice stays on the
-device. Way A: the bar beside the title of a page opens the learner's own assistant with one sentence that names the
-page's tutor page with the page's task numbers, or copies that sentence with the tutor page's Markdown. The assistant
-fetches the tutor page, looks the numbers up in its tables, asks what the child does not understand, explains with
-the page's own example and sends links to tasks of the page with `via=tutor`. On such a page the learner solves the
-task and presses "Zurück zum Tutor": the page copies the tutor page with the page's task numbers and how each task of
-the session went (the try, the input, the app's message), the button says where to paste them, and the learner switches back and pastes them into the
-chat; the assistant knows the task's solution and
-mistakes from the tutor page and talks about the mistake. Way B: stuck at a task, the learner clicks "Hilfe"
-("Warum?" after a wrong answer) in the exercise. Without a chat the assistant opens with one sentence that names the
-tutor page and the task, then the input and the app's message word for word; on a page a tutor opened the page copies
-the task, the same lines and the tutor page, and the learner pastes them into the running chat.
-The assistant starts from the app's message and helps without giving the solution away, as the tutor page's guide
-says. Nothing leaves the device before a click, and the app reports nothing back. No model runs in the browser.
+The learner switches an assistant on once; the choice stays on the device.
+
+Way A: the learner clicks "Mit <name> lernen" beside the page title. Their own assistant opens with one sentence that
+names the page's tutor page. The assistant reads it, asks what the child does not understand, explains with the page's
+example and sends links to tasks of the page. The learner solves a task and clicks "Zurück zum Tutor". The page copies
+how each task went, and the learner pastes it into the chat. The assistant talks about the mistake.
+
+Way B: stuck at a task, the learner clicks "Hilfe", or "Warum?" after a wrong answer. A new chat opens with the task,
+the input and the app's message; in a running chat the learner pastes them. The assistant starts from the app's message
+and helps without giving the solution away.
+
+Nothing leaves the device before a click, and the app reports nothing back.
 
 ```arc42
 :::runtime-scenario
@@ -66,11 +59,9 @@ involves: bb-shell, bb-tutor-handoff, bb-task-numbers, bb-explainer-components
 
 ## Watching a video
 
-Without JavaScript, and with it before a click, a video is its title as a link to youtube.com, its channel and the
-note that playing it sends data, among them the IP address, to YouTube/Google; the page requests nothing from another
-host. The learner clicks "Video abspielen": the player of youtube-nocookie.com loads into the figure and starts, and
-from then on YouTube gets the learner's IP address and the app's origin. Ticking "Videos immer direkt laden" keeps that
-choice on the device, so every page of the app loads its players without the click, until the learner unticks it.
+Before a click, a video is a link with its channel and a note that playing sends data to YouTube/Google. The page
+requests nothing from another host. The learner clicks "Video abspielen", and the player loads and starts. Ticking
+"Videos immer direkt laden" keeps that choice on the device until the learner unticks it.
 
 ```arc42
 :::runtime-scenario
@@ -98,11 +89,9 @@ involves: bb-render, bb-shell, bb-feedback-mode, bb-runtime-texts, bb-tooling
 
 ## Reviewing a change in the preview
 
-A reviewer opens the preview of a pull request that changes an explainer. The build compared the content with the one of
-the branch the pull request merges into, so every page marks what changed: new blocks, changed blocks with their earlier
-version beside them on a wide screen, removed blocks where they were, and moved blocks. A bar that floats beside the page
-counts the changes and steps from one to the next; the list of the app's pages shows which pages changed, and the
-overview lists everything, including pages and chapters that are gone.
+A reviewer opens the preview of a pull request that changes an explainer. Every page marks what changed against the
+target branch: new, changed, removed and moved blocks. A bar steps from one change to the next. An overview lists all
+changes, including pages and chapters that are gone.
 
 ```arc42
 :::runtime-scenario
@@ -115,17 +104,15 @@ involves: bb-build, bb-render, bb-shell, bb-diff-mode, bb-runtime-texts
 
 ## Doing a self-assessment
 
-The start page, or a chapter's page, offers the self-assessment once the client module runs; it names the last result
-when the device keeps one. The learner starts a run: each generated exercise gets a new task, and the pages follow one
-by one with "Weiter" and "Zurück", the exercises without "Prüfen" and without feedback. "Auswerten" checks all of them
-together, keeps the result on the device (replacing the one before) and shows the score and, for each content page in
-order, whether the learner probably knows it, should look at it again or should read it, each with its link. "Mit
-<name> besprechen" opens the learner's assistant with one sentence that names the self-assessment's tutor page with the
-result in its address, the result per page and a line per exercise. The tutor guides chapter by chapter: it sends the
-learner to the pages that do not stick, each with `via=tutor`, whose "Zurück zum Tutor" copies the result line for the
-chat, and then into a new round of the chapter's self-assessment with `via=tutor`: that run keeps nothing, and its
-"Zurück zum Tutor" copies the result and the tutor page for the running chat. After each round the tutor decides on the
-next chapter or another round. "Neu starten" starts a new run, "Ergebnis löschen" removes the result.
+The start page or a chapter's page offers the self-assessment and names the last result, if any. The learner starts a
+run with new tasks and goes through its pages, without feedback. "Auswerten" checks everything and keeps the result on
+the device. It shows, per content page, whether the learner probably knows it, should look at it again or should read
+it.
+
+The learner may take the result to their assistant with a click. The tutor then guides chapter by chapter: it sends the
+learner to the pages that do not stick and then into a new round. The learner brings each result back by pasting it.
+After each round the tutor decides on the next chapter or another round. The learner can start anew or delete the
+result.
 
 ```arc42
 :::runtime-scenario

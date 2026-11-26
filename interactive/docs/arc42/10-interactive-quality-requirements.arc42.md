@@ -11,9 +11,8 @@ The interactive archetype's scenarios, besides the generic ones.
 
 ## The same inputs play the same twice
 
-At build, every playthrough is played against the core twice, with only the ticks its steps name; a core that draws
-from `Math.random` or
-the clock gives different states.
+At build, every playthrough is played against the core twice, with only the ticks its steps name.
+A core that uses chance or the clock outside its seed gives different states.
 
 ```arc42
 :::quality-scenario
@@ -28,7 +27,7 @@ metric: Both plays give identical states at every step and match every expected 
 
 ## Playthroughs in the browser
 
-`interactiveTests()` plays every playthrough at its address in the browser, at desktop width and at 360 px.
+The end-to-end tests play every playthrough at its address in the browser, on a desktop and on a phone width.
 
 ```arc42
 :::quality-scenario

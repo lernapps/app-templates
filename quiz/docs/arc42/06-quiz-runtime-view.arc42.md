@@ -4,12 +4,13 @@ The quiz's own scenario, besides the generic ones.
 
 ## Answering a question
 
-The learner opens the quiz, possibly with `?seed=<n>` or `#frage-<id>`. Without JavaScript the page is a worksheet:
-every question, then the solutions with the same background and links. With JavaScript `startQuiz()` turns it into a
-quiz: the questions in the order of the seed (the address gets one when it has none), one at a time. Before the first question the learner chooses how many to answer (`?n=<n>` in the address, all by default; a link with `n` or to a question skips the choice), the first of them in the order of the seed; an answer is
-checked by the question types' checker, and right or wrong, the background of every option, the explanation show, a
-link to further reading as a small "i" in the feedback's first line, the feedback in view with the focus and announced. At the end come the score and the solutions;
-when the bank asks for it, the last result is kept on the device.
+The learner opens the quiz, possibly with a seed or a link to one question.
+Without JavaScript the page is a worksheet: every question, then the solutions with background and links.
+With JavaScript the page becomes a quiz. The learner first chooses how many questions to answer; a link can preset this.
+The questions come one at a time, in the order of the seed.
+After each answer the learner sees whether it is right, the background of every option and the explanation.
+A small "i" links to further reading. Screen readers announce the feedback.
+At the end come the score and the solutions. When the bank asks for it, the device keeps the last result.
 
 ```arc42
 :::runtime-scenario

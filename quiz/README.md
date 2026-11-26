@@ -6,17 +6,18 @@ A quiz about things to know: one page of questions with options, feedback on eve
 
 - Six question types: single choice, multiple choice, true or false, a number within a tolerance, putting items in
   order, matching pairs.
-- Background on every option, an explanation for every question, optional links to further reading, an optional hint, typical
-  wrong numbers with their message.
+- Background on every option, an explanation for every question, optional links to further reading, an optional
+  hint, typical wrong numbers with their message.
 - One question at a time with feedback; at the end the score and all solutions. Without JavaScript: a worksheet with
   the solutions.
 - Questions in a shuffled order; a link with a seed gives every learner the same order. A link to each question.
-- The learner chooses at the start how many questions to answer (at most all of them): the seed picks them, and the address (`?seed=…&n=…`) keeps the choice, so a link gives every learner the same questions.
+- The learner chooses at the start how many questions to answer. The address (`?seed=…&n=…`) keeps the choice, so a
+  link gives every learner the same questions.
 - German, plus English: a page per language.
 - Optionally keeps the last score on the learner's device.
-- Content in a question, between its text and its answers (`material`): prose, a formula, a figure (your own image in
-  `src/images/` with its source and licence, one per language if needed, or drawn from numbers), a labelled figure, a table, a quotation, code.
-  Every figure has an alternative text and a caption; the build checks the blocks and carries the images.
+- Content in a question, between its text and its answers (`material`): prose, a formula, a figure, a labelled
+  figure, a table, a quotation, code. A figure is your own image in `src/images/` with its source and licence (one per
+  language if needed), or drawn from numbers. Every figure has an alternative text and a caption.
 
 ## What it cannot do
 

@@ -38,9 +38,8 @@ source: GDPR Art. 44 / Legal review 2025-03-01
 
 ## Frontend Only, Static Pages
 
-An app is static files served from its repo's GitHub Pages at `lernapps.net/<repo>/`; it has no server of its own
-and shares no code at runtime with other apps. All logic runs in the learner's browser, and the build renders every
-page ahead of time.
+An app is static files on GitHub Pages at `lernapps.net/<repo>/`. It has no server of its own and shares no code
+with other apps at runtime. All logic runs in the learner's browser.
 
 ```arc42
 :::constraint
@@ -53,9 +52,8 @@ source: ORGANIZATION.md "What every site shares" and "Apps and the app overview"
 
 ## No Request Before a Click, No Tracking
 
-No page sets a cookie, tracks, or requests anything from another server before the learner clicks; the privacy
-notice of lernapps.net states this for every app. So fonts, libraries and data are bundled, and anything that leaves
-the device (a tutor handoff, a link) waits for a click. `lernapps check` verifies it on the built app.
+No page sets a cookie, tracks, or requests anything from another server before the learner clicks. The privacy
+notice of lernapps.net promises this. So the app bundles fonts, libraries and data. `lernapps check` verifies it.
 
 ```arc42
 :::constraint
@@ -68,9 +66,8 @@ source: ORGANIZATION.md "Every page, in every repo"; lernapps check rules no-req
 
 ## TypeScript on vite-plus, Vue for Components
 
-Every app is TypeScript built with vite-plus and the shared preset of `@lernapps/tooling`. Where an app has
-components of its own (an explainer's components, an interactive app's UI), they are Vue single-file components, so
-one set of component rules, lint rules and `vue-tsc` holds for every app; the quiz has none.
+Every app is TypeScript, built with vite-plus and the preset of `@lernapps/tooling`. An app's own components are Vue
+single-file components. So one set of component rules holds for every app.
 
 ```arc42
 :::constraint
@@ -83,10 +80,8 @@ source: Decided sketch, step 12, section 2; owner, 2026-10-16, conversation (Vue
 
 ## Component Rules
 
-The app's components and the modules they import are checked on the SFC compiler's output at build: no network
-APIs, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from Vue, the runtime, the tooling's storage,
-i18n and a11y helpers and the app's own files (an interactive app's also from the libraries in its dependencies,
-never from a URL), and browser globals only once mounted, because the build renders without a browser.
+The build checks an app's components and what they import: no network, no code from strings, no raw HTML, imports
+only from allowed sources. The rules are in the concept "Component rules" (chapter 8).
 
 ```arc42
 :::constraint
@@ -99,9 +94,8 @@ source: Decided sketch, step 12, section 2; runtime/explainer/components.ts; run
 
 ## The Runtime Is Not Changed by the App
 
-The frame and the archetype's runtime come from `@lernapps/app-templates`, and the app does not change them; the app
-writes only what its archetype allows (the quiz its question bank, the explainer its content, the interactive app its
-core, UI, data, playthroughs, messages and description). Changes to the runtime reach the app as dependency updates.
+The frame and the archetype's runtime come from `@lernapps/app-templates`. The app does not change them. It writes
+only what its archetype allows. Runtime changes reach the app as dependency updates.
 
 ```arc42
 :::constraint
@@ -114,11 +108,9 @@ source: Decided sketch, step 12, sections 3 and 4; skill rules quiz-only-data, e
 
 ## State Only on the Device
 
-What an app remembers stays in the learner's browser, under its own key prefix, through the tooling's storage
-wrapper; there are no accounts and no server state. The learner's settings that hold for every app or for every app
-of an archetype are kept under `lernapps:settings:` and `lernapps:settings:<archetype>:`, which every app, or every
-app of that archetype, may read and write; an app's own setting wins. Storage may be blocked or full at any time, so the app must keep
-working and simply remember nothing.
+What an app remembers stays in the learner's browser, under its own prefix, through the tooling's storage wrapper.
+There are no accounts and no server state. Settings may be shared by all apps or by all apps of an archetype; an
+app's own setting wins. Storage may be blocked or full at any time. Then the app keeps working and remembers nothing.
 
 ```arc42
 :::constraint
@@ -131,8 +123,8 @@ source: Decided sketch, step 12, section 4; @lernapps/tooling archetypes/shared/
 
 ## Small Storage with a Quota
 
-All apps share the 5 MiB of `localStorage` of the one origin lernapps.net, so each app may keep at most 100 kB and
-`save` refuses beyond it. The quota is decided but not built yet: the wrapper has no limit today.
+All apps share the `localStorage` of the one origin lernapps.net. So each app may keep at most 100 kB. The quota is
+decided but not built yet.
 
 ```arc42
 :::constraint
@@ -145,11 +137,10 @@ source: Owner, 2026-10-16, conversation; decided sketch, step 12, section 3
 
 ## Accessibility: Platform Rule, App Default
 
-WCAG 2.1 AA and use at 360 px are rules for the platform's own pages; an app follows them by default and may
-deviate where its idea needs it, for example a typing game against the clock, declaring what it does not offer in its
-entry. Pages the runtime renders from the creator's data meet both in any case. Low stimulation is advice only. The
-warnings for an app with declared limits are not built yet: `accessible` and `usable-at-360px` are errors for every
-app today.
+WCAG 2.1 AA and use at 360 px are rules for the platform's pages. An app follows them by default. It may deviate where
+its idea needs it, for example a typing game against the clock, and then declares its limits in its entry. Pages the
+runtime renders from the creator's data always meet both. Low stimulation is advice only. Declared limits are not
+built yet: today both checks fail every app.
 
 ```arc42
 :::constraint
@@ -162,9 +153,9 @@ source: ORGANIZATION.md "Every page, in every repo"; decided sketch, step 12, se
 
 ## German for Learners, English for Infrastructure
 
-Text for learners, teachers and parents is German (further languages may be declared); shared infrastructure,
-identifiers, schemas and developer docs are English, and so is this architecture. Inside its own repo, an app's author
-decides the language of names.
+Text for learners, teachers and parents is German; an app may declare further languages. Shared infrastructure,
+identifiers, schemas and developer docs are English, and so is this architecture. Inside its own repo, an app's
+author chooses the language of names.
 
 ```arc42
 :::constraint
@@ -177,9 +168,8 @@ source: ORGANIZATION.md "Language"; owner, 2026-10-16, conversation (architectur
 
 ## Bundled Libraries with Accepted Licences
 
-A library an app uses is bundled, never loaded from a CDN, and its licence and those of its dependencies must be on
-the allowlist of the `dependency-licence` check (MIT, Apache-2.0, BSD and similar). The app's own repo is MIT;
-third-party content keeps its licence and is named next to it.
+An app bundles its libraries and never loads them from a CDN. Their licences must be on an allowlist (MIT, Apache-2.0,
+BSD and similar). The app's own repo is MIT. Third-party content keeps its licence and names it.
 
 ```arc42
 :::ignore H006 an organisation rule that lernapps check verifies (dependency-licence); no architecture decision responds to it
@@ -194,8 +184,7 @@ source: Decided sketch, step 12, section 2; ORGANIZATION.md "License"; lernapps 
 
 ## Imprint and Privacy Notice
 
-Every page links to the imprint and the privacy notice of lernapps.net; the runtime renders both links in the footer
-of its pages.
+Every page links to the imprint and the privacy notice of lernapps.net. The runtime puts both links in the footer.
 
 ```arc42
 :::ignore H006 an organisation rule the runtime meets in the footer of its pages; no architecture decision responds to it
@@ -210,13 +199,9 @@ source: ORGANIZATION.md "Every page, in every repo"; decided sketch, step 12, se
 
 ## Architecture Kept Current
 
-The architecture lives in the arc42 DSL: this generic part at the root of `lernapps/app-templates` and one extension
-per archetype in its template folder. An app gets both in its `docs/arc42/`; only an interactive app, whose code is
-free, adds a part of its own; the creator's assistant updates and validates it with every change, without a
-checkpoint with the creator. `arc42 diff --staged --strict` before a commit
-and `arc42 validate` in `lernapps check` are decided but not wired into the app's hooks and check yet; the copying of
-the architecture into an app is not built yet either. In `lernapps/app-templates` itself, `scripts/arc42.ts` validates
-the generic part with each extension strictly, in the pre-commit hook and in CI.
+The architecture is written in the arc42 DSL: this generic part and one extension per archetype. An app gets both.
+Only an interactive app, whose code is free, adds a part of its own. The creator's assistant keeps it current with
+every change. The checks for this in an app are decided but not wired yet (`dec-arc42-in-app`).
 
 ```arc42
 :::constraint

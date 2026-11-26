@@ -66,17 +66,18 @@ supersedes: dec-auth-old
 ```
 -->
 
-The decisions every lernapps app shares. Owner decisions are accepted with their date; decisions the runtime made
-when it was built are accepted because they are in force. Each extension adds its archetype's decisions, and an
-interactive app adds its own below these.
+The decisions every lernapps app shares. Owner decisions carry their date. Decisions made while building the runtime
+are accepted because they are in force. Each extension adds its archetype's decisions; an interactive app adds its
+own below these.
 
 ## Generic Architecture with One Extension per Archetype
 
-Quiz, explainer and interactive app stay separate archetypes, but they share their quality goals, so they follow one
-architecture: this generic part with the frame and an abstract archetype part, and one extension per archetype in its
-template folder that adds only its own blocks and decisions and references the generic ids. An app's architecture is
-both together. Rejected: one architecture per archetype, which would repeat the frame three times; one architecture
-with every archetype's detail in it, which no app could take as its own.
+Quiz, explainer and interactive app stay separate archetypes but share their quality goals. So they follow one
+architecture: this generic part, plus one extension per archetype that adds only its own blocks and decisions. An
+app's architecture is both together.
+
+Rejected: one architecture per archetype, because it repeats the frame three times; one architecture with every
+archetype's detail, because no app could take it as its own.
 
 ```arc42
 :::decision
@@ -90,14 +91,13 @@ addresses: qg-understandable, con-architecture-current
 
 ## What Archetypes Share Lives in the Shared Runtime
 
-Quiz, explainer and interactive app use some things alike, the questions first of all: the quiz asks them, the
-explainer's exercises are the same six types; the explainer and the interactive archetype read YAML content, check
-texts and formulas and check the code of Vue components alike. Such a thing lives in `runtime/shared` (the questions in
-`runtime/shared/questions`), and the archetypes build on it: no archetype imports another, and the shared runtime
-imports none. The public paths of the package (`quiz/question`, `quiz/e2e`, ...) stay as thin re-exports, so that an
-app generated from a template keeps building when a module moves. A test (`test/architecture.test.ts`) fails on an
-import against this direction and on a public path without a file or a build entry. Rejected: the explainer importing
-the quiz and the quiz the explainer's figures, which makes two archetypes one; copying the questions into each.
+The archetypes use some things alike, above all the questions: the quiz asks them, and the explainer's exercises use
+the same types. Such shared things live in the shared runtime. The archetypes build on it, never on each other, and
+the shared runtime depends on no archetype. The package's public paths stay stable when code moves, so generated apps
+keep building. A test enforces both rules.
+
+Rejected: archetypes importing each other, because that makes two archetypes one; copying the questions into
+each archetype.
 
 ```arc42
 :::decision
@@ -111,10 +111,10 @@ addresses: qg-understandable, con-runtime-unchanged
 
 ## Vue Is Fixed for Components
 
-Where an app has components of its own (an explainer's components, an interactive app's UI), they are Vue with
-TypeScript, so that one set of component rules, their build checks on the SFC compiler's output, the lint rules and
-`vue-tsc` hold for every app, with no rules per framework; what a component draws and how stays free. Rejected: a free
-choice of framework.
+An app's own components are Vue with TypeScript. So one set of component rules and checks holds for every app. What a
+component draws stays free.
+
+Rejected: a free choice of framework, because each framework would need rules of its own.
 
 ```arc42
 :::decision
@@ -128,9 +128,10 @@ addresses: con-vue-typescript, con-component-rules, qg-checkable
 
 ## Small Storage with a Quota
 
-All apps share the origin's 5 MiB of `localStorage`. The only storage is the tooling's `localStorage` wrapper under the
-app's prefix with a quota of 100 kB per app, and `save` refuses beyond it; the shared origin is accepted as a risk. The
-quota is decided, not built. A second storage (IndexedDB) is left out.
+All apps share the origin's `localStorage`. The only storage is the tooling's wrapper, under the app's prefix, with a
+quota of 100 kB per app. The shared origin is accepted as a risk. The quota is not built yet.
+
+Left out: a second, larger storage (IndexedDB).
 
 ```arc42
 :::decision
@@ -144,10 +145,10 @@ addresses: con-state-on-device, con-storage-quota, con-frontend-only, qg-privacy
 
 ## No Size Limit, the Size in the Entry
 
-The app's size is not limited by the frame; it is stated in the app's catalog entry (its fact sheet), and a page may
-show an optional loading indicator while it loads (not built). An archetype may still fix the size of its own parts,
-as the explainer does for each component. Rejected: a size budget for every app, which would keep large interactive
-apps out.
+The frame does not limit an app's size. The app's catalog entry states it. A page may show a loading indicator (not
+built). An archetype may still limit the size of its own parts.
+
+Rejected: a size budget for every app, because it would keep large interactive apps out.
 
 ```arc42
 :::decision
@@ -161,10 +162,11 @@ addresses: qg-accessibility
 
 ## Accessibility by Default, Limits Declared
 
-WCAG 2.1 AA and 360 px are platform rules; an app follows them by default and may deviate where its idea needs it (a
-game against the clock), saying in its entry what it does not offer; then `accessible` and `usable-at-360px`
-become warnings for it. Pages the runtime renders from the creator's data meet both in any case. Low stimulation is
-advice in a skill, not a check. Rejected: the rules as errors for every app, which would exclude real-time games.
+WCAG 2.1 AA and 360 px are platform rules. An app follows them by default. It may deviate where its idea needs it,
+such as a game against the clock, and says so in its entry. Then the two checks only warn for it. Pages the runtime
+renders from the creator's data always meet both. Low stimulation is advice in a skill, not a check.
+
+Rejected: the rules as errors for every app, because that would exclude real-time games.
 
 ```arc42
 :::decision
@@ -178,8 +180,8 @@ addresses: con-accessibility-default, qg-accessibility, risk-accessibility-limit
 
 ## No Settings Now
 
-A settings dialog (time limit off, less motion, sound, pause) is not in scope now; an app that needs one later adds it
-to the frame rather than on its own.
+A settings dialog (time limit off, less motion, sound, pause) is out of scope for now. An app that needs one later
+adds it to the frame, not on its own.
 
 ```arc42
 :::ignore H001 a scoping decision of the owner (2026-10-16): it leaves something out and serves no quality goal of its own
@@ -195,12 +197,12 @@ date: 2026-10-16
 ## arc42 in the App, Only for Interactive Apps
 
 Every app gets the generic architecture and its archetype's extension. Only an interactive app, whose code is free,
-writes an architecture part of its own, below its extension's blocks, English and minimal; a quiz or explainer app
-writes none, because its archetype's notation (the question bank, the content schema) fixes its structure. Checked
-is only what arc42 checks itself (`arc42 diff --staged --strict` before a commit, `arc42 validate` in
-`lernapps check`); whether the code keeps to the responsibilities is not checked. Rejected: framework-specific
-conformance checks. Both checks are not wired into an app yet; `lernapps/app-templates` validates each combination of
-the generic part and one extension strictly in its pre-commit hook and in CI (`scripts/arc42.ts`).
+writes a part of its own. A quiz or explainer app writes none, because its archetype's data format fixes its
+structure. Only what arc42 checks itself is checked: the architecture against the staged code before a commit, and
+its validity in `lernapps check`. Neither is wired into apps yet. This repository already validates the generic part
+with each extension, in its pre-commit hook and in CI.
+
+Rejected: framework-specific conformance checks.
 
 ```arc42
 :::decision
@@ -214,9 +216,9 @@ addresses: con-architecture-current, con-language, qg-understandable, risk-arc42
 
 ## The Skill as the Interface to the Creator's Assistant
 
-The guidance for the creator's assistant is a skill per archetype plus `lernapps-app` for every app: Markdown the
-assistant loads and follows, modelled as the interface `if-skills` of the skills block `bb-skills`. Advice that no check can make (how to write
-a good question, low stimulation) lives there, not in the runtime.
+The guidance for the creator's assistant is a set of skills: one for every app and one per archetype. The assistant
+loads and follows them. Advice that no check can give, such as how to write a good question, lives there, not in the
+runtime.
 
 ```arc42
 :::decision
@@ -230,17 +232,17 @@ addresses: qg-understandable
 
 ## A New App Gets the Scaffold, Not the Example
 
-`lernapps create` copies only the scaffold of the archetype into a new app: the paths that `lernapps.scaffold.<archetype>`
-in this package's `package.json` lists (the entry, the configuration, the e2e entry) and a placeholder as start content
-(`scaffold/<archetype>/`: one question, one page with one exercise, or a counter as the core). The template folder
-stays a complete example app, which this repo checks; an app does not copy it, the creator's assistant looks it up in
-`node_modules/@lernapps/app-templates/<archetype>/`. A copied example shaped the new app too much: its structure,
-its topic and its tone stayed long after the plan said otherwise. The list is data in this package, which alone knows
-what is configuration and what is example; the tooling only reads it. The CI job `scaffold` checks the scaffold as an
-app, so that a new app passes `lernapps check` from its first commit. `lernapps update` never writes the scaffold
-again: it moves libraries, not content. Rejected: a function `scaffold()` exported by the package, which would need the
-built package even in a clone given to `create --templates`; start content inside the template folder, which the
-template's own checks would read as part of the example.
+Occasion: a new app used to copy the whole example app. The example's structure, topic and tone stayed long after the
+plan said otherwise.
+
+Decision: `lernapps create` copies only the archetype's scaffold: configuration, entry points and a placeholder as
+start content. The template folder stays a complete example that the assistant can look up in the installed package.
+This package lists the scaffold's files, because only it knows what is configuration and what is example. CI checks
+the scaffold as an app, so a new app passes `lernapps check` from its first commit. `lernapps update` never writes
+the scaffold again.
+
+Rejected: a scaffold function exported by the package, because a clone of the templates would need the built package;
+start content inside the template folder, because the template's checks would read it as part of the example.
 
 ```arc42
 :::decision
@@ -254,10 +256,10 @@ addresses: qg-understandable
 
 ## Tutor Variant
 
-The optional tutor is a handoff to the learner's own assistant: after a click, a prompt (copied or passed to a chosen
-provider) and a static tutor page per content page give it the task on the learner's screen. Rejected: a model
-running in the browser. Built for the explainer (its extension models it); not built for the quiz and interactive
-apps.
+The optional tutor hands the task to the learner's own assistant after a click. A prompt and a static tutor page per
+content page give it the task. It is built for the explainer only; its extension models it.
+
+Rejected: a model running in the browser.
 
 ```arc42
 :::decision

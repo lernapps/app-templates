@@ -1,13 +1,11 @@
 # Building Blocks
 
-The explainer's extension of the generic architecture (`docs/arc42/` at the root of `lernapps/app-templates`): an
-explainer of chapters of pages with an exercise on every page, whose build step, rendering, validation, client module,
-islands, generated exercises, tutor handoff, task numbers and tests the runtime `runtime/explainer/` ships, and whose
-creator writes the content as YAML, data files and, only where no block fits, Vue components under the component
-contract (`explainer-only-content`, `prefer-built-in-block`); `src/main.ts` stays as generated. It reuses the quiz's
-question types for its quiz-type exercises. Every page is complete without JavaScript
-(`qg-explainer-readable-without-js`). The creator's assistant follows the skill `lernapps-explainer` (`if-skills`). An
-explainer app writes no architecture of its own: the content schema fixes its structure.
+The explainer's extension of the generic architecture (`docs/arc42/` at the root of `lernapps/app-templates`). An
+explainer is chapters of pages, with an exercise on every page. The runtime brings everything but the content. The
+creator writes YAML, data files and, only where no block fits, Vue components (`explainer-only-content`,
+`prefer-built-in-block`); `src/main.ts` stays as generated. Quiz-type exercises reuse the quiz's question types. Every
+page is complete without JavaScript (`qg-explainer-readable-without-js`). The creator's assistant follows the skill
+`lernapps-explainer` (`if-skills`). An explainer app writes no architecture of its own.
 
 ## Level 1 (explainer)
 
@@ -140,10 +138,9 @@ implements: concept-archetype-extension
 
 ### Build step
 
-Built. The plugin `explainer()` reads and validates the content, runs the component rules and the property test of
-each generated exercise and exercise component over fixed seeds, and only then writes every page in each language,
-the tutor pages where the tutor is on, and the 404 page; for an app of format 2 also the list of its pages for the
-catalog (`if-page-list`); `vp dev` serves the same pages.
+Built. Reads and validates the content and tests every generated exercise and exercise component. Only then it writes
+every page in each language, the tutor pages and, for format 2, the page list for the catalog. The dev server serves the
+same pages.
 
 ```arc42
 :::building-block
@@ -158,9 +155,8 @@ requires: if-archetype-content, if-component-rules, if-exercise-logic, if-tutor-
 
 #### Page list for the catalog
 
-The build provides the catalog with the app's place on the learning map: its strand (or the subject of a unit app) and
-its pages with their competencies. The catalog consumes it to place the app and checks the ids, which the app cannot
-know. Only format 2 apps have one.
+The app's place on the learning map: its strand, or the subject of a unit app, and its pages with their competencies.
+The catalog places the app with it and checks the ids. Only format 2 apps have one.
 
 ```arc42
 :::interface
@@ -188,10 +184,9 @@ path: runtime/explainer/plugin.ts
 
 ### Content validation
 
-Built. Validates every content file against its part of the schema of its format, then what a schema cannot say
-(complete order lists, depth, unique ids, complete languages, restricted Markdown, formulas in the command list,
-sources and licences, links to pages and sections, the exercises a page needs, components and their props, and in
-format 2 the competencies of the pages), one line per problem with file and line.
+Built. Checks every content file against the schema of its format, then what a schema cannot say: complete languages,
+unique ids, links, sources and licences, formulas, components and their props, and more. It reports one line per
+problem, with file and line.
 
 ```arc42
 :::building-block
@@ -206,11 +201,9 @@ requires: if-archetype-content, if-data-files, if-component-rules, if-questions
 
 ### Page rendering
 
-Built. Renders every YAML page to static HTML in each language: text in restricted Markdown, formulas as MathML,
-figures as SVG, tables, timelines, code, videos as links (`bb-video`), vocabulary with its forms folded
-(`dec-vocabulary`), the exercises with their solution folded (a generated one with three worked
-tasks), the navigation and the glossary, and each Vue component's island as the server renderer drew it, with its
-`nojs` text. Without JavaScript every page is complete.
+Built. Renders every page to static HTML in each language: text, formulas, figures, tables, timelines, code, videos,
+vocabulary, the exercises with their solution folded, the navigation and the glossary. A Vue component is rendered at
+build, with its `nojs` text. Without JavaScript every page is complete.
 
 ```arc42
 :::building-block
@@ -227,8 +220,8 @@ implements: concept-readable-without-js, concept-accessibility
 #### Pages interface
 
 Learners, teachers and parents read the explainer at `lernapps.net/<repo>/` (and `/<language>/`): the start page, a
-page per chapter, the content pages at `<chapter>/<page>/` and the glossary, with `?<id>=<n>` for the task number of
-an exercise; the catalog entry and its topics link there.
+page per chapter, the content pages at `<chapter>/<page>/` and the glossary. `?<id>=<n>` names the task number of an
+exercise. The catalog links there.
 
 ```arc42
 :::interface
@@ -242,10 +235,9 @@ path: runtime/explainer/routes.ts
 
 ### Client module
 
-Built. Makes a page's exercises live: answered before the solution shows, the reason of a wrong answer, "Neue
-Aufgabe", the task numbers in the address; the tutor button; and starts the videos (`bb-video`). It keeps only the
-learner's chosen way to the tutor and their choice to load videos directly on the device, and the needs the learner chose for the tutor (`dec-tutor-needs`), for every explainer or
-for this app only; the last result of a self-assessment is kept by `bb-self-assessment`, which it starts.
+Built. Makes a page's exercises live: checking, the reason of a wrong answer, a new task, the task number in the
+address. It starts the tutor buttons, the videos, the feedback mode and the self-assessment. On the device it keeps
+only the learner's choices: the assistant, the needs and loading videos directly.
 
 ```arc42
 :::building-block
@@ -275,11 +267,9 @@ path: runtime/explainer/explainer.ts
 
 ### Component islands
 
-Built. Only on a page with a component: loads Vue, hydrates each component's island with the props of the page's
-language, gives an exercise component the seed of its task number, takes the answer it emits, checks it on "Prüfen"
-with its logic module, and shows the feedback (`dec-explainer-checks`). On a self-assessment's page it hydrates the
-components once the self-assessment put them into the page, shows the task the run draws, and judges each answer
-silently, without "Prüfen", for "Auswerten" (`dec-self-assessment`).
+Built. Only on a page with a component: makes each component live in the browser, in the page's language. It gives an
+exercise component its task, takes its answer, checks it on "Prüfen" with the logic module and shows the feedback
+(`dec-explainer-checks`). In a self-assessment it judges the answer silently (`dec-self-assessment`).
 
 ```arc42
 :::building-block
@@ -294,11 +284,8 @@ requires: if-vue-component, if-task-numbers
 
 ### Generated exercises
 
-Built. Exercises drawn from a seed (`generated`), the explainer's own notation: the same code gives three worked tasks
-at build, runs the property test over fixed seeds and draws a live task in the browser, so both agree; their answers
-are checked through the question types' checker.
-The texts of a quiz-type exercise are plain text in which `$…$` is a formula, rendered as MathML at build and checked
-like every formula.
+Built. Exercises drawn from a seed (`generated`). The same code gives the worked tasks at build, tests the exercise and
+draws a live task in the browser, so both agree. The question types' checker checks the answers.
 
 ```arc42
 :::building-block
@@ -314,12 +301,9 @@ implements: concept-determinism
 
 ### Open tasks
 
-Built. An open task (`open-task`) is answered in the learner's own words, typed or written on paper and photographed,
-then compared with the points of a good answer, which the learner ticks: all right, some partly right (`teilweise`),
-none wrong, the missed points named P1, P2 …; while comparing, the learner's own text or photo stays in view above the
-points; the model answer opens after the learner's own answer
-(`dec-open-task`). Each content point names its source, a section of the app, which the build checks as it checks every
-link. The same client part runs on a content page and in a self-assessment, where the ticks are the answer.
+Built. An open task (`open-task`) is answered in the learner's own words, then compared with the points of a good
+answer (`dec-open-task`). The build checks each point's source like every link. The same part runs on a content page and
+in a self-assessment.
 
 ```arc42
 :::building-block
@@ -335,8 +319,7 @@ requires: if-archetype-content
 ### Language tasks
 
 Built. A language task (`language-task`) is written by the learner and checked against the answers it lists
-(`dec-language-task`). The check (`language.ts`) is pure and the same in the build and in the browser
-(`language-task.ts`), on a content page with "Prüfen" and in a self-assessment without it.
+(`dec-language-task`). The check is the same in the build and in the browser.
 
 ```arc42
 :::building-block
@@ -351,12 +334,9 @@ requires: if-archetype-content
 
 ### Audio files and the media overview
 
-Built. An app may hold MP3 files in `src/audio/`. Each carries its marking as ID3 frames: the spoken language, the licence,
-the date, that a model made the voice (`lernapps-synthetic`, the IPTC value, model, voice, generator, the credit its data
-source asks for) and the text it speaks (`dec-audio-marking`). The build reads them itself (`shared/audio.ts`, pure, no new
-package), stops with the file, the frame and what to do when one is missing, and writes the files next to the pages; the
-dev server sends them with byte ranges. The page "Medienübersicht" (`medien/`) lists every image, audio file and video of the
-app with its credit, where it is used and, for speech a model made, the AI voice, model and text (`dec-media-overview`).
+Built. An app may hold MP3 files in `src/audio/`, each with its marking (`dec-audio-marking`). The build reads the
+marking, stops when it is incomplete, and publishes the files with the pages. It also writes the page "Medienübersicht",
+which lists every medium of the app (`dec-media-overview`).
 
 ```arc42
 :::building-block
@@ -371,12 +351,8 @@ requires: if-archetype-content
 
 ### Audio player
 
-Built. A task that starts from an audio file shows the browser's own player, which plays without JavaScript and loads
-nothing before the learner presses play, a small label "KI" for a voice a model made (the model, the voice and the licence show at
-once on hover, focus and tap, and a screen reader reads them), and, only on an iPhone or an iPad, whose control has no tempo menu,
-buttons for the tempo (0.75, 1 and 1.25 times the speed, the pitch kept) beside it, which the client module makes work for every
-player of the page. A tempo chosen in a control that has a menu (Chrome's, Safari's) becomes the tempo of the page
-(`dec-audio-player`).
+Built. A task that starts from audio shows the browser's own player, labelled "KI" for a synthetic voice. Where the
+player has no tempo menu, it adds tempo buttons (`dec-audio-player`).
 
 ```arc42
 :::building-block
@@ -391,9 +367,8 @@ requires: if-archetype-content
 
 ### Speaking tasks
 
-Built. A speaking task (`speaking-task`) lets the learner hear a model, record themself with the microphone, play the
-original, the recording or both, and rate the pronunciation (`dec-speaking-task`). The page checks nothing; the recording is a
-Blob in the browser's memory that is neither stored nor sent.
+Built. A speaking task (`speaking-task`) lets the learner hear a model, record themself, compare and rate the
+pronunciation (`dec-speaking-task`). The recording stays in the browser's memory.
 
 ```arc42
 :::building-block
@@ -408,13 +383,9 @@ requires: if-archetype-content
 
 ### Scope
 
-Built, optional per app, required by lernapps/practice. The scope is the whole learning path for a tutor, written by
-the creator's assistant in its own words from the material: `scope` in each page's YAML says what the page teaches,
-optionally `scope` in a chapter's what it is about, and `scope` in `src/app.yaml` what the app is about and what
-does not belong to the scope (`dec-scope`). With the app's, the build requires a page's on every page, and
-writes a scope per content page (`<chapter>/<page>/scope/`: its text and what does not belong to the scope), per chapter
-(`<chapter>/scope/`: all its pages) and for the whole app (`scope/`), in each language, each linking one level up, as
-Markdown and a page for no menu and no search engine; every tutor page links its page's scope.
+Built, optional per app, required by lernapps/practice. The scope is the whole learning path for a tutor, written in
+the content of the app, its chapters and pages (`dec-scope`). The build writes it per page, per chapter and for the app,
+in each language, for no menu and no search engine. Every tutor page links its page's scope.
 
 ```arc42
 :::building-block
@@ -429,25 +400,12 @@ requires: if-archetype-content
 
 ### Tutor handoff
 
-Built, optional per app. No model runs in the browser: after the learner's click the app hands over to the learner's
-own assistant on one of two ways (`dec-tutor-page`), once the learner has switched an assistant on, on the start page
-or beside the title of a content page, kept on the device (`dec-tutor-assistant`). Both ways name one address, the
-page's tutor page `<chapter>/<page>/tutor/`, with where the learner is in its query: the page's task numbers as its
-own address has them (`?<id>=<n>`); way B adds the exercise (`uebung`) and its section (`abschnitt`). Way A, a bar
-beside the title of each content page, "Mit <name> lernen", opens the assistant with one sentence that asks for help
-with the page, and the tutor page tells the tutor to lead through the page first. Way B, "Hilfe" ("Warum?" after a wrong answer) in the row of "Prüfen" and "Lösung" of every exercise, adds the
-task, the input with its tries and the app's message word for word; without a chat it opens the assistant with them
-(B1), on a page a tutor opened it copies them for the running chat (B2). "Zurück zum Tutor", at the top and the end of a
-page a tutor opened, leads back with the page's tutor page and the result of each task of the session on the
-clipboard. A chat assistant fetches only addresses its user wrote into the conversation, so the one
-address the tutor needs comes in the prompt or in a line the learner pastes. The tutor page is the one source of what
-the tutor gets: a short visible guide, then the page's content and its exercises with every task number, a
-`generated` one once as its template with a table of each number's inputs and outputs (the values, the solution, what
-each typical mistake gives), an exercise component with its `about` and the same table from its exercise logic
-(`dec-component-table`), or without one each number's task and solution from its `describe` as far as they fit into
-64 kB; its Markdown lies beside it for copying. Under "Besondere Anforderungen" it ends with a short section for each
-need a learner can choose, which holds when the query names it in `bedarf=` (`dec-tutor-needs`). No
-prompt and no line carries a rule for the tutor, and the app writes no `llms.txt`.
+Built, optional per app. No model runs in the browser. After the learner's click the app hands over to the learner's
+own assistant (`dec-tutor-assistant`). Both ways name the page's tutor page, with where the learner is in its query
+(`dec-tutor-page`). Way A asks for help with the page. Way B, "Hilfe" in an exercise, adds the task, the input and the
+app's message. "Zurück zum Tutor" brings the results back to the running chat. The tutor page is the one source of what
+the tutor gets: a short guide, the page's content, its exercises with a table of tasks (`dec-component-table`), and a
+short section for each need (`dec-tutor-needs`).
 
 ```arc42
 :::building-block
@@ -463,14 +421,11 @@ implements: concept-tutor
 
 #### Tutor pages and the learner's lines
 
-The start prompt of way A, the lines of "Hilfe" (way B) and the result line of "Zurück zum Tutor" name the page's
-tutor page with the page's task numbers, those of way B also with `uebung` and `abschnitt`, those that start a chat
-(way A, B1) also with the learner's needs in `bedarf`, absolute; the start prompt adds "Meine Muttersprache ist …"
-when `andere-muttersprache` is chosen; the lines of way B and the result line
-add the task, the input, the app's message word for word and how far the learner got. A chat assistant reads the
-tutor page without running JavaScript; its Markdown (`index.md`) is the text "Ein anderer: Text kopieren" copies. The
-page ids, exercise ids, the query parameters, the ids of the needs, the tutor page's structure, the result line and the lines of way B are
-a contract with every tutor.
+The start prompt of way A, the lines of way B and the result line name the page's tutor page absolutely, with the
+page's task numbers. Way B adds `uebung` and `abschnitt`, a new chat adds the needs in `bedarf`, and the lines add the
+task, the input and the app's message. A chat assistant reads the tutor page without JavaScript; its Markdown lies
+beside it for copying. The page and exercise ids, the query parameters, the ids of the needs, the tutor page's
+structure and the lines are a contract with every tutor.
 
 ```arc42
 :::interface
@@ -500,7 +455,7 @@ implements: concept-determinism
 
 #### Task numbers interface
 
-The client module, the islands and the tutor handoff turn a task number into its seed and back.
+The client module, the islands and the tutor handoff turn a task number into its task and back.
 
 ```arc42
 :::interface
@@ -514,12 +469,9 @@ path: runtime/explainer/tasks.ts
 
 ### Video block
 
-Built. A YouTube video behind two clicks (`dec-explainer-video-two-click`): the page rendering writes the video as a
-figure with its title as a link to youtube.com, its channel and a note that playing it sends data, among them the IP
-address, to YouTube/Google; nothing loads from another host. The client module shows "Video abspielen", which puts
-the player of youtube-nocookie.com into the figure, and "Videos immer direkt laden", a standing choice kept on the
-device until the learner clears it. The tutor page names the video in its section as a link with its title and
-channel, as it names a figure by its alt text.
+Built. A YouTube video behind a click (`dec-explainer-video-two-click`). The page shows the video as a link with its
+channel and a privacy note, and loads nothing from another host. A click loads the player; a standing choice to load
+videos directly stays on the device. The tutor page names the video by its title and channel.
 
 ```arc42
 :::building-block
@@ -535,9 +487,9 @@ implements: concept-readable-without-js
 
 #### Video player request
 
-The one request to another host an explainer makes on its own: the address of a video's player,
-`https://www.youtube-nocookie.com/embed/<id>`, in an iframe named by the video's title, with the app's origin as its
-only referrer; sent after the learner's click, or on opening the page once they chose to load videos directly.
+The one request to another host an explainer makes on its own: the player of a video at youtube-nocookie.com, with only
+the app's origin as referrer. It is sent after the learner's click, or on opening the page once they chose to load
+videos directly.
 
 ```arc42
 :::interface
@@ -551,11 +503,9 @@ path: runtime/explainer/video.ts
 
 ### Feedback mode
 
-Built. Lets teachers and parents note what to improve in an app's content, at the block it concerns, and hand the
-notes over to the creator as one new issue in the app's repository (`dec-explainer-feedback-issue`). It relies on
-the page rendering for an address of each block and on the build for the app's repository, keeps the notes on the
-device and takes its texts from the runtime texts. The client module starts it on every page. Without JavaScript
-there is no mode, and the pages stay complete. Nothing leaves the page but what the person copies.
+Built. Lets teachers and parents note what to improve at the block it concerns. They hand the notes over as one new
+issue in the app's repository (`dec-explainer-feedback-issue`). The notes stay on the device until then. Without
+JavaScript there is no mode, and the pages stay complete.
 
 ```arc42
 :::building-block
@@ -571,7 +521,7 @@ implements: concept-readable-without-js
 
 #### Feedback mode interface
 
-What the client module calls on every page to start the feedback mode where it is on.
+The client module starts the feedback mode on every page.
 
 ```arc42
 :::interface
@@ -585,15 +535,10 @@ path: runtime/explainer/feedback-client.ts
 
 ### Diff mode
 
-Built. Lets a reviewer see what a version of an explainer changes against another, in the running app: the build is given
-the base (`EXPLAINER_BASE`, the folder of the other version, such as the branch a pull request merges into), compares the
-two contents block by block, and writes the pages of this version with its added, changed, moved and removed blocks
-marked (`dec-explainer-diff-mode`). It matches blocks by their id, not their place, so that a block added at the top
-does not turn the blocks below it into changes. The page rendering writes the marks, the earlier version of a changed
-block with the words that differ, the removed blocks where they were, the bar of the page's changes, the list of the
-app's pages and the overview of all changes (`aenderungen/`, every language); the client module only adds stepping
-from change to change, the filters and the narrow screen's menu. Without the base nothing is written. The preview of a
-pull request builds the two example explainers this way.
+Built. Lets a reviewer see in the running app what a version changes against a base (`dec-explainer-diff-mode`). The
+build gets the base as a folder (`EXPLAINER_BASE`), compares block by block and marks added, changed, moved and removed
+blocks in the pages. It also writes an overview of all changes. Without a base nothing changes. The preview of a pull
+request builds the example explainers this way.
 
 ```arc42
 :::building-block
@@ -609,8 +554,8 @@ implements: concept-readable-without-js, concept-accessibility
 
 #### Diff mode interface
 
-What the build step, the page rendering and the client module use of the diff mode: the difference of two sites, the
-markup of its marks and the start of its controls in the browser.
+The build step, the page rendering and the client module use it: the difference of two versions, its marks, and its
+controls in the browser.
 
 ```arc42
 :::interface
@@ -624,20 +569,11 @@ path: runtime/explainer/diff-render.ts
 
 ### Self-assessment
 
-Built. An optional self-assessment (`dec-self-assessment`), declared per chapter: `selfAssessment` in its
-`chapter.yaml`, its pages with the exercises it asks, each by `/<chapter>/<page>/#<exercise>` of the chapter (a
-generated one, a question type or an exercise component). The app's is every chapter's in the order of the
-chapters (`einschaetzung/`), a chapter's its own (`<chapter>/einschaetzung/`; in an app with one chapter, the app's is
-the chapter's). The validation checks each reference, that it is of the chapter and that an exercise is listed once;
-the build notes a page of it with fewer than two or more than five exercises. The page rendering writes its page and
-the offer on the start page or the chapter's page, every part of them in a `<template>` until the client module puts it
-into the page, and its tutor page `<assessment>/tutor/`, which makes the tutor a guide (`dec-self-assessment-tutor`).
-In the browser a run draws a new task of each generated exercise and exercise component (the islands show a
-component's task and judge its answer silently, `bb-islands`), shows the pages one by one without "Prüfen", checks
-all exercises together at "Auswerten" and shows for each content page in its scope whether the learner probably knows
-it, should look at it again or should read it; a page with no exercise in it is not asked. The last result stays on the
-device, one per self-assessment (`dec-self-assessment-result`); a run a tutor opened keeps nothing and ends in "Zurück
-zum Tutor".
+Built. An optional self-assessment per chapter, and one of the app over all chapters (`dec-self-assessment`). A chapter
+lists the exercises it asks, by page. The validation checks each reference. The build writes its page, the offer on the
+start or chapter page, and its tutor page, which makes the tutor a guide (`dec-self-assessment-tutor`). In the browser a
+run draws new tasks, checks all at the end and says per content page where to start. The last result stays on the
+device (`dec-self-assessment-result`).
 
 ```arc42
 :::building-block
@@ -653,12 +589,9 @@ implements: concept-tutor
 
 #### Self-assessment interface
 
-The build step writes the page, the offer and the tutor page of each self-assessment (`assessment-page.ts`); the client
-module starts it (`assessment-client.ts`). Its addresses, the query of its tutor page (`?a1=17-falsch-F1&a2=richtig&a3=teilweise-P2`:
-each exercise by its key in order, its task number, `richtig`, `teilweise`, `falsch` or `offen`, the typical mistake,
-the points a partly right answer missed), the lines of
-its prompt and of "Zurück zum Tutor", and the result kept under `self-assessment` or `self-assessment:<chapter>` are a
-contract with every tutor and with the result kept on a device.
+The build writes the self-assessment's pages; the client module starts it. Its addresses, the query of its tutor page
+(each exercise with its task number, its result and its mistake or missed points), its lines and the result kept on the
+device are a contract with every tutor and with older results on a device.
 
 ```arc42
 :::interface
@@ -672,12 +605,9 @@ path: runtime/explainer/assessment.ts
 
 ### End-to-end tests
 
-Built, in two parts. `explainerTests()` checks the app's content: it derives from the content what every page must
-show and checks it without JavaScript in every language, previous and next, and with JavaScript the app's own
-components and the checks of its exercise components. `explainerRuntimeTests()` checks the runtime, the same in every
-app: one exercise per type and page, the videos, the tutor ways, the start page, the self-assessments, what is stored.
-Only this repo runs the second part, on the template and its fixtures (`explainer/e2e/runtime.e2e.ts`, not in the
-scaffold).
+Built, in two parts. `explainerTests()` checks the app's content: what every page must show, without JavaScript in
+every language, and with it the app's own components. `explainerRuntimeTests()` checks the runtime, the same in every
+app. Only this repo runs the second part, on the template and its fixtures.
 
 ```arc42
 :::building-block
@@ -736,7 +666,7 @@ path: runtime/explainer/messages
 ## Content
 
 Built in the template, written by the creator: `src/app.yaml` and a folder per chapter with `chapter.yaml` and its
-pages of blocks, each page with an exercise; optionally the scope for the tutor in them (`bb-scope`).
+pages of blocks, each page with an exercise, and optionally the scope (`bb-scope`).
 
 ```arc42
 :::building-block
@@ -750,9 +680,8 @@ path: explainer/src/app.yaml
 
 ### Content interface
 
-The explainer's content: build, validation, rendering, generated exercises, tutor pages and tests read it only through
-its schema: format 2 for the template and new apps, which adds the app's place on the learning map to format 1; format
-1 stays valid (`dec-explainer-format-2`).
+The runtime reads the content only through its schema. Format 2 is for the template and new apps; it adds the app's
+place on the learning map. Format 1 stays valid (`dec-explainer-format-2`).
 
 ```arc42
 :::interface
@@ -796,11 +725,9 @@ protocol: YAML records
 
 ## Vue components
 
-Optional: `src/components/<Name>.vue` with its test, for what no block can express, under the component rules and
-within a fixed size each (`dec-explainer-component-size`); an exercise component adds its logic module. The template
-has one as an example, `ProzentFeld` on the page `prozent/prozentwert`: a field of G squares of which the learner
-colours p %, with the exercise declared for the tutor (`dec-component-table`), so that a hand test shows how a tutor
-deals with its typical mistakes.
+Optional: `src/components/<Name>.vue` with its test, for what no block can express. Each follows the component rules
+and stays within a fixed size (`dec-explainer-component-size`). An exercise component adds its logic module. The
+template has one example, `ProzentFeld`, which declares its table of tasks for the tutor (`dec-component-table`).
 
 ```arc42
 :::building-block
@@ -814,9 +741,9 @@ implements: concept-component-rules
 
 ### Component contract
 
-A `vue-component` block names the component with its typed props and a `nojs` text; an exercise component is the
-input of its task: it takes the prop `seed`, emits `answer` with the learner's answer each time it changes, may take
-the prop `checked`, and draws no "Prüfen" of its own, which the explainer draws under it (`dec-explainer-checks`).
+A `vue-component` block names the component with its typed props and a `nojs` text. An exercise component is only
+the input of its task (`dec-explainer-checks`). It takes the prop `seed`, emits `answer` whenever the answer changes,
+and may take the prop `checked`. The explainer draws "Prüfen" for it.
 
 ```arc42
 :::interface
@@ -830,12 +757,16 @@ protocol: Vue props and events, YAML block
 
 ### Exercise logic module
 
-An exercise component's `<Name>.ts` exports `generate`, `check`, `solution`, `wrong`, `reason`, `describe` and
-`about`: the exercise contract, which the build tests over fixed seeds, the islands call on "Prüfen" and the tutor
-pages read (the task and its solution as text
-in each language, and what the exercise is for a tutor). For its table of tasks it adds `template`, `params`,
-`mistakes` and `show`, all four or none (`dec-component-table`); the build checks them against `check` for every task
-number and gives a hint for a component without them.
+An exercise component's `<Name>.ts` is the exercise contract. It exports:
+`generate`, the task of a seed;
+`check`, whether an answer is right;
+`solution`, the right answer;
+`wrong`, a wrong answer that `check` must reject;
+`reason`, the app's message for a wrong answer;
+`describe`, the task and its solution as text;
+`about`, what the exercise is, for a tutor.
+For its table of tasks it adds `template`, `params`, `mistakes` and `show`, all four or none (`dec-component-table`).
+The build tests the module, the islands use it on "Prüfen", and the tutor pages read it.
 
 ```arc42
 :::interface

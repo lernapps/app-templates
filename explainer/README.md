@@ -4,82 +4,128 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 
 ## What it can do
 
-- Text, formulas (also chemistry), drawn figures, your own images with source and licence (one per
-  language if it has words in it), figures with numbered labels, tables, timelines, definitions with a glossary, quotes, code, boxes for worked examples and hints.
-- YouTube videos behind two clicks: before the click a link with title, channel and a note on privacy, nothing loaded
-  from YouTube or Google; "Video abspielen" loads the player from youtube-nocookie.com. The learner may choose to load
-  videos directly from then on. The catalog entry of an app with a video says `fitness.thirdParty: on-click`.
-- Exercises of the six question types, with feedback, hints and typical mistakes (a wrong matching or ordering marks what is wrong); a question can show content (`material`: the figures, tables, quotes and code of the page's blocks) between its text and its answers.
-- Language tasks (`language-task`): the learner writes a word, a form or sentences in a language and the page
-  checks it against the answers the task lists. An item starts from the other language, a cue or a marker of a
-  labelled figure; modes `write`, `gap`, `choice` and `table`; the direction is part of the task. Mistakes of form
-  count as wrong unless the task loosens them. The example app is
-  [`examples/franzoesisch`](examples/franzoesisch/src/app.yaml).
-- Listening and speaking, with synthetic voices that run on the creator's machine, never in the learner's browser and
-  never on a server: an item of a language task may start from `audio` (a dictation, a gap dictation, or a listening task
-  with a translation), and a `speaking-task` lets the learner record themself, play the original, the recording or both,
-  and rate the pronunciation. The files are MP3s in `src/audio/` that the audio skill (`lernapps-audio`) makes and marks as
-  AI-generated in their own metadata; the build stops when a file lacks the marking. The player is the browser's own, with a
-  small "KI" label (the model and the licence on hover, focus and tap) and, on an iPhone or an iPad, whose control has no tempo
-  menu, buttons for a tempo (0.75, 1, 1.25 times). A recording stays in the browser's memory: it is not stored and not sent.
-- A page "Medienübersicht" (`medien/`) lists every image, audio file and video with credit, licence and use, for review.
-- Generated exercises: each task draws new numbers or records, up to 67 numbered tasks per exercise, with typical
-  mistakes, a hint and the way to the solution, also with roots, powers and trigonometry, and with chemical formulas
-  from a data file. The build tests them over fixed seeds. Without JavaScript, three worked tasks show with their
-  solutions. Optionally every exercise starts at task number 1 (`tasks: { start: first }`).
-- Vue components for what no block can show or check, such as reading a scale, labelling a figure or dragging into
-  place; an exercise component draws its own tasks. A component needs its logic module, a test and a text for readers
-  without JavaScript. An exercise component also declares its exercise for the tutor (`template`, `params`,
-  `mistakes`, `show`), so that its tutor page has a table of every task like a generated one. Like every exercise it
-  shows its solution after the right answer or on "Lösung zeigen". A prop marked `@verbatim` (an id) needs no
-  translation. The example is
-  `src/components/ProzentFeld` on the page `prozent/prozentwert`: colour p % of a field of G squares.
-- Navigation, contents and glossary are generated, and for an AI tutor a short tutor page per page
-  (`<chapter>/<page>/tutor/`), the one source of what the tutor gets: its guide, the page's content and every task of
-  its exercises, a generated one and an exercise component as a table of inputs and outputs. The learner switches an assistant on once, on the
-  start page or beside the title of a page (one of the KI assistants the runtime offers), with
-  an account of their own. Then two ways lead there: a bar beside the title of each page, for a tutor who helps with
-  the page, and "Hilfe" ("Warum?" after a wrong answer) in every exercise, with the task, the input and the app's
-  message. "Zurück zum Tutor" copies the page's tutor page and how each task of the session went, for the learner to
-  paste into the chat.
-- Optional: a self-assessment per chapter (`selfAssessment` in its `chapter.yaml`, at `<chapter>/einschaetzung/`);
-  the app's, at `einschaetzung/`, is every chapter's together. It shows exercises of the pages, best two to five on
-  each of its pages, without "Prüfen", and checks them all together: the result says per page whether the learner
-  probably knows it, should look at it again or should read it. The last result stays on the device; with a click the
-  learner takes it to the tutor, who then guides chapter by chapter: to the pages that do not stick, then into a new
-  round of the chapter's self-assessment, whose "Zurück zum Tutor" brings the result back into the chat.
-  An exercise component may be in it: it shows the task the run draws, without "Prüfen". The example chapter has
-  one, with the exercise component `prozentfeld`, offered on the start page.
+- Text, formulas (also chemistry), drawn figures, tables, timelines, definitions with a glossary, quotes, code, and
+  boxes for worked examples and hints.
+- Your own images with source and licence. An image with words in it can have one file per language:
+  `image: { de: images/plan-de.svg, en: images/plan-en.svg }`. Figures can have numbered labels.
+- YouTube videos behind two clicks. Before the click, the page shows a link with title and channel and a note on
+  privacy, and loads nothing from YouTube or Google. "Video abspielen" loads the player from youtube-nocookie.com.
+  The learner may choose to load videos directly from then on. The catalog entry of an app with a video says
+  `fitness.thirdParty: on-click`.
+- Exercises of the six question types of the quiz, with feedback, hints and typical mistakes. A question can show
+  content between its text and its answers (`material`): figures, tables, quotes and code.
+- Language tasks (`language-task`): the learner writes a word, a form or sentences, and the page checks it against
+  the answers the task lists. An item starts from the other language, a cue or a marker of a labelled figure. The
+  modes are `write`, `gap`, `choice` and `table`. Mistakes of form count as wrong unless the task loosens them. The
+  example app is [`examples/franzoesisch`](examples/franzoesisch/src/app.yaml).
+- Listening and speaking with synthetic voices. They run on the creator's machine, never in the learner's browser
+  or on a server. An item of a language task may start from `audio`: a dictation, a gap dictation or a listening
+  task. A `speaking-task` lets the learner record themself, compare with the original and rate their pronunciation.
+  The recording stays in the browser's memory; it is not stored and not sent.
+- The audio files are MP3s in `src/audio/`. The audio skill (`lernapps-audio`) makes them and marks them as
+  AI-generated. The build stops when a file lacks that mark. The player shows a small "KI" label.
+- A page "Medienübersicht" (`medien/`) lists every image, audio file and video with credit, licence and use.
+- Generated exercises (`generated`): each task draws new numbers or records, with typical mistakes, a hint and the
+  way to the solution. They can use roots, powers, trigonometry and chemical formulas from a data file. The build
+  tests them over fixed seeds. Without JavaScript, three worked tasks show with their solutions. How to write them is
+  in the [schema](../runtime/explainer/explainer.v1.schema.json) (`$defs/generated`).
+- Task numbers: every generated exercise and exercise component numbers its different tasks, up to 67. The page shows
+  "Aufgabe Nr. <n>" and "Neue Aufgabe". The address holds the number of each exercise (`?<id>=<n>`), so a link opens
+  the same tasks, for example in class. An exercise starts at a random number, or at 1 with `tasks: { start: first }`
+  in `app.yaml`.
+- Vue components for what no block can show or check, such as reading a scale or labelling a figure. See
+  [Components](#components).
+- Navigation, contents and glossary are generated.
+- An AI tutor that the learner brings: see [AI tutor](#ai-tutor).
+- Optional self-assessments: one per chapter (`selfAssessment` in its `chapter.yaml`, at `<chapter>/einschaetzung/`),
+  and one for the app at `einschaetzung/` with every chapter's together. It shows two to five exercises per page,
+  without "Prüfen", and checks them all together. The result says per page whether the learner probably knows it,
+  should look at it again or should read it. The learner can take the result to the tutor. The example chapter has
+  one.
 - German, plus English: a page tree per language.
-- A diff mode for reviewing a change: build the app with `EXPLAINER_BASE` set to the folder of another version (the one
-  with its `src/`), and every page marks what this version changes against it: new, changed, moved and removed
-  blocks, with the earlier version of a changed block beside it, and `aenderungen/` lists every change, including pages,
-  chapters and the app's own fields. A bar that floats beside the page steps from change to change. The preview of a
-  pull request is built so. Locally: `git worktree add ../base main && EXPLAINER_BASE=../base npm run dev`. Without
-  `EXPLAINER_BASE` the pages have no marks, and a production build never sets it.
+- A diff mode for reviewing a change. Build the app with `EXPLAINER_BASE` set to the folder of another version. Every
+  page then marks new, changed, moved and removed blocks, and `aenderungen/` lists every change. The preview of a pull
+  request is built this way. A production build never sets it.
+
+## Components
+
+An app's components are Vue single-file components in `src/components/<Name>.vue`, with typed props and a test
+`<Name>.test.ts`. A `vue-component` block uses one, with its `props` and a `nojs` text for readers without
+JavaScript. The example is `src/components/ProzentFeld` on the page `prozent/prozentwert`: colour p % of a field of G
+squares.
+
+- The build checks each block's props against the component's prop types. A string prop is a text to translate,
+  unless its doc comment says `@verbatim`, for example for an id.
+- The build also checks the component's code: no network, no `eval` or `innerHTML`, browser globals only after it
+  mounts, and at most 20 kB gzip. It may import only from `vue`, this runtime, `@lernapps/tooling/storage`, `i18n`,
+  `a11y` and `src/components/` itself.
+- Once the component runs, it replaces its `nojs` text. With `defineOptions({ nojs: "caption" })` it keeps the text
+  as a folded description below it.
+
+A component that emits `answer` is an exercise component. It is only the input of its task: the page adds "Prüfen",
+the feedback and "Lösung zeigen". It emits the learner's answer at each change (`undefined` while there is none). It
+may declare the props `checked: boolean` (true while the checked answer stands) and `seed: number` (the seed of its
+task number).
+
+Its logic module `<Name>.ts` exports:
+
+- `generate(seed, props)`: the task for a seed.
+- `check(task, answer)`: whether an answer is right.
+- `solution(task)`: the right answer.
+- `wrong(task)`: a wrong answer, for the build's tests.
+- `reason(task, answer, props, lang)`: the message for a wrong answer, or `undefined`.
+- `unanswered` (optional): the message when the learner checks without an answer.
+- `describe(task, props, lang)`: the task and its solution as text (`{ task, solution }`, restricted Markdown). The
+  build writes the page's text without JavaScript from it, so the block needs no `nojs`.
+- `about`: what the exercise is for a tutor (`{ task, answer, correct, mistakes }`).
+- For a table of all tasks on the tutor page, all four or none: `template(props, lang)`, the task once with `{name}`
+  for each input; `params(task, props, lang)`, the inputs of a task by name; `mistakes(task, props)`, the answer each
+  typical mistake gives; `show(answer, task, props, lang)`, an answer as text. Without them the build gives a hint.
+
+The build tests these exports over fixed seeds and every task number. The block of an exercise component needs at
+least one accepted and one rejected example.
+
+## AI tutor
+
+The learner can bring an AI assistant of their own, with their own account. The app does not offer it; lernapps.net
+only provides the content and the exercises.
+
+- For every content page the app writes a tutor page (`<chapter>/<page>/tutor/`), as HTML and as Markdown. Parents
+  and teachers can read it too. It tells the tutor how to guide a child and holds the page's content and every task of
+  its exercises, with solutions and typical mistakes. The app adds its own rules in `tutor.rules` in `app.yaml`.
+- The learner switches an assistant on once, on the start page or beside the title of a page. The choice stays on the
+  device. "Ein anderer: Text kopieren" works with any assistant.
+- Then a button beside the title of each page opens the assistant with the page.
+- Every exercise has a help button: "Hilfe", or "Warum?" after a wrong answer. It hands the tutor the task, the
+  learner's input and the app's message. Input and message leave the page only with this click.
+- A page opened from the tutor shows "Zurück zum Tutor". It copies how each task of the session went, for the learner
+  to paste into the chat.
+- Without JavaScript, the page has a plain link per assistant.
 
 ## What it cannot do
 
-- No speech recognition: nothing judges how a learner speaks. A language task checks only what is written, against the
-  answers the task lists: a right version it does not list counts as wrong (the page says the learner may ask). The
-  pronunciation in a speaking task is rated by the learner. Audio is synthetic and in four languages for now: English
-  (US, GB), French, Spanish and Italian.
-
+- No speech recognition: nothing judges how a learner speaks. A language task checks only what is written. A right
+  version that the task does not list counts as wrong; the page tells the learner they may ask. In a speaking task the
+  learner rates their own pronunciation.
+- Audio is in four languages for now: English (US, GB), French, Spanish and Italian.
 - No own colours or layout: the look is the runtime's, calm like a worksheet. Dark mode follows the device.
 - No timer, no game.
 - At most two section levels in a page.
-- An exercise component does not count as a page's required exercise: each page also needs a question or a generated
-  exercise. A recap page has none required and at most two, to check what it repeats.
-- Stores nothing but the learner's choice of AI tutor, if they make it, the choice to load videos directly, and the
-  last result of each self-assessment they do.
-- A self-assessment needs JavaScript (without it, it is not offered).
+- An exercise component does not count as a page's required exercise. Each page also needs a question or a generated
+  exercise. A recap page needs none and has at most two.
+- Stores only the learner's choice of AI tutor, the choice to load videos directly, and the last result of each
+  self-assessment.
+- A self-assessment needs JavaScript. Without it, it is not offered.
 - No video from another platform than YouTube, no thumbnail, no own video files.
 
 ## What the app supplies
 
-- The content as YAML in `src/`: the app, a folder per chapter with its pages, data files and images
-  ([schema](../runtime/explainer/explainer.v2.schema.json), format 2); Vue components in `src/components/` where
-  no block fits.
-- Its place on the catalog's learning map (format 2): the app's strand, or the subject of a unit app across the
-  strands of a subject whose map allows it, and the competencies each page practises. A recap page repeats one or several competencies from elsewhere that the app needs (`recap: physik/kraft`, or `recap: [physik/kraft, physik/masse]` for one short recap at the start of a chapter), without exercises; the runtime links each on the learning map, and the page's text names each. Format 1
-  ([schema](../runtime/explainer/explainer.v1.schema.json)) stays valid, without a place on the map.
+- The content as YAML in `src/`: `app.yaml`, a folder per chapter with `chapter.yaml` and its pages, `data/` and
+  `images/` ([schema](../runtime/explainer/explainer.v2.schema.json), format 2). Vue components in
+  `src/components/` where no block fits.
+- Its place on the catalog's learning map (format 2): the app's strand, and the competencies each page practises. A
+  unit app may instead name a subject and span its strands, if the subject's map allows it.
+- A recap page repeats one or more competencies from elsewhere that the app needs (`recap: physik/kraft`, or
+  `recap: [physik/kraft, physik/masse]` for one short recap at the start of a chapter). The runtime links each on the
+  learning map, and the page's text names each.
+- Format 1 ([schema](../runtime/explainer/explainer.v1.schema.json)) stays valid, without a place on the map.
