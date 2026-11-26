@@ -113,3 +113,25 @@ test("a component imports a library in the dependencies of package.json, and the
   // the library is in the app's own bundle, not loaded from elsewhere
   expect(readFileSync(join(root, "dist/app", script), "utf8")).not.toMatch(/from\s*["']yaml["']/);
 }, 60_000);
+
+test("a playthrough's params reach the core whole, the same at every start; without params the core gets {}", async () => {
+  const root = interactiveApp();
+  // a challenge as long as the ones lernapps/coding links with (?c=…), in the characters of base64url
+  const challenge = "AbC-_09".repeat(300);
+  edit(
+    root,
+    "core/index.ts",
+    "export function start(seed: number, route: string): State {\n",
+    [
+      // the default for its own start of the next round, which passes no params
+      "export function start(seed: number, route: string, params: Record<string, string> = {}): State {",
+      '  if (JSON.stringify(Object.keys(params)) !== (params["c"] === undefined ? "[]" : \'["c","level"]\'))',
+      '    throw new Error(`params ${Object.keys(params).join(", ")}`);',
+      '  if (params["c"] !== undefined && params["c"].length !== 2100) throw new Error("a shortened challenge");',
+      "",
+    ].join("\n"),
+  );
+  edit(root, "playthroughs/grundreihe.yaml", "seed: 1\n", `seed: 1\nparams: { c: "${challenge}", level: "2" }\n`);
+  await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [interactive()] });
+  expect(existsSync(join(root, "dist/app/index.html"))).toBe(true);
+}, 60_000);

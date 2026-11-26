@@ -25,5 +25,5 @@
     "isolatedModules": true
   },
   "include": ["runtime", "scripts", "test", "vite.config.ts"],
-  "exclude": ["test/fixtures/question-page"]
+  "exclude": ["test/fixtures/question-page", "test/fixtures/interactive-params"]
 }

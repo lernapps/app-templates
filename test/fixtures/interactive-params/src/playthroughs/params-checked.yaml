@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=../../node_modules/@lernapps/app-templates/runtime/interactive/playthrough.v1.schema.json
+# A challenge that is no base64url text: the runtime passes it through, the core does not take it.
+route: obere-reihe
+seed: 1
+params:
+  c: "<b>kein Base64</b>"
+steps:
+  - keys: [x]
+    state: { challenge: null, params: { c: "<b>kein Base64</b>" } }

@@ -12,15 +12,16 @@
 // without it.
 //
 // On the app page it keeps the core's state (contract.ts): it starts it with the seed of the address (?seed=<n>, else
-// a random one) and the route of the address (#<id>, else the first route), gives every key typed on the page to
+// a random one), the route of the address (#<id>, else the first route) and the other parameters of the address
+// (Params: every search parameter but seed, passed through unchanged), gives every key typed on the page to
 // step as a key input (not a key typed on a link, button or form field, which is theirs, nor one with Ctrl, Alt or
 // Meta), and calls tick every TICK ms when the core has it (the end-to-end tests step the ticks themselves:
 // CLOCK_PROPERTY). A key that changes the state loses its default (the space bar does not scroll). A new route in the
-// address starts the core again with it. It mounts the app's root component into the page with the props state (the
+// address starts the core again with it, with the same seed and parameters. It mounts the app's root component into the page with the props state (the
 // core's state) and lang (the page's language), and steps every input the component emits as input (an action of a
 // button or a tap, or a key it stands for). The start page loads no script; the build removes it there.
 import { createApp, h, shallowRef, type Component } from "vue";
-import { CLOCK_PROPERTY, STATE_PROPERTY, TICK, type Core, type Input } from "./contract.ts";
+import { CLOCK_PROPERTY, paramsOf, STATE_PROPERTY, TICK, type Core, type Input, type Params } from "./contract.ts";
 
 export {
   TICK,
@@ -29,6 +30,7 @@ export {
   type Input,
   type Json,
   type KeyInput,
+  type Params,
   type Playthrough,
   type PlaythroughStep,
 } from "./contract.ts";
@@ -53,14 +55,17 @@ export function startInteractive<S>(core: Core<S>, root: Component, options: Int
   const host = document.querySelector<HTMLElement>(".interactive-app");
   if (host === null) return;
   const routes = JSON.parse(host.dataset["routes"] ?? "[]") as string[];
-  const seedParam = Number(new URL(location.href).searchParams.get("seed"));
+  const search = new URL(location.href).searchParams;
+  const seedParam = Number(search.get("seed"));
   const seed = Number.isInteger(seedParam) && seedParam > 0 ? seedParam : 1 + Math.floor(Math.random() * 2 ** 31 - 1);
+  // read once: the same for every start of this visit, kept nowhere but here
+  const params: Params = paramsOf(search);
   const routeOf = (): string => {
     const id = decodeURIComponent(location.hash.slice(1));
     return routes.includes(id) ? id : (routes[0] ?? "");
   };
   let route = routeOf();
-  const state = shallowRef(core.start(seed, route));
+  const state = shallowRef(core.start(seed, route, params));
   const set = (next: S): void => {
     state.value = next;
     Object.assign(host, { [STATE_PROPERTY]: next });
@@ -88,7 +93,7 @@ export function startInteractive<S>(core: Core<S>, root: Component, options: Int
   addEventListener("hashchange", () => {
     if (routeOf() === route) return;
     route = routeOf();
-    set(core.start(seed, route));
+    set(core.start(seed, route, params));
     markRoute();
   });
   const tick = (): void => set(core.tick?.(state.value, TICK) ?? state.value);

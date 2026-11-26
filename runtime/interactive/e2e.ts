@@ -10,7 +10,7 @@
 // and loads no script; the app page shows the title, the note with a link back to the start page, and an element
 // with each route's id; each page has its language, its alternates, a language switch and the archetype marker. With
 // JavaScript, in German: the app page mounts the app without a console error, and every playthrough plays at its
-// address (app/?seed=<seed>#<route>) on the tests' clock (CLOCK_PROPERTY), on which no time passes but the ticks a
+// address (app/?seed=<seed>&<params>#<route>) on the tests' clock (CLOCK_PROPERTY), on which no time passes but the ticks a
 // step names, as in the build: each step's inputs one after the other, a key pressed on the keyboard with the focus
 // on the page, an action emitted as input by the app's root component, as the component itself does; then its ticks,
 // stepped through the runtime's own tick; after each step the state it expects (the fields it names, read from the
@@ -20,7 +20,7 @@
 import { expect, test, type Page } from "playwright/test";
 import { inLanguage } from "../shared/languages.ts";
 import { languageRoot } from "../shared/pages.ts";
-import { CLOCK_PROPERTY, doingText, inputsOf, mismatch, STATE_PROPERTY } from "./contract.ts";
+import { addressOf, CLOCK_PROPERTY, doingText, inputsOf, mismatch, STATE_PROPERTY } from "./contract.ts";
 import { loadInteractive } from "./load.ts";
 import { message } from "./messages.ts";
 import { APP_PAGE } from "./render.ts";
@@ -160,7 +160,7 @@ export function interactiveTests(root = "."): void {
           const errors = consoleErrors(page);
           // before the client module runs: the runtime then starts no interval, and time passes only by stepTicks
           await page.addInitScript((property) => Reflect.set(globalThis, property, {}), CLOCK_PROPERTY);
-          await page.goto(`./${APP_PAGE}?seed=${playthrough.seed}${route === undefined ? "" : `#${route}`}`);
+          await page.goto(`./${APP_PAGE}${addressOf(playthrough, route)}`);
           const host = page.locator(".interactive-app");
           await expect(host).toHaveAttribute("data-mounted", "");
           // the polite live region of @lernapps/tooling/a11y, which announce() fills

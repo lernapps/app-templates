@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:lernapps:schema:playthrough.v1",
   "title": "A playthrough of a lernapps interactive app",
-  "description": "A file src/playthroughs/<name>.yaml of an app built from the archetype interactive: what a learner does, from the start of a route with a seed: inputs (keys typed, actions of the app's root component) and time passing (ticks), and after each step what is expected: the state of the core (the fields named, compared with the state step(state, input) and tick(state, dt) give) or the announcement for screen readers (@lernapps/tooling/a11y), or both. The build plays every playthrough against the core and fails with one line per mismatch; the end-to-end tests play the same inputs and ticks in the browser. In both, no time passes but the ticks a step names.",
+  "description": "A file src/playthroughs/<name>.yaml of an app built from the archetype interactive: what a learner does, from the start of a route with a seed (and the parameters of the address, if it names them): inputs (keys typed, actions of the app's root component) and time passing (ticks), and after each step what is expected: the state of the core (the fields named, compared with the state step(state, input) and tick(state, dt) give) or the announcement for screen readers (@lernapps/tooling/a11y), or both. The build plays every playthrough against the core and fails with one line per mismatch; the end-to-end tests play the same inputs and ticks in the browser. In both, no time passes but the ticks a step names.",
   "type": "object",
   "additionalProperties": false,
   "required": ["seed", "steps"],
@@ -13,10 +13,20 @@
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
     },
     "seed": {
-      "description": "The seed it starts with: start(seed, route); in the browser the address app/?seed=<seed>#<route>.",
+      "description": "The seed it starts with: start(seed, route, params); in the browser the address app/?seed=<seed>#<route>.",
       "type": "integer",
       "minimum": 1,
       "maximum": 2147483647
+    },
+    "params": {
+      "description": "The other parameters of the address it starts with, as the app is opened with them (app/?seed=<seed>&c=…#<route>): each a name and its text, given to the core as they are: start(seed, route, params). Data for the app, such as a challenge another app links to, not a route; the core checks them itself. Not seed, which has its own field. Without params, the core starts with {}.",
+      "type": "object",
+      "propertyNames": {
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "steps": {
       "description": "The steps, in order.",

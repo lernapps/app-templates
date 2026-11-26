@@ -393,3 +393,11 @@ Earlier ignore directives (W002 for bb-not-found-page, bb-loading-indicator, bb-
 | `runtime/interactive/plugin.ts` (no `SIZE_BUDGET`) | The interactive build limits no size | generic dec-no-size-limit; risk-size-budget-left removed | high | — |
 | owner, 2026-10-16 (relayed by the coordinator); `runtime/explainer/components.ts` (`sourceScope`, `packages`) | An interactive app's components may import the libraries in the dependencies of its package.json; URL imports stay forbidden | interactive dec-libraries, bb-component-rules; generic con-component-rules, concept component rules | high | — |
 | lernapps/tooling#90 merged | The skill lernapps-interactive exists | generic bb-skills, interactive building blocks intro; risk-interactive-skill-missing removed | high | — |
+
+## Parameters of the address (lernapps/app-templates#201, 2026-11-26)
+
+| Source path:line, symbol, or command | Derived fact or relationship | Used in | Confidence | Open question / human decision |
+| --- | --- | --- | --- | --- |
+| lernapps/app-templates#201; lernapps/apps#869 (Epic lernapps/apps#509); lernapps/coding branch `increment/spike` | The coding workshop gets challenges from other apps as `app/?c=<base64url(deflate-raw(JSON))>`, up to about 2000 characters; today only a root component that sends an action can read them, and a new route loses them | interactive dec-address-params | high | — |
+| `runtime/interactive/contract.ts` (`Params`, `paramsOf`, `Core.start(seed, route, params)`, `Playthrough.params`, `addressOf`); `runtime/interactive/interactive.ts` | The shell reads every search parameter but `seed` once (first value of a name) and passes it to every start, also on a new route; it does not check, shorten, log or store them | interactive if-pages, bb-shell, if-core-contract, scenario-play, concept core and shell, dec-address-params, term-address-params, term-core | high | — |
+| `runtime/interactive/playthrough.v1.schema.json` (`params`), `load.ts`, `plugin.ts` (`play`), `e2e.ts`; `test/fixtures/interactive-params` | Playthroughs name params; the build passes them to start, the browser opens `app/?seed=<seed>&<params>#<route>`; a fixture proves a new route keeps them | interactive bb-interactive-playthroughs, if-playthrough-format, scenario-browser-playthroughs, concept-playthroughs, term-playthrough | high | — |

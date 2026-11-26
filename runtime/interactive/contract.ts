@@ -1,10 +1,10 @@
 // The contract between the runtime of an interactive app and the app's core (src/core/index.ts), and its
 // playthroughs (src/playthroughs/*.yaml). The core is the app's logic: pure TypeScript without DOM, deterministic by
-// its seed, its state plain JSON data. The runtime keeps the state: it starts it with start(seed, route), gives every
-// input to step(state, input), a key the learner types or an input the app's root component emits, and calls
-// tick(state, TICK) every TICK milliseconds when the core has it; the app's components only show the state. A
-// playthrough is a seed, a route and a list of steps: inputs, then ticks (time passing), and the state (a part of it)
-// or the announcement expected after them. The build plays each against the core (plugin.ts); the end-to-end tests
+// its seed, its state plain JSON data. The runtime keeps the state: it starts it with start(seed, route, params),
+// gives every input to step(state, input), a key the learner types or an input the app's root component emits, and
+// calls tick(state, TICK) every TICK milliseconds when the core has it; the app's components only show the state. A
+// playthrough is a seed, a route, the parameters of the address if any, and a list of steps: inputs, then ticks (time
+// passing), and the state (a part of it) or the announcement expected after them. The build plays each against the core (plugin.ts); the end-to-end tests
 // play the same inputs and ticks in the browser (e2e.ts). Used in the browser and in Node alike.
 
 /** A JSON value: what an action input carries. */
@@ -36,15 +36,38 @@ export interface ActionInput {
 export type Input = KeyInput | ActionInput;
 
 /**
+ * The parameters of the address the app was opened at: every search parameter but `seed` (app/?c=…&level=2 gives
+ * { c: "…", level: "2" }), the first value of a name given more than once; {} when there are none. They are data an
+ * app or a link from another app hands over (a challenge, a level), not routes: the routes are the hash. The runtime
+ * only passes them through, unchanged, whatever their length: it does not check, shorten, log or store them; the
+ * core checks them itself and starts as without them when they do not fit. They stay the same for the whole visit,
+ * so a new route starts the core again with the same parameters.
+ */
+export type Params = Readonly<Record<string, string>>;
+
+/**
  * The core of an interactive app, the exports of src/core/index.ts. `route` is the id of the hash route the app was
  * opened at (app/#<id>, a route of src/app.yaml), the first route when the address names none, "" when the app has
- * no routes. step returns the same state object for an input it ignores, so that a key keeps its default (Tab moves
- * the focus).
+ * no routes; `params` the parameters of the address (Params). A core that needs no parameters leaves the third
+ * argument out: start(seed, route). step returns the same state object for an input it ignores, so that a key keeps
+ * its default (Tab moves the focus).
  */
 export interface Core<S> {
-  start(seed: number, route: string): S;
+  start(seed: number, route: string, params: Params): S;
   step(state: S, input: Input): S;
   tick?(state: S, dt: number): S;
+}
+
+/**
+ * The parameters of the address of `search` (Params): every search parameter but seed, the first value of each name,
+ * frozen. Its prototype is null, so that a name like __proto__ is a parameter like any other.
+ */
+export function paramsOf(search: URLSearchParams): Params {
+  const params: Record<string, string> = Object.create(null) as Record<string, string>;
+  for (const [name, value] of search) {
+    if (name !== "seed" && !Object.hasOwn(params, name)) params[name] = value;
+  }
+  return Object.freeze(params);
 }
 
 /** The milliseconds from one tick to the next: the runtime calls tick(state, TICK) every TICK ms. */
@@ -72,11 +95,21 @@ export interface PlaythroughStep {
   announce?: string;
 }
 
-/** A playthrough: the route and seed it starts with, and its steps. */
+/**
+ * A playthrough: the route, seed and parameters of the address it starts with (start(seed, route, params ?? {}); in
+ * the browser app/?seed=<seed>&<params>#<route>), and its steps.
+ */
 export interface Playthrough {
   route?: string;
   seed: number;
+  params?: Params;
   steps: readonly PlaythroughStep[];
+}
+
+/** The address of `playthrough` below the app page: ?seed=<seed>, then its parameters, then #<route> if any. */
+export function addressOf(playthrough: Playthrough, route: string | undefined): string {
+  const search = new URLSearchParams({ seed: String(playthrough.seed), ...playthrough.params });
+  return `?${search.toString()}${route === undefined ? "" : `#${route}`}`;
 }
 
 /** The inputs of a step, its keys as key inputs. */

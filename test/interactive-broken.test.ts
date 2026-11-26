@@ -81,7 +81,7 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "a core without step",
     (root) => edit(root, CORE, "export function step(", "function step("),
-    "src/core/index.ts: exports no step; the core exports start(seed, route) and step(state, input), and tick(state, dt) when the app moves on its own (interactive-core-contract)",
+    "src/core/index.ts: exports no step; the core exports start(seed, route, params) and step(state, input), and tick(state, dt) when the app moves on its own (interactive-core-contract)",
   ],
   [
     "a route the core cannot start",
@@ -118,7 +118,25 @@ const cases: [string, (root: string) => void, string][] = [
   [
     "a core that draws from Math.random",
     (root) => edit(root, CORE, "const next = random(seed);", "const next = Math.random;"),
-    "src/playthroughs/grundreihe.yaml:8: steps[0]: the state differs between two plays of the same steps; the core gives the same state for the same seed, route, inputs and ticks, so draw from the seed, never from Math.random or the clock (interactive-core-contract)",
+    "src/playthroughs/grundreihe.yaml:8: steps[0]: the state differs between two plays of the same steps; the core gives the same state for the same seed, route, params, inputs and ticks, so draw from the seed, never from Math.random or the clock (interactive-core-contract)",
+  ],
+  [
+    "a playthrough whose params name the seed",
+    (root) => edit(root, PLAY, "seed: 1\n", 'seed: 1\nparams: { seed: "2" }\n'),
+    "src/playthroughs/grundreihe.yaml:7: params.seed: the seed has its own field; give it as seed, not in params",
+  ],
+  [
+    "a core that throws on its params",
+    (root) => {
+      edit(root, PLAY, "seed: 1\n", "seed: 1\nparams: { c: kaputt }\n");
+      edit(
+        root,
+        CORE,
+        "export function start(seed: number, route: string): State {\n",
+        'export function start(seed: number, route: string, params: Record<string, string>): State {\n  if (params["c"] !== undefined) throw new Error("no challenge");\n',
+      );
+    },
+    'src/playthroughs/grundreihe.yaml:6: seed: start(1, "grundreihe", params) throws: no challenge (interactive-core-contract)',
   ],
   [
     "a playthrough whose state does not match",
