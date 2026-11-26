@@ -221,10 +221,12 @@ function propTypes(
         throw unsupported;
       }
       const owner = (element as unknown as Scoped)._ownerScope;
+      const verbatim = (element.leadingComments ?? []).some((comment) => /(^|\s)@verbatim\b/.test(comment.value));
       result[name] = {
         type: convert(element.typeAnnotation.typeAnnotation, owner),
         optional: element.optional === true,
         source: written(element, owner) ?? name,
+        ...(verbatim ? { verbatim: true } : {}),
       };
     }
     return result;

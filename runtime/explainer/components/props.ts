@@ -173,26 +173,39 @@ export function propsProblems(props: unknown, component: ComponentInfo): PropPro
   return fieldProblems((props ?? {}) as Record<string, unknown>, component.props, [], component.name);
 }
 
-/** The paths of the learner texts in `value`, a `type`: each string prop, whose languages the build checks. */
+/**
+ * The paths of the texts in `value`, a `type`: each string prop, whose languages the build checks; `verbatim` when it
+ * is in a field whose doc comment says @verbatim, a text the same in every language (an id), checked as a name.
+ */
 export function textPaths(
   value: unknown,
   type: PropType,
   path: readonly (string | number)[] = [],
-): (string | number)[][] {
+  verbatim = false,
+): { path: (string | number)[]; verbatim: boolean }[] {
   switch (type.kind) {
     case "string":
-      return [[...path]];
+      return [{ path: [...path], verbatim }];
     case "array":
-      return Array.isArray(value) ? value.flatMap((item, index) => textPaths(item, type.of, [...path, index])) : [];
+      return Array.isArray(value)
+        ? value.flatMap((item, index) => textPaths(item, type.of, [...path, index], verbatim))
+        : [];
     case "object":
       return typeof value === "object" && value !== null
         ? Object.entries(type.fields).flatMap(([key, field]) =>
-            key in value ? textPaths((value as Record<string, unknown>)[key], field.type, [...path, key]) : [],
+            key in value
+              ? textPaths(
+                  (value as Record<string, unknown>)[key],
+                  field.type,
+                  [...path, key],
+                  verbatim || field.verbatim === true,
+                )
+              : [],
           )
         : [];
     case "union": {
       const member = type.of.find((candidate) => matches(value, candidate));
-      return member === undefined ? [] : textPaths(value, member, path);
+      return member === undefined ? [] : textPaths(value, member, path, verbatim);
     }
     default:
       return [];

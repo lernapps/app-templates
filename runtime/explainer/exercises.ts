@@ -5,7 +5,7 @@
 // three worked tasks, the task numbers 1 to 3 (taskSeeds), each with its task number and a <details> "Lösung" (with JavaScript they show
 // once the live task is solved). Each exercise carries the data its live part
 // needs in the browser (explainer.ts): the question, or the exercise with its templates and data files.
-import { questionIn, type Question } from "../shared/questions/question.ts";
+import { mixed, questionIn, rightEntries, type Question } from "../shared/questions/question.ts";
 import { renderMaterial, type AudioRef, type MaterialContext } from "../shared/blocks/index.ts";
 import { materialIn } from "../shared/blocks/block.ts";
 import { answerText, questionMessagesIn, renderQuestion, renderSolution } from "../shared/questions/render.ts";
@@ -728,6 +728,31 @@ function openTaskExercise(
     .join("\n");
 }
 
+/**
+ * What a worked task asks to choose, order or match, for readers without JavaScript, who do not see the controls of
+ * the live task: the options of a choice, the items of an ordering in the order the live task mixes them, the left
+ * entries of a matching with the right ones to choose from; nothing for a number.
+ */
+function workedEntries(question: Question, lang: string): string {
+  const quiz = questionMessagesIn(lang);
+  const list = (entries: readonly string[]) =>
+    `<ul>${entries.map((entry) => `<li>${plain(entry)}</li>`).join("")}</ul>`;
+  switch (question.type) {
+    case "single-choice":
+    case "multiple-choice":
+      return list(question.options.map((option) => option.text));
+    case "ordering":
+      return `<p>${plain(quiz.orderHint)}</p>${list(mixed(question.items.length, question.id).map((index) => question.items[index] ?? ""))}`;
+    case "matching": {
+      const rights = rightEntries(question);
+      const choices = mixed(rights.length, question.id).map((index) => rights[index] ?? "");
+      return `<p>${plain(quiz.matchHint)}</p>${list(question.pairs.map((pair) => pair.left))}<p>${plain(message(lang, "workedChoices", { choices: choices.join(", ") }))}</p>`;
+    }
+    default:
+      return "";
+  }
+}
+
 function generatedExercise(
   spec: Generated,
   lang: string,
@@ -742,6 +767,9 @@ function generatedExercise(
       `<li class="explainer-worked-task">`,
       `<p class="explainer-task-number">${plain(message(lang, "taskNumber", { n: String(item.number) }))}</p>`,
       `<p class="explainer-task">${item.task}</p>`,
+      workedEntries(item.question, lang) === ""
+        ? ""
+        : `<div class="explainer-worked-entries">${workedEntries(item.question, lang)}</div>`,
       item.hint === undefined
         ? ""
         : `<details class="explainer-hint"><summary>${plain(message(lang, "hint"))}</summary><p>${item.hint}</p></details>`,

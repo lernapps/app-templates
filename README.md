@@ -34,8 +34,8 @@ feature: assistants read it before they choose an archetype.
 - An explainer's components are Vue single-file components in `src/components/<Name>.vue`, each with
   `<script setup lang="ts">`, typed props and its test `<Name>.test.ts`, used by a `vue-component` block with its
   `props` and a `nojs` text. The build renders each with Vue's server renderer into its island, `hidden` until it
-  hydrates; only a page with a component loads Vue. It checks each block's props against the component's prop types,
-  and on the SFC compiler's output: no network, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from
+  hydrates; only a page with a component loads Vue. It checks each block's props against the component's prop types
+  (a string prop is a learner text, unless its doc comment says `@verbatim`), and on the SFC compiler's output: no network, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from
   `vue`, this runtime, `@lernapps/tooling/storage`, `i18n` and `a11y` and the folder itself, browser globals only in
   `onMounted`, and 20 kB gzip of the component's own code. Once it runs, it replaces its `nojs` text, or keeps it
   folded as a text description under it with `defineOptions({ nojs: "caption" })`. A component that emits
@@ -64,7 +64,8 @@ feature: assistants read it before they choose an archetype.
   (`vue-component-tutor-table`).
 - Every seeded exercise (generated, exercise component) numbers its distinct tasks: the build walks the seeds 1, 2,
   3, … through its generator, keeps each seed whose task differs from all before, up to 67, and the page shows
-  "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:
+  "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). Without a number in the address an exercise
+  starts at a random one, or at 1 with `tasks: { start: first }` in `app.yaml`. The number is the one identifier of a task:
   `?<id>=<n>` opens task number n of the exercise `<id>` (a number above N wraps around). The address holds one
   parameter per exercise (`?a=3&b=12`), written on load and at every "Neue Aufgabe", so it is the page's state: a link
   to share in class, a deep link, and what a tutor reads; `seed`, `via`, `uebung` and `abschnitt` are no exercise id, and `?seed=<n>#<id>`

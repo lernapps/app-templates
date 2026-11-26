@@ -685,6 +685,8 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       await expect(details).not.toHaveAttribute("open");
     } else await expect(nojs, "the component replaces its nojs text").toBeHidden();
     if (!component.exercise) continue;
+    // a card with the label of an exercise, as every exercise has
+    await expect(element.locator(":scope > .explainer-exercise-label")).toHaveText(messageOf("de", "exerciseLabel"));
     // "Prüfen" under it, drawn by the explainer, looks like that of the questions: filled with the accent and at
     // least 44 px high; disabled until the component emits an answer
     const check = element.locator(":scope > form.explainer-component-form > .question-actions .question-check");
@@ -715,6 +717,10 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     for (const kind of ["accepted", "rejected"] as const) {
       const example = component.examples?.[kind];
       if (example === undefined) continue;
+      // each example on a fresh page, no solution shown yet: the page without a task number in its address, then
+      // the example's (the same address again would only move to its anchor)
+      await page.goto(`./${item.url}`);
+      await expect(element).toHaveAttribute("data-hydrated", "");
       await showSeed(page, component, example.seed);
       await element.evaluate(emitAnswer, example.answer);
       await expect(check).toBeEnabled();
@@ -737,6 +743,21 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
         await expect(feedback, `${component.name}: "Richtig!" goes once the answer changes`).toHaveText("");
       } else
         await expect(feedback, `${component.name}: the reason stays while the answer changes`).toHaveText(said ?? "");
+      // the solution of the task shown, as its describe states it: after the right answer at once, after a wrong one
+      // on "Lösung zeigen", with the focus (#209)
+      const solution = element.locator(":scope > .explainer-component-solution");
+      const solve = element.locator(":scope > form .question-solve");
+      if (kind === "rejected") {
+        await expect(solution, `${component.name}: no solution after a wrong answer`).toBeHidden();
+        await expect(solve, `${component.name}: "Lösung zeigen" after a wrong answer`).toHaveText(
+          questionMessagesIn("de").showSolution,
+        );
+        await solve.click();
+        await expect(solution).toBeFocused();
+        await expect(solve).toBeHidden();
+      }
+      await expect(solution, `${component.name}: the solution after the ${kind} example`).toBeVisible();
+      expect((await solution.locator(".explainer-component-solution-text").textContent())?.trim()).not.toBe("");
     }
     await checkTaskNumber(page, item, component);
   }

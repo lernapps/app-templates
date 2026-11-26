@@ -416,10 +416,11 @@ const json = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
 /**
  * A vue-component block: its island, hidden until it hydrates, its nojs text, its props and its feedback. An exercise
- * component has its anchor, its task number with "Neue Aufgabe" (hidden until it hydrates), its island in a form with
- * the explainer's "Prüfen" (the row of the shared questions, hidden until it hydrates; Enter in a field of the
- * component checks too), and as its no-JS text the task of number 1 as its describe states it, with the solution
- * folded, under the block's own nojs text if it has one.
+ * component is a card with the label of an exercise; it has its anchor, its task number with "Neue Aufgabe" (hidden
+ * until it hydrates), its island in a form with the explainer's "Prüfen" and "Lösung zeigen" (the row of the shared
+ * questions, hidden until it hydrates; Enter in a field of the component checks too), the solution of each task
+ * number in a template, for the islands to show, and as its no-JS text the task of number 1 as its describe states
+ * it, with the solution folded, under the block's own nojs text if it has one.
  */
 function renderComponent(context: Context, block: BlockOf<"vue-component">): string {
   const use = context.site.components.find((candidate) => candidate.block === block);
@@ -460,14 +461,31 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
     ...(component.checked ? ["data-checked"] : []),
     ...(component.caption ? [`data-nojs="caption" data-caption="${plain(context.t("textDescription"))}"`] : []),
   ];
+  // the solution of each task number, as its describe states it: after the right answer, or on "Lösung zeigen" after a
+  // wrong one, the islands show the one of the number shown
+  const tasks = context.descriptions.get(block)?.tasks[context.lang] ?? [];
+  const solutions =
+    component.exercise && tasks.length > 0
+      ? [
+          `<div class="explainer-component-solution" hidden tabindex="-1"><p class="explainer-component-solution-label">${plain(messages.solution)}</p><div class="explainer-component-solution-text"></div></div>`,
+          `<template class="explainer-component-solutions">${tasks.map((task) => `<div data-number="${task.number}">${renderMarkdown(task.solution, context.resolve)}</div>`).join("")}</template>`,
+        ].join("\n")
+      : "";
+  const solve =
+    tasks.length > 0
+      ? ` <button type="button" class="question-solve" hidden>${plain(messages.showSolution)}</button>`
+      : "";
   return [
     `<div class="explainer-component" ${attributes.join(" ")}>`,
+    // an exercise component is a card with its label, as every exercise is
+    component.exercise ? `<p class="explainer-exercise-label">${plain(context.t("exerciseLabel"))}</p>` : "",
     controls,
     component.exercise
-      ? `<form class="explainer-component-form" novalidate><div class="explainer-island" hidden>${markup}</div><p class="question-actions" hidden><button type="submit" class="question-check">${plain(messages.check)}</button></p></form>`
+      ? `<form class="explainer-component-form" novalidate><div class="explainer-island" hidden>${markup}</div><p class="question-actions" hidden><button type="submit" class="question-check">${plain(messages.check)}</button>${solve}</p></form>`
       : `<div class="explainer-island" hidden>${markup}</div>`,
     `<div class="explainer-nojs">${nojs}</div>`,
     feedback,
+    solutions,
     `<script type="application/json" class="explainer-component-props">${json(propsIn(block.props, component, context.lang))}</script>`,
     `</div>`,
   ]
@@ -1221,7 +1239,8 @@ export function renderPage(
     ...diffChrome(context),
     header(context),
     breadcrumbs(context),
-    `<main class="explainer" id="inhalt-der-seite">`,
+    // where an exercise with task numbers starts without a number in the address (tasks.ts startNumber)
+    `<main class="explainer" id="inhalt-der-seite"${site.app.tasks?.start === "first" ? ' data-task-start="first"' : ""}>`,
     content,
     `</main>`,
     feedbackPanel(context),

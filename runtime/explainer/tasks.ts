@@ -42,6 +42,13 @@ export const nextTaskNumber = (n: number, count: number): number => (n % count) 
 export const randomTaskNumber = (count: number): number => 1 + Math.floor(Math.random() * count);
 
 /**
+ * The task number an exercise inside `element` starts with when the address names none: 1 when the app starts its
+ * exercises there (tasks: { start: first }, data-task-start on the page's main), else a random one.
+ */
+export const startNumber = (element: Element, count: number): number =>
+  element.closest<HTMLElement>("[data-task-start]")?.dataset["taskStart"] === "first" ? 1 : randomTaskNumber(count);
+
+/**
  * Address parameters that are no exercise's: the page's (seed, via) and those of its tutor page, whose address holds
  * the page's task numbers beside them (uebung, abschnitt; position.ts). An exercise id must not be one of them (the
  * build checks).
@@ -83,6 +90,9 @@ export const NEW_TASK_ICON =
 
 /** The event an exercise sends on its element once it shows a task: the tutor's help button takes its place again. */
 export const SHOWN_EVENT = "explainer-shown";
+
+/** The event an exercise component sends on its element when the learner looks its solution up ("Lösung zeigen"). */
+export const REVEALED_EVENT = "explainer-revealed";
 
 /**
  * The events between a self-assessment (assessment-client.ts) and the islands (islands.ts): the self-assessment put

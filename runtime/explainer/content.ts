@@ -80,6 +80,10 @@ export interface App {
   tutor?: {
     rules?: Text;
   };
+  /** Where an exercise with task numbers starts without a number in the address: random (the default) or 1. */
+  tasks?: {
+    start?: "random" | "first";
+  };
   /** The scope for the tutor: what the app is about, and what does not belong to it (scope.ts). */
   scope?: {
     text?: Text;
@@ -251,6 +255,11 @@ export type PropType =
 export interface Field {
   type: PropType;
   optional: boolean;
+  /**
+   * Its doc comment says @verbatim: its strings are no learner texts but the same in every language (ids, codes, the
+   * states of an automaton), checked as names are.
+   */
+  verbatim?: boolean;
   /** The declaration as written, e.g. "parts: string[]". */
   source: string;
 }

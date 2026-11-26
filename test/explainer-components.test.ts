@@ -314,6 +314,21 @@ const dataCases: [string, (root: string) => void, string[]][] = [
   ],
 ];
 
+describe("a prop whose doc comment says @verbatim holds no learner text (#209)", () => {
+  const events = "[{ id: q0, title: { de: Eins, en: One } }]";
+  test("a string of it is the same in every language", async () => {
+    const root = app();
+    withDates(root, "/** The state, the same in every language. @verbatim */ id: string; title: string", events);
+    expect(await problems(root)).toEqual([]);
+  }, 60_000);
+
+  test("without the tag the string is a learner text that needs every language", async () => {
+    const root = app();
+    withDates(root, "id: string; title: string", events);
+    expect(await problems(root)).toEqual([expect.stringContaining("blocks[0].blocks[3].props.events[0].id")]);
+  }, 60_000);
+});
+
 describe("a data file that nothing names is an error of the check", () => {
   test.each(dataCases)(
     "%s",

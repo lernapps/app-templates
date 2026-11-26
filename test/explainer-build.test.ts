@@ -146,7 +146,7 @@ describe("one build writes every page", () => {
             '<form class="explainer-component-form" novalidate><div class="explainer-island" hidden>',
           );
           expect(html).toMatch(
-            /<\/div><p class="question-actions" hidden><button type="submit" class="question-check">(Prüfen|Check)<\/button><\/p><\/form>/,
+            /<\/div><p class="question-actions" hidden><button type="submit" class="question-check">(Prüfen|Check)<\/button>( <button type="button" class="question-solve" hidden>[^<]+<\/button>)?<\/p><\/form>/,
           );
           // an exercise component: its anchor, its task number with "Neue Aufgabe" for JavaScript, and without it
           // the task of number 1 as its describe states it, with the solution folded
@@ -159,9 +159,20 @@ describe("one build writes every page", () => {
           expect(nojs).toContain(component.task[route.lang]);
           expect(nojs).toMatch(component.solution);
           expect(html).toContain(`data-incomplete="${component.unanswered[route.lang] ?? ""}"></p>`);
+          // a card with the label of an exercise; "Lösung zeigen" beside "Prüfen", and the solution of each number for
+          // the islands (#209)
+          expect(html).toMatch(
+            /<div class="explainer-component" [^>]*data-exercise[^>]*>\n<p class="explainer-exercise-label">/,
+          );
+          expect(html).toMatch(/<button type="button" class="question-solve" hidden>[^<]+<\/button><\/p><\/form>/);
+          expect(html).toMatch(
+            /<div class="explainer-component-solution" hidden tabindex="-1">.*\n<template class="explainer-component-solutions"><div data-number="1">/,
+          );
         }
         // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
         if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
+        // without an option of the app, an exercise with task numbers starts at a random one
+        expect(html).toContain('<main class="explainer" id="inhalt-der-seite">');
         for (const generated of html.split('class="explainer-exercise explainer-generated"').slice(1)) {
           const exercise = generated.split('class="explainer-exercise-data"')[0] ?? "";
           expect(exercise.split('class="explainer-worked-task"').length - 1).toBe(3);
@@ -298,6 +309,22 @@ test("each language's page has its own credits and the addresses of its links", 
   expect(en).toContain('href="https://en.wikipedia.org/wiki/Hexagon"');
   expect(en).not.toContain("eigene Zeichnung");
   expect(en).not.toContain("wikipedia.org/wiki/Sechseck");
+});
+
+describe("an exercise for young learners (#209)", () => {
+  test("the app starts its exercises at task number 1; a worked task shows what to order without JavaScript", async () => {
+    const root = app(join(import.meta.dirname, "fixtures/explainer-history"));
+    const yaml = join(root, "src/app.yaml");
+    writeFileSync(yaml, `${readFileSync(yaml, "utf8")}tasks:\n  start: first\n`);
+    await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [explainer()] });
+    const html = readFileSync(join(root, "dist/revolution/sommer-1789/index.html"), "utf8");
+    expect(html).toContain('<main class="explainer" id="inhalt-der-seite" data-task-start="first">');
+    // the generated ordering of the page: each worked task lists its items, under the hint how to order them
+    const worked = html.split('class="explainer-worked-task"').slice(1);
+    expect(worked).toHaveLength(3);
+    for (const task of worked)
+      expect(task).toMatch(/<div class="explainer-worked-entries"><p>Gib jedem Eintrag seinen Platz/);
+  }, 120_000);
 });
 
 describe("404.html finds the app's root from any missing address and moves on to it", () => {
