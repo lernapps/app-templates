@@ -7,8 +7,12 @@ import { readFileSync } from "node:fs";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { describe, expect, test } from "vite-plus/test";
 import {
+  INCOMPLETE_MESSAGE,
+  isComplete,
   isCorrect,
   matchedPairs,
+  optionLabel,
+  placeTwice,
   messages,
   QUESTION_REF,
   questionId,
@@ -367,6 +371,56 @@ describe("why a wrong answer is wrong", () => {
     expect(wrongReasons({ ...item, hint: "Der höchste Berg kommt zuletzt." }, wrongAnswer(item))).toEqual([
       { text: "Der höchste Berg kommt zuletzt." },
     ]);
+  });
+});
+
+describe("an ordering answer, place by place (#209)", () => {
+  const item = questions.find((entry) => entry.type === "ordering") as Question;
+  if (item.type !== "ordering") throw new Error("the fixture bank has an ordering question");
+
+  test("a place given twice is no complete answer, and says so", () => {
+    const twice = item.items.map(() => 0);
+    expect(isComplete(item, twice)).toBe(false);
+    expect(placeTwice(item, twice)).toBe(true);
+    expect(
+      placeTwice(
+        item,
+        item.items.map(() => -1),
+      ),
+    ).toBe(false);
+    expect(isComplete(item, wrongAnswer(item))).toBe(true);
+    expect(placeTwice(item, wrongAnswer(item))).toBe(false);
+  });
+
+  test("each item in its place or not, as a matching's pairs", () => {
+    expect(matchedPairs(item, rightAnswer(item))).toEqual(item.items.map(() => true));
+    const swapped = item.items.map((_item, index) => (index < 2 ? 1 - index : index));
+    expect(matchedPairs(item, swapped)).toEqual(item.items.map((_item, index) => index >= 2));
+    expect(messages.placesRight).toContain("{right}");
+    expect(en.placesRight).toContain("{total}");
+  });
+});
+
+describe("what the feedback says without an answer, by type (#209)", () => {
+  test("a text for each type, in every language", () => {
+    for (const key of Object.values(INCOMPLETE_MESSAGE)) {
+      expect(messages[key]).not.toBe("");
+      expect(en[key]).not.toBe("");
+    }
+  });
+
+  test("an unreadable number gets an example of the kind asked for", () => {
+    expect(messages.unreadableNumber).toContain("{example}");
+    expect(messages.unreadableWholeNumber).toContain("{example}");
+    expect(en.unreadableWholeNumber).toContain("{example}");
+  });
+});
+
+describe("a reason names its option (#209)", () => {
+  test("with a colon, none after the end of a sentence", () => {
+    expect(optionLabel("Hardware")).toBe("Hardware:");
+    expect(optionLabel("Software ist ein Programm.")).toBe("Software ist ein Programm.");
+    expect(optionLabel("Ist das ein Programm?")).toBe("Ist das ein Programm?");
   });
 });
 

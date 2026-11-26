@@ -63,6 +63,7 @@ import {
   questionId,
   rightAnswer,
   wrongAnswer,
+  optionLabel,
   wrongReasons,
   type Answer,
   type Question,
@@ -830,7 +831,10 @@ function reasonFor(question: Question, answer: Answer): string {
   const quiz = questionMessagesIn("de");
   const [first] = wrongReasons(question, answer);
   if (first !== undefined) {
-    return first.option === undefined ? shownText(first.text) : `${shownText(first.option)}: ${shownText(first.text)}`;
+    if (first.option === undefined) return shownText(first.text);
+    // the option with a colon after it, none when it ends a sentence (engine.ts)
+    const colon = optionLabel(first.option).slice(first.option.length);
+    return `${shownText(first.option)}${colon} ${shownText(first.text)}`;
   }
   if (missesRight(question, answer)) return quiz.missingRight;
   // a true/false question is told to read the statement again (engine.ts)

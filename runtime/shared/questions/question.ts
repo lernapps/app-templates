@@ -329,12 +329,13 @@ export function wrongReasons(question: Question, answer: Answer): { option?: str
 }
 
 /**
- * For each pair of a matching question, whether the learner's answer matches it: what a retry may mark without giving
- * the right entry away. None for another question type or an answer of the wrong shape.
+ * For each pair of a matching question, whether the learner's answer matches it, and for each item of an ordering
+ * question, whether it has its place: what a retry may mark without giving the right entry or place away. None for
+ * another question type or an answer of the wrong shape.
  */
 export const matchedPairs = (question: Question, answer: Answer): boolean[] =>
-  question.type === "matching" && isIndexList(answer)
-    ? question.pairs.map((_pair, index) => answer[index] === index)
+  (question.type === "matching" || question.type === "ordering") && isIndexList(answer)
+    ? (question.type === "matching" ? question.pairs : question.items).map((_entry, index) => answer[index] === index)
     : [];
 
 /** Whether a multiple-choice answer chose only right options, but not all of them. */
@@ -344,7 +345,7 @@ export const missesRight = (question: Question, answer: Answer): boolean =>
   answer.every((index) => question.options[index]?.correct === true) &&
   !isCorrect(question, answer);
 
-/** Whether the learner has answered at all: something chosen, typed or placed everywhere. */
+/** Whether the learner has answered at all: something chosen, typed or placed everywhere (an ordering's places once each). */
 export function isComplete(question: Question, answer: Answer | undefined): answer is Answer {
   if (answer === undefined) return false;
   switch (question.type) {
@@ -357,10 +358,29 @@ export function isComplete(question: Question, answer: Answer | undefined): answ
     case "number":
       return typeof answer === "string" && parseNumber(answer, question.unit) !== undefined;
     case "ordering":
+      // every item placed, and no place given twice: two items cannot share a place
+      return isIndexList(answer) && placed(answer) && new Set(answer).size === answer.length;
     case "matching":
-      return isIndexList(answer) && answer.every((value) => Number.isInteger(value) && value >= 0);
+      return isIndexList(answer) && placed(answer);
   }
 }
+
+/** Whether every entry of an ordering or matching answer has its choice. */
+const placed = (answer: readonly number[]) => answer.every((value) => Number.isInteger(value) && value >= 0);
+
+/** Whether an ordering answer gives every item a place, but some place twice. */
+export const placeTwice = (question: Question, answer: Answer | undefined): boolean =>
+  question.type === "ordering" &&
+  answer !== undefined &&
+  isIndexList(answer) &&
+  placed(answer) &&
+  new Set(answer).size < answer.length;
+
+/**
+ * How a reason of the feedback names its option: with a colon after it, none when the option ends a sentence of its
+ * own ("Software ist ein Programm."), which would read ".:".
+ */
+export const optionLabel = (option: string): string => (/[.!?:…]\s*$/.test(option) ? option : `${option}:`);
 
 /** The right answer, as a learner would give it. */
 export function rightAnswer(question: Question): Answer {

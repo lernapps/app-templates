@@ -244,6 +244,29 @@ addresses: qg-understandable, qg-checkable
 :::
 ```
 
+## An Ordering Gives Each Place Once, and Its Wrong Places Are Marked
+
+In the Informatik apps (#209) every item of an ordering could get "Platz 1", and the feedback said only "Leider nicht
+richtig." without naming the wrong one. So an ordering that gives a place twice is not complete: "Prüfen" says "Gib
+jeden Platz nur einmal." and checks nothing, in a quiz too, where it would lock the question. With `retry`, a wrong
+ordering marks the items not in their place and counts the right ones, as a matching does with its pairs since #151;
+the solution stays hidden. The count is no reason: it is not in what onAnswer passes on to "Hilfe". The same round of
+#209 set the feedback's other words right for all ages and both languages: a hint to read again points to the page,
+not to "the text above the exercise", which is often only a heading or another exercise; an unreadable number gets an
+example of the kind of number asked for (a whole one for a whole answer, never the answer itself); a reason names its
+option without a colon when the option ends a sentence. Rejected: marking the right place of an item, which would give
+the solution away; letting the controls forbid a place given twice, which would hide why.
+
+```arc42
+:::decision
+id: dec-ordering-places
+title: An ordering gives each place once, and a retry marks its items in a wrong place
+status: accepted
+date: 2026-11-26
+addresses: qg-understandable, qg-checkable
+:::
+```
+
 ## The Learner Switches an Assistant On Once
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:

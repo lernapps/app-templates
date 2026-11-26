@@ -2,7 +2,7 @@
 // has rendered it (render.ts); startQuestion makes it live. A complete answer gets its feedback, right or wrong, with
 // the most specific reason of a wrong answer; then the solution shows: the background of every option with the right
 // ones and the learner's choice marked, the explanation and further reading. A question can also be tried again
-// (retry), as an exercise is; a wrong matching then marks its wrong pairs and says how many are right, without the
+// (retry), as an exercise is; a wrong matching or ordering then marks its wrong pairs or places and says how many are right, without the
 // right entries. The question's own texts are in the page's language (the option `lang`, German by
 // default). The browser imports only this module of the questions (@lernapps/app-templates/questions/engine), which
 // has no build-time code: its types and the id of a question. Used on the element that renderQuestion rendered:
@@ -18,6 +18,8 @@ import {
   isCorrect,
   matchedPairs,
   missesRight,
+  optionLabel,
+  placeTwice,
   shuffled,
   wrongReasons,
   type Answer,
@@ -73,7 +75,8 @@ export interface StartQuestionOptions {
   /**
    * Called on each complete answer, right or wrong; once in a quiz round, where the answer locks the question. `said`
    * is what the feedback says about a wrong answer, word for word as the question's texts have it (its formulas as
-   * written): the reasons, each with its option, without the verdict and the offer to try again; "" for a right one.
+   * written): the reasons, each with its option, without the verdict, the count of right pairs or places and the offer
+   * to try again; "" for a right one.
    */
   onAnswer?: (answer: Answer, right: boolean, said: string) => void;
   /** Called once, when the solution shows. */
@@ -127,14 +130,16 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
   }
   // what the feedback says about the answer, for onAnswer
   let said: string[] = [];
-  const line = (text: string, option?: string) => {
-    said.push(option === undefined ? text : `${option}: ${text}`);
+  // `told`: whether it is a reason, which onAnswer passes on; a count of right pairs or places is none
+  const line = (text: string, option?: string, told = true) => {
+    if (told) said.push(option === undefined ? text : `${optionLabel(option)} ${text}`);
     const why = doc.createElement("p");
-    why.className = "question-diagnosis";
+    why.className = told ? "question-diagnosis" : "question-count";
     if (option !== undefined) {
       const name = doc.createElement("strong");
-      if (options.format) name.innerHTML = `${options.format(option)}:`;
-      else name.textContent = `${option}:`;
+      const colon = optionLabel(option).slice(option.length);
+      if (options.format) name.innerHTML = `${options.format(option)}${colon}`;
+      else name.textContent = optionLabel(option);
       why.append(name, " ");
     }
     if (options.format) why.insertAdjacentHTML("beforeend", options.format(text));
@@ -144,22 +149,31 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
   let answered = false;
   let last: Answer | undefined;
 
-  /** Marks the pairs of a matching answer that are wrong and says how many are right; unmarks a pair on a change. */
+  // the choice of each entry: a pair's right entry, an item's place
+  const key = question.type === "ordering" ? "item" : "left";
+  /**
+   * Marks the pairs of a matching answer, or the items of an ordering, that are wrong and says how many are right;
+   * unmarks one on a change.
+   */
   const markPairs = (answer: Answer) => {
     const matched = matchedPairs(question, answer);
     if (matched.length === 0) return;
-    for (const select of form.querySelectorAll<HTMLSelectElement>("select[data-left]")) {
-      const wrong = matched[Number(select.dataset["left"])] === false;
+    for (const select of form.querySelectorAll<HTMLSelectElement>(`select[data-${key}]`)) {
+      const wrong = matched[Number(select.dataset[key])] === false;
       select.closest("li")?.classList.toggle("question-pair-wrong", wrong);
       if (wrong) select.setAttribute("aria-invalid", "true");
       else select.removeAttribute("aria-invalid");
     }
     const right = matched.filter(Boolean).length;
-    line(t("pairsRight", { right, total: matched.length }));
+    line(
+      t(question.type === "ordering" ? "placesRight" : "pairsRight", { right, total: matched.length }),
+      undefined,
+      false,
+    );
   };
   form.addEventListener("change", (event) => {
     const select = event.target;
-    if (!(select instanceof HTMLSelectElement) || select.dataset["left"] === undefined) return;
+    if (!(select instanceof HTMLSelectElement) || select.dataset[key] === undefined) return;
     select.closest("li")?.classList.remove("question-pair-wrong");
     select.removeAttribute("aria-invalid");
   });
@@ -206,11 +220,17 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     if (answered) return;
     const answer = readAnswer(question, form);
     if (!isComplete(question, answer)) {
-      // what is missing, in the words of the question's type; a number field also says when what it has is no
-      // number ("1/6", "115 Grad")
+      // what is missing, in the words of the question's type; an ordering also says when it gives a place twice, a
+      // number field when what it has is no number ("1/6", "115 Grad"), with an example of the kind of number asked
+      // for that is not the answer
       const given = readAnswer(question, form);
       const typed = question.type === "number" && typeof given === "string" ? given.trim() : "";
-      feedback.textContent = t(typed === "" ? INCOMPLETE_MESSAGE[question.type] : "unreadableNumber");
+      if (question.type === "number" && typed !== "") {
+        const whole = Number.isInteger(question.answer);
+        const value = whole ? (question.answer === 12 ? 7 : 12) : question.answer === 2.5 ? 1.5 : 2.5;
+        const example = (options.lang ?? "de") === "de" ? String(value).replace(".", ",") : String(value);
+        feedback.textContent = t(whole ? "unreadableWholeNumber" : "unreadableNumber", { example });
+      } else feedback.textContent = t(placeTwice(question, given) ? "placeTwice" : INCOMPLETE_MESSAGE[question.type]);
       feedback.className = "question-feedback";
       return;
     }
@@ -233,8 +253,8 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
       if (options.retry === true && reasons.length === 0 && !missing) {
         line(t(question.type === "true-false" ? "lookAgainStatement" : "lookAgain"));
       }
-      // a matching question that may be tried again: how many pairs are right, and the wrong ones marked; the solution
-      // stays hidden, so the right entries are not given away
+      // a matching or ordering question that may be tried again: how many pairs or places are right, and the wrong ones
+      // marked; the solution stays hidden, so the right entries are not given away
       if (options.retry === true) markPairs(answer);
     }
     // further reading shows at once after a wrong answer too, not only under "Lösung"

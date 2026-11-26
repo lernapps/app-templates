@@ -240,11 +240,13 @@
   outline-offset: 2px;
 }
 
-.question-diagnosis {
+.question-diagnosis,
+.question-count {
   margin: 0.25rem 0 0;
 }
 
-/* A pair that a matching answer got wrong, while it may be tried again (engine.ts): marked by colour and a sign, and
+/* A pair that a matching answer got wrong, or an item an ordering put in the wrong place, while it may be tried again
+   (engine.ts): marked by colour and a sign, and
    for a screen reader by aria-invalid. */
 .question-pairs li.question-pair-wrong select {
   border: 2px solid var(--page-wrong);
