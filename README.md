@@ -42,11 +42,9 @@ feature: assistants read it before they choose an archetype.
   `answer` is an exercise, and only the input of its task: it emits the learner's answer each time it changes
   (`undefined` while there is none) and draws no "Prüfen" of its own; the explainer renders its island in a form with
   "Prüfen" under it (Enter in a field checks too), calls `check`, `reason` and `show` of its logic module and gives the
-  feedback, and sets the prop `checked: boolean`, when the component declares it, until the answer changes. "Richtig!"
-  goes when the answer changes; a wrong answer's feedback stays as the hint to correct it, as in the questions. A
-  component whose empty state is no answer (an empty list, say) emits `undefined` for it: "Prüfen" then asks for an
-  answer, in the words of the optional export `unanswered(props, lang)` of its logic module, else "Bearbeite zuerst die
-  Aufgabe."; an emitted empty list is an answer that `check` judges. It
+  feedback, and sets the prop `checked: boolean`, when the component declares it, until the answer changes, when
+  "Richtig!" goes too. Without an answer (`undefined`) "Prüfen" asks for one, in the component's own words when its
+  logic module exports `unanswered`. It
   declares the prop `seed: number`, the seed of its task number, which the explainer gives it with "Aufgabe Nr."
   and "Neue Aufgabe" and keeps in the address (`?<id>=<n>`, the id of its block or its name in kebab case), and
   its logic module `<Name>.ts` exports `generate(seed, props)`, `check(task, answer)`, `solution(task)` and
