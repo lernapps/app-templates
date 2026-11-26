@@ -3,7 +3,7 @@
 // from the top, the index of the label chosen for it (-1 for none); the right answer gives each part its own label.
 // describe states a task and its solution as a learner reads them, about what the exercise is: both for readers
 // without JavaScript and for a tutor; template, params, mistakes and show give a tutor the task once and a table of
-// each number's inputs and outputs.
+// each number's inputs and outputs; unanswered what "Prüfen" says before an answer.
 
 /**
  * The props the logic needs: the labels of the parts, from the top, the right answer; the question and a level's name;
@@ -117,6 +117,11 @@ export function mistakes(task: Task): (Answer | undefined)[] {
 export function reason(task: Task, answer: Answer, props: Props, _lang: string): string | undefined {
   const index = mistakes(task).findIndex((mistaken) => JSON.stringify(mistaken) === JSON.stringify(answer));
   return index < 0 ? undefined : props.reasons?.[index];
+}
+
+/** What "Prüfen" says before a level has a label (the component then emits no answer), in the app's words. */
+export function unanswered(_props: Props, lang: string): string {
+  return lang === "de" ? "Wähle zuerst für eine Stufe eine Beschriftung." : "First choose a label for a level.";
 }
 
 /** An answer as text: each level with the label chosen for it. */

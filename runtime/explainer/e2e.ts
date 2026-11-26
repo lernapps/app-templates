@@ -25,7 +25,8 @@
 // "Neue Aufgabe" changes the task, and the new task accepts its right answer. Each component hydrates without a
 // console error, folds a nojs text it keeps, and an exercise component has the explainer's "Prüfen" under it, styled as
 // the questions' (it asks for an answer first when there is none), which checks the first accepted and the first rejected example
-// of its block, as the component emits them, and gives the feedback, in view with the focus; at its address ?<id>=<n> it shows "Aufgabe
+// of its block, as the component emits them, and gives the feedback, in view with the focus ("Richtig!" goes when the
+// answer changes; a wrong answer's feedback stays); at its address ?<id>=<n> it shows "Aufgabe
 // Nr. n" and gets the seed of task number n from its table, and "Neue Aufgabe", the arrow beside the number, moves to
 // the next number in the address and on the page.
 // Without JavaScript, each component's nojs text is visible and not empty, an exercise component's with its task of
@@ -699,13 +700,14 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
     });
     expect(look.height, `${component.name}: "Prüfen" is at least 44 px high`).toBeGreaterThanOrEqual(44);
     expect(look.background, `${component.name}: "Prüfen" is filled with the accent`).toBe(look.filled);
-    // as in the questions, "Prüfen" is there without an answer and then says to answer first
+    // as in the questions, "Prüfen" is there without an answer and then says to answer first: in the words of the
+    // logic's unanswered, else the explainer's, as the build wrote them
     await expect(check, `${component.name}: "Prüfen" shows before an answer`).toBeEnabled();
     await check.click();
-    await expect(
-      element.locator(":scope > .question-feedback"),
-      `${component.name}: "Prüfen" without an answer asks for one`,
-    ).toHaveText(questionMessagesIn("de").incomplete);
+    const unanswered = element.locator(":scope > .question-feedback");
+    const asked = (await unanswered.getAttribute("data-incomplete")) ?? "";
+    expect(asked.trim(), `${component.name}: a text for "Prüfen" without an answer`).not.toBe("");
+    await expect(unanswered, `${component.name}: "Prüfen" without an answer asks for one`).toHaveText(asked);
     // the block's examples, as the component emits them: "Prüfen" checks each with the logic module, one feedback, in
     // view with the focus, and waits for the next answer
     const feedback = element.locator(":scope > .question-feedback");
@@ -725,6 +727,15 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       await expect(feedback).toBeInViewport();
       await expect(check, `${component.name}: "Prüfen" waits for another answer`).toBeDisabled();
       await expect(element.locator(".question-feedback"), "one feedback").toHaveCount(1);
+      // the answer changes: "Prüfen" is ready again; "Richtig!" goes, as it held only for the answer checked, and a
+      // wrong answer's feedback stays, as the hint to correct it
+      const said = await feedback.textContent();
+      await element.evaluate(emitAnswer, example.answer);
+      await expect(check, `${component.name}: "Prüfen" is ready for the changed answer`).toBeEnabled();
+      if (kind === "accepted") {
+        await expect(feedback, `${component.name}: "Richtig!" goes once the answer changes`).toHaveText("");
+      } else
+        await expect(feedback, `${component.name}: the reason stays while the answer changes`).toHaveText(said ?? "");
     }
     await checkTaskNumber(page, item, component);
   }

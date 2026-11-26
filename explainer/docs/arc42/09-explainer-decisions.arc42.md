@@ -219,6 +219,31 @@ addresses: qg-checkable, qg-accessibility
 :::
 ```
 
+## Feedback Holds for the Answer It Judged
+
+In the Informatik apps for grades 5-6 (#209) a child changed the answer of an exercise component after "Richtig!" and
+still saw "Richtig!" beside a wrong answer: a component does not lock after the right answer, as a question does. And
+"Prüfen" without an answer said "Antworte zuerst: Wähle, tippe oder ordne alles zu." for every question type and every
+component, where often there is nothing to type or to match. So "Richtig!" goes as soon as the component emits another
+answer. A wrong answer's feedback stays until the next "Prüfen", for components as for questions with `retry`: it names
+the reason, which the learner needs while correcting the answer, over several clicks for several options. Without an
+answer, a question says what is missing in the words of its type, a component "Bearbeite zuerst die Aufgabe.", or its
+own words when its logic module exports `unanswered(props, lang)`; the build calls it in every language and writes the
+text into the page. A component whose empty state is no answer emits `undefined`. Rejected: treating an emitted empty
+list as no answer, as one component asked for, since for another an empty list is a right answer ("none of these
+files belongs in the folder"); clearing a wrong answer's feedback on every change, which would take its reason away
+after the first click; a text for no answer in `about`, which a tutor reads and which cannot depend on the props.
+
+```arc42
+:::decision
+id: dec-feedback-for-checked-answer
+title: Feedback holds for the answer it judged, and "Prüfen" without an answer says what is missing
+status: accepted
+date: 2026-11-26
+addresses: qg-understandable, qg-checkable
+:::
+```
+
 ## The Learner Switches an Assistant On Once
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:

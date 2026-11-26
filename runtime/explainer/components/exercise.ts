@@ -31,6 +31,8 @@ export interface ExerciseLogic {
   /** The app's message for a wrong answer, in `lang`; undefined (or "") for none. */
   reason?(task: unknown, answer: unknown, props: unknown, lang: string): unknown;
   describe?(task: unknown, props: unknown, lang: string): unknown;
+  /** The app's message when "Prüfen" is pressed before the component emitted an answer, in `lang`; optional. */
+  unanswered?(props: unknown, lang: string): unknown;
   about?: unknown;
   // for a tutor: the exercise with its inputs and outputs, all four or none (exerciseProblems)
   template?(props: unknown, lang: string): unknown;
@@ -152,6 +154,8 @@ export function describedProblems(
     tasks[lang] = list;
   }
   if (problems.length > 0) return { problems };
+  const unanswered = unansweredProblems(logic, propsIn, languages);
+  if (unanswered.problems.length > 0) return { problems: unanswered.problems };
   const declared = exerciseProblems(logic, propsIn, languages, seeds, (about as ComponentAbout).mistakes.length);
   if (declared.problems.length > 0) return { problems: declared.problems };
   return {
@@ -160,9 +164,45 @@ export function describedProblems(
       seeds,
       tasks,
       ...(declared.exercise ? { exercise: declared.exercise } : {}),
+      ...(unanswered.texts ? { unanswered: unanswered.texts } : {}),
     },
     problems,
   };
+}
+
+/**
+ * What "Prüfen" says before an exercise component emitted an answer, in each of `languages`, when its logic exports
+ * unanswered(props, lang) (without it: none, and no problem): a text that is not empty, with the block's props in that
+ * language. The texts, or the problems (the first).
+ */
+export function unansweredProblems(
+  logic: ExerciseLogic,
+  propsIn: (lang: string) => unknown,
+  languages: readonly string[],
+): { texts?: Record<string, string>; problems: string[] } {
+  if (logic.unanswered === undefined) return { problems: [] };
+  if (typeof logic.unanswered !== "function") {
+    return { problems: ["unanswered is no function; export function unanswered(props, lang) giving a text"] };
+  }
+  const texts: Record<string, string> = {};
+  for (const lang of languages) {
+    const call = `unanswered(props, "${lang}")`;
+    let text: unknown;
+    try {
+      text = logic.unanswered(propsIn(lang), lang);
+    } catch (error) {
+      return { problems: [`${call} throws: ${error instanceof Error ? error.message : String(error)}`] };
+    }
+    if (typeof text !== "string" || text.trim() === "") {
+      return {
+        problems: [
+          `${call} is ${JSON.stringify(text) ?? "undefined"}; unanswered gives what "Prüfen" says before the learner answered, a text in the page's language`,
+        ],
+      };
+    }
+    texts[lang] = text.trim();
+  }
+  return { texts, problems: [] };
 }
 
 /** A list of names, for a message: "a", "a and b", "a, b and c". */

@@ -64,6 +64,8 @@ interface ComponentPages {
   /** Without JavaScript: a part of the task of number 1, and its solution folded, by language. */
   task: Record<string, string>;
   solution: RegExp;
+  /** What "Prüfen" says before an answer, by language: the logic's unanswered, else the explainer's. */
+  unanswered: Record<string, string>;
 }
 
 // the content, the number of its pages in German, and its exercise component
@@ -80,6 +82,7 @@ const contents: [string, string, number, ComponentPages | undefined][] = [
         '<div class="explainer-component" id="prozentfeld" data-component="ProzentFeld" data-exercise data-seeds="[1,2,4,',
       task: { de: "Färbe 5 % davon." },
       solution: /<details class="explainer-solution"><summary>[^<]+<\/summary><p>2 Kästchen: /,
+      unanswered: { de: "Bearbeite zuerst die Aufgabe." },
     },
   ],
   ["the all-blocks fixture", join(import.meta.dirname, "fixtures/explainer-all-blocks"), 4, undefined],
@@ -95,6 +98,7 @@ const contents: [string, string, number, ComponentPages | undefined][] = [
         '<div class="explainer-component" id="assign-labels" data-component="AssignLabels" data-exercise data-seeds="[1,2,5,7,10]" data-checked>',
       task: { de: "Zur Wahl stehen, in dieser Reihenfolge:", en: "The choices, in this order:" },
       solution: /<details class="explainer-solution"><summary>[^<]+<\/summary><p>(Stufe|Level) 1: /,
+      unanswered: { de: "Wähle zuerst für eine Stufe eine Beschriftung.", en: "First choose a label for a level." },
     },
   ],
 ];
@@ -154,6 +158,7 @@ describe("one build writes every page", () => {
           expect(nojs).toContain(route.lang === "de" ? "Aufgabe Nr. 1" : "Task no. 1");
           expect(nojs).toContain(component.task[route.lang]);
           expect(nojs).toMatch(component.solution);
+          expect(html).toContain(`data-incomplete="${component.unanswered[route.lang] ?? ""}"></p>`);
         }
         // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
         if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
