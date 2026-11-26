@@ -4,8 +4,8 @@ The interactive archetype's terms, besides the generic ones.
 
 ## Core
 
-The app's logic in `src/core/index.ts`. Called "core" rather than "engine" or "model" because it holds no state of its
-own: the shell keeps it.
+The app's logic in `src/core/`. It is called "core", not "engine" or "model", because it holds no state of its own.
+The shell keeps the state.
 
 ```arc42
 :::glossary-term
@@ -41,8 +41,7 @@ definition: A mode or level of the app with its own address on the app page (app
 
 ## Tick
 
-The runtime's constant `TICK` is 20. A learner's browser ticks in real time; the build and the end-to-end tests tick
-only as a playthrough step's `ticks` say.
+A learner's browser ticks in real time. The build and the end-to-end tests tick only as a playthrough step says.
 
 ```arc42
 :::glossary-term
@@ -54,7 +53,7 @@ definition: A call of tick(state, 20) that the shell makes every 20 ms when the 
 
 ## Playthrough
 
-A YAML file in `src/playthroughs/`. Not a free-form test: it holds only data the runtime plays.
+A YAML file in `src/playthroughs/`. It is not a free-form test: it holds only data the runtime plays.
 
 ```arc42
 :::glossary-term

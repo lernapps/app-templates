@@ -1,17 +1,19 @@
 # Building Blocks
 
 The interactive archetype's extension of the generic architecture (`docs/arc42/` at the root of
-`lernapps/app-templates`): an app whose doing is the content, with a static start page, one app page on which the
-shell runs the app's deterministic core and shows its state with the app's Vue components, and hash routes for modes
-and levels. The runtime `runtime/interactive/` ships the build step, the pages, the shell and the end-to-end tests; the
-creator writes the description, the core, the UI, the data, the messages and the playthroughs, and `src/main.ts`, which
-calls `startInteractive`. It reuses the explainer's component rules; the tutor handoff, task numbers, exercise contract
-and the examples check are not built for it (its playthroughs take the examples' role). Only the start page reads
-without JavaScript. An interactive app adds its own blocks below `bb-interactive-core`, `bb-interactive-ui` and
-`bb-interactive-data`: an app gets this architecture as a copy, and writes its own part between the markers
-`<!-- app: begin … -->` and `<!-- app: end … -->` in it (here inside the sections of the core, the UI and the data and
-at the end of each chapter), which the tooling keeps when it replaces the rest. The creator's assistant follows the
-skill `lernapps-interactive` (`if-skills`).
+`lernapps/app-templates`). In an interactive app, doing is the content.
+It has a static start page and one app page. On the app page the shell runs the app's deterministic core and shows its
+state with the app's Vue components. Hash routes select modes and levels.
+
+The runtime ships the build step, the pages, the shell and the end-to-end tests.
+The creator writes the description, the core, the UI, the data, the messages and the playthroughs, and `src/main.ts`.
+The archetype reuses the explainer's component rules. It has no tutor handoff, task numbers, exercise contract or
+examples check; its playthroughs take the examples' role. Only the start page reads without JavaScript.
+
+An app gets this architecture as a copy and adds its own blocks below the core, the UI and the data.
+It writes its part between the markers `<!-- app: begin … -->` and `<!-- app: end … -->`.
+The tooling keeps that part when it replaces the rest.
+The creator's assistant follows the skill `lernapps-interactive` (`if-skills`).
 
 ## Level 1 (interactive app)
 
@@ -90,8 +92,8 @@ flowchart TB
 
 ## Interactive runtime
 
-Built. The runtime of every interactive app, which the app does not change: it builds the pages, runs the build
-checks, starts the app's core and UI in the browser and brings the end-to-end tests.
+Built. The runtime of every interactive app; the app does not change it.
+It builds and checks the app, starts its core and UI in the browser and brings the end-to-end tests.
 
 ```arc42
 :::building-block
@@ -106,11 +108,11 @@ implements: concept-archetype-extension
 
 ### Build step
 
-Built. The plugin `interactive()` reads `src/app.yaml` and the playthroughs, runs the component rules on the UI, loads
-the core in a Vite server of its own and checks its exports and that every route starts, plays every playthrough
-against the core twice, each step's inputs through `step` and then its ticks through `tick(state, 20)`, and fails when
-the two plays differ or a state differs from the expected one, and only then writes the start page, the app page and
-the 404 page. No time passes but the ticks a step names. An app's code has no size limit (`dec-no-size-limit`).
+Built. Reads the description and the playthroughs and runs the component rules on the UI.
+It checks that the core has the contract's exports and that every route starts.
+It plays every playthrough against the core twice. The build fails when the two plays differ or a state differs from
+the expected one. Only then does it write the start page, the app page and the 404 page.
+No time passes in a play except the ticks a step names. An app's code has no size limit (`dec-no-size-limit`).
 
 ```arc42
 :::building-block
@@ -126,7 +128,7 @@ implements: concept-playthroughs, concept-determinism
 
 #### Build plugin interface
 
-The app's vite.config.ts adds `interactive()` to the tooling preset; that is the only way the app enters the build.
+The app's Vite configuration adds the plugin to the tooling preset. That is the only way the app enters the build.
 
 ```arc42
 :::interface
@@ -140,9 +142,8 @@ path: runtime/interactive/plugin.ts
 
 ### Description validation
 
-Built. Validates `src/app.yaml` and every playthrough against their JSON schemas, then German first, complete
-languages, unique ids, at least one playthrough, each step expecting something, and known routes; one line per
-problem with file and line.
+Built. Checks the description and every playthrough against their schemas and what a schema cannot say, such as
+complete languages, unique ids and known routes. It reports one line per problem with file and line.
 
 ```arc42
 :::building-block
@@ -157,9 +158,10 @@ requires: if-archetype-content, if-playthrough-format, if-runtime-texts
 
 ### Page rendering
 
-Built. Renders, in each language, the start page (what the app does, the link into the app, the routes, how to play,
-competencies, background sections, a `<noscript>` note and no script) and the app page (title, `<noscript>` note with
-a link back, the routes as anchor links, and the element the shell mounts into, carrying the route ids).
+Built. Renders two pages in each language.
+The start page says what the app does, how to play and what it trains, and links into the app and its routes.
+It needs no script. The app page holds the title, the route links and the place where the app runs.
+Without JavaScript it shows a note and a link back.
 
 ```arc42
 :::building-block
@@ -175,9 +177,9 @@ implements: concept-readable-without-js, concept-hash-routes, concept-accessibil
 
 #### Pages interface
 
-Learners, teachers and parents read the start page at `lernapps.net/<repo>/` and play at
-`app/?seed=<n>#<route>`; the catalog entry's topics link to the routes. Another app can link with more parameters of
-the address, `app/?c=…#<route>`, which the shell hands to the core as data (`dec-address-params`).
+Learners, teachers and parents read the start page at `lernapps.net/<repo>/` and play at `app/?seed=<n>#<route>`.
+The catalog entry's topics link to the routes. Another app can link with more parameters in the address.
+The core gets them as data (`dec-address-params`).
 
 ```arc42
 :::interface
@@ -191,22 +193,15 @@ path: runtime/interactive/render.ts
 
 ### Shell
 
-Built. `startInteractive(core, root)` mounts the root component on the app page and holds the core's state; it takes
-the seed from `?seed=<n>` (else a random one), the route from the hash (else the first route) and the other
-parameters of the address once (`dec-address-params`), starts the core again on a new route with the same seed and
-parameters, gives the links of the language switch the search and the hash of the address (so that the other
-language opens the same round, `dec-address-params`), calls `tick(state, 20)` every 20 ms when the core has `tick`, and routes typed inputs to `step`
-(`dec-typed-input`): every key typed on the page as a key input, except on links, buttons and form fields or with
-Ctrl, Alt or Meta, and every input the root component emits as `input` (an action, or a key it stands for). When the
-end-to-end tests' clock is on the page (`if-test-clock`), it starts no interval and steps the ticks the tests ask for.
+Built. Mounts the app's root component on the app page and holds the core's state.
+It starts the core with the seed, the route and the other parameters of the address; without a seed it draws one.
+A new route starts the core again with the same seed and parameters.
+It passes the learner's inputs to the core (`dec-typed-input`) and lets time pass when the core moves on its own.
+The language switch opens the same round in the other language (`dec-address-params`).
 
-The app page has a heading line: the h1, the app's title, and a slot beside it, hidden and empty. An app that wants a
-small control there (help, sound off) passes a component as `startInteractive(core, App, { title })`; the shell
-mounts it into the slot with the props `state` and `lang` and the same `input` event as the root component, and shows
-the slot. The header of both pages holds the language switch and nothing else, and an app with one language has none:
-the title is the h1, and the way back to the catalog is the platform's. The frame of the header, the page and the
-footer is as wide as the custom property `--page-max-width` (default `44rem`), which an app sets in its own
-`:root` rule.
+The page header holds only the language switch; an app with one language has none.
+Beside the title an app may show one small control of its own, such as help or sound off.
+An app can set the width of the page.
 
 ```arc42
 :::building-block
@@ -222,7 +217,7 @@ implements: concept-core-and-shell, concept-hash-routes, concept-determinism
 
 #### Start interface
 
-The app's `src/main.ts` imports the runtime's style, the core and the root component and calls `startInteractive`.
+The app's `src/main.ts` imports the runtime's style, the core and the root component and starts the app with them.
 
 ```arc42
 :::interface
@@ -236,9 +231,8 @@ path: runtime/interactive/interactive.ts
 
 #### Test clock
 
-Before the client module runs, the end-to-end tests put an object on the page as the global `lernappsClock`; the
-shell then starts no interval and gives that object `tick(count)`, which calls the shell's own tick `count` times. No
-time passes in the browser but the ticks a playthrough step names, as in the build. Only the tests set it.
+The end-to-end tests control time in the browser through this clock. Then no time passes except the ticks a
+playthrough step names, as in the build. Only the tests use it.
 
 ```arc42
 :::interface
@@ -252,7 +246,7 @@ path: runtime/interactive/contract.ts
 
 #### State property
 
-The shell mirrors the state on the app's element as `lernappsState`, which the end-to-end tests read.
+The shell shows the core's state on the app's element, so that the end-to-end tests can read it.
 
 ```arc42
 :::ignore H020 the state property, the test clock and the core contract are all defined in contract.ts, the runtime's one contract module
@@ -268,10 +262,9 @@ path: runtime/interactive/contract.ts
 
 ### End-to-end tests
 
-Built. `interactiveTests()` checks the start page and the app page without JavaScript in every language and plays
-every playthrough's steps in the browser on the test clock (`if-test-clock`): a key input pressed on the keyboard, an
-action emitted as `input` by the root component, as the component itself does, then the step's ticks; after each step
-it compares the state and the polite announcement, at desktop width and 360 px.
+Built. Checks both pages without JavaScript in every language.
+It plays every playthrough in the browser on the test clock, as a learner's inputs would.
+After each step it compares the state and the announcement, on a desktop and on a phone width.
 
 ```arc42
 :::building-block
@@ -287,7 +280,7 @@ implements: concept-playthroughs
 
 #### Tests interface
 
-The app's `e2e/interactive.e2e.ts` only calls `interactiveTests()`.
+The app's end-to-end test file, part of the scaffold, only calls these tests.
 
 ```arc42
 :::interface
@@ -316,7 +309,7 @@ implements: concept-languages
 
 #### Runtime texts interface
 
-The pages, the validation and the tests take the runtime's texts by key and language.
+The pages, the validation and the tests read the runtime's texts by language.
 
 ```arc42
 :::interface
@@ -358,8 +351,8 @@ path: runtime/interactive/interactive.v1.schema.json
 
 ## Core
 
-Built in the template. The app's logic, pure TypeScript without DOM, deterministic by its seed, its state plain JSON,
-so that it can be played and tested in Node and in the browser alike; it reads the app's data.
+Built in the template. The app's logic in pure TypeScript without DOM. It is deterministic by its seed, and its state
+is plain JSON. So it plays the same in Node and in the browser. It reads the app's data.
 
 ```arc42
 :::building-block
@@ -374,12 +367,17 @@ path: interactive/src/core
 
 ### Core contract
 
-The core exports `start(seed, route, params)`, `step(state, input)` and, when the app moves on its own,
-`tick(state, dt)`. `params` are the search parameters of the address but `seed`, as text, passed through unchanged;
-the core checks them itself, and a core that needs none keeps `start(seed, route)` (`dec-address-params`).
-The input is typed and extensible (`dec-typed-input`): `{ kind: "key", key }` with the key as `KeyboardEvent.key`, or
-`{ kind: "action", name, value? }` for what the learner does with the pointer or by touch; a core handles the kinds it
-knows and returns the state unchanged for any other, so new kinds can come.
+The core exports three functions:
+
+- `start(seed, route, params)` returns the first state for a seed and a route.
+  `params` are the other parameters of the address as text; the core checks them itself.
+  A core that needs none keeps `start(seed, route)` (`dec-address-params`).
+- `step(state, input)` returns the state after one input of the learner.
+- `tick(state, dt)`, only when the app moves on its own, returns the state after some time.
+
+An input is typed and extensible (`dec-typed-input`). A key input names the key as the browser does.
+An action input names what the learner does with the pointer or by touch, with an optional value.
+A core returns the state unchanged for a kind of input it does not know, so new kinds can come.
 
 ```arc42
 :::ignore H020 the core contract, the state property and the test clock are all defined in contract.ts, the runtime's one contract module
@@ -398,9 +396,9 @@ path: runtime/interactive/contract.ts
 
 ## UI
 
-Built in the template. Vue components that show the state and translate the device's input (keys, pointer, touch, …)
-into inputs; free in how they render (DOM, SVG, canvas). They may remember something through the small storage; the
-template does not.
+Built in the template. Vue components show the state and turn the device's input into inputs for the core.
+They are free in how they render, for example DOM, SVG or canvas.
+They may remember something in the small storage; the template does not.
 
 ```arc42
 :::building-block
@@ -415,7 +413,7 @@ path: interactive/src/ui
 
 ### Root component
 
-The root component takes the props `state` and `lang` and emits `input` with an input (an action, or a key).
+The root component gets the state and the language and emits the learner's inputs (an action or a key).
 
 ```arc42
 :::ignore H014 the contract has no file of its own: its props are set in runtime/interactive/interactive.ts (if-start's file), the component is the app's
@@ -491,9 +489,8 @@ path: interactive/src/messages
 
 ## Playthroughs
 
-Built in the template. Playthroughs as data: a seed, a route, the parameters of the address if any, and steps of inputs (`keys` as the short form of key
-inputs, or `inputs`) and ticks that pass after them, with the state or announcement expected after each step. The
-template's playthrough lets a letter go late and starts a round with the action `again`.
+Built in the template. A playthrough is data: a seed, a route, the parameters of the address if any, and steps.
+Each step gives inputs and lets ticks pass, then names the state or announcement it expects.
 
 ```arc42
 :::building-block

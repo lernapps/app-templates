@@ -4,9 +4,9 @@ The quiz's goal and scenarios, besides the generic ones.
 
 ## Readable without JavaScript (quiz)
 
-A quiz is text-heavy, so its questions, solutions, background and links read without JavaScript, as far as a quiz
-can: as a worksheet with its answer key, not as a quiz answered one question at a time. Realised by the quiz
-rendering and checked by the quiz's end-to-end tests (`dec-quiz-worksheet`).
+A quiz is text-heavy. So its questions, solutions, background and links read without JavaScript.
+They read as a worksheet with its answer key, not as a quiz with one question at a time.
+The quiz rendering realises this, and the quiz's end-to-end tests check it (`dec-quiz-worksheet`).
 
 High priority, because the archetype is text-heavy (owner, 2026-10-16).
 
@@ -24,7 +24,7 @@ priority: high
 
 ## Every question readable without JavaScript
 
-`quizTests()` opens the page with JavaScript off, in every language of the bank.
+The quiz's end-to-end tests open the page with JavaScript off, in every language of the bank.
 
 ```arc42
 :::quality-scenario
