@@ -8,7 +8,7 @@ import schema from "./explainer.v1.schema.json" with { type: "json" };
 import schemaV2 from "./explainer.v2.schema.json" with { type: "json" };
 import questionSchema from "../shared/questions/question.v1.schema.json" with { type: "json" };
 import { knownProperties, schemasById } from "../shared/schema.ts";
-import { addressProblem, QUESTION_BRANCH, questionSchemas } from "../shared/questions/validate.ts";
+import { addressProblem, imageProblem, QUESTION_BRANCH, questionSchemas } from "../shared/questions/validate.ts";
 import { isObject, schemaProblems, type DescribeError, type Problems, type YamlFile } from "../shared/content.ts";
 
 export const SCHEMA_ID = schema.$id;
@@ -146,9 +146,10 @@ const describe: DescribeError = (error, path, value) => {
   }
   switch (error.keyword) {
     case "anyOf": {
-      // the address of a link of an exercise of the question types: an https address, or a map of them by language
-      if (path.at(-1) !== "url") return undefined;
-      const { lang, message } = addressProblem(value);
+      // the address of a link of an exercise of the question types: an https address, or a map of them by language;
+      // the image of a figure: a bundled image's path, or a map of them by language
+      if (path.at(-1) !== "url" && path.at(-1) !== "image") return undefined;
+      const { lang, message } = path.at(-1) === "image" ? imageProblem(value) : addressProblem(value);
       return { message, ...(lang === undefined ? {} : { lang }) };
     }
     case "oneOf": {

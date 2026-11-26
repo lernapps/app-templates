@@ -89,16 +89,17 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
       return `<div class="block-formula">${renderFormula(inLanguage(block.formula, lang), true)}</div>`;
     case "figure": {
       const alt = inLanguage(block.alt, lang);
+      const image = block.image === undefined ? undefined : inLanguage(block.image, lang);
       let picture = "";
       if (block.draw?.kind === "hundred-grid") picture = hundredGrid(block.draw.filled, alt);
       else if (block.draw?.kind === "bar") picture = bar(block.draw.part, block.draw.whole, alt, localeOf(lang));
-      else if (block.image !== undefined)
-        picture = `<img src="${escape(context.href(block.image))}" alt="${escape(alt)}" loading="lazy" decoding="async">`;
-      const fill =
-        block.draw?.kind === "bar" || (block.image !== undefined && context.sizeless?.(block.image) === true);
+      else if (image !== undefined)
+        picture = `<img src="${escape(context.href(image))}" alt="${escape(alt)}" loading="lazy" decoding="async">`;
+      const fill = block.draw?.kind === "bar" || (image !== undefined && context.sizeless?.(image) === true);
       return `<figure class="block-figure">${withCredit(picture, renderCredit(block, lang), fill)}<figcaption>${markdown(block.caption)}</figcaption></figure>`;
     }
     case "labelled-figure": {
+      const image = inLanguage(block.image, lang);
       const markers = block.labels
         .map(
           (label, index) =>
@@ -116,11 +117,11 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
           ? ""
           : `<ol class="block-legend${named ? " block-legend-named" : ""}">${block.labels.map(item).join("")}</ol>`;
       const caption = block.caption === undefined ? "" : markdown(block.caption);
-      const fill = context.sizeless?.(block.image) === true ? " block-labelled-fill" : "";
+      const fill = context.sizeless?.(image) === true ? " block-labelled-fill" : "";
       // without a caption the figure has no name of its own (the credit used to be its figcaption): its alt text names it
       return [
         `<figure class="block-figure block-labelled"${caption === "" ? ` aria-label="${plain(block.alt)}"` : ""}>`,
-        `<div class="block-labelled-image${fill}"><img src="${escape(context.href(block.image))}" alt="${plain(block.alt)}" loading="lazy" decoding="async">${markers}${renderCredit(block, lang)}</div>`,
+        `<div class="block-labelled-image${fill}"><img src="${escape(context.href(image))}" alt="${plain(block.alt)}" loading="lazy" decoding="async">${markers}${renderCredit(block, lang)}</div>`,
         legend,
         caption === "" ? "" : `<figcaption>${caption}</figcaption>`,
         `</figure>`,

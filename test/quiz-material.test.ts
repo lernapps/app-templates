@@ -5,6 +5,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
+import { materialImages } from "../runtime/shared/blocks/block.ts";
 import { isSizeless } from "../runtime/shared/blocks/image.ts";
 import { renderQuiz } from "../runtime/quiz/render.ts";
 import { quizIn } from "../runtime/quiz/quiz.ts";
@@ -94,6 +95,48 @@ describe("the checks of the content of a question", () => {
       expect.stringContaining(
         'questions[1].material[0].rows[0] (question "flaeche"): 3 cells, but the table has 2 columns',
       ),
+    ]);
+  });
+});
+
+describe("an image by language", () => {
+  const withImage = (image: unknown) => {
+    const changed = bank();
+    (material(changed, "ring")[0] as { image: unknown }).image = image;
+    return changed;
+  };
+  const both = { de: "images/kreis.svg", en: "images/schnitt.svg" };
+
+  test("is valid with a file for each language, and each language's page shows its own", () => {
+    const changed = withImage(both);
+    expect(problems(changed, app)).toEqual([]);
+    const quiz = readBank(JSON.stringify(changed), "src/quiz.json", app);
+    const languages = ["de", "en"];
+    const de = renderQuiz({ quiz: quizIn(quiz, "de") }, { languages }).body;
+    const en = renderQuiz({ quiz: quizIn(quiz, "en"), lang: "en" }, { languages }).body;
+    expect(de).toContain('<img src="images/kreis.svg" alt="Ein blauer Kreis');
+    expect(en).toContain('<img src="../images/schnitt.svg" alt="A blue circle');
+    // the build carries both files
+    expect(materialImages(quiz.questions[0]?.material ?? [])).toEqual(["images/kreis.svg", "images/schnitt.svg"]);
+  });
+
+  test("a map without a language of the bank, and a file that is not in src/images/", () => {
+    expect(problems(withImage({ de: "images/kreis.svg" }), app)).toEqual([
+      'questions[0].material[0].image (en) (question "ring"): the translation is missing',
+    ]);
+    expect(problems(withImage({ de: "images/kreis.svg", en: "images/fehlt.svg" }), app)).toEqual([
+      'questions[0].material[0].image (en) (question "ring"): images/fehlt.svg is missing: put the file into src/images/',
+    ]);
+  });
+
+  test("a path that is no image path, alone or in a map, is named with its language", () => {
+    const form =
+      "write images/<name>.svg (or .png, .jpg, .webp), with a lower-case name of letters, digits and hyphens";
+    expect(problems(withImage("images/Kreis.svg"), app)).toEqual([
+      `questions[0].material[0].image (question "ring"): images/Kreis.svg is no image path; ${form}`,
+    ]);
+    expect(problems(withImage({ de: "images/kreis.svg", en: "bilder/kreis.svg" }), app)).toEqual([
+      `questions[0].material[0].image (question "ring") (en): bilder/kreis.svg is no image path; ${form}`,
     ]);
   });
 });

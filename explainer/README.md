@@ -4,8 +4,8 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 
 ## What it can do
 
-- Text, formulas (also chemistry), drawn figures, your own images with source and licence, figures with numbered
-  labels, tables, timelines, definitions with a glossary, quotes, code, boxes for worked examples and hints.
+- Text, formulas (also chemistry), drawn figures, your own images with source and licence (one file for every
+  language, or one per language for an image with words in it), figures with numbered labels, tables, timelines, definitions with a glossary, quotes, code, boxes for worked examples and hints.
 - YouTube videos behind two clicks: before the click a link with title, channel and a note on privacy, nothing loaded
   from YouTube or Google; "Video abspielen" loads the player from youtube-nocookie.com. The learner may choose to load
   videos directly from then on. The catalog entry of an app with a video says `fitness.thirdParty: on-click`.
