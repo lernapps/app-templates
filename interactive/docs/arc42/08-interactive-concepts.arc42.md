@@ -4,11 +4,11 @@ The interactive archetype's concepts, besides the generic ones.
 
 ## Core and shell
 
-The core is the app's logic in pure TypeScript without DOM, its state plain JSON, exported as
-`start(seed, route, params)`, `step(state, input)` and optionally `tick(state, dt)`. The input is typed and extensible: a key, a pointer or touch
-action, and other kinds later; the components translate any device input into such inputs (`dec-typed-input`). The
-shell keeps the state, feeds it inputs and ticks and hands it to the components, which only show it, so the same core
-runs in Node at build and in the browser.
+The core is the app's logic in pure TypeScript without DOM, and its state is plain JSON.
+It starts a round, takes one input at a time and, if it moves on its own, lets time pass (see the core contract).
+Inputs are typed and extensible; the components turn any device input into them (`dec-typed-input`).
+The shell keeps the state and hands it to the components, which only show it.
+So the same core runs in Node at build and in the browser.
 
 ```arc42
 :::concept
@@ -20,11 +20,12 @@ category: structure
 
 ## Playthroughs
 
-A playthrough is data: a seed, a route, the parameters of the address if any, and steps of inputs, each with the state (a part of it) or the announcement
-expected after them. The build plays it against the core, the end-to-end tests give the same inputs in the browser,
-so behaviour is specified once and checked in both places. A step can let n ticks pass after its inputs; in the build
-and in the browser no other time passes, so a real-time core is checked deterministically. The core's property tests
-over fixed seeds are not built yet.
+A playthrough is data: a seed, a route, the parameters of the address if any, and steps of inputs.
+Each step names the state, or a part of it, or the announcement it expects.
+The build plays it against the core, and the end-to-end tests play the same inputs in the browser.
+So behaviour is specified once and checked in both places.
+A step can let time pass in ticks. No other time passes, so a real-time core is checked deterministically.
+Property tests of the core over fixed seeds are not built yet.
 
 ```arc42
 :::concept
@@ -36,9 +37,9 @@ category: testing
 
 ## Hash routes
 
-Modes and levels are routes declared in `src/app.yaml`, reached as `app/#<id>` from anchor links on the start page and
-the app page. The shell starts the core with the route of the address (else the first) and again on every new route,
-so an entry's topics can point to a route and `entry-links-resolve` can check it.
+Modes and levels are routes declared in `src/app.yaml`. Each has an address `app/#<id>`.
+The start page and the app page link to them. The core starts with the route of the address, else the first route.
+So a catalog entry's topics can point to a route, and `entry-links-resolve` can check it.
 
 ```arc42
 :::concept

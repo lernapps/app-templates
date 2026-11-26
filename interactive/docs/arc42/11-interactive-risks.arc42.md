@@ -4,8 +4,8 @@ The interactive archetype's risks, besides the generic ones, highest first.
 
 ## Core Property Tests Not Built
 
-The sketch has the build run the core's property tests over fixed seeds; the build plays only the playthroughs, so a
-core is checked for the seeds its playthroughs name and no others.
+The build should also run property tests of the core over fixed seeds. It plays only the playthroughs.
+So a core is checked only for the seeds its playthroughs name.
 
 ```arc42
 :::risk

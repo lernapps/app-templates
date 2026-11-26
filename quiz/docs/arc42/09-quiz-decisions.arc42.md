@@ -4,10 +4,11 @@ The quiz's decisions, besides the generic ones.
 
 ## The Creator Writes Only the Question Bank
 
-The quiz is a deep scaffold: engine, six question types, feedback, scoring, order, accessibility and the page
-without JavaScript come from the runtime, and the creator writes only `src/quiz.json`, no code. What the bank cannot
-say goes into the retrospective instead of code around the runtime. So the schema fixes the quiz's structure, and a
-quiz app writes no architecture of its own. Rejected: quiz-specific code in the app.
+The quiz is a deep scaffold. The runtime brings engine, question types, feedback, scoring, accessibility and the
+worksheet. The creator writes only `src/quiz.json`, no code.
+What the bank cannot say goes into the retrospective, not into code around the runtime.
+So the schema fixes the quiz's structure, and a quiz app writes no architecture of its own.
+Rejected: quiz-specific code in the app, because every app would then need its own checks.
 
 ```arc42
 :::decision
@@ -21,9 +22,10 @@ addresses: qg-checkable, qg-understandable, con-runtime-unchanged
 
 ## A Worksheet Without JavaScript
 
-The build renders every question with its solution into the page, so that without JavaScript the quiz reads as a
-worksheet with its answer key and the engine only adds the one-question-at-a-time quiz. Rejected: a page that needs
-JavaScript to show its questions.
+A quiz is text-heavy and should read without JavaScript.
+So the build renders every question with its solution into the page: a worksheet with its answer key.
+JavaScript only adds the quiz with one question at a time.
+Rejected: a page that needs JavaScript to show its questions, because it shows nothing without it.
 
 ```arc42
 :::decision
