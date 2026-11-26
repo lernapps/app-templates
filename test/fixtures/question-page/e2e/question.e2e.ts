@@ -7,7 +7,14 @@
 // <details>: the right answer, the background of every option, the explanation and the links.
 import { readFileSync } from "node:fs";
 import { answerQuestion, expectBackground, expectFeedbackInView } from "@lernapps/app-templates/questions/e2e";
-import { INCOMPLETE_MESSAGE, messages, questionId, rightAnswer, wrongAnswer, type Question } from "@lernapps/app-templates/questions";
+import {
+  INCOMPLETE_MESSAGE,
+  messages,
+  questionId,
+  rightAnswer,
+  wrongAnswer,
+  type Question,
+} from "@lernapps/app-templates/questions";
 import { expect, test, type Page } from "playwright/test";
 
 const questions = JSON.parse(readFileSync("src/questions.json", "utf8")) as Question[];
