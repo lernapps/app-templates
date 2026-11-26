@@ -70,6 +70,21 @@ export function paramsOf(search: URLSearchParams): Params {
   return Object.freeze(params);
 }
 
+/**
+ * The link `href` of the language switch with the search and the hash of `address`, so that the other language opens
+ * the same round: the same seed, route and parameters. Both are parsed as URLs: the link keeps its own parameters, a
+ * parameter of the address replaces the link's of the same name with all of its values, in order, and the hash of the
+ * address replaces the link's. `href` may be relative; it is resolved against `address`, and the result is absolute.
+ */
+export function languageHref(href: string, address: URL): string {
+  const target = new URL(href, address);
+  const names = new Set(address.searchParams.keys());
+  for (const name of names) target.searchParams.delete(name);
+  for (const [name, value] of address.searchParams) target.searchParams.append(name, value);
+  target.hash = address.hash;
+  return target.href;
+}
+
 /** The milliseconds from one tick to the next: the runtime calls tick(state, TICK) every TICK ms. */
 export const TICK = 20;
 

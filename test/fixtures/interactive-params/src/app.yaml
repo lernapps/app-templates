@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../node_modules/@lernapps/app-templates/runtime/interactive/interactive.v1.schema.json
+# The template's app.yaml in German and English, so that the end-to-end tests follow the language switch from the
+# address of each playthrough, its parameters included.
+title: { de: Buchstaben tippen, en: Typing letters }
+description:
+  de: |
+    Ein Buchstabe erscheint, du tippst ihn auf der Tastatur. Für jeden hast du fünf Sekunden.
+  en: |
+    A letter appears, and you type it on the keyboard. You have five seconds for each.
+howto:
+  de: |
+    - Tippe den Buchstaben, der groß in der Mitte steht.
+    - Nach zehn Buchstaben ist die Runde vorbei. Mit Enter spielst du die nächste.
+  en: |
+    - Type the letter shown large in the middle.
+    - After ten letters the round is over. Press Enter for the next one.
+competencies:
+  - { de: Ich kann die Buchstaben der Grundreihe auf der Tastatur finden., en: I can find the letters of the home row. }
+  - { de: Ich kann die Buchstaben der oberen Reihe tippen., en: I can type the letters of the top row. }
+languages: [de, en]
+routes:
+  - id: grundreihe
+    title: { de: Grundreihe, en: Home row }
+    description: { de: a s d f j k l, en: a s d f j k l }
+  - id: obere-reihe
+    title: { de: Obere Reihe, en: Top row }
+    description: { de: q w e r t z u i o p, en: q w e r t z u i o p }

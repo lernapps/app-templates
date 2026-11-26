@@ -215,8 +215,9 @@ jobs:
       - run: npx lernapps check --pre-push
         working-directory: explainer
 
-  # The interactive template with the parameters of the address (test/fixtures/interactive-params, dec-address-params):
-  # the template's core, kept as src/core/typing.ts, under a core that keeps the parameters in its state; playthroughs
+  # The interactive template with the parameters of the address (test/fixtures/interactive-params, dec-address-params),
+  # in German and English, so that the language switch is followed from each playthrough's address: the template's
+  # core, kept as src/core/typing.ts, under a core that keeps the parameters in its state; playthroughs
   # with a challenge of 2000 characters, one the core does not take, and none; and an end-to-end test that the
   # runtime writes them nowhere. The template's core reads no parameters, so only here do the end-to-end tests of
   # every interactive app (a new route starts the core again with the same parameters) see that they arrive.

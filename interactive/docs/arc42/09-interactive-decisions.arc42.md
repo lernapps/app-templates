@@ -102,6 +102,12 @@ Rejected: the root component reads the address and sends an action, because the 
 data and loses it on every new route; a fixed list of parameter names in the runtime, because each app has its own;
 a back channel between apps (not part of this).
 
+The language switch keeps them (lernapps/app-templates#210): on the app page the shell gives its links the search,
+`seed` included, and the hash of the address, so the other language opens the same round. It parses both as URLs: a
+link keeps its own parameters, a parameter of the address replaces the link's of the same name with all its values,
+the hash of the address replaces the link's. The links the build writes stay plain, for the page without JavaScript;
+the alternates in `<head>` name the page, not the round, and stay as they are.
+
 ```arc42
 :::decision
 id: dec-address-params
