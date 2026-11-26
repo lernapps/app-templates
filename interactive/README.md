@@ -9,7 +9,8 @@ it is and works without JavaScript.
 - Timers and moving parts: the runtime's clock ticks the app's core.
 - Its own look and colours, images, and libraries with an open licence, bundled.
 - Routes for modes or levels, which a link can open.
-- Data in the address, which another app can link with: `app/?c=…#<route>`. See [Parameters of the address](#parameters-of-the-address).
+- Data in the address, which another app can link with: `app/?c=…#<route>`. See
+  [Parameters of the address](#parameters-of-the-address).
 - The learning state on the learner's device, at most 100 kB.
 - German, plus English: texts in message files.
 - Playthroughs prove its behaviour: the build plays them against the core, the browser on desktop and at 360 px.
@@ -23,8 +24,10 @@ it is and works without JavaScript.
 
 ## What the app supplies
 
-- `src/app.yaml` ([schema](../runtime/interactive/interactive.v1.schema.json)), the core
-  `src/core/index.ts`, its Vue components in `src/ui/`, data in `src/data/`, texts in `src/messages/`, playthroughs in
+- `src/app.yaml` ([schema](../runtime/interactive/interactive.v1.schema.json)).
+- The core `src/core/index.ts`. It exports `start(seed, route)`, the first state; `step(state, input)`, the next
+  state for a key or an action of the root component; and optionally `tick(state, dt)`, the state after a time step.
+- Its Vue components in `src/ui/`, data in `src/data/`, texts in `src/messages/`, playthroughs in
   `src/playthroughs/` ([schema](../runtime/interactive/playthrough.v1.schema.json)), and its part of the
   architecture in `docs/arc42/`.
 
@@ -38,9 +41,7 @@ the first value counts.
 - The runtime only passes them through. It does not check, shorten, log or store them, whatever their length.
 - The core checks them itself. If a parameter does not fit, the core starts as it would without it.
 - They stay the same for the whole visit. A new route starts the core again with the same parameters.
-- The language switch keeps them: on the app page it carries the search, `seed` included, and the hash of the
-  address, so the other language opens the same round. If the core
-  calls its own `start` (for a new round), it passes the parameters on itself.
+- The language switch keeps them, with `seed` and the route, so the other language opens the same round.
+- If the core calls its own `start` for a new round, it passes the parameters on itself.
 - A core that needs no parameters keeps `start(seed, route)`.
-- A playthrough names them in `params`. The build calls `start(seed, route, params)` with them; the browser tests open
-  `app/?seed=<seed>&<params>#<route>`.
+- A playthrough names them in `params`. The build and the browser tests start the core with them.
