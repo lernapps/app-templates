@@ -1,8 +1,8 @@
 // What the schema cannot say about blocks that show content, at build time: a figure is drawn or an image, not both
-// and not neither; a bundled image exists; every text is complete in the declared languages and holds what its kind
+// and not neither; a bundled image exists, and one given by language names every declared language; every text is complete in the declared languages and holds what its kind
 // allows (plain text without raw HTML, restricted Markdown, a formula, a name, the source of a credit). The place of a
 // problem is a path below the blocks: [2, "caption", "en"] for the English caption of the third block.
-import { inLanguage, type Text } from "../languages.ts";
+import { inLanguage, textLanguages, type Text } from "../languages.ts";
 import { checkText, type TextFinding, type TextKind } from "../text/check.ts";
 import { markerOf, type MaterialBlock } from "./block.ts";
 
@@ -93,11 +93,21 @@ export function checkMaterial(blocks: readonly MaterialBlock<Text>[], checks: Bl
                 : "draw and image: a figure is either drawn from data or a bundled image",
           });
         }
-        if (block.image !== undefined && !checks.imageExists(block.image)) {
-          problems.push({
-            path: [...at, "image"],
-            message: `${block.image} is missing: put the file into src/images/`,
-          });
+        if (block.image !== undefined) {
+          // one path is the same in every language, as a formula is; a map names a file for each language
+          const { texts, problems: languages } = textLanguages(block.image, checks.languages, true, checks.declaredIn);
+          for (const problem of languages)
+            problems.push({ path: [...at, "image"], lang: problem.lang, message: problem.message });
+          const missing = new Set<string>();
+          for (const { lang, text: image, keyed } of texts) {
+            if (missing.has(image) || checks.imageExists(image)) continue;
+            if (!keyed) missing.add(image);
+            problems.push({
+              path: keyed ? [...at, "image", lang] : [...at, "image"],
+              ...(keyed ? { lang } : {}),
+              message: `${image} is missing: put the file into src/images/`,
+            });
+          }
         }
         text([...at, "alt"], block.alt, "plain");
         text([...at, "caption"], block.caption, "markdown");

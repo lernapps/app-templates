@@ -733,3 +733,21 @@ date: 2026-11-22
 addresses: qg-understandable, qg-accessibility, qg-explainer-readable-without-js
 :::
 ```
+
+## An Image May Be Given by Language
+
+An image was one file for every language, so words inside it stayed German on the English page (#209). So an image may
+be given per language, as a text is; one file for every language stays valid, so existing apps do not change. A
+per-language image must name every language of the app, as a text must. Rejected: finding the file of a language by its
+name, which the content would not show; translating the words of an image at build time, which works for no photo and
+breaks the layout of a drawing.
+
+```arc42
+:::decision
+id: dec-image-per-language
+title: The image of a figure is one path for every language or a map of paths by language, like a text
+status: accepted
+date: 2026-11-26
+addresses: qg-understandable, qg-accessibility, qg-checkable
+:::
+```

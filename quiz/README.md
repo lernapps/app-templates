@@ -15,7 +15,7 @@ A quiz about things to know: one page of questions with options, feedback on eve
 - German, plus English: a page per language.
 - Optionally keeps the last score on the learner's device.
 - Content in a question, between its text and its answers (`material`): prose, a formula, a figure (your own image in
-  `src/images/` with its source and licence, or drawn from numbers), a labelled figure, a table, a quotation, code.
+  `src/images/` with its source and licence, one per language if needed, or drawn from numbers), a labelled figure, a table, a quotation, code.
   Every figure has an alternative text and a caption; the build checks the blocks and carries the images.
 
 ## What it cannot do

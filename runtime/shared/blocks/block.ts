@@ -2,7 +2,9 @@
 // explainer): a text in restricted Markdown, a formula, a figure (drawn from data, or a bundled image), a labelled
 // figure (a bundled image with labels), a table, a quotation and program code. Their types, the blocks in one
 // language, and the images they use. The checks are in validate.ts, the rendering in render.ts. A bundled image is a
-// file in src/images/ of the app, named by its path from src/: images/<name>.svg (or .png, .jpg, .webp).
+// file in src/images/ of the app, named by its path from src/: images/<name>.svg (or .png, .jpg, .webp). Like a text, it
+// is one path for every language or a map of paths by language, { de: images/a-de.svg, en: images/a-en.svg }, for an
+// image with words in it; each language's page shows its own.
 import { inLanguage, type Text } from "../languages.ts";
 import type { CodeLanguage } from "./code.ts";
 
@@ -27,14 +29,16 @@ export interface FormulaBlock<T extends Text = string> {
 export type Figure<T extends Text = string> = {
   type: "figure";
   draw?: Drawing;
-  image?: string;
+  /** The bundled image: one path for every language, or a map of paths by language. */
+  image?: T;
   alt: T;
   caption: T;
 } & Credit<T>;
 
 export type LabelledFigure<T extends Text = string> = {
   type: "labelled-figure";
-  image: string;
+  /** The bundled image: one path for every language, or a map of paths by language. */
+  image: T;
   alt: T;
   caption?: T;
   /** Whether the figure lists the texts of the labels next to the image; without it, alt names every marker. */
@@ -104,7 +108,7 @@ export function materialIn(blocks: readonly MaterialBlock<Text>[], lang: string)
         return {
           type: "figure",
           ...(block.draw === undefined ? {} : { draw: block.draw }),
-          ...(block.image === undefined ? {} : { image: block.image }),
+          ...(block.image === undefined ? {} : { image: t(block.image) }),
           alt: t(block.alt),
           caption: t(block.caption),
           ...credit(block),
@@ -112,7 +116,7 @@ export function materialIn(blocks: readonly MaterialBlock<Text>[], lang: string)
       case "labelled-figure":
         return {
           type: "labelled-figure",
-          image: block.image,
+          image: t(block.image),
           alt: t(block.alt),
           ...(block.caption === undefined ? {} : { caption: t(block.caption) }),
           ...(block.legend === undefined ? {} : { legend: block.legend }),
@@ -156,7 +160,11 @@ export function materialIn(blocks: readonly MaterialBlock<Text>[], lang: string)
   });
 }
 
-/** The bundled images `blocks` use, each once, as paths from src/. */
+/** The paths of a bundled image (one, or one per language), each once, in the order of the map. */
+export const imagePaths = (image: Text): string[] =>
+  typeof image === "string" ? [image] : [...new Set(Object.values(image))];
+
+/** The bundled images `blocks` use, in every language, each once, as paths from src/. */
 export const materialImages = (blocks: readonly MaterialBlock<Text>[]): string[] => [
-  ...new Set(blocks.flatMap((block) => ("image" in block && block.image !== undefined ? [block.image] : []))),
+  ...new Set(blocks.flatMap((block) => ("image" in block && block.image !== undefined ? imagePaths(block.image) : []))),
 ];

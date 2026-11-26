@@ -1,6 +1,7 @@
 // The audio files of an explainer and its media overview (media.ts, dec-audio-metadata): src/audio/ holds MP3 files that
 // carry their marking, a file without it stops the build with the place and what to do, the overview "Medienübersicht"
 // lists every image, audio file and video with its credit, names an AI voice as such and links the pages that use it.
+// An image may be given by language (dec-image-per-language): each language's page shows its file, the overview lists each.
 import { cpSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -21,6 +22,18 @@ function app(audio: Record<string, string> = {}): string {
   if (Object.keys(audio).length > 0) mkdirSync(join(root, "src/audio"));
   for (const [name, from] of Object.entries(audio))
     copyFileSync(join(fixtures, "audio", from), join(root, "src/audio", name));
+  return root;
+}
+
+const PAGE = "src/zahlen/zahlen-01.yaml";
+const SHARED = "            image: images/raster.svg\n            alt:\n";
+
+/** The first figure of zahlen-01 with `image` instead of its one path images/raster.svg, and src/images/raster-en.svg. */
+function byLanguage(root: string, image = "{ de: images/raster.svg, en: images/raster-en.svg }"): string {
+  copyFileSync(join(root, "src/images/raster.svg"), join(root, "src/images/raster-en.svg"));
+  const page = readFileSync(join(root, PAGE), "utf8");
+  if (!page.includes(SHARED)) throw new Error("the fixture's first figure has changed");
+  writeFileSync(join(root, PAGE), page.replace(SHARED, `            image: ${image}\n            alt:\n`));
   return root;
 }
 
@@ -112,9 +125,61 @@ describe("the media overview", () => {
   });
 });
 
+describe("an image by language", () => {
+  const body = (site: ReturnType<typeof loadSite>, lang: string) => {
+    const route = routes(site).find((one) => one.kind === "page" && one.page?.id === "zahlen-01" && one.lang === lang);
+    if (route === undefined) throw new Error(`no page zahlen-01 in ${lang}`);
+    return renderPage(site, route).body;
+  };
+
+  test("each language's page shows its own file; one path stays the same in every language", () => {
+    const site = loadSite(byLanguage(app()), 0);
+    const german = body(site, "de");
+    const english = body(site, "en");
+    expect(german).toContain('<img src="../../images/raster.svg" alt="Ein blauer Kreis');
+    expect(english).toContain('<img src="../../../images/raster-en.svg" alt="A blue circle');
+    expect(german).not.toContain("raster-en.svg");
+    // the labelled figure below keeps its one path in both languages
+    expect(english).toContain('<img src="../../../images/raster.svg" alt="Three shapes with numbers"');
+    expect(site.images.has("images/raster-en.svg")).toBe(true);
+  });
+
+  test("the media overview lists each file of the image, with the pages that use it", () => {
+    const items = mediaOf(loadSite(byLanguage(app()), 0));
+    const english = items.find((item) => item.kind === "image" && item.name === "images/raster-en.svg");
+    const german = items.find((item) => item.kind === "image" && item.name === "images/raster.svg");
+    expect(english?.uses.map(({ page }) => page.id)).toEqual(["zahlen-01"]);
+    expect(german?.uses.length).toBeGreaterThan(1);
+  });
+
+  test("a map names every language of the app, and no other", () => {
+    expect(problemsOf(byLanguage(app(), "{ de: images/raster.svg }"))).toEqual([
+      expect.stringMatching(/^src\/zahlen\/zahlen-01\.yaml:\d+: .*image \(en\): the translation is missing$/),
+    ]);
+    expect(
+      problemsOf(byLanguage(app(), "{ de: images/raster.svg, en: images/raster-en.svg, fr: images/raster.svg }")),
+    ).toEqual([expect.stringMatching(/image \(fr\): fr is not a language of the app; declare it in languages/)]);
+  });
+
+  test("each file of a map must exist", () => {
+    expect(problemsOf(byLanguage(app(), "{ de: images/raster.svg, en: images/fehlt.svg }"))).toEqual([
+      expect.stringMatching(/image \(en\): images\/fehlt\.svg is missing: put the file into src\/images\/$/),
+    ]);
+  });
+
+  test("a path that is no image path is named with its language", () => {
+    // the page that does not match the schema is not read: a link to it from another page follows
+    expect(problemsOf(byLanguage(app(), "{ de: images/raster.svg, en: images/Raster-EN.svg }"))).toContainEqual(
+      expect.stringMatching(
+        /^src\/zahlen\/zahlen-01\.yaml:\d+: .*image \(en\): images\/Raster-EN\.svg is no image path; write images\/<name>\.svg/,
+      ),
+    );
+  });
+});
+
 describe("the build", () => {
-  test("writes the audio file next to the pages and the overview in every language", async () => {
-    const root = app({ "je-mappelle.mp3": "je-mappelle.mp3" });
+  test("writes the audio file and each file of an image by language next to the pages, and the overview in every language", async () => {
+    const root = byLanguage(app({ "je-mappelle.mp3": "je-mappelle.mp3" }));
     writeFileSync(
       join(root, "index.html"),
       '<!doctype html>\n<html lang="de">\n  <head>\n    <meta charset="utf-8" />\n    <script type="module" src="/src/main.ts"></script>\n  </head>\n  <body>\n    <!-- explainer -->\n  </body>\n</html>\n',
@@ -123,6 +188,9 @@ describe("the build", () => {
     await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [explainer()] });
     const bytes = readFileSync(join(root, "dist/audio/je-mappelle.mp3"));
     expect(bytes.equals(readFileSync(join(fixtures, "audio/je-mappelle.mp3")))).toBe(true);
+    // both files of an image by language
+    for (const image of ["images/raster.svg", "images/raster-en.svg"])
+      expect(existsSync(join(root, "dist", image))).toBe(true);
     for (const path of ["medien/index.html", "en/medien/index.html"]) {
       expect(existsSync(join(root, "dist", path)), path).toBe(true);
     }

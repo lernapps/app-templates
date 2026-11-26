@@ -1,9 +1,10 @@
 // The media of an explainer, for its overview page "Medienübersicht" (medien/): every image, audio file and video the
-// pages use, with where they come from and under which licence. For speech a model made, it names the model and the
+// pages use (an image given by language with each language's file), with where they come from and under which licence. For speech a model made, it names the model and the
 // voice and says that it is AI-generated, as the file's own marking does (shared/audio.ts), so that anyone can check
 // the quality and the credits in one place. Pure and without Node: the build writes the page from it.
 import { allBlocks, type Block, type Chapter, type Page, type Site, type Text } from "./content.ts";
 import type { AudioMeta } from "../shared/audio.ts";
+import { imagePaths } from "../shared/blocks/block.ts";
 
 /** A page that uses a medium. */
 export interface PageRef {
@@ -42,18 +43,20 @@ export function mediaOf(site: Site): MediaItem[] {
         for (const block of [outer, ...materialOf(outer)]) {
           if ((block.type === "figure" || block.type === "labelled-figure") && block.image !== undefined) {
             const { image, alt, source, licence } = block;
-            use(
-              image,
-              () => ({
-                kind: "image",
-                name: image,
-                alt,
-                ...(source === undefined ? {} : { source }),
-                ...(licence === undefined ? {} : { licence }),
-                uses: [],
-              }),
-              at,
-            );
+            for (const name of imagePaths(image)) {
+              use(
+                name,
+                () => ({
+                  kind: "image",
+                  name,
+                  alt,
+                  ...(source === undefined ? {} : { source }),
+                  ...(licence === undefined ? {} : { licence }),
+                  uses: [],
+                }),
+                at,
+              );
+            }
           } else if (block.type === "video") {
             const { youtube, title, channel } = block;
             use(`video:${youtube}`, () => ({ kind: "video", youtube, title, channel, uses: [] }), at);
