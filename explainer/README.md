@@ -25,15 +25,14 @@ Chapters of pages that explain a topic, with exercises on every page. Every page
 - A page "Medienübersicht" (`medien/`) lists every image, audio file and video with credit, licence and use, for review.
 - Generated exercises: each task draws new numbers or records, up to 67 numbered tasks per exercise, with typical
   mistakes, a hint and the way to the solution, also with roots, powers and trigonometry, and with chemical formulas
-  from a data file. The build tests them over fixed seeds. Without JavaScript, three worked tasks show with what to
-  choose, order or match and their solutions. A task starts at a random number, or at 1 with `tasks: { start: first }`
-  in `src/app.yaml`.
+  from a data file. The build tests them over fixed seeds. Without JavaScript, three worked tasks show with their
+  solutions. Optionally every exercise starts at task number 1 (`tasks: { start: first }`).
 - Vue components for what no block can show or check, such as reading a scale, labelling a figure or dragging into
   place; an exercise component draws its own tasks. A component needs its logic module, a test and a text for readers
   without JavaScript. An exercise component also declares its exercise for the tutor (`template`, `params`,
-  `mistakes`, `show`), so that its tutor page has a table of every task like a generated one. After the right
-  answer, or "Lösung zeigen" after a wrong one, it shows the solution its `describe` gives. A string prop whose doc
-  comment says `@verbatim` (an id, a state) is no learner text and needs no translation. The example is
+  `mistakes`, `show`), so that its tutor page has a table of every task like a generated one. Like every exercise it
+  shows its solution after the right answer or on "Lösung zeigen". A prop marked `@verbatim` (an id) needs no
+  translation. The example is
   `src/components/ProzentFeld` on the page `prozent/prozentwert`: colour p % of a field of G squares.
 - Navigation, contents and glossary are generated, and for an AI tutor a short tutor page per page
   (`<chapter>/<page>/tutor/`), the one source of what the tutor gets: its guide, the page's content and every task of

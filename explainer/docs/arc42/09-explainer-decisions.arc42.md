@@ -259,25 +259,18 @@ addresses: qg-understandable, qg-checkable
 
 ## An Exercise Component Is an Exercise Like the Others
 
-The Informatik apps for grades 5-6 (#209) found an exercise component set apart from the other exercises: no card
-"Aufgabe" around it, no "Lösung" after a wrong answer, only "Richtig!" after a right one where a question shows its
-explanation. Its logic already states each task's solution (`describe`, which the no-JS text and the tutor page use),
-so the build writes the solution of every task number into the page and the island shows the one of the number shown:
-after the right answer at once, after a wrong one on "Lösung zeigen", which the result counts as looked up. It is a card
-labelled "Aufgabe" as every exercise. In the same round: a string prop whose doc comment says `@verbatim` is no learner
-text but the same in every language, checked as a name (an id from a data file, the states of an automaton), instead of
-numbers as ids; a worked task of a generated exercise lists, without JavaScript, what it asks to choose, order or match,
-which only the controls of the live task showed; and an app may start its exercises at task number 1
-(`tasks: { start: first }`) where young learners took a random first number for tasks they had missed. The random start
-stays the default: a new visit, and the learners of one class, start with different tasks. Rejected: an export of its
-own for the reason of a right answer (the solution of `describe` is there, and checked for every number); calling
-`reason` on a right answer, which existing apps return a fallback text from; ids recognised only when they come from
-`src/data/` (a prop written in the block may be an id too).
+An exercise component stood apart from the other exercises (#209): no frame "Aufgabe", no solution after a wrong
+answer, no explanation after a right one. So it looks and behaves like every exercise: it shows the solution its logic
+already describes, after the right answer or on "Lösung zeigen". An app may mark a prop as no learner text (an id that
+is the same in every language), and may start its exercises at task number 1, where young learners took a random first
+number for tasks they had missed; the random start stays the default, so that a class does not all start with the same
+task. Rejected: a new contract for the explanation of a right answer, since the solution is already there; asking the
+existing message of a wrong answer for a right one, which would show texts the apps never meant for it.
 
 ```arc42
 :::decision
 id: dec-component-exercise-like-others
-title: An exercise component is a card with its solution like every exercise; @verbatim props are no learner texts
+title: An exercise component looks and behaves like every exercise, with its solution
 status: accepted
 date: 2026-11-26
 addresses: qg-understandable, qg-checkable, qg-explainer-readable-without-js
