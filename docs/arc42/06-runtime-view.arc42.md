@@ -9,7 +9,8 @@ scenarios (the explainer's include asking the tutor).
 A learner, teacher or parent opens `lernapps.net/<app>/`. The host serves static pages the build rendered from what
 the creator wrote; what a page shows without JavaScript depends on the archetype and is in its extension (an
 interactive app's app page shows only a `<noscript>` note). The language switch and the alternates are plain links to
-the same page in the other language tree; an address the app does not have gets the 404 page, which leads to the
+the same page in the other language tree (an interactive app's shell adds the search and the hash of the address to
+the switch on its app page); an address the app does not have gets the 404 page, which leads to the
 start page.
 
 ```arc42

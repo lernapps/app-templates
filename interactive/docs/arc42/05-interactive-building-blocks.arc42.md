@@ -194,7 +194,8 @@ path: runtime/interactive/render.ts
 Built. `startInteractive(core, root)` mounts the root component on the app page and holds the core's state; it takes
 the seed from `?seed=<n>` (else a random one), the route from the hash (else the first route) and the other
 parameters of the address once (`dec-address-params`), starts the core again on a new route with the same seed and
-parameters, calls `tick(state, 20)` every 20 ms when the core has `tick`, and routes typed inputs to `step`
+parameters, gives the links of the language switch the search and the hash of the address (so that the other
+language opens the same round, `dec-address-params`), calls `tick(state, 20)` every 20 ms when the core has `tick`, and routes typed inputs to `step`
 (`dec-typed-input`): every key typed on the page as a key input, except on links, buttons and form fields or with
 Ctrl, Alt or Meta, and every input the root component emits as `input` (an action, or a key it stands for). When the
 end-to-end tests' clock is on the page (`if-test-clock`), it starts no interval and steps the ticks the tests ask for.

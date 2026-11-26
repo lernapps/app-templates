@@ -10,9 +10,9 @@
 // and loads no script; the app page shows the title, the note with a link back to the start page, and an element
 // with each route's id; each page has its language, its alternates, a language switch and the archetype marker. With
 // JavaScript, in German: the app page mounts the app without a console error, and every playthrough plays at its
-// address (app/?seed=<seed>&<params>#<route>), and in an app with routes starts the same after a new route and back
-// (the same seed and params), on the tests' clock (CLOCK_PROPERTY), on which no time passes but the ticks a
-// step names, as in the build: each step's inputs one after the other, a key pressed on the keyboard with the focus
+// address (app/?seed=<seed>&<params>#<route>), starts the same after a new route and back in an app with routes (the
+// same seed and params) and in each other language through the language switch, which keeps the address; on the
+// tests' clock (CLOCK_PROPERTY), on which no time passes but the ticks a step names, as in the build: each step's inputs one after the other, a key pressed on the keyboard with the focus
 // on the page, an action emitted as input by the app's root component, as the component itself does; then its ticks,
 // stepped through the runtime's own tick; after each step the state it expects (the fields it names, read from the
 // runtime) and the announcement it expects (the polite live region of @lernapps/tooling/a11y). The tests run in
@@ -178,6 +178,30 @@ export function interactiveTests(root = "."): void {
               await expect.poll(async () => (JSON.parse(await read()) as { route?: unknown }).route ?? next).toBe(next);
             }
             await expect.poll(read, `${yaml.file}: the state after ${other} and back`).toBe(started);
+          });
+        // the language switch opens the same round in each other language: the same seed, route and parameters
+        for (const lang of app.languages.slice(1))
+          test(`${yaml.file}: the switch to ${lang} keeps the address`, async ({ page }) => {
+            await page.addInitScript((property) => Reflect.set(globalThis, property, {}), CLOCK_PROPERTY);
+            const address = `${APP_PAGE}${addressOf(playthrough, route)}`;
+            await page.goto(`./${address}`);
+            const host = page.locator(".interactive-app");
+            await expect(host).toHaveAttribute("data-mounted", "");
+            const read = () =>
+              host.evaluate(
+                (element, property) => JSON.stringify((element as unknown as Record<string, unknown>)[property]),
+                STATE_PROPERTY,
+              );
+            const started = await read();
+            const link = page.locator(`.page-languages a[hreflang="${lang}"]`);
+            const href = await link.evaluate((a) => (a as HTMLAnchorElement).href);
+            expect(href, "the switch").toBe(
+              new URL(`${languageRoot(lang)}${address}`, new URL("../", page.url())).href,
+            );
+            await link.click();
+            await expect(page.locator("html")).toHaveAttribute("lang", lang);
+            await expect(host).toHaveAttribute("data-mounted", "");
+            expect(await read(), `the state on the ${lang} page`).toBe(started);
           });
         test(`${yaml.file}: played with its inputs and ticks`, async ({ page }) => {
           const errors = consoleErrors(page);

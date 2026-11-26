@@ -17,11 +17,21 @@
 // step as a key input (not a key typed on a link, button or form field, which is theirs, nor one with Ctrl, Alt or
 // Meta), and calls tick every TICK ms when the core has it (the end-to-end tests step the ticks themselves:
 // CLOCK_PROPERTY). A key that changes the state loses its default (the space bar does not scroll). A new route in the
-// address starts the core again with it, with the same seed and parameters. It mounts the app's root component into the page with the props state (the
+// address starts the core again with it, with the same seed and parameters. The links of the language switch get the
+// search and the hash of the address (languageHref), so that the other language opens the same round. It mounts the app's root component into the page with the props state (the
 // core's state) and lang (the page's language), and steps every input the component emits as input (an action of a
 // button or a tap, or a key it stands for). The start page loads no script; the build removes it there.
 import { createApp, h, shallowRef, type Component } from "vue";
-import { CLOCK_PROPERTY, paramsOf, STATE_PROPERTY, TICK, type Core, type Input, type Params } from "./contract.ts";
+import {
+  CLOCK_PROPERTY,
+  languageHref,
+  paramsOf,
+  STATE_PROPERTY,
+  TICK,
+  type Core,
+  type Input,
+  type Params,
+} from "./contract.ts";
 
 export {
   TICK,
@@ -78,6 +88,17 @@ export function startInteractive<S>(core: Core<S>, root: Component, options: Int
     }
   };
   markRoute();
+  // the language switch opens the same round in the other language: the links as the build wrote them, with the
+  // search and the hash of the address
+  const switches = [...document.querySelectorAll<HTMLAnchorElement>(".page-languages a")].map((link) => ({
+    link,
+    built: link.getAttribute("href") ?? "",
+  }));
+  const keepAddress = (): void => {
+    const address = new URL(location.href);
+    for (const { link, built } of switches) link.href = languageHref(built, address);
+  };
+  keepAddress();
   /** Gives `given` to the core; whether it changed the state. */
   const input = (given: Input): boolean => {
     const next = core.step(state.value, given);
@@ -95,6 +116,7 @@ export function startInteractive<S>(core: Core<S>, root: Component, options: Int
     route = routeOf();
     set(core.start(seed, route, params));
     markRoute();
+    keepAddress();
   });
   const tick = (): void => set(core.tick?.(state.value, TICK) ?? state.value);
   const clock: unknown = Reflect.get(globalThis, CLOCK_PROPERTY);

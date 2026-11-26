@@ -11,7 +11,8 @@ route from the hash (else the first route) and the other parameters of the addre
 `step` as a key input, except keys on links, buttons and form fields or with Ctrl, Alt or Meta, and steps every input
 the root component emits as `input`; a key that changes the state loses its default. When the core
 has `tick`, the shell calls it every 20 ms. A new route in the hash starts the core again with the same seed and parameters and marks
-the current route link. The components only show the state, take their texts through the translator and announce
+the current route link. The language switch carries the search and the hash of the address, so the other language
+opens the same round. The components only show the state, take their texts through the translator and announce
 changes through the live region.
 
 ```arc42
@@ -45,7 +46,8 @@ involves: bb-build, bb-validation, bb-component-rules, bb-interactive-descriptio
 playthrough at `app/?seed=<seed>&<params>#<route>` on the test clock, gives its inputs (keys pressed on the keyboard,
 actions emitted by the root component) and its ticks, and compares, after each step, the state read from
 `lernappsState` and the announcement of the polite live region. In an app with routes it also goes to another route and
-back and expects the state it started with: the core starts again with the same seed and parameters.
+back and expects the state it started with: the core starts again with the same seed and parameters. In an app with
+more languages it follows the switch to each other language and expects the same state there.
 
 ```arc42
 :::runtime-scenario

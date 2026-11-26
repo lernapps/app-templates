@@ -37,7 +37,9 @@ the first value counts.
 - The parameters are data, not routes. Routes are the hash (`#<route>`), from `src/app.yaml`.
 - The runtime only passes them through. It does not check, shorten, log or store them, whatever their length.
 - The core checks them itself. If a parameter does not fit, the core starts as it would without it.
-- They stay the same for the whole visit. A new route starts the core again with the same parameters. If the core
+- They stay the same for the whole visit. A new route starts the core again with the same parameters.
+- The language switch keeps them: on the app page it carries the search, `seed` included, and the hash of the
+  address, so the other language opens the same round. If the core
   calls its own `start` (for a new round), it passes the parameters on itself.
 - A core that needs no parameters keeps `start(seed, route)`.
 - A playthrough names them in `params`. The build calls `start(seed, route, params)` with them; the browser tests open
