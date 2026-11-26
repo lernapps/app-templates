@@ -219,6 +219,26 @@ addresses: qg-checkable, qg-accessibility
 :::
 ```
 
+## Feedback Holds for the Answer It Judged
+
+A child changed the answer of an exercise component after "Richtig!" and still saw "Richtig!" beside a wrong answer
+(#209): unlike a question, a component does not lock after the right answer. And "Prüfen" without an answer gave the
+same text for every kind of exercise. So the feedback holds only for the answer it judged: "Richtig!" goes when the
+answer changes. A wrong answer's feedback stays until the next "Prüfen", since its reason helps to correct the answer.
+Without an answer, the message says what is missing for that kind of exercise; a component may give its own words.
+Rejected: treating an empty list as no answer, since for some tasks it is the right one; clearing a wrong answer's
+feedback on every change, which would take its reason away.
+
+```arc42
+:::decision
+id: dec-feedback-for-checked-answer
+title: Feedback holds for the answer it judged, and "Prüfen" without an answer says what is missing
+status: accepted
+date: 2026-11-26
+addresses: qg-understandable, qg-checkable
+:::
+```
+
 ## The Learner Switches an Assistant On Once
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:

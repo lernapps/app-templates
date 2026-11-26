@@ -428,8 +428,10 @@ function renderComponent(context: Context, block: BlockOf<"vue-component">): str
   const { component } = use;
   const markup = context.islands.get(block)?.get(context.lang) ?? "";
   const messages = questionMessagesIn(context.lang);
+  // before an answer: the component's own words, else the explainer's
+  const unanswered = context.descriptions.get(block)?.unanswered?.[context.lang] ?? context.t("componentUnanswered");
   const feedback = component.exercise
-    ? `<p class="question-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}" data-incomplete="${plain(messages.incomplete)}"></p>`
+    ? `<p class="question-feedback" data-right="${plain(messages.right)}" data-wrong="${plain(messages.wrong)}" data-incomplete="${plain(unanswered)}"></p>`
     : "";
   const first = context.descriptions.get(block)?.tasks[context.lang]?.[0];
   const number = (seed: number) => plain(context.t("taskNumber", { n: String(seed) }));

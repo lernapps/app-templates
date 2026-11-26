@@ -4,10 +4,13 @@
 // nojs text goes, or, when the component declares defineOptions({ nojs: "caption" }), stays as a text description
 // folded into a <details> under it. An exercise component is the input of its task: it emits answer with the
 // learner's answer each time it changes. The explainer checks it with "Prüfen" under the component (a form, so Enter in
-// a field of the component checks too, enabled while there is an answer that is not checked yet): check, reason and
+// a field of the component checks too, enabled while there is an answer that is not checked yet; before the component
+// emitted an answer, or after it emitted undefined, it asks for one, in the words of the logic's unanswered or the
+// explainer's own): check, reason and
 // show of the component's logic module give whether it is right, the app's message for a wrong one and the answer as
 // text. The island shows the feedback, with the message under it, in view with the focus, gives the component
-// checked: true until the answer changes, when it declares that prop, and passes the answer on to the client module as
+// checked: true until the answer changes, when it declares that prop ("Richtig!" goes then too; a wrong answer's
+// feedback stays as the hint to correct it), and passes the answer on to the client module as
 // the event explainer-answered on its element ({ correct, answer, message }: answer is what the learner gave, as text,
 // for the result line of "Zurück zum Tutor", result.ts; message the app's message, for the lines of "Ich verstehe das
 // nicht", stuck.ts).
@@ -191,6 +194,12 @@ async function hydrate(
       answer.value = value;
       checked.value = false;
       sync();
+      // "Richtig!" holds only for the answer it judged: it goes once the learner changes it (the component does not
+      // lock). A wrong answer's feedback stays, as in the questions: its reason helps to correct it.
+      if (feedback?.classList.contains("question-right")) {
+        feedback.className = "question-feedback";
+        feedback.textContent = "";
+      }
     };
     const declaresChecked = element.dataset["checked"] !== undefined;
     createSSRApp({

@@ -347,6 +347,8 @@ export interface ComponentDescription {
   tasks: Readonly<Record<string, readonly DescribedTask[]>>;
   /** The exercise in each language, when its logic declares its inputs and outputs; else none. */
   exercise?: Readonly<Record<string, ComponentExercise>>;
+  /** What "Prüfen" says before the component emits an answer, in each language, when its logic gives it; else none. */
+  unanswered?: Readonly<Record<string, string>>;
 }
 
 /** Every block of `blocks`, depth first, with the blocks inside sections and boxes. */

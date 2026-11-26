@@ -16,6 +16,7 @@ import de from "./messages/de.json" with { type: "json" };
 export * from "./question.ts";
 export {
   answerText,
+  INCOMPLETE_MESSAGE,
   QUESTION_MESSAGES,
   questionMessagesIn,
   renderQuestion,

@@ -26,6 +26,7 @@
   "newTask": "New task",
   "hint": "Hint",
   "textDescription": "Text description",
+  "componentUnanswered": "Do the task first.",
   "taskNumber": "Task no. {n}",
   "backToTutor": "Back to the tutor",
   "backToTutorOpen": "Switch back to the chat with {name}.",

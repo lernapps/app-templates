@@ -1,13 +1,20 @@
 // The per-question contract of the quiz runtime, from a consumer's side: a page that embeds one question of each type
 // through @lernapps/app-templates/questions (rendering), @lernapps/app-templates/questions/engine (startQuestion) and
 // @lernapps/app-templates/questions/e2e (the helpers). With JavaScript each question checks on its own: the right answer
-// counts, a wrong one does not, an incomplete one is asked to be completed; after an answer the feedback is in view
+// counts, a wrong one does not, an incomplete one is asked to be completed, in the words of its type; after an answer the feedback is in view
 // with the focus, the background of every option, the explanation and the links show, and there is no button to a
 // next question. Without JavaScript each question and its controls can be read, and its solution opens in a
 // <details>: the right answer, the background of every option, the explanation and the links.
 import { readFileSync } from "node:fs";
 import { answerQuestion, expectBackground, expectFeedbackInView } from "@lernapps/app-templates/questions/e2e";
-import { messages, questionId, rightAnswer, wrongAnswer, type Question } from "@lernapps/app-templates/questions";
+import {
+  INCOMPLETE_MESSAGE,
+  messages,
+  questionId,
+  rightAnswer,
+  wrongAnswer,
+  type Question,
+} from "@lernapps/app-templates/questions";
 import { expect, test, type Page } from "playwright/test";
 
 const questions = JSON.parse(readFileSync("src/questions.json", "utf8")) as Question[];
@@ -60,7 +67,7 @@ test.describe("with JavaScript", () => {
       await page.goto("./");
       await exercise(page, item).getByRole("button", { name: messages.check }).click();
       await expect(exercise(page, item).locator(".question-feedback")).toHaveText(
-        item.type === "number" ? messages.incompleteNumber : messages.incomplete,
+        messages[INCOMPLETE_MESSAGE[item.type]],
       );
       await expect(exercise(page, item).locator(".question-reveal")).toBeHidden();
       await answerQuestion(page, item, rightAnswer(item));

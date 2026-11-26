@@ -441,6 +441,32 @@ describe("what an exercise component's logic describes", () => {
   });
 });
 
+describe("what an exercise component says before an answer", () => {
+  const props = (lang: string) => ({ parts: ["a", "b"], level: lang === "de" ? "Stufe" : "Level" });
+  test("unanswered in each language, or none without it", async () => {
+    const logic = await import("./fixtures/explainer-history/components/AssignLabels.ts");
+    expect(describedProblems(logic, props, ["de", "en"]).description?.unanswered).toEqual({
+      de: "Wähle zuerst für eine Stufe eine Beschriftung.",
+      en: "First choose a label for a level.",
+    });
+    const { unanswered: _, ...without } = logic;
+    expect(describedProblems(without, props, ["de", "en"]).description).not.toHaveProperty("unanswered");
+  });
+
+  test("an unanswered that gives no text, or throws", async () => {
+    const logic = await import("./fixtures/explainer-history/components/AssignLabels.ts");
+    expect(describedProblems({ ...logic, unanswered: () => " " }, props, ["de", "en"]).problems).toEqual([
+      'unanswered(props, "de") is " "; unanswered gives what "Prüfen" says before the learner answered, a text in the page\'s language',
+    ]);
+    const throwing = () => {
+      throw new Error("no lang");
+    };
+    expect(describedProblems({ ...logic, unanswered: throwing }, props, ["de", "en"]).problems).toEqual([
+      'unanswered(props, "de") throws: no lang',
+    ]);
+  });
+});
+
 describe("the table of tasks an exercise component declares for a tutor", () => {
   const props = (lang: string) => ({
     parts: lang === "de" ? ["a", "b", "c"] : ["x", "y", "z"],

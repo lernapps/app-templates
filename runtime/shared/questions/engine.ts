@@ -11,7 +11,7 @@
 import { moveFocus } from "@lernapps/tooling/a11y";
 import { translator } from "@lernapps/tooling/i18n";
 import { textsIn } from "../languages.ts";
-import { QUESTION_MESSAGES } from "./render.ts";
+import { INCOMPLETE_MESSAGE, QUESTION_MESSAGES } from "./render.ts";
 import {
   hash,
   isComplete,
@@ -88,8 +88,9 @@ export interface StartQuestionOptions {
  * background of each wrong option chosen, a number's typical mistake, else its hint). Then the solution shows: the
  * background of every option with the right ones and the learner's choice marked, the explanation and further
  * reading; the controls are locked, the button to the next question shows if there is one, and the focus moves to the
- * feedback. With `retry`, a wrong answer keeps the controls open and offers "Lösung zeigen" instead. An incomplete
- * answer is asked to be completed.
+ * feedback. With `retry`, a wrong answer keeps the controls open and offers "Lösung zeigen" instead; its feedback
+ * stays while the learner changes the answer, as the hint to correct it, until the next check. An incomplete answer
+ * is asked to be completed, in the words of the question's type.
  */
 export function startQuestion(item: HTMLElement, question: Question, options: StartQuestionOptions = {}): void {
   const t = translator(textsIn(QUESTION_MESSAGES, options.lang ?? "de"));
@@ -205,12 +206,11 @@ export function startQuestion(item: HTMLElement, question: Question, options: St
     if (answered) return;
     const answer = readAnswer(question, form);
     if (!isComplete(question, answer)) {
-      // a number field says what is missing: nothing, or something that is no number ("1/6", "115 Grad")
+      // what is missing, in the words of the question's type; a number field also says when what it has is no
+      // number ("1/6", "115 Grad")
       const given = readAnswer(question, form);
-      const typed = question.type === "number" && typeof given === "string" ? given.trim() : undefined;
-      feedback.textContent = t(
-        typed === undefined ? "incomplete" : typed === "" ? "incompleteNumber" : "unreadableNumber",
-      );
+      const typed = question.type === "number" && typeof given === "string" ? given.trim() : "";
+      feedback.textContent = t(typed === "" ? INCOMPLETE_MESSAGE[question.type] : "unreadableNumber");
       feedback.className = "question-feedback";
       return;
     }

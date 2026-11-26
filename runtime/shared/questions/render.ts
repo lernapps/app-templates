@@ -23,6 +23,16 @@ export const QUESTION_MESSAGES: Readonly<Record<Language, QuestionMessages>> = {
 /** The question's texts in `lang`; German for a language it does not have. */
 export const questionMessagesIn = (lang: string): QuestionMessages => textsIn(QUESTION_MESSAGES, lang);
 
+/** The key of what "Prüfen" says to a question of each type without an answer: what is still missing. */
+export const INCOMPLETE_MESSAGE: Readonly<Record<Question["type"], keyof QuestionMessages>> = {
+  "single-choice": "incompleteSingleChoice",
+  "multiple-choice": "incompleteMultipleChoice",
+  "true-false": "incompleteTrueFalse",
+  number: "incompleteNumber",
+  ordering: "incompleteOrdering",
+  matching: "incompleteMatching",
+};
+
 /** What rendering in one language needs: its texts and its numbers. */
 export interface Words {
   t: (key: keyof QuestionMessages, params?: Readonly<Record<string, string | number>>) => string;
