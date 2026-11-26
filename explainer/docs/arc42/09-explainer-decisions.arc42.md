@@ -250,7 +250,7 @@ twice, which would hide why.
 ```arc42
 :::decision
 id: dec-ordering-places
-title: An ordering gives each place once, and a retry marks its items in a wrong place
+title: An ordering gives each place once, and a wrong ordering marks the items out of place
 status: accepted
 date: 2026-11-26
 addresses: qg-understandable, qg-checkable
