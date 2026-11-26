@@ -27,6 +27,7 @@
   "hint": "Hint",
   "textDescription": "Text description",
   "componentUnanswered": "Do the task first.",
+  "workedChoices": "To choose from: {choices}",
   "taskNumber": "Task no. {n}",
   "backToTutor": "Back to the tutor",
   "backToTutorOpen": "Switch back to the chat with {name}.",

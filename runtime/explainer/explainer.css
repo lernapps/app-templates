@@ -846,8 +846,10 @@ button.explainer-help:focus-visible {
   font-size: 1.2rem;
 }
 
-/* An exercise is a card of its own with a label on top, apart from the explanation around it */
-.explainer-exercise {
+/* An exercise is a card of its own with a label on top, apart from the explanation around it; an exercise component
+   too (not in a self-assessment, which has its own frame) */
+.explainer-exercise,
+.explainer-component[data-exercise]:not([data-assessment]) {
   padding: 0 1rem 1rem;
   border: 2px solid var(--page-accent);
   border-radius: 0.75rem;
@@ -903,6 +905,41 @@ button.explainer-help:focus-visible {
 .explainer-exercise details.explainer-solution p,
 .explainer-exercise details.explainer-solution li {
   color: var(--page-text);
+}
+
+/* An exercise component's solution, shown after the right answer or "Lösung zeigen": the look of a solution opened */
+.explainer-component-solution {
+  margin: 0.75rem 0 0;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--page-right);
+  border-left-width: 5px;
+  background: var(--page-right-background);
+}
+
+.explainer-component-solution-label {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--page-right);
+  font-weight: 600;
+}
+
+.explainer-component-solution-label::before {
+  content: "✔ ";
+}
+
+/* "Lösung zeigen" beside "Prüfen", as in the questions: outlined, not filled */
+.explainer-component-form > .question-actions .question-solve {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--page-accent);
+  border-radius: 0.375rem;
+  background: var(--page-background);
+  color: var(--page-accent);
+  cursor: pointer;
+}
+
+.explainer-component-form > .question-actions .question-solve:focus-visible {
+  outline: 3px solid var(--page-text);
+  outline-offset: 2px;
 }
 
 /* the hint is lighter than the solution */

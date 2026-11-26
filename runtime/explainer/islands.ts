@@ -13,10 +13,11 @@
 // feedback stays as the hint to correct it), and passes the answer on to the client module as
 // the event explainer-answered on its element ({ correct, answer, message }: answer is what the learner gave, as text,
 // for the result line of "Zurück zum Tutor", result.ts; message the app's message, for the lines of "Ich verstehe das
-// nicht", stuck.ts).
+// nicht", stuck.ts). After the right answer, or "Lösung zeigen" after a wrong one, it shows the solution of the task
+// number shown, from the build's template of them (describe); "Lösung zeigen" sends REVEALED_EVENT for the result.
 // An exercise component gets the seed of its task number as the prop seed, from the table of its distinct tasks the
 // build ships (data-seeds; tasks.ts): the build rendered task number 1, it hydrates with it, and then moves to the
-// number the address names (?<id>=<n>, wrapped into 1 to N) or to a random one; "Aufgabe Nr. <n>" shows above
+// number the address names (?<id>=<n>, wrapped into 1 to N) or to a random one (number 1 in an app with tasks: { start: first }); "Aufgabe Nr. <n>" shows above
 // it, and "Neue Aufgabe" moves to the next number, writes it into the address and mounts the component afresh. Nothing is stored.
 // In a self-assessment (data-assessment) an exercise component has no "Prüfen", no feedback and no task number: it
 // shows the task of the seed the self-assessment gives (data-seed, then ASSESSMENT_TASK_EVENT, each mounting it
@@ -31,7 +32,8 @@ import {
   ASSESSMENT_UNPACKED_EVENT,
   nextTaskNumber,
   numberFromAddress,
-  randomTaskNumber,
+  startNumber,
+  REVEALED_EVENT,
   SHOWN_EVENT,
   taskNumber,
   type AssessmentAnswer,
@@ -179,6 +181,27 @@ async function hydrate(
     const form = element.querySelector<HTMLFormElement>(":scope > form.explainer-component-form");
     const actions = form?.querySelector<HTMLElement>(":scope > .question-actions");
     const check = actions?.querySelector<HTMLButtonElement>(".question-check");
+    const solve = actions?.querySelector<HTMLButtonElement>(".question-solve");
+    const solution = element.querySelector<HTMLElement>(":scope > .explainer-component-solution");
+    const solutions = element.querySelector<HTMLTemplateElement>(":scope > template.explainer-component-solutions");
+    /**
+     * Shows the solution of the task number shown, as its describe states it: after the right answer, as the reason
+     * of the questions shows; after a wrong one on "Lösung zeigen", which the result counts as looked up.
+     */
+    const reveal = (looked: boolean) => {
+      const text = solutions?.content.querySelector(`[data-number="${current}"]`);
+      const place = solution?.querySelector(".explainer-component-solution-text");
+      if (!solution || !text || !place) return;
+      place.replaceChildren(text.cloneNode(true));
+      solution.hidden = false;
+      if (solve) solve.hidden = true;
+      if (looked) element.dispatchEvent(new CustomEvent(REVEALED_EVENT, { bubbles: true }));
+    };
+    /** No solution and no "Lösung zeigen": a new task. */
+    const conceal = () => {
+      if (solution) solution.hidden = true;
+      if (solve) solve.hidden = true;
+    };
     // hydrates with the task of number 1, as the build rendered it, then shows the task of its own number
     const seeds = JSON.parse(element.dataset["seeds"] ?? "[1]") as number[];
     const count = Math.max(seeds.length, 1);
@@ -231,6 +254,8 @@ async function hydrate(
       // after the component has rendered what checked changes, so that the feedback stays in view with the focus
       void nextTick(() => {
         if (feedback) showFeedback(feedback, correct, message);
+        if (correct) reveal(false);
+        else if (solve && solution?.hidden !== false) solve.hidden = false;
       });
       element.dispatchEvent(
         new CustomEvent("explainer-answered", {
@@ -247,7 +272,7 @@ async function hydrate(
     sync();
     const id = element.id;
     const from = numberFromAddress(location.href, id);
-    let current = from === undefined ? randomTaskNumber(count) : taskNumber(from, count);
+    let current = from === undefined ? startNumber(element, count) : taskNumber(from, count);
     history.replaceState(history.state, "", addressOf(location.href, id, current));
     const controls = element.querySelector<HTMLElement>(":scope > .explainer-task-controls");
     const number = controls?.querySelector<HTMLElement>(".explainer-task-number");
@@ -260,10 +285,15 @@ async function hydrate(
     };
     show();
     if (controls) controls.hidden = false;
+    solve?.addEventListener("click", () => {
+      reveal(true);
+      solution?.focus();
+    });
     controls?.querySelector(".explainer-new-task")?.addEventListener("click", () => {
       current = nextTaskNumber(current, count);
       history.replaceState(history.state, "", addressOf(location.href, id, current));
       show();
+      conceal();
       if (feedback) {
         feedback.className = "question-feedback";
         feedback.textContent = "";

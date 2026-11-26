@@ -137,6 +137,16 @@
             }
           }
         },
+        "tasks": {
+          "description": "Optional: how the exercises that draw their tasks by number (generated exercises and exercise components) start when the address names no number. start: random (the default), a task number drawn anew on each visit, so that a new visit and the learners of one class start with different tasks; or first, task number 1, so that young learners do not think they missed tasks before it. \"Neue Aufgabe\" goes on with the next number either way.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "enum": ["random", "first"]
+            }
+          }
+        },
         "scope": {
           "description": "The scope for the tutor, never shown to the learner: with it every page has its scope, and the build writes the scope beside each page, chapter and the app, linked from every tutor page. The tutor judges open answers by it, not by general knowledge.",
           "type": "object",

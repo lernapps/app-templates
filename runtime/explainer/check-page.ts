@@ -480,7 +480,10 @@ function checkComponent(check: PageCheck, block: BlockOf<"vue-component">, at: P
   if (found.length > 0) return;
   for (const [name, field] of Object.entries(component.props)) {
     const value = block.props?.[name];
-    for (const path of textPaths(value, field.type)) texts.check(yaml, [...at, "props", name, ...path], "plain");
+    // a prop whose doc comment says @verbatim holds no learner text: the same in every language, as a name
+    for (const text of textPaths(value, field.type, [], field.verbatim === true)) {
+      texts.check(yaml, [...at, "props", name, ...text.path], text.verbatim ? "name" : "plain");
+    }
   }
   // an exercise's check is the component's own code: its examples, at least one answer of each kind, test it
   const examples = block.examples;

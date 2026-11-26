@@ -118,6 +118,9 @@
         },
         "scope": {
           "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/scope"
+        },
+        "tasks": {
+          "$ref": "urn:lernapps:schema:explainer.v1#/$defs/app/properties/tasks"
         }
       }
     },

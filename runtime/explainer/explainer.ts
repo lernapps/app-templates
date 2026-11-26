@@ -5,7 +5,7 @@
 // answer or "Lösung zeigen" (startQuestion of the shared questions with retry). A question of one of the question types gets
 // the question's controls, "Prüfen" and its feedback; its "Lösung" for readers without JavaScript goes, as the question
 // shows the same after the answer. A generated exercise gets a live task: from the seed in the address when the
-// address names its task number (?<exercise>=<n>), else from a random one; its seed from the exercise's table
+// address names its task number (?<exercise>=<n>), else from a random one (number 1 with tasks: { start: first }); its seed from the exercise's table
 // of distinct tasks (tasks.ts), "Aufgabe Nr. <n>" above it; the question's controls, checker and feedback through its
 // comparator, the message of a typical mistake, and "Neue Aufgabe", which moves to the next task number; the address
 // always holds the task number of every exercise of the page. Its worked tasks, with their solutions, stay hidden with
@@ -56,7 +56,8 @@ import {
   NEW_TASK_ICON,
   nextTaskNumber,
   numberFromAddress,
-  randomTaskNumber,
+  REVEALED_EVENT,
+  startNumber,
   SHOWN_EVENT,
   taskNumber,
 } from "./tasks.ts";
@@ -84,7 +85,7 @@ function startGenerated(
   const { seeds } = data;
   const count = Math.max(seeds.length, 1);
   const from = numberFromAddress(location.href, spec.id);
-  let number = from === undefined ? randomTaskNumber(count) : taskNumber(from, count);
+  let number = from === undefined ? startNumber(element, count) : taskNumber(from, count);
   // the address always names the task shown: it is the link to share
   history.replaceState(history.state, "", addressOf(location.href, spec.id, number));
 
@@ -776,6 +777,13 @@ export function startExplainer(root: Document = document): void {
       text(detail.answer),
       text(detail.message),
     );
+  });
+  // an exercise component's solution, looked up after a wrong answer
+  root.addEventListener(REVEALED_EVENT, (event) => {
+    const element = event.target;
+    if (element instanceof HTMLElement && element.id !== "") {
+      progress.revealed(element.id, numberFromAddress(root.location.href, element.id));
+    }
   });
   startVideos(root);
   startVocabulary(root);

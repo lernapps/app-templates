@@ -34,8 +34,9 @@ feature: assistants read it before they choose an archetype.
 - An explainer's components are Vue single-file components in `src/components/<Name>.vue`, each with
   `<script setup lang="ts">`, typed props and its test `<Name>.test.ts`, used by a `vue-component` block with its
   `props` and a `nojs` text. The build renders each with Vue's server renderer into its island, `hidden` until it
-  hydrates; only a page with a component loads Vue. It checks each block's props against the component's prop types,
-  and on the SFC compiler's output: no network, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from
+  hydrates; only a page with a component loads Vue. It checks each block's props against the component's prop types
+  (each string prop is a learner text in every language, unless its doc comment says `@verbatim`: an id or a code,
+  the same in every language), and on the SFC compiler's output: no network, no `eval`, `new Function`, `innerHTML` or `v-html`, imports only from
   `vue`, this runtime, `@lernapps/tooling/storage`, `i18n` and `a11y` and the folder itself, browser globals only in
   `onMounted`, and 20 kB gzip of the component's own code. Once it runs, it replaces its `nojs` text, or keeps it
   folded as a text description under it with `defineOptions({ nojs: "caption" })`. A component that emits
@@ -59,14 +60,18 @@ feature: assistants read it before they choose an archetype.
   page it also exports, all four or none, `template(props, lang)`, the task once with `{name}` for each input,
   `params(task, props, lang)`, the inputs of a task by name (`{ G: 1260, p: 15 }`, the same names for every task),
   `mistakes(task, props)`, the answer each typical mistake of `about.mistakes` gives (`undefined` for one without a
-  single answer), and `show(answer, task, props, lang)`, an answer as text. The build checks them for every task
+  single answer), and `show(answer, task, props, lang)`, an answer as text. An exercise component is a card labelled
+  "Aufgabe", as every exercise; after the right answer, or "Lösung zeigen" after a wrong one, it shows the solution of
+  the task number shown, as `describe` states it. The build checks them for every task
   number: `check` accepts the solution and rejects each mistake's answer, and each placeholder is an input. The
   table leaves out the column of a mistake without an answer for any number, and calls an input that is no
   placeholder of the template "(verdeckt)", a value the child does not see. Without them the build gives a hint
   (`vue-component-tutor-table`).
 - Every seeded exercise (generated, exercise component) numbers its distinct tasks: the build walks the seeds 1, 2,
   3, … through its generator, keeps each seed whose task differs from all before, up to 67, and the page shows
-  "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). The number is the one identifier of a task:
+  "Aufgabe Nr. <n>" for them ([`tasks.ts`](runtime/explainer/tasks.ts)). Without a number in the address an exercise
+  starts at a random one, or at 1 with `tasks: { start: first }` in `app.yaml`, for young learners who would think
+  they missed the tasks before. The number is the one identifier of a task:
   `?<id>=<n>` opens task number n of the exercise `<id>` (a number above N wraps around). The address holds one
   parameter per exercise (`?a=3&b=12`), written on load and at every "Neue Aufgabe", so it is the page's state: a link
   to share in class, a deep link, and what a tutor reads; `seed`, `via`, `uebung` and `abschnitt` are no exercise id, and `?seed=<n>#<id>`
