@@ -45,11 +45,18 @@ Vier Agenten mit getrennten Dateien, je ein lokaler Branch im eigenen Worktree, 
 - [x] Umfang gemessen, Regel festgelegt
 
 ## Implement
-### Tasks
-- [ ] Vier Teile kürzen (Agenten)
-- [ ] Zusammenführen, `node scripts/arc42.ts` 0/0/0, Stichproben lesen
-- [ ] PR
+### Completed
+- [x] Vier Teile gekürzt (Agenten), je ein Commit, zusammengeführt ohne Konflikte
+- [x] `node scripts/arc42.ts` 0/0/0; alle arc42-Direktiven und Diagramme byteweise unverändert (von den Agenten per Skript geprüft)
+- [x] Stichproben gelesen: Root-README, Entscheidung „The Explainer Checks an Exercise Component's Answer“
 
 ## Finalize
-### Tasks
-- [ ] Wortzahl vorher/nachher im PR
+### Completed
+- [x] Wortzahl: READMEs und arc42 zusammen 38 520 → 28 913 (main → dieser Branch); ohne die unveränderten Direktiven ist die Prosa etwa halbiert
+- [x] Offene Punkte für den Menschen im PR genannt (Widerspruch im quiz-README, Parameter `via=tutor`/`vorher=` und Speicherschlüssel aus dem Explainer-arc42 entfernt)
+
+## Notes zu Entscheidungen der Agenten
+- Inhalte für App-Autoren (Komponentenvertrag, Aufgabennummern, Video, Selbsteinschätzung, `examples`) zogen vom Root-README ins Explainer-README; das Root-README beschreibt nur noch Paket und Archetypen.
+- Generisches arc42, Kapitel 01: ein nie geschlossener HTML-Kommentar versteckte das ganze Kapitel; jetzt geschlossen.
+- Issue- und Sitzungsverweise in Entscheidungen entfernt, der Anlass steht in Worten.
+- Agenten nannten Unklares; davon stehen im PR die Punkte, die eine Entscheidung des Menschen brauchen.
