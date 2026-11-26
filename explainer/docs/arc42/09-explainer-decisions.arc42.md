@@ -257,26 +257,6 @@ addresses: qg-understandable, qg-checkable
 :::
 ```
 
-## An Exercise Component Is an Exercise Like the Others
-
-An exercise component stood apart from the other exercises (#209): no frame "Aufgabe", no solution after a wrong
-answer, no explanation after a right one. So it looks and behaves like every exercise: it shows the solution its logic
-already describes, after the right answer or on "Lösung zeigen". An app may mark a prop as no learner text (an id that
-is the same in every language), and may start its exercises at task number 1, where young learners took a random first
-number for tasks they had missed; the random start stays the default, so that a class does not all start with the same
-task. Rejected: a new contract for the explanation of a right answer, since the solution is already there; asking the
-existing message of a wrong answer for a right one, which would show texts the apps never meant for it.
-
-```arc42
-:::decision
-id: dec-component-exercise-like-others
-title: An exercise component looks and behaves like every exercise, with its solution
-status: accepted
-date: 2026-11-26
-addresses: qg-understandable, qg-checkable, qg-explainer-readable-without-js
-:::
-```
-
 ## The Learner Switches an Assistant On Once
 
 Not every learner wants a KI tutor, and one who does wants it at hand on every page. So the learner chooses once:
