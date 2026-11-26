@@ -2,16 +2,12 @@
 
 ## Deployment overview
 
-Every app is static files: it is built and checked on the creator's machine and again in CI, published to its repo's
-GitHub Pages and run entirely in the learner's browser. There is no server of the app's own; what the app remembers
-stays in the browser's `localStorage`. A pull request gets a preview of the same files. Each extension adds nodes
-below these for its archetype's blocks at build and in the browser; blocks not built yet are listed where they would
-run.
+Every app is static files. They are built and checked on the creator's machine and again in CI, published to GitHub
+Pages, and run entirely in the learner's browser. There is no server of the app's own. A pull request gets a preview
+of the same files. Each extension adds its archetype's blocks to these nodes.
 
-Every app gets the same generated Pages workflow (app check, publish, preview) in step 2 of the plan. It is built for
-the explainer and quiz archetypes; the tooling does not have the interactive archetype yet, so an interactive app has
-no generated workflow today. The templates themselves are checked by the CI of `lernapps/app-templates`. The diagram
-shows one representative block per node; each node's section lists all it hosts.
+Every app gets the same generated publishing workflow. It exists for the quiz and the explainer; an interactive app
+has none yet. The diagram shows one block per node; each node's section lists all it hosts.
 
 ```arc42
 :::diagram
@@ -56,10 +52,8 @@ type: environment
 
 ## Creator's machine
 
-`vp dev` serves the pages, rendered on each request. The git hooks the preset installs run the checks before a commit
-(format, lint, type check) and before a push (unit tests, build, checks of the built app, end-to-end tests, in
-Chromium). The assistant loads the skills here. A template folder inside `lernapps/app-templates` gets no hooks of
-its own.
+A development server shows the pages while the assistant writes. Git hooks run the checks before a commit and before
+a push.
 
 ```arc42
 :::deployment-node
@@ -85,9 +79,8 @@ type: environment
 
 ## GitHub Actions runner
 
-The job `app` runs `lernapps check`, the same command as the hooks, and keeps the checked bundle; on `main` the job
-`deploy` publishes it, on a pull request from the repo the job `preview` publishes it as a preview. A change of only
-the plan or only docs checks and publishes nothing.
+Runs `lernapps check`, the same command as the hooks. On `main` it publishes the checked files. On a pull request it
+publishes them as a preview.
 
 ```arc42
 :::deployment-node
@@ -113,10 +106,8 @@ type: environment
 
 ## GitHub Pages
 
-The `gh-pages` branch of the app's repo, served from its root at `lernapps.net/<repo>/` (only a repo of the lernapps
-organisation is served there; any other at its own Pages address). It serves the rendered pages in every language,
-the 404 page, the tutor pages where the tutor is built, and the bundle; the preset builds with relative URLs, so the
-app works under any path.
+Serves the app at `lernapps.net/<repo>/`: the pages in every language, the 404 page and the bundle. The app uses
+relative URLs, so it works under any path.
 
 ```arc42
 :::deployment-node
@@ -130,8 +121,8 @@ hosts: bb-render, bb-runtime, bb-questions, bb-blocks, bb-component-rules
 
 ## Pull request preview
 
-The same files below `pr-preview/pr-<number>/` of the app's address, not indexed by search engines, removed when the
-pull request is closed.
+The same files under a preview path of the app's address. Search engines do not index it. It is removed when the
+pull request closes.
 
 ```arc42
 :::deployment-node
@@ -145,9 +136,8 @@ hosts: bb-render, bb-runtime, bb-questions, bb-blocks, bb-component-rules
 
 ## Learner's browser
 
-Runs the app's client module: the shell with the archetype's code and the tooling's helpers. `localStorage` of the
-one origin lernapps.net holds what the app remembers, under the app's prefix; nothing leaves the device before a
-click.
+Runs the archetype's code and the tooling's helpers. The browser's storage holds what the app remembers. Nothing
+leaves the device before a click.
 
 ```arc42
 :::deployment-node

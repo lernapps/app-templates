@@ -1,15 +1,13 @@
 # System Scope and Context
 
-The system is one lernapps app of any archetype: the frame runtime, the tooling helpers and the archetype part,
-built into static pages. Outside it are the people who use or write the app and the few systems it meets: the host
-that serves it, the app overview that links to it and, where an archetype has the optional tutor, the learner's own
-assistant (in that archetype's extension). Each actor requires an interface of chapter 5: the pages or, for the
-creator's assistant, what the archetype lets it write, the check command and the skills.
+The system is one lernapps app of any archetype, built into static pages. Outside it are the people who use or write
+the app, the host that serves it and the app overview that links to it. Where an archetype has the optional tutor,
+its extension adds the learner's own assistant. Each actor requires an interface of chapter 5.
 
 ## Context diagram
 
-The creator's assistant writes the archetype's content and follows the skills; every other actor meets the built
-pages at the boundary.
+The creator's assistant writes the archetype's content and follows the skills. Every other actor meets the built
+pages.
 
 ```arc42
 :::diagram
@@ -40,9 +38,8 @@ flowchart LR
 
 ## Learner
 
-Adults and students, often in German schools, who learn in the browser, with keyboard, pointer, touch or other
-input, without an account;
-what the app remembers stays on their device.
+Adults and students, often in German schools. They learn in the browser with any input device and without an
+account.
 
 ```arc42
 :::actor
@@ -56,8 +53,7 @@ requires: if-pages
 
 ## Teachers and parents
 
-They read the pages and the app's entry to see what the app teaches and whether it may be used; they need the pages
-in German.
+They read the pages and the app's entry. They want to know what the app teaches and whether it may be used.
 
 ```arc42
 :::actor
@@ -71,8 +67,8 @@ requires: if-pages
 
 ## Creator and their AI assistant
 
-The creator's AI assistant writes what the archetype lets it write, runs the checks and follows the skill
-`lernapps-app` and its archetype's skill (each extension names it); the creator decides and lists the app.
+The assistant writes what the archetype allows, runs the checks and follows the skills. The creator decides and lists
+the app.
 
 OPEN: No interface is modelled for `vp build` and `vp dev`, which the assistant also runs; should there be one?
 
@@ -88,8 +84,7 @@ requires: if-archetype-content, if-lernapps-check, if-skills
 
 ## GitHub Pages
 
-The app is static files published from its repo's `gh-pages` branch to `lernapps.net/<repo>/`: the pages the build
-rendered and the bundle; there is no server of the app's own, and pull requests get a preview.
+Serves the app's static files at `lernapps.net/<repo>/`. Pull requests get a preview (chapter 7).
 
 ```arc42
 :::actor
@@ -103,9 +98,8 @@ requires: if-pages
 
 ## lernapps.net app overview
 
-The app connects to the platform only through its entry in the app overview, which links to the app's pages and,
-through its topics, to its deep links; `entry-links-resolve` checks that these links answer. The entry's fact sheet
-also states the app's size (not built yet).
+The app connects to the platform only through its entry in the app overview. The entry links to the app's pages and
+deep links. `lernapps check` verifies that these links resolve.
 
 ```arc42
 :::actor
