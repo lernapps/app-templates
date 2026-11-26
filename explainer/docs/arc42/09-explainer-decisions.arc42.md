@@ -678,16 +678,11 @@ addresses: qg-understandable, qg-accessibility, qg-explainer-readable-without-js
 
 ## An Image May Be Given by Language
 
-The image of a figure or a labelled figure was one path for every language, so a word inside an SVG (a label of a plan, a
-legend drawn into a chart) stayed German on the English page. Like a text, `image` may now be a map of paths by language,
-`{ de: images/plan-de.svg, en: images/plan-en.svg }`, and each language's page shows its own file. One path stays valid in
-every language, as a formula does, so existing apps do not change: an image without words needs no copy. A map names every
-language of the app and no other, with the same messages as a text, since a missing file would otherwise fall back to German
-without a word; each file it names must be in `src/images/`. The media overview lists each file on its own, with the
-credit of the figure and the pages that use it. Source, licence and alternative text stay as they are: they are texts
-already. The quiz shows the same blocks as material and gets the same. Rejected: an image per language found by a name
-suffix (`plan.en.svg`), which the build would have to guess and the creator could not see in the content; translating
-the text of an SVG at build time, which works for no PNG and breaks the layout of a drawing.
+An image was one file for every language, so words inside it stayed German on the English page (#209). So an image may
+be given per language, as a text is; one file for every language stays valid, so existing apps do not change. A
+per-language image must name every language of the app, as a text must. Rejected: finding the file of a language by its
+name, which the content would not show; translating the words of an image at build time, which works for no photo and
+breaks the layout of a drawing.
 
 ```arc42
 :::decision
