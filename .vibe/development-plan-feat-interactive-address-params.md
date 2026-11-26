@@ -39,6 +39,13 @@ Working autonomously (owner's release in the task): no stop at phase boundaries;
 - KD-10 Found on the way: a core that calls its own `start` (the template's next round) must pass the params on
   itself; README and the fixture say so. The template does not use params and stays unchanged.
 
+- KD-11 Review (PR author, 2026-11-26: "why a pipeline job, not regular e2e?"): the route change moved into the e2e
+  tests of every interactive app (`interactiveTests`): each playthrough, in an app with two routes or more, goes to
+  another route and back and expects its start state (the core is deterministic). The template runs it too. The
+  fixture job stays, because the template's core reads no parameters: only a core that keeps them can show that they
+  arrive and survive; its own e2e test keeps only the checks no generic test can make (first value of a name, nothing
+  in storage or console).
+
 ## Notes
 
 - Today: `interactive.ts` `startInteractive` reads `seed` and the hash only; `plugin.ts` `play` and the route check

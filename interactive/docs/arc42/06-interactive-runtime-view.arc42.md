@@ -42,8 +42,10 @@ involves: bb-build, bb-validation, bb-component-rules, bb-interactive-descriptio
 ## Browser playthroughs
 
 `interactiveTests()` checks the start page and the app page without JavaScript in every language, then opens each
-playthrough at `app/?seed=<seed>&<params>#<route>` on the test clock, gives its inputs (keys pressed on the keyboard, actions
-emitted by the root component) and its ticks, and compares, after each step, the state read from `lernappsState` and the announcement of the polite live region.
+playthrough at `app/?seed=<seed>&<params>#<route>` on the test clock, gives its inputs (keys pressed on the keyboard,
+actions emitted by the root component) and its ticks, and compares, after each step, the state read from
+`lernappsState` and the announcement of the polite live region. In an app with routes it also goes to another route and
+back and expects the state it started with: the core starts again with the same seed and parameters.
 
 ```arc42
 :::runtime-scenario

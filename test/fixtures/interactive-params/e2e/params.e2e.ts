@@ -1,5 +1,6 @@
-// The parameters of the address in the browser: the runtime gives them to the core whole, keeps them when a new
-// route starts the core again, and writes them nowhere: not into the address, the storage or the console.
+// The parameters of the address in the browser, beyond what the end-to-end tests of every interactive app check (that
+// a new route starts the core again with the same parameters): the runtime gives the core all but the seed, the first
+// value of a name given twice, whole, and writes them nowhere: not into the address, the storage or the console.
 import { expect, test } from "playwright/test";
 
 const CHALLENGE =
@@ -7,7 +8,7 @@ const CHALLENGE =
 
 const stateOf = (host: Element) => (host as unknown as { lernappsState: Record<string, unknown> }).lernappsState;
 
-test("a new route keeps the parameters of the address, which the runtime writes nowhere", async ({ page }) => {
+test("the core gets the parameters of the address whole, which the runtime writes nowhere", async ({ page }) => {
   const logged: string[] = [];
   page.on("console", (entry) => logged.push(entry.text()));
   const address = `./app/?c=${CHALLENGE}&seed=7&level=2&level=3#grundreihe`;
@@ -17,10 +18,7 @@ test("a new route keeps the parameters of the address, which the runtime writes 
   // all but the seed, the first value of a name given twice
   const params = { c: CHALLENGE, level: "2" };
   expect(await host.evaluate(stateOf)).toMatchObject({ seed: 7, route: "grundreihe", challenge: CHALLENGE, params });
-  await page.evaluate(() => (location.hash = "obere-reihe"));
-  await expect.poll(async () => (await host.evaluate(stateOf))["route"]).toBe("obere-reihe");
-  expect(await host.evaluate(stateOf)).toMatchObject({ seed: 7, challenge: CHALLENGE, params });
-  expect(page.url()).toContain(`?c=${CHALLENGE}&seed=7&level=2&level=3#obere-reihe`);
+  expect(page.url()).toContain(`?c=${CHALLENGE}&seed=7&level=2&level=3#grundreihe`);
   const stored = await page.evaluate(() =>
     JSON.stringify([...Object.entries(localStorage), ...Object.entries(sessionStorage)]),
   );
