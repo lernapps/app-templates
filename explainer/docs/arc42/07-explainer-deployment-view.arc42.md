@@ -4,9 +4,9 @@ Where the explainer's blocks run, below the generic nodes.
 
 ## Explainer build
 
-The explainer's component rules, property tests, tutor pages and self-assessments run in CI and, through the same hooks, on the
-creator's machine; the content, data and components are built into the pages and the bundle there. In the preview of a pull
-request the build also compares the content with the one of the base and marks the difference in the pages (the diff mode).
+The explainer's build runs in CI and, through the same hooks, on the creator's machine. It checks the content and the
+components and builds them into the pages and the bundle. In the preview of a pull request it also marks the difference
+to the base in the pages.
 
 ```arc42
 :::deployment-node
@@ -20,9 +20,8 @@ hosts: bb-generated-exercises, bb-tutor-handoff, bb-scope, bb-task-numbers, bb-s
 
 ## Explainer page
 
-The client module, the islands with the components, the generated exercises' live tasks with the quiz's question
-types, the task numbers, the videos, the feedback mode, the controls of the diff mode (stepping from change to change), a self-assessment's run and the explainer's texts run in the learner's browser on the pages the build
-rendered.
+Everything live runs in the learner's browser, on the pages the build rendered: the exercises, the components, the
+videos, the feedback mode, the diff mode's controls and the self-assessment.
 
 ```arc42
 :::deployment-node
