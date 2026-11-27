@@ -91,7 +91,7 @@ export interface LanguageTemplates {
   task: string;
   steps: string[];
   hint?: string | undefined;
-  /** The mistakes' messages, plain text. */
+  /** The mistakes' messages, plain text; $\frac{a}{b}$ shows as a fraction (fraction.ts). */
   messages: string[];
   /**
    * The chemical formula of each value of the placeholders in \ce{{{…}}}, as MathML without <math>, by the value as

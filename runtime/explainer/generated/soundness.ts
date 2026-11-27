@@ -4,6 +4,7 @@ import { evaluate, parse, same, type Value } from "../expression.ts";
 import { Fraction } from "../fraction.ts";
 import { type Answer, isCorrect, type Question, rightAnswer } from "../../shared/questions/question.ts";
 import { verdict } from "../../shared/examples.ts";
+import { fractionProblems } from "../../shared/text/fraction.ts";
 import { type Data, type Generated, type Task, type Templates } from "./types.ts";
 import { kindOf } from "./comparator.ts";
 import { ATTEMPTS, compiled, generate, holds, StarvedError, values } from "./values.ts";
@@ -172,6 +173,18 @@ function seedProblems(
       ]),
     ];
     for (const [path, what, text] of texts) {
+      // the messages of the mistakes are shown with fractions set (fraction.ts); no other formula
+      if (path[0] === "mistakes") {
+        for (const found of fractionProblems(text)) {
+          const source = path.reduce<unknown>((at, part) => (at as Record<string, unknown> | undefined)?.[part], spec);
+          const keyed = typeof source === "object" && source !== null;
+          problems.push({
+            path: keyed ? [...path, each] : path,
+            ...(keyed ? { lang: each } : {}),
+            message: `for seed ${seed} ${what}: ${found}`,
+          });
+        }
+      }
       const left = /\{\{?([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\}\}?/.exec(text);
       if (left === null) continue;
       const source = path.reduce<unknown>((at, part) => (at as Record<string, unknown> | undefined)?.[part], spec);

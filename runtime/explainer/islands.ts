@@ -25,6 +25,7 @@
 // (ASSESSMENT_ANSWER_EVENT). Its elements are in a <template> until the self-assessment puts them into the page
 // (ASSESSMENT_UNPACKED_EVENT); the islands hydrate them then.
 import { createSSRApp, h, nextTick, ref, shallowRef, type Component } from "vue";
+import { fractionHtml } from "../shared/text/fraction.ts";
 import {
   addressOf,
   ASSESSMENT_ANSWER_EVENT,
@@ -65,7 +66,8 @@ function showFeedback(feedback: HTMLElement, correct: boolean, reason: unknown):
   if (!correct && typeof reason === "string" && reason.trim() !== "") {
     const why = feedback.ownerDocument.createElement("span");
     why.className = "question-diagnosis";
-    why.textContent = reason;
+    // the app's message may hold fractions, $\frac{3}{4}$, as the texts of the page (fraction.ts)
+    why.innerHTML = fractionHtml(reason);
     feedback.append(" ", why);
   }
   feedback.tabIndex = -1;

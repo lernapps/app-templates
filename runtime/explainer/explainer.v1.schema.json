@@ -1183,7 +1183,7 @@
           }
         },
         "mistakes": {
-          "description": "Typical mistakes: the wrong answer as an expression, and a message (plain text) that says what went wrong. A learner who gives that answer reads the message with the feedback, and may try again.",
+          "description": "Typical mistakes: the wrong answer as an expression, and a message (plain text; fractions as $\\frac{3}{4}$ are set as in the page, no other formula) that says what went wrong. A learner who gives that answer reads the message with the feedback, and may try again.",
           "type": "array",
           "minItems": 1,
           "items": {

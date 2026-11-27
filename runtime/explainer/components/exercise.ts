@@ -13,6 +13,7 @@ import {
   type DescribedTask,
 } from "../content.ts";
 import { inspect } from "../../shared/text/markdown.ts";
+import { fractionProblems } from "../../shared/text/fraction.ts";
 import { distinctSeeds, MAX_TASKS, SEED_TRIES } from "../tasks.ts";
 import { isText } from "./props.ts";
 
@@ -396,6 +397,11 @@ export function propertyProblems(logic: ExerciseLogic, props: unknown, seeds = C
         return [
           `for seed ${seed} ${call} is ${JSON.stringify(message) ?? "a function"}; reason gives the app's message for a wrong answer as a text, or undefined for none`,
         ];
+      }
+      if (typeof message === "string") {
+        // the message is shown with fractions set (fraction.ts); no other formula
+        const [found] = fractionProblems(message);
+        if (found !== undefined) return [`for seed ${seed} ${call}: ${found}`];
       }
     }
   }

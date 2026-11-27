@@ -768,6 +768,13 @@ An exercise component's `<Name>.ts` is the exercise contract. It exports:
 For its table of tasks it adds `template`, `params`, `mistakes` and `show`, all four or none (`dec-component-table`).
 The build tests the module, the islands use it on "Prüfen", and the tutor pages read it.
 
+The feedback of an exercise is made when the learner answers, so the build cannot render its formulas, and Temml stays out
+of the page. `reason` and the `mistakes` messages of a generated exercise may hold fractions in the notation of the page,
+`$\frac{3}{4}$`, which `shared/text/fraction.ts` sets in the browser as the same MathML: numbers, letters, `+ - = < >`,
+`\cdot \times \div \%`, parentheses and one level of `\frac`. Any other formula in these texts is a problem of the
+build (the property test of the component, the soundness test of the generated exercise); the feedback appears only with
+JavaScript, so the `<math>` count of the page without JavaScript is not touched.
+
 ```arc42
 :::interface
 id: if-exercise-logic
