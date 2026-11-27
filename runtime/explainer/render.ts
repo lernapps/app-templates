@@ -611,7 +611,7 @@ function sidebarNav(context: Context): string {
   return [
     `<aside class="explainer-sidebar">`,
     `<details class="explainer-nav">`,
-    `<summary class="explainer-nav-toggle">${plain(context.t("contents"))}</summary>`,
+    `<summary class="explainer-nav-toggle"><span class="explainer-nav-burger" aria-hidden="true">☰</span><span>${plain(context.t("contents"))}</span></summary>`,
     `<nav class="explainer-nav-body" aria-label="${plain(context.t("navLabel"))}">`,
     `<p class="explainer-nav-overview"><a href="${context.to("")}">← ${plain(context.t("overview"))}</a></p>`,
     tree,
