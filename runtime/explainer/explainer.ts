@@ -709,16 +709,46 @@ function startTutor(root: Document, data: TutorData, choice: WayChoice): void {
   showHint(select, hint);
   const plain = section.querySelector<HTMLElement>(".explainer-tutor-plain");
   if (plain) plain.hidden = true;
+  const robotIcon = () => {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = root.createElementNS(ns, "svg");
+    svg.setAttribute("class", "explainer-tutor-icon");
+    svg.setAttribute("width", "16");
+    svg.setAttribute("height", "16");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+    for (const d of ["M12 8V4H8", "M2 14h2", "M20 14h2", "M15 13v2", "M9 13v2"]) {
+      const path = root.createElementNS(ns, "path");
+      path.setAttribute("d", d);
+      svg.append(path);
+    }
+    const rect = root.createElementNS(ns, "rect");
+    rect.setAttribute("width", "16");
+    rect.setAttribute("height", "12");
+    rect.setAttribute("x", "4");
+    rect.setAttribute("y", "8");
+    rect.setAttribute("rx", "2");
+    svg.append(rect);
+    return svg;
+  };
   const show = () => {
     const chosen = choice.get();
     off.hidden = chosen !== undefined;
     bar.hidden = chosen === undefined;
     if (chosen === undefined) return;
+    const label = chosen.url === undefined ? data.copy : data.go.replace("{name}", chosen.name);
+    go.setAttribute("aria-label", label);
+    go.title = label;
     const text = root.createElement("span");
     text.className = "explainer-tutor-go-text";
-    text.textContent = chosen.url === undefined ? data.copy : data.go.replace("{name}", chosen.name);
+    text.textContent = "Tutor";
     done.textContent = data.done.replace("{name}", nameOf(chosen, root.documentElement.lang));
-    go.replaceChildren(iconOf(root, chosen), text);
+    go.replaceChildren(robotIcon(), text);
   };
   show();
   choice.listen(show);
@@ -1104,8 +1134,12 @@ function startStepper(root: Document): void {
     showAll = false;
     render();
     if (focus) {
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "instant" });
       const heading = sections[active]?.querySelector<HTMLElement>(":scope > h2");
-      if (heading) moveFocus(heading);
+      if (heading) {
+        if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
+        heading.focus({ preventScroll: true });
+      }
     }
   };
 

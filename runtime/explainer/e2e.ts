@@ -1594,7 +1594,8 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
         for (const id of ids.slice(1)) expect(after.get(id), `${id} stays`).toBe(before.get(id));
         // the bar's button copies the prompt with the page's address once copying the text is switched on
         const tutor = await switchOn(page, messageOf("de", "tutorOther"));
-        await expect(tutor.locator(".explainer-tutor-go")).toHaveText(`?${messageOf("de", "tutorCopy")}`);
+        await expect(tutor.locator(".explainer-tutor-go")).toHaveText("Tutor");
+        await expect(tutor.locator(".explainer-tutor-go")).toHaveAttribute("aria-label", messageOf("de", "tutorCopy"));
         await tutor.locator(".explainer-tutor-go").click();
         await expect(tutor.locator(".explainer-tutor-status")).toHaveText(messageOf("de", "tutorCopied"));
         const copied = await page.evaluate(() => (window as unknown as { copied: string[] }).copied);
@@ -1847,7 +1848,9 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
         const tutor = page.locator(".explainer-tutor");
         await expect(tutor.locator(".explainer-tutor-bar")).toBeVisible();
         await expect(tutor.locator("details.explainer-tutor-off")).toBeHidden();
-        if (name !== "copy") await expect(tutor.locator(".explainer-tutor-go")).toContainText(name);
+        await expect(tutor.locator(".explainer-tutor-go")).toHaveText("Tutor");
+        if (name !== "copy")
+          await expect(tutor.locator(".explainer-tutor-go")).toHaveAttribute("aria-label", new RegExp(name));
         await page.goto("./");
         await expect(choose).toHaveValue(name);
         await choose.selectOption("");
@@ -2242,33 +2245,33 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
           await expect(sections.nth(0)).toBeVisible();
           await expect(sections.nth(1)).toBeHidden();
           await expect(progress).toHaveAttribute("aria-valuenow", "1");
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
           await page.locator("main .explainer-step-next").click();
           await expect(sections.nth(0)).toBeHidden();
           await expect(sections.nth(1)).toBeVisible();
           await expect(progress).toHaveAttribute("aria-valuenow", "2");
+          await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
           await page.locator("main .explainer-stepper-step").first().click();
           await expect(sections.nth(0)).toBeVisible();
           await expect(sections.nth(1)).toBeHidden();
           await page.locator("main .explainer-stepper-all").click();
           await expect(sections.nth(0)).toBeVisible();
           await expect(sections.nth(1)).toBeVisible();
+          // opening with a hash jumps straight to that section on desktop
+          const secondHeading = sections.nth(1).locator(":scope > h2");
+          const secondId = await secondHeading.getAttribute("id");
+          if (secondId) {
+            await page.goto(`./${multiSection.url}#${secondId}`);
+            await expect(sections.nth(0)).toBeHidden();
+            await expect(sections.nth(1)).toBeVisible();
+          }
         } else {
-          // mobile starts expanded for natural vertical scrolling, and scrolling advances the progress bar
+          // mobile hides the stepper bar for natural vertical scrolling, and scrolling advances the progress bar
+          await expect(page.locator("main .explainer-stepper")).toBeHidden();
           await expect(sections.nth(0)).toBeVisible();
           await expect(sections.nth(1)).toBeVisible();
           await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
           await expect(progress.locator(".explainer-progress-fill")).toHaveAttribute("style", /width:\s*100%/);
-          await page.locator("main .explainer-stepper-all").click();
-          await expect(sections.nth(0)).toBeVisible();
-          await expect(sections.nth(1)).toBeHidden();
-        }
-        // opening with a hash jumps straight to that section on both desktop and mobile
-        const secondHeading = sections.nth(1).locator(":scope > h2");
-        const secondId = await secondHeading.getAttribute("id");
-        if (secondId) {
-          await page.goto(`./${multiSection.url}#${secondId}`);
-          await expect(sections.nth(0)).toBeHidden();
-          await expect(sections.nth(1)).toBeVisible();
         }
       });
     }
