@@ -9,8 +9,8 @@
 // explainer's own): check, reason and
 // show of the component's logic module give whether it is right, the app's message for a wrong one and the answer as
 // text. The island shows the feedback, with the message under it, in view with the focus, gives the component
-// checked: true until the answer changes, when it declares that prop ("Richtig!" goes then too; a wrong answer's
-// feedback stays as the hint to correct it), and passes the answer on to the client module as
+// checked: true until the answer changes, when it declares that prop ("Richtig!" and the solution go then too; a
+// wrong answer's feedback stays as the hint to correct it, with "Lösung zeigen"), and passes the answer on to the client module as
 // the event explainer-answered on its element ({ correct, answer, message }: answer is what the learner gave, as text,
 // for the result line of "Zurück zum Tutor", result.ts; message the app's message, for the lines of "Ich verstehe das
 // nicht", stuck.ts). After the right answer, or "Lösung zeigen" after a wrong one, it shows the solution of the task
@@ -217,12 +217,16 @@ async function hydrate(
       answer.value = value;
       checked.value = false;
       sync();
-      // "Richtig!" holds only for the answer it judged: it goes once the learner changes it (the component does not
-      // lock). A wrong answer's feedback stays, as in the questions: its reason helps to correct it.
+      // "Richtig!" and the solution hold only for the answer judged: they go once the learner changes it (the
+      // component does not lock, as a question does once its solution shows). A wrong answer's feedback stays, as in
+      // the questions: its reason helps to correct it, with "Lösung zeigen" again.
+      const wrong = feedback?.classList.contains("question-wrong") === true;
       if (feedback?.classList.contains("question-right")) {
         feedback.className = "question-feedback";
         feedback.textContent = "";
       }
+      if (solution) solution.hidden = true;
+      if (solve) solve.hidden = !wrong;
     };
     const declaresChecked = element.dataset["checked"] !== undefined;
     createSSRApp({

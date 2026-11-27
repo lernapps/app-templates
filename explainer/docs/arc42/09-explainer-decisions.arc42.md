@@ -168,8 +168,9 @@ addresses: qg-checkable, qg-accessibility
 ## Feedback Holds for the Answer It Judged
 
 A child changed a component's answer after "Richtig!" and still saw "Richtig!" beside a wrong answer. And "Prüfen"
-without an answer said the same for every kind of exercise. So "Richtig!" goes when the answer changes. A wrong answer's
-feedback stays until the next "Prüfen", since its reason helps to correct. Without an answer, the message says what is
+without an answer said the same for every kind of exercise. So "Richtig!" and the solution go when the answer changes,
+since a component does not lock as a question does once its solution shows. A wrong answer's feedback stays until the
+next "Prüfen", since its reason helps to correct, and "Lösung zeigen" offers the solution again. Without an answer, the message says what is
 missing for that kind of exercise. Rejected: treating an empty list as no answer (it may be right); clearing a wrong
 answer's feedback on every change (its reason would go).
 
