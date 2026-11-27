@@ -3770,18 +3770,18 @@ body:has(.explainer-diff-banner) .explainer-progress {
 
 .explainer-read-aloud-choice {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem;
 }
 
 .explainer-read-aloud-choice label {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.4rem;
+  flex: 0 1 auto;
   min-width: 0;
-  max-width: 100%;
 }
 
 .explainer-read-aloud-choice[hidden],
@@ -3790,6 +3790,7 @@ body:has(.explainer-diff-banner) .explainer-progress {
 }
 
 .explainer-read-aloud-choose {
+  flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
   min-height: 2.5rem;
@@ -3802,6 +3803,7 @@ body:has(.explainer-diff-banner) .explainer-progress {
 }
 
 .explainer-read-aloud-config-open {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
