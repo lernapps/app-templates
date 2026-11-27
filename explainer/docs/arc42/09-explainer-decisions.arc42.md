@@ -581,3 +581,32 @@ date: 2026-11-26
 addresses: qg-understandable, qg-accessibility, qg-checkable
 :::
 ```
+
+## Generic Read-Aloud Mode for Readable Blocks
+
+Children with reading difficulties benefit from hearing explanations and tasks read aloud while following along. Mirroring
+the AI tutor section on the start page, the explainer offers a read-aloud section with a voice selector and a gear
+button opening a configuration dialog (kept in a `<template>` until JavaScript runs). The dialog explains the two
+local speech backends—the device's own `speechSynthesis` (instant, no download) and a local Piper/WASM AI voice
+(`de_DE-thorsten-medium` for German, `en_GB-alba-medium` for English; ~80 MB one-time same-origin download from
+`/app-templates/assets/tts/` into `CacheStorage`, shared across all apps on the origin)—including the transparent disclosure that a
+spoken "KI-Stimme" announcement is intentionally omitted during playback so learners are not interrupted. At the bottom
+of the dialog sits the activation toggle (disabled with an explanation until the AI model is fully downloaded), along
+with speed (`0.75×`, `1×`, `1.25×`), optional read-along highlighting (`CSS.highlights` with an element-class fallback)
+and scope (all explainers or this app, `createSettings`). Content pages stay completely calm (no top toolbar or header
+button); only while read-aloud is active does every readable block (`text`, `definition`, `quote`, `note`/`example` as
+one unit, `figure`/`labelled-figure` captions and legends, `timeline`, `formula`, `self-test` and exercises) show a play
+button. Formulas carry their spoken words from the build (`data-speech` via Speech Rule Engine), and read-aloud pauses
+`<audio>` players and stops when one starts. Rejected: a permanent toolbar on every content page (visual clutter);
+pre-generated MP3s for every text block (storage and maintenance per text edit); a server-side TTS API
+(`con-frontend-only`, `con-apps-collect-nothing`).
+
+```arc42
+:::decision
+id: dec-explainer-read-aloud
+title: Start-page read-aloud activation with device and local Piper/WASM AI voices, keeping content pages calm
+status: accepted
+date: 2026-11-27
+addresses: qg-accessibility, qg-explainer-readable-without-js, con-frontend-only, con-no-request-before-click, con-state-on-device
+:::
+```

@@ -48,6 +48,7 @@ import { languageOfAudio } from "../shared/audio.ts";
 import { renderCredit } from "../shared/blocks/render.ts";
 import { assessmentOf } from "./assessment.ts";
 import { assessmentMain, assessmentOffer, type AssessmentContext } from "./assessment-page.ts";
+import { piperDownloadSizeMb, piperVoiceFor, READ_ALOUD_TEMPOS } from "./read-aloud.ts";
 
 function sizeless(site: Site, image: string): boolean {
   const file = site.images.get(image);
@@ -143,10 +144,10 @@ class Context {
   /** Where a link inside a text leads: /<chapter>/<page>/#<section> within this language's tree. */
   readonly resolve = (href: string): string => this.to(href.replace(/^\//, ""));
   markdown(text: Text): string {
-    return renderMarkdown(inLanguage(text, this.lang), this.resolve);
+    return renderMarkdown(inLanguage(text, this.lang), this.resolve, this.lang);
   }
   inline(text: Text): string {
-    return renderInline(inLanguage(text, this.lang), this.resolve);
+    return renderInline(inLanguage(text, this.lang), this.resolve, this.lang);
   }
 }
 
@@ -728,6 +729,7 @@ function main(context: Context): string {
         glossary,
         media,
         tutorAbout(context),
+        readAloudAbout(context),
         feedbackAbout(context),
         sources,
       ]
@@ -1072,6 +1074,66 @@ function needsChoice(context: Context): string {
     `<fieldset class="explainer-tutor-needs-where"><legend>${plain(context.t("needsScopeTitle"))}</legend>${scope("archetype", "needsScopeAll")} ${scope("app", "needsScopeApp")}</fieldset>`,
     `<p class="explainer-tutor-note">${plain(context.t("needsPrivacy"))}</p>`,
     `<p><button class="explainer-tutor-needs-done">${plain(context.t("needsDone"))}</button></p>`,
+    `</form>`,
+    `</dialog>`,
+    `</template>`,
+  ].join("\n");
+}
+
+/**
+ * The read-aloud section on the start page, mirroring `tutorAbout` and `needsChoice` (dec-explainer-read-aloud):
+ * a select to activate device speech or the local Piper AI voice, a gear button opening the configuration dialog
+ * (kept in a <template> until the client module runs) with the download explanation, size, AI-voice disclosure
+ * (consciously omitting a spoken "KI-Stimme" announcement while reading), tempo, optional highlighting, scope,
+ * and the bottom activation toggle. Without JavaScript the controls stay hidden.
+ */
+function readAloudAbout(context: Context): string {
+  const { site, lang } = context;
+  const storage = plain(site.storage ?? "explainer");
+  const voice = piperVoiceFor(lang);
+  const size = String(piperDownloadSizeMb(lang));
+  const formatRate = (rate: number) => `${lang.startsWith("de") ? String(rate).replace(".", ",") : String(rate)}×`;
+  const scope = (value: string, key: keyof Messages) =>
+    `<label><input type="radio" class="explainer-read-aloud-scope" name="vorlesen-gilt" value="${value}" /> ${plain(context.t(key))}</label>`;
+  const tempos = READ_ALOUD_TEMPOS.map(
+    (rate) =>
+      `<button type="button" class="explainer-read-aloud-rate" data-rate="${rate}" aria-pressed="${rate === 1}">${plain(formatRate(rate))}</button>`,
+  ).join("");
+  return [
+    `<section class="explainer-read-aloud-about" aria-labelledby="vorlesen">`,
+    `<h2 id="vorlesen">${plain(context.t("readAloudTitle"))}</h2>`,
+    `<p>${plain(context.t("readAloudAbout"))}</p>`,
+    `<p class="explainer-read-aloud-choice" hidden><label>${plain(context.t("readAloudChoose"))} <select class="explainer-read-aloud-choose" data-storage="${storage}"><option value="off">${plain(context.t("readAloudOff"))}</option><option value="device">${plain(context.t("readAloudDeviceOption"))}</option><option value="piper">${plain(context.t("readAloudPiperOption", { voice: voice.label, size }))}</option></select></label> <button type="button" class="explainer-read-aloud-config-open" aria-haspopup="dialog" aria-label="${plain(context.t("readAloudConfigOpen"))}" title="${plain(context.t("readAloudConfigOpen"))}">${SETTINGS_ICON}</button></p>`,
+    `<p class="explainer-read-aloud-hint" role="status" aria-live="polite" hidden></p>`,
+    `</section>`,
+    `<template class="explainer-read-aloud-dialog-template">`,
+    `<dialog class="explainer-read-aloud-dialog" data-storage="${storage}" aria-labelledby="vorlesen-dialog-titel">`,
+    `<form method="dialog">`,
+    `<div class="explainer-read-aloud-dialog-head">`,
+    `<h2 id="vorlesen-dialog-titel">${plain(context.t("readAloudDialogTitle"))}</h2>`,
+    `<button type="submit" class="explainer-read-aloud-dialog-close" aria-label="${plain(context.t("readAloudDialogClose"))}" title="${plain(context.t("readAloudDialogClose"))}">✕</button>`,
+    `</div>`,
+    `<div class="explainer-read-aloud-engine" role="radiogroup" aria-label="${plain(context.t("readAloudChoose"))}">`,
+    `<button type="button" class="explainer-read-aloud-engine-btn" data-engine="device" role="radio" aria-checked="true">${plain(context.t("readAloudDeviceShort"))}</button>`,
+    `<button type="button" class="explainer-read-aloud-engine-btn" data-engine="piper" role="radio" aria-checked="false">${plain(context.t("readAloudPiperShort"))}</button>`,
+    `</div>`,
+    `<p class="explainer-read-aloud-device-info">${plain(context.t("readAloudDeviceInfo"))}</p>`,
+    `<div class="explainer-read-aloud-piper-info" hidden>`,
+    `<p>${plain(context.t("readAloudPiperDownloadInfo", { voice: voice.label, size, licence: voice.licence }))}</p>`,
+    `<p>${plain(context.t("readAloudPiperAiNotice"))}</p>`,
+    `<p class="explainer-read-aloud-piper-actions"><button type="button" class="explainer-read-aloud-download">${plain(context.t("readAloudDownload", { size }))}</button> <button type="button" class="explainer-read-aloud-delete" hidden>${plain(context.t("readAloudDelete"))}</button></p>`,
+    `<progress class="explainer-read-aloud-progress" max="100" value="0" hidden></progress>`,
+    `<p class="explainer-read-aloud-download-status" role="status" aria-live="polite"></p>`,
+    `</div>`,
+    `<div class="explainer-read-aloud-options">`,
+    `<div class="explainer-read-aloud-option-row"><span>${plain(context.t("audioSpeed"))}</span><div class="explainer-read-aloud-speed" role="group" aria-label="${plain(context.t("audioSpeed"))}">${tempos}</div></div>`,
+    `<label class="explainer-read-aloud-option-row"><span>${plain(context.t("readAloudHighlight"))}</span><input type="checkbox" class="explainer-read-aloud-highlight" /></label>`,
+    `<fieldset class="explainer-read-aloud-where"><legend>${plain(context.t("needsScopeTitle"))}</legend>${scope("archetype", "needsScopeAll")} ${scope("app", "needsScopeApp")}</fieldset>`,
+    `</div>`,
+    `<div class="explainer-read-aloud-enable-box">`,
+    `<label class="explainer-read-aloud-enable-row"><span>${plain(context.t("readAloudEnable"))}</span><input type="checkbox" class="explainer-read-aloud-enable" role="switch" /></label>`,
+    `<p class="explainer-read-aloud-enable-hint" role="status" aria-live="polite"></p>`,
+    `</div>`,
     `</form>`,
     `</dialog>`,
     `</template>`,

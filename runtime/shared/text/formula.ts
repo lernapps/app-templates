@@ -126,6 +126,9 @@ export function formulaProblem(tex: string): string | undefined {
   }
 }
 
+/** Inline formula delimiter `$…$` in restricted Markdown and plain text. */
+export const FORMULA = /\$((?:\\.|[^\\$\n])+?)\$/g;
+
 /** The formula as MathML: a <math> element, on its own line when `display`. */
 export function renderFormula(tex: string, display: boolean): string {
   return temml.renderToString(tex, { displayMode: display, throwOnError: true });

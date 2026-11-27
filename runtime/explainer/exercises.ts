@@ -303,24 +303,25 @@ function formulaTexts(value: unknown): string[] {
 function questionData(block: QuestionBlock, lang: string): Extract<ExerciseData, { kind: "question" }> {
   const question = questionIn(block, lang);
   const rendered: Record<string, string> = {};
-  for (const text of formulaTexts(question)) rendered[text] = renderWithFormulas(text);
+  for (const text of formulaTexts(question)) rendered[text] = renderWithFormulas(text, lang);
   return { kind: "question", lang, question, rendered };
 }
 
 function questionExercise(block: QuestionBlock, lang: string, material: MaterialContext): string {
   const data = questionData(block, lang);
   const { question } = data;
+  const format = (text: string) => renderWithFormulas(text, lang);
   return [
     `<div class="explainer-exercise explainer-question" id="${block.id}">`,
     `<p class="explainer-exercise-label">${plain(message(lang, "exerciseLabel"))}</p>`,
     renderQuestion(question, {
       lang,
-      format: renderWithFormulas,
+      format,
       describe: (text) => formulaAlternative(text, lang),
       ...(question.material === undefined ? {} : { materialHtml: renderMaterial(question.material, material) }),
     }),
     `<details class="explainer-solution"><summary>${plain(questionMessagesIn(lang).solution)}</summary>`,
-    renderSolution(question, { lang, format: renderWithFormulas }),
+    renderSolution(question, { lang, format }),
     `</details>`,
     `<script type="application/json" class="explainer-exercise-data">${json(data)}</script>`,
     `</div>`,
@@ -361,15 +362,15 @@ export function openTaskData(block: OpenTask, lang: string, resolve: (href: stri
     kind: "open",
     lang,
     id: block.id,
-    task: renderMarkdown(inLanguage(block.task, lang), resolve),
+    task: renderMarkdown(inLanguage(block.task, lang), resolve, lang),
     answer: block.answer ?? ["text", "photo"],
     points: block.points.map((point) => ({
       text: inLanguage(point.text, lang),
       kind: point.kind ?? "content",
       ...(point.source === undefined ? {} : { href: resolve(point.source) }),
     })),
-    solution: renderMarkdown(inLanguage(block.solution, lang), resolve),
-    ...(block.hint === undefined ? {} : { hint: renderMarkdown(inLanguage(block.hint, lang), resolve) }),
+    solution: renderMarkdown(inLanguage(block.solution, lang), resolve, lang),
+    ...(block.hint === undefined ? {} : { hint: renderMarkdown(inLanguage(block.hint, lang), resolve, lang) }),
   };
 }
 
@@ -379,7 +380,7 @@ export const languageName = (code: string, lang: string): string =>
 
 /** The task of a language task as the learner reads it: its own, or a text by its mode and its first prompt. */
 export function languageTaskText(block: LanguageTask, lang: string, resolve: (href: string) => string): string {
-  if (block.task !== undefined) return renderMarkdown(inLanguage(block.task, lang), resolve);
+  if (block.task !== undefined) return renderMarkdown(inLanguage(block.task, lang), resolve, lang);
   const language = languageName(answerLanguage(block), lang);
   const mode = block.mode ?? "write";
   const first = block.items?.[0];
