@@ -203,15 +203,19 @@ export function startReadAloud(
     stopButton.hidden = true;
   };
 
-  const readTarget = async (target: HTMLElement, button: HTMLButtonElement) => {
+  const readTarget = (target: HTMLElement, button: HTMLButtonElement) => {
     if (activeTarget === target) {
       stop();
       return;
     }
-    stop();
+    if (activeTarget !== undefined) stop();
     status.textContent = "";
     const parts = extractSpeechParts(target, lang);
-    if (parts.length === 0) return;
+    const entries: { element: Element; sentence: string }[] = [];
+    for (const part of parts) {
+      for (const sentence of part.sentences) entries.push({ element: part.element, sentence });
+    }
+    if (entries.length === 0) return;
 
     // Pause any playing <audio> element on the page so voices do not overlap
     for (const audio of root.querySelectorAll("audio")) {
@@ -225,34 +229,41 @@ export function startReadAloud(
     setButtonPlaying(button, true);
     stopButton.hidden = false;
 
-    try {
-      for (const part of parts) {
-        let offset = 0;
-        for (const sentence of part.sentences) {
-          if (currentRun !== runId) return;
-          if (state.highlight) {
-            offset = highlightSentence(root, part.element, sentence, offset);
-          } else {
-            clearHighlight(root);
-          }
-          await backend.speak(sentence, { lang, rate: state.rate });
-          if (currentRun !== runId) return;
-        }
-      }
-    } catch {
-      if (currentRun === runId) {
-        status.textContent = message(lang, "readAloudError");
-      }
-    } finally {
-      if (currentRun === runId) {
+    const offsets = new WeakMap<Element, number>();
+    const onSegment = (index: number) => {
+      if (currentRun !== runId) return;
+      const entry = entries[index];
+      if (!entry) return;
+      if (state.highlight) {
+        const nextOffset = highlightSentence(root, entry.element, entry.sentence, offsets.get(entry.element) ?? 0);
+        offsets.set(entry.element, nextOffset);
+      } else {
         clearHighlight(root);
-        target.classList.remove("explainer-reading");
-        setButtonPlaying(button, false);
-        activeTarget = undefined;
-        activeButton = undefined;
-        stopButton.hidden = true;
       }
-    }
+    };
+
+    // Call speakAll synchronously within the click handler so iOS Safari preserves the user gesture for all sentences
+    void backend
+      .speakAll(
+        entries.map((entry) => entry.sentence),
+        { lang, rate: state.rate },
+        onSegment,
+      )
+      .catch(() => {
+        if (currentRun === runId) {
+          status.textContent = message(lang, "readAloudError");
+        }
+      })
+      .finally(() => {
+        if (currentRun === runId) {
+          clearHighlight(root);
+          target.classList.remove("explainer-reading");
+          setButtonPlaying(button, false);
+          activeTarget = undefined;
+          activeButton = undefined;
+          stopButton.hidden = true;
+        }
+      });
   };
 
   const attachButtons = () => {
@@ -265,7 +276,7 @@ export function startReadAloud(
       button.className = "explainer-read-btn";
       setButtonPlaying(button, false);
       button.addEventListener("click", () => {
-        void readTarget(target, button);
+        readTarget(target, button);
       });
       target.prepend(button);
     }

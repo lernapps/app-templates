@@ -13,7 +13,9 @@ import {
   NON_READABLE_BLOCK_TYPES,
   pickVoice,
   READ_ALOUD_TEMPOS,
+  speechLocale,
   splitSentences,
+  WebSpeechBackend,
 } from "../runtime/explainer/read-aloud.ts";
 import { renderPage } from "../runtime/explainer/render.ts";
 import { routes } from "../runtime/explainer/routes.ts";
@@ -125,5 +127,72 @@ describe("spoken formula annotations at build time", () => {
     for (const html of withMath) {
       expect(html).toContain("<math data-speech=");
     }
+  });
+});
+
+describe("WebSpeechBackend iOS Safari compatibility", () => {
+  test("maps two-letter page languages to BCP-47 locales", () => {
+    expect(speechLocale("de")).toBe("de-DE");
+    expect(speechLocale("en")).toBe("en-US");
+    expect(speechLocale("fr")).toBe("fr-FR");
+    expect(speechLocale("de-AT")).toBe("de-AT");
+  });
+
+  test("queues all segments synchronously without cancelling when idle", async () => {
+    const spoken: { text: string; lang: string; rate: number; onstart?: () => void; onend?: () => void }[] = [];
+    let cancels = 0;
+    class FakeUtterance {
+      text: string;
+      lang = "";
+      rate = 1;
+      voice: SpeechSynthesisVoice | null = null;
+      onstart: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      onerror: ((event: SpeechSynthesisErrorEvent) => void) | null = null;
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+    const synth = {
+      speaking: false,
+      pending: false,
+      paused: false,
+      getVoices: () => [],
+      resume: () => {},
+      cancel: () => {
+        cancels += 1;
+      },
+      speak: (utterance: FakeUtterance) => {
+        spoken.push({
+          text: utterance.text,
+          lang: utterance.lang,
+          rate: utterance.rate,
+          onstart: () => utterance.onstart?.(),
+          onend: () => utterance.onend?.(),
+        });
+      },
+    };
+    const fakeWindow = {
+      speechSynthesis: synth,
+      SpeechSynthesisUtterance: FakeUtterance,
+    } as unknown as Window;
+
+    const backend = new WebSpeechBackend(fakeWindow);
+    backend.stop();
+    expect(cancels).toBe(0);
+
+    const started: number[] = [];
+    const done = backend.speakAll(["Erster Satz.", "Zweiter Satz."], { lang: "de", rate: 0.75 }, (i) =>
+      started.push(i),
+    );
+    // Both utterances must be queued synchronously inside the user gesture
+    expect(spoken).toHaveLength(2);
+    expect(spoken[0]?.lang).toBe("de-DE");
+    expect(spoken[0]?.rate).toBe(0.75);
+    spoken[0]?.onstart?.();
+    spoken[1]?.onstart?.();
+    spoken[1]?.onend?.();
+    await done;
+    expect(started).toEqual([0, 1]);
   });
 });

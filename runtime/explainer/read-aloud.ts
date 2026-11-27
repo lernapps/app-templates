@@ -71,11 +71,30 @@ export interface SpeechBackend {
   available(): boolean;
   /** Speaks `text` and resolves when finished or cancelled. Rejects only on unexpected synthesis errors. */
   speak(text: string, options: SpeechOptions): Promise<void>;
+  /**
+   * Speaks `segments` in order, calling `onSegment(index)` as each segment starts. Queueing all segments
+   * synchronously within the click handler preserves the user gesture required by iOS Safari.
+   */
+  speakAll(segments: readonly string[], options: SpeechOptions, onSegment?: (index: number) => void): Promise<void>;
   /** Stops any ongoing speech immediately. */
   stop(): void;
 }
 
-/** Picks the best matching voice for `lang` from `voices`, preferring local voices with an exact or prefix match. */
+/** Full BCP-47 fallback locales for two-letter page languages, used when `getVoices()` is still empty on iOS Safari. */
+const DEFAULT_LOCALE: Readonly<Record<string, string>> = {
+  de: "de-DE",
+  en: "en-US",
+  fr: "fr-FR",
+  es: "es-ES",
+  it: "it-IT",
+};
+
+/** Normalizes a page language like `"de"` to a BCP-47 locale tag (`"de-DE"`). */
+export function speechLocale(lang: string): string {
+  return DEFAULT_LOCALE[lang.toLowerCase()] ?? lang;
+}
+
+/** Picks the best matching voice for `lang` from `voices`, preferring the default or local voice. */
 export function pickVoice(voices: readonly SpeechSynthesisVoice[], lang: string): SpeechSynthesisVoice | undefined {
   const target = lang.toLowerCase();
   const base = target.split("-")[0] ?? target;
@@ -84,7 +103,7 @@ export function pickVoice(voices: readonly SpeechSynthesisVoice[], lang: string)
     (voice) => voice.lang.toLowerCase().startsWith(`${base}-`) || voice.lang.toLowerCase() === base,
   );
   const pool = exact.length > 0 ? exact : prefix;
-  return pool.find((voice) => voice.localService) ?? pool[0];
+  return pool.find((voice) => voice.default) ?? pool.find((voice) => voice.localService) ?? pool[0];
 }
 
 /** Window with optional SpeechSynthesisUtterance constructor (present on browser windows with Web Speech API). */
@@ -94,6 +113,8 @@ type SpeechWindow = Window & { SpeechSynthesisUtterance?: typeof SpeechSynthesis
 export class WebSpeechBackend implements SpeechBackend {
   readonly #win: SpeechWindow | undefined;
   #active: (() => void) | undefined;
+  /** Strong references to queued utterances so WebKit/Blink do not garbage-collect them before `onend`. */
+  #utterances: SpeechSynthesisUtterance[] = [];
 
   constructor(win: Window | undefined = typeof window === "undefined" ? undefined : window) {
     this.#win = win as SpeechWindow | undefined;
@@ -109,43 +130,66 @@ export class WebSpeechBackend implements SpeechBackend {
   }
 
   speak(text: string, options: SpeechOptions): Promise<void> {
+    return this.speakAll([text], options);
+  }
+
+  speakAll(segments: readonly string[], options: SpeechOptions, onSegment?: (index: number) => void): Promise<void> {
     if (!this.available() || this.#win === undefined || this.#win.SpeechSynthesisUtterance === undefined) {
       return Promise.resolve();
     }
-    const trimmed = text.trim();
-    if (trimmed === "") return Promise.resolve();
+    const items = segments.map((text, index) => ({ text: text.trim(), index })).filter((item) => item.text !== "");
+    if (items.length === 0) return Promise.resolve();
     const synth = this.#win.speechSynthesis;
     const Utterance = this.#win.SpeechSynthesisUtterance;
+    const voice = pickVoice(synth.getVoices(), options.lang);
+    const locale = voice?.lang || speechLocale(options.lang);
+
+    if (synth.paused) synth.resume();
+
     return new Promise<void>((resolve, reject) => {
-      const utterance = new Utterance(trimmed);
-      utterance.lang = options.lang;
-      utterance.rate = options.rate;
-      const voice = pickVoice(synth.getVoices(), options.lang);
-      if (voice !== undefined) utterance.voice = voice;
       let settled = false;
       const finish = () => {
         if (settled) return;
         settled = true;
+        this.#utterances = [];
         if (this.#active === finish) this.#active = undefined;
         resolve();
       };
       this.#active = finish;
-      utterance.onend = finish;
-      utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
-        if (settled) return;
-        settled = true;
-        if (this.#active === finish) this.#active = undefined;
-        // "canceled" and "interrupted" happen routinely when the learner stops or switches blocks
-        if (event.error === "canceled" || event.error === "interrupted") resolve();
-        else reject(new Error(`Speech synthesis error: ${event.error}`));
-      };
-      synth.speak(utterance);
+      const queued: SpeechSynthesisUtterance[] = [];
+      for (let i = 0; i < items.length; i += 1) {
+        const item = items[i]!;
+        const utterance = new Utterance(item.text);
+        utterance.lang = locale;
+        utterance.rate = options.rate;
+        if (voice !== undefined) utterance.voice = voice;
+        utterance.onstart = () => {
+          if (!settled) onSegment?.(item.index);
+        };
+        if (i === items.length - 1) utterance.onend = finish;
+        utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+          if (settled) return;
+          settled = true;
+          this.#utterances = [];
+          if (this.#active === finish) this.#active = undefined;
+          // "canceled" and "interrupted" happen routinely when the learner stops or switches blocks
+          if (event.error === "canceled" || event.error === "interrupted") resolve();
+          else reject(new Error(`Speech synthesis error: ${event.error}`));
+        };
+        queued.push(utterance);
+      }
+      this.#utterances = queued;
+      // Queue all utterances synchronously inside the user gesture so iOS Safari does not block later sentences
+      for (const utterance of queued) synth.speak(utterance);
     });
   }
 
   stop(): void {
     if (!this.available() || this.#win === undefined) return;
-    this.#win.speechSynthesis.cancel();
+    const synth = this.#win.speechSynthesis;
+    // Avoid calling cancel() when idle: on iOS Safari a cancel() right before speak() can silence the new utterance
+    if (this.#utterances.length > 0 || synth.speaking || synth.pending) synth.cancel();
+    this.#utterances = [];
     this.#active?.();
   }
 }

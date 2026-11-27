@@ -13,6 +13,7 @@ Den Explainer in `@lernapps/app-templates` generisch um einen Vorlese-Modus für
 - **Formeln:** Beim Build wird `data-speech` via `speakFormula(tex, lang)` auf `<math>`-Elemente geschrieben, sodass Inline- und Display-Formeln sauber vorgelesen werden.
 - **Hervorhebung ohne DOM-Bruch:** Satz-/Abschnittshervorhebung nutzt bevorzugt die CSS Custom Highlight API (`CSS.highlights`) mit sicherem Klassen-Fallback auf Absatz-/Element-Ebene (`.explainer-reading-part`), sodass Links, MathML und Event-Listener unangetastet bleiben.
 - **Audio-Koordination:** Startendes Vorlesen pausiert `<audio>`-Elemente; startendes `<audio>` stoppt das Vorlesen.
+- **iOS-Safari-Kompatibilität (`WebSpeechBackend.speakAll`):** Alle Sätze eines Blocks werden synchron innerhalb des Klick-Handlers in `speechSynthesis` eingereiht (User-Gesture-Anforderung auf iOS), `cancel()` wird nur bei laufender Ausgabe aufgerufen, `resume()` entsperrt pausierte Queues, starke Referenzen verhindern vorzeitige GC, und zweibuchstabige Sprachen werden auf volle BCP-47-Locales (`de` → `de-DE`) normiert.
 
 ## Notes
 ### Plattformdesign (PDT) & Architektur (arc42)
