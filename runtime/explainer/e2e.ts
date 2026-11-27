@@ -1455,8 +1455,12 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
               else if (exercise.kind === "speaking") continue; // nothing to check: its own tests record and rate
               else await checkGenerated(page, item.url, exercise);
             }
-            // only an open task keeps something, its answer, and only while the tab is open
-            expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+            // only an open task keeps something in sessionStorage, and scrolling to the last exercise may mark the page read
+            expect(
+              (await page.evaluate(() => Object.keys(localStorage))).filter(
+                (key) => !/^lernapps:[^:]+:read$/.test(key),
+              ),
+            ).toEqual([]);
             const kept = await page.evaluate(() => Object.keys(sessionStorage));
             expect(
               kept.filter((key) => !/^lernapps:[^:]+:antwort:/.test(key)),
@@ -1526,9 +1530,11 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
             page,
           }) => {
             await checkComponents(page, item);
-            expect(await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).toEqual(
-              [],
-            );
+            expect(
+              (await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).filter(
+                (key) => !/^lernapps:[^:]+:read$/.test(key),
+              ),
+            ).toEqual([]);
           });
         }
     });
@@ -2149,7 +2155,7 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
             JSON.parse(localStorage.getItem(key) ?? ""),
           ]),
         );
-        expect(kept).toEqual([["feedback", { on: false, seen: true }]]);
+        expect(kept.filter(([name]) => name !== "read")).toEqual([["feedback", { on: false, seen: true }]]);
         // switched on again, the bar does not open on its help
         await page.locator("main .explainer-feedback-invite button").click();
         await expect(panel).toBeVisible();

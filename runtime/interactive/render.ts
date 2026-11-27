@@ -105,7 +105,7 @@ export function renderPage(app: App, page: Page): RenderedPage {
             .map((route) => `<li id="${route.id}"><a href="#${route.id}">${text(route.title)}</a></li>`)
             .join("")}</ul></nav>`;
     main = [
-      `<div class="interactive-title"><h1>${title}</h1><div class="interactive-title-slot" hidden></div></div>`,
+      `<div class="interactive-title"><h1>${title}</h1><div class="interactive-title-slot" hidden></div><a class="interactive-howto-link" href="${to("")}">${t("howto")}</a></div>`,
       `<noscript><p class="interactive-noscript">${t("noscriptApp")} <a href="${to("")}">${t("toStart")}</a></p></noscript>`,
       nav,
       `<div class="interactive-app" data-routes="${plain(JSON.stringify(routeIds(app)))}"></div>`,

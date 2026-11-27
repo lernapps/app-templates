@@ -172,7 +172,8 @@ describe("one build writes every page", () => {
         // every content page has an exercise; a generated one its three worked tasks, each with its "Lösung"
         if (route.kind === "page") expect(html, `${route.path}: an exercise`).toContain('class="explainer-exercise');
         // without an option of the app, an exercise with task numbers starts at a random one
-        expect(html).toContain('<main class="explainer" id="inhalt-der-seite">');
+        expect(html).toMatch(/<main class="explainer" id="inhalt-der-seite"[^>]*>/);
+        expect(html).not.toContain('data-task-start="first"');
         for (const generated of html.split('class="explainer-exercise explainer-generated"').slice(1)) {
           const exercise = generated.split('class="explainer-exercise-data"')[0] ?? "";
           expect(exercise.split('class="explainer-worked-task"').length - 1).toBe(3);
@@ -318,7 +319,7 @@ describe("an exercise for young learners (#209)", () => {
     writeFileSync(yaml, `${readFileSync(yaml, "utf8")}tasks:\n  start: first\n`);
     await build({ root, base: "./", logLevel: "silent", configFile: false, plugins: [explainer()] });
     const html = readFileSync(join(root, "dist/revolution/sommer-1789/index.html"), "utf8");
-    expect(html).toContain('<main class="explainer" id="inhalt-der-seite" data-task-start="first">');
+    expect(html).toMatch(/<main class="explainer" id="inhalt-der-seite" data-task-start="first"[^>]*>/);
     // the generated ordering of the page: each worked task lists its items, under the hint how to order them
     const worked = html.split('class="explainer-worked-task"').slice(1);
     expect(worked).toHaveLength(3);
