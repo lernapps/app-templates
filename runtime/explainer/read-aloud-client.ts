@@ -343,9 +343,18 @@ export function startReadAloud(root: Document = document, backends: ReadAloudBac
     syncBlocks();
   });
 
+  const refreshPiperStatus = () => {
+    if (!piperBackend.available()) return;
+    void piperBackend.isDownloaded(lang).then((cached) => {
+      piperDownloaded = cached;
+      syncStartAndDialog();
+    });
+  };
+
   openBtn?.addEventListener("click", () => {
     syncStartAndDialog();
     dialog?.showModal();
+    refreshPiperStatus();
   });
 
   for (const button of engineButtons) {
@@ -458,11 +467,6 @@ export function startReadAloud(root: Document = document, backends: ReadAloudBac
   syncStartAndDialog();
   syncBlocks();
 
-  // Check local CacheStorage (no network) to reflect whether the Piper model is already on this device
-  if (piperBackend.available()) {
-    void piperBackend.isDownloaded(lang).then((cached) => {
-      piperDownloaded = cached;
-      syncStartAndDialog();
-    });
-  }
+  // Check local CacheStorage (no network) only when the learner already chose the Piper AI voice
+  if (state.engine === "piper") refreshPiperStatus();
 }

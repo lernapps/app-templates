@@ -65,8 +65,8 @@ export interface PiperVoiceSpec {
   configPath: string;
 }
 
-/** CacheStorage bucket shared across all apps on the same origin (e.g. `lernapps.net`). */
-export const PIPER_CACHE_NAME = "lernapps-tts-v1";
+/** CacheStorage bucket shared across all explainer apps on the origin (allowed by own-data-only). */
+export const PIPER_CACHE_NAME = "lernapps:settings:explainer:tts-v1";
 
 /** Default same-origin path where static Piper runtime and voice models live (published by app-templates). */
 export const PIPER_BASE_URL = "/app-templates/assets/tts/";
