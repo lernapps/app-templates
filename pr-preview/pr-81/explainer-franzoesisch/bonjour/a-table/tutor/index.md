@@ -93,11 +93,11 @@ Jetzt hörst du die Sätze, mit einer weiblichen und einer männlichen KI-Stimme
 - Antwortformat: die ganze Antwort auf Französisch schreiben
 - Wie die App Fehler der Form zählt: Groß- und Kleinschreibung richtig mit Hinweis, Akzente falsch, Bindestrich falsch, Apostroph falsch, Satzzeichen falsch
 - Einträge (Vorgabe → Lösung):
-1. Teil A der Abbildung → le pain
-2. Teil B der Abbildung → la pomme
+1. Markierung A in der Abbildung → le pain
+2. Markierung B in der Abbildung → la pomme
      - le pomme: Pomme ist weiblich: la pomme.
-3. Teil C der Abbildung → le fromage
-4. Teil D der Abbildung → l'eau
+3. Markierung C in der Abbildung → le fromage
+4. Markierung D in der Abbildung → l'eau
      - la eau / le eau: Vor einem Vokal wird le oder la zu l': l'eau.
 - So hilfst du: Die App prüft Wort für Wort gegen die Lösungen oben und nennt Fehler der Form (zum Beispiel Akzente) mit den Wörtern des Kindes. Sag nicht die Lösung vor: Frag nach der Regel (Endung, Geschlecht, Zeitform) oder nach einem ähnlichen Satz der Seite. Hält die App eine Fassung des Kindes für falsch, die du für richtig hältst, sag es dem Kind: Die App kennt nur die Fassungen oben.
 - Link: [../?via=tutor#tisch-beschriften](../?via=tutor#tisch-beschriften)
