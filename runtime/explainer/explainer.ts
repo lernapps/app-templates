@@ -792,6 +792,7 @@ export function startExplainer(root: Document = document): void {
   startFeedback(root);
   startDiff(root);
   startSidebar(root);
+  startStepper(root);
   startReadProgress(root);
   startAssessment(root, {
     chosen: (storage, ways) => new WayChoice(storage, ways).get(),
@@ -952,4 +953,150 @@ function startReadProgress(root: Document): void {
   if (typeof window !== "undefined") {
     window.addEventListener("scroll", startObserving, { once: true, passive: true });
   }
+}
+
+/**
+ * Turns top-level sections of a content page into a clickable step-by-step view with JavaScript,
+ * while keeping the page complete without JavaScript, in diff/feedback mode, and when printing.
+ */
+function startStepper(root: Document): void {
+  const main = root.querySelector<HTMLElement>("main.explainer[data-page-key]");
+  if (!main) return;
+  if (root.querySelector(".explainer-diff-bar")) return;
+  if (new URLSearchParams(root.location.search).has("feedback")) return;
+  const sections = [...main.querySelectorAll<HTMLElement>(":scope > section.explainer-section")];
+  if (sections.length < 2) return;
+
+  const lang = root.documentElement.lang || "de";
+  const titles = sections.map((section, index) => {
+    const heading = section.querySelector<HTMLElement>(":scope > h2");
+    return heading?.textContent?.trim() || String(index + 1);
+  });
+
+  const toc = main.querySelector<HTMLElement>(":scope > nav.explainer-toc");
+  if (toc) toc.hidden = true;
+
+  // Top step bar with clickable step tabs + "Show all" toggle
+  const bar = root.createElement("nav");
+  bar.className = "explainer-stepper";
+  bar.setAttribute("aria-label", message(lang, "stepperLabel"));
+
+  const list = root.createElement("ol");
+  list.className = "explainer-stepper-steps";
+  const stepButtons = titles.map((title, index) => {
+    const item = root.createElement("li");
+    const button = root.createElement("button");
+    button.type = "button";
+    button.className = "explainer-stepper-step";
+    button.textContent = `${index + 1}. ${title}`;
+    button.addEventListener("click", () => {
+      showAll = false;
+      showStep(index, true);
+    });
+    item.append(button);
+    list.append(item);
+    return button;
+  });
+
+  const allButton = root.createElement("button");
+  allButton.type = "button";
+  allButton.className = "explainer-stepper-all";
+  allButton.setAttribute("aria-pressed", "false");
+  allButton.textContent = message(lang, "stepperAll");
+  allButton.addEventListener("click", () => {
+    showAll = !showAll;
+    render();
+  });
+
+  bar.append(list, allButton);
+  const firstSection = sections[0];
+  if (firstSection) main.insertBefore(bar, firstSection);
+
+  // Bottom prev/next section navigation
+  const pager = root.createElement("nav");
+  pager.className = "explainer-step-pager";
+  pager.setAttribute("aria-label", message(lang, "stepperPager"));
+
+  const prevButton = root.createElement("button");
+  prevButton.type = "button";
+  prevButton.className = "explainer-step-prev";
+  prevButton.addEventListener("click", () => showStep(active - 1, true));
+
+  const nextButton = root.createElement("button");
+  nextButton.type = "button";
+  nextButton.className = "explainer-step-next";
+  nextButton.addEventListener("click", () => showStep(active + 1, true));
+
+  pager.append(prevButton, nextButton);
+  const lastSection = sections[sections.length - 1];
+  lastSection?.after(pager);
+
+  const stepForHash = (hash: string): number | undefined => {
+    if (!hash || hash === "#") return undefined;
+    const id = decodeURIComponent(hash.slice(1));
+    const target = root.getElementById(id);
+    if (!target) return undefined;
+    const found = sections.findIndex((section) => section === target || section.contains(target));
+    return found >= 0 ? found : undefined;
+  };
+
+  let active = stepForHash(root.location.hash) ?? 0;
+  let showAll = false;
+
+  const render = () => {
+    allButton.setAttribute("aria-pressed", String(showAll));
+    allButton.textContent = message(lang, showAll ? "stepperOne" : "stepperAll");
+    sections.forEach((section, index) => {
+      section.hidden = !showAll && index !== active;
+    });
+    stepButtons.forEach((button, index) => {
+      if (!showAll && index === active) button.setAttribute("aria-current", "step");
+      else button.removeAttribute("aria-current");
+    });
+    pager.hidden = showAll;
+    if (!showAll) {
+      const prevTitle = titles[active - 1];
+      const nextTitle = titles[active + 1];
+      prevButton.hidden = prevTitle === undefined;
+      if (prevTitle !== undefined) prevButton.textContent = `← ${message(lang, "stepperPrev", { title: prevTitle })}`;
+      nextButton.hidden = nextTitle === undefined;
+      if (nextTitle !== undefined) nextButton.textContent = `${message(lang, "stepperNext", { title: nextTitle })} →`;
+    }
+  };
+
+  const showStep = (index: number, focus: boolean) => {
+    if (index < 0 || index >= sections.length) return;
+    active = index;
+    showAll = false;
+    render();
+    if (focus) {
+      const heading = sections[active]?.querySelector<HTMLElement>(":scope > h2");
+      if (heading) moveFocus(heading);
+    }
+  };
+
+  // Internal hash links and hash changes jump directly to the section holding the target
+  if (typeof window !== "undefined") {
+    window.addEventListener("hashchange", () => {
+      const target = stepForHash(root.location.hash);
+      if (target !== undefined) showStep(target, false);
+    });
+  }
+  main.addEventListener("click", (event) => {
+    const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#"]');
+    if (!link) return;
+    const href = link.getAttribute("href");
+    if (!href) return;
+    const target = stepForHash(href);
+    if (target !== undefined) showStep(target, false);
+  });
+
+  // Switching on feedback mode expands all sections so any block can be annotated
+  const feedbackBtn = main.querySelector<HTMLButtonElement>(".explainer-feedback-invite button");
+  feedbackBtn?.addEventListener("click", () => {
+    showAll = true;
+    render();
+  });
+
+  render();
 }

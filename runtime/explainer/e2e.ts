@@ -324,12 +324,21 @@ async function expectVocabularies(page: Page, item: PageOutline): Promise<void> 
   }
 }
 
+/** Expands all sections when the page's section stepper is active, so block-level checks can reach every section. */
+async function showAllSections(page: Page): Promise<void> {
+  const button = page.locator("main .explainer-stepper-all");
+  if ((await button.count()) > 0 && (await button.getAttribute("aria-pressed")) === "false") {
+    await button.click();
+  }
+}
+
 /**
  * With JavaScript: each self-test shows its options as buttons and hides the folded answer; the arrow keys answer
  * nothing, a pick (Enter) says whether it was right and why, and another pick replaces that feedback.
  */
 async function checkSelfTests(page: Page, item: PageOutline): Promise<void> {
   await page.goto(`./${item.url}`);
+  await showAllSections(page);
   const blocks = page.locator("main .explainer-selftest");
   await expect(blocks, `${item.url}: one block per self-test`).toHaveCount(item.selfTests.length);
   for (const [index, selfTest] of item.selfTests.entries()) {
@@ -361,6 +370,7 @@ async function checkVocabulary(page: Page, item: PageOutline): Promise<void> {
   const [first] = item.vocabularies;
   if (first === undefined) return;
   await page.goto(`./${item.url}`);
+  await showAllSections(page);
   const block = page.locator("main .explainer-vocabulary").first();
   const target = block.locator('.explainer-vocabulary-cover[data-side="target"]');
   const source = block.locator('.explainer-vocabulary-cover[data-side="source"]');
@@ -402,6 +412,7 @@ async function checkAudio(page: Page, item: PageOutline): Promise<void> {
     if (/\/audio\/[^/]+\.mp3$/.test(new URL(request.url()).pathname)) requested.push(request.url());
   });
   await page.goto(`./${item.url}`);
+  await showAllSections(page);
   await page.waitForLoadState("networkidle");
   const players = page.locator("main .explainer-audio audio:visible");
   await expect(players, `${item.url}: one player per audio prompt`).toHaveCount(item.audio.length);
@@ -528,6 +539,7 @@ async function checkSpeaking(
     };
   });
   await page.goto(`./${item.url}`);
+  await showAllSections(page);
   const view = page.locator(`[id="${task.id}"]`);
   const live = view.locator(".explainer-speaking-live");
   await expect(live, `${task.id}: the live task shows with JavaScript`).toBeVisible();
@@ -591,6 +603,7 @@ async function checkSpeakingWithoutMicrophone(
     navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException("refused", "NotAllowedError"));
   });
   await page.goto(`./${item.url}`);
+  await showAllSections(page);
   const row = page.locator(`[id="${task.id}"] .explainer-speaking-item`).first();
   await row.getByRole("button", { name: messageOf("de", "speakRecord"), exact: true }).click();
   await expect(row.locator(".explainer-speaking-nomic")).toContainText(messageOf("de", "speakNoMic"));
@@ -619,6 +632,7 @@ async function checkVideos(page: Page, item: PageOutline, origin: string): Promi
       .evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])
       .then((keys) => keys.filter((key) => !/^lernapps:[^:]+:read$/.test(key)));
   await page.goto(`./${item.url}`);
+  await showAllSections(page);
   const videos = page.locator("main figure.explainer-video");
   const [first] = item.videos;
   if (first === undefined) return;
@@ -649,6 +663,7 @@ async function checkVideos(page: Page, item: PageOutline, origin: string): Promi
   await always.first().check();
   expect(await stored(), "the choice is kept").toHaveLength(1);
   await page.reload();
+  await showAllSections(page);
   await expect(page.locator("main figure.explainer-video iframe"), "every player, without a click").toHaveCount(
     item.videos.length,
   );
@@ -662,6 +677,7 @@ async function checkVideos(page: Page, item: PageOutline, origin: string): Promi
   expect(await stored(), "the choice goes").toEqual([]);
   requested.length = 0;
   await page.reload();
+  await showAllSections(page);
   await expect(videos.first().locator(".explainer-video-play")).toBeVisible();
   await expect(page.locator("iframe")).toHaveCount(0);
   expect(requested, `${item.url}: again no request before a click`).toEqual([]);
@@ -675,6 +691,7 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
   });
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`./${item.url}`);
+  await showAllSections(page);
   const components = page.locator("main .explainer-component");
   for (const [index, component] of item.components.entries()) {
     const element = components.nth(index);
@@ -1562,6 +1579,7 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
           });
         });
         await page.goto(`./${item.url}`);
+        await showAllSections(page);
         const ids = item.exercises.flatMap((exercise) => (exercise.kind === "generated" ? [exercise.id] : []));
         // the task numbers are in the address as soon as the page runs; "Neue Aufgabe" changes only its exercise's
         for (const id of ids) {
@@ -2210,6 +2228,35 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
         await expect(page.locator("aside.explainer-feedback")).toBeVisible();
       });
     });
+
+    const multiSection = (app.pages["de"] ?? []).find((candidate) => candidate.sections.length >= 2);
+    if (multiSection !== undefined) {
+      test("the section stepper shows one section at a time, follows anchors and toggles all sections", async ({
+        page,
+      }) => {
+        await page.goto(`./${multiSection.url}`);
+        const sections = page.locator("main.explainer > section.explainer-section");
+        await expect(sections.nth(0)).toBeVisible();
+        await expect(sections.nth(1)).toBeHidden();
+        await page.locator("main .explainer-step-next").click();
+        await expect(sections.nth(0)).toBeHidden();
+        await expect(sections.nth(1)).toBeVisible();
+        await page.locator("main .explainer-stepper-step").first().click();
+        await expect(sections.nth(0)).toBeVisible();
+        await expect(sections.nth(1)).toBeHidden();
+        await page.locator("main .explainer-stepper-all").click();
+        await expect(sections.nth(0)).toBeVisible();
+        await expect(sections.nth(1)).toBeVisible();
+        // opening with a hash jumps straight to that section
+        const secondHeading = sections.nth(1).locator(":scope > h2");
+        const secondId = await secondHeading.getAttribute("id");
+        if (secondId) {
+          await page.goto(`./${multiSection.url}#${secondId}`);
+          await expect(sections.nth(0)).toBeHidden();
+          await expect(sections.nth(1)).toBeVisible();
+        }
+      });
+    }
 
     test("nothing is stored on the device", async ({ page, context }) => {
       const urls = app.languages.flatMap((lang) => [...(app.others[lang] ?? []), ...(app.pages[lang] ?? [])]);
