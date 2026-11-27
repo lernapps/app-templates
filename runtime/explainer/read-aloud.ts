@@ -141,7 +141,11 @@ export class WebSpeechBackend implements SpeechBackend {
     if (items.length === 0) return Promise.resolve();
     const synth = this.#win.speechSynthesis;
     const Utterance = this.#win.SpeechSynthesisUtterance;
-    const voice = pickVoice(synth.getVoices(), options.lang);
+    const ua = this.#win.navigator?.userAgent ?? "";
+    const touchPoints = this.#win.navigator?.maxTouchPoints ?? 0;
+    const isIos = /\b(iPhone|iPad|iPod)\b/.test(ua) || (/\bMacintosh\b/.test(ua) && touchPoints > 1);
+    // On iOS Safari, forcing a voice from getVoices() can select an un-downloaded or silent voice; rely on BCP-47 lang.
+    const voice = isIos ? undefined : pickVoice(synth.getVoices(), options.lang);
     const locale = voice?.lang || speechLocale(options.lang);
 
     if (synth.paused) synth.resume();
@@ -162,6 +166,7 @@ export class WebSpeechBackend implements SpeechBackend {
         const utterance = new Utterance(item.text);
         utterance.lang = locale;
         utterance.rate = options.rate;
+        utterance.volume = 1;
         if (voice !== undefined) utterance.voice = voice;
         utterance.onstart = () => {
           if (!settled) onSegment?.(item.index);
