@@ -594,12 +594,13 @@ spoken "KI-Stimme" announcement is intentionally omitted during playback so lear
 of the dialog sits the activation toggle (disabled with an explanation until the AI model is fully downloaded), along
 with speed (`0.75×`, `1×`, `1.25×`), optional read-along highlighting (`CSS.highlights` with an element-class fallback)
 and scope (all explainers or this app, `createSettings`). Content pages stay completely calm (no top toolbar or header
-button); only while read-aloud is active does every readable block (`text`, `definition`, `quote`, `note`/`example` as
-one unit, `figure`/`labelled-figure` captions and legends, `timeline`, `formula`, `self-test` and exercises) show a play
-button. Formulas carry their spoken words from the build (`data-speech` via Speech Rule Engine), and read-aloud pauses
-`<audio>` players and stops when one starts. Rejected: a permanent toolbar on every content page (visual clutter);
-pre-generated MP3s for every text block (storage and maintenance per text edit); a server-side TTS API
-(`con-frontend-only`, `con-apps-collect-nothing`).
+button); only while read-aloud is active does every readable prose block (`text`, `definition`, `quote`, `note`/`example`
+as one unit, `timeline`, `formula`, `self-test` and exercise prompts) show a play button—strictly reading only the
+textual prose (excluding tables, figures/captions, answer options, form controls, and closed solution/hint details).
+Formulas carry their spoken words from the build (`data-speech` via Speech Rule Engine), and read-aloud pauses `<audio>`
+players and stops when one starts. Rejected: a permanent toolbar on every content page (visual clutter); pre-generated
+MP3s for every text block (storage and maintenance per text edit); a server-side TTS API (`con-frontend-only`,
+`con-apps-collect-nothing`).
 
 ```arc42
 :::decision

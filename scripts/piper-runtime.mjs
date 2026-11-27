@@ -45,43 +45,34 @@ async function phonemize(text, espeakVoice) {
   const wasmUrl = new URL("./phonemize/piper_phonemize.wasm", import.meta.url).href;
   const dataUrl = new URL("./phonemize/piper_phonemize.data", import.meta.url).href;
   const input = JSON.stringify([{ text: text.trim() }]);
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    createPiperPhonemize({
-      print(data) {
-        if (settled) return;
-        try {
-          const parsed = JSON.parse(data);
-          if (Array.isArray(parsed.phoneme_ids)) {
-            settled = true;
-            resolve(parsed.phoneme_ids);
-          }
-        } catch {
-          // ignore non-JSON stdout lines
+  const allIds = [];
+  let fatalError;
+  const mod = await createPiperPhonemize({
+    print(data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed.phoneme_ids) && parsed.phoneme_ids.length > 0) {
+          allIds.push(...parsed.phoneme_ids);
         }
-      },
-      printErr(msg) {
-        if (!settled && msg && /error|fatal/i.test(String(msg))) {
-          settled = true;
-          reject(new Error(String(msg)));
-        }
-      },
-      locateFile(url) {
-        if (url.endsWith(".wasm")) return wasmUrl;
-        if (url.endsWith(".data")) return dataUrl;
-        return url;
-      },
-    })
-      .then((mod) => {
-        mod.callMain(["-l", espeakVoice, "--input", input, "--espeak_data", "/espeak-ng-data"]);
-      })
-      .catch((err) => {
-        if (!settled) {
-          settled = true;
-          reject(err);
-        }
-      });
+      } catch {
+        // ignore non-JSON stdout lines
+      }
+    },
+    printErr(msg) {
+      if (msg && /error|fatal/i.test(String(msg))) {
+        fatalError = new Error(String(msg));
+      }
+    },
+    locateFile(url) {
+      if (url.endsWith(".wasm")) return wasmUrl;
+      if (url.endsWith(".data")) return dataUrl;
+      return url;
+    },
   });
+  mod.callMain(["-l", espeakVoice, "--input", input, "--espeak_data", "/espeak-ng-data"]);
+  if (allIds.length > 0) return allIds;
+  if (fatalError) throw fatalError;
+  throw new Error("piper_phonemize produced no phoneme IDs");
 }
 
 function pcm2wav(samples, sampleRate) {

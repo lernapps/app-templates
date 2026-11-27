@@ -119,13 +119,15 @@ export function piperDownloadSizeMb(lang: string): number {
 
 /**
  * Block types that do not carry prose suitable for generic read-aloud: source code, video embeds, vocabulary tables
- * (which have mixed languages or dedicated audio), data tables, and Vue islands (owned by Vue hydration).
+ * (which have mixed languages or dedicated audio), data tables, figures/captions, and Vue islands (owned by Vue hydration).
  */
 export const NON_READABLE_BLOCK_TYPES: ReadonlySet<string> = new Set([
   "code",
   "video",
   "vocabulary",
   "table",
+  "figure",
+  "labelled-figure",
   "vue-component",
 ]);
 
@@ -294,17 +296,21 @@ export interface DownloadProgress {
   percent: number;
 }
 
+/** Minimal silent WAV data URI used to unlock a reusable `HTMLAudioElement` synchronously inside a user click gesture. */
+const SILENT_WAV_DATA_URI = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
 /**
- * Local in-browser Piper/WASM backend backed by `CacheStorage` (`lernapps-tts-v1`).
+ * Local in-browser Piper/WASM backend backed by `CacheStorage` (`lernapps:settings:explainer:tts-v1`).
  * Never fetches anything before an explicit user click (`download()`). Once downloaded from same-origin
- * `/assets/tts/`, the model is shared across all explainer apps on the origin and played via `HTMLAudioElement`
- * (which also works on iPhones in Silent Mode).
+ * `/assets/tts/`, the model is shared across all explainer apps on the origin and played via a single reusable
+ * `HTMLAudioElement` unlocked synchronously inside the click handler (required by iOS Safari).
  */
 export class PiperWasmBackend implements SpeechBackend {
   readonly #win: Window | undefined;
   readonly #baseUrl: string;
-  #activeAudio: HTMLAudioElement | undefined;
+  #audio: HTMLAudioElement | undefined;
   #activeUrl: string | undefined;
+  #abortCurrent: (() => void) | undefined;
   #aborted = false;
   #runtimePromise: Promise<PiperRuntimeModule> | undefined;
 
@@ -412,6 +418,19 @@ export class PiperWasmBackend implements SpeechBackend {
     return this.#runtimePromise;
   }
 
+  #unlockAudio(): HTMLAudioElement {
+    if (this.#audio === undefined) {
+      this.#audio = new Audio();
+    }
+    this.#audio.onplay = null;
+    this.#audio.onended = null;
+    this.#audio.onpause = null;
+    this.#audio.onerror = null;
+    this.#audio.src = SILENT_WAV_DATA_URI;
+    void this.#audio.play().catch(() => {});
+    return this.#audio;
+  }
+
   speak(text: string, options: SpeechOptions): Promise<void> {
     return this.speakAll([text], options);
   }
@@ -425,7 +444,10 @@ export class PiperWasmBackend implements SpeechBackend {
     const items = segments.map((text, index) => ({ text: text.trim(), index })).filter((item) => item.text !== "");
     if (items.length === 0) return;
 
+    // Unlock a single reusable HTMLAudioElement synchronously inside the click gesture before any await
     this.#aborted = false;
+    const audio = this.#unlockAudio();
+
     const cache = await this.#win.caches.open(PIPER_CACHE_NAME);
     const urls = this.#urlsFor(options.lang);
     const [configRes, modelRes] = await Promise.all([cache.match(urls.config), cache.match(urls.model)]);
@@ -443,22 +465,21 @@ export class PiperWasmBackend implements SpeechBackend {
       const synthesized = await runtime.synthesize(item.text, { modelBytes, config, baseUrl: this.#baseUrl });
       if (this.#aborted) return;
       const blob = synthesized instanceof Blob ? synthesized : new Blob([synthesized], { type: "audio/wav" });
-      await this.#playBlob(blob, options.rate, () => onSegment?.(item.index));
+      await this.#playBlob(audio, blob, options.rate, () => onSegment?.(item.index));
     }
   }
 
-  #playBlob(blob: Blob, rate: number, onStart: () => void): Promise<void> {
+  #playBlob(audio: HTMLAudioElement, blob: Blob, rate: number, onStart: () => void): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.preservesPitch = true;
-      audio.defaultPlaybackRate = rate;
-      audio.playbackRate = rate;
-      this.#activeAudio = audio;
       this.#activeUrl = url;
       let settled = false;
       const cleanup = () => {
-        if (this.#activeAudio === audio) this.#activeAudio = undefined;
+        audio.onplay = null;
+        audio.onended = null;
+        audio.onpause = null;
+        audio.onerror = null;
+        if (this.#abortCurrent === done) this.#abortCurrent = undefined;
         if (this.#activeUrl === url) this.#activeUrl = undefined;
         URL.revokeObjectURL(url);
       };
@@ -468,6 +489,7 @@ export class PiperWasmBackend implements SpeechBackend {
         cleanup();
         resolve();
       };
+      this.#abortCurrent = done;
       audio.onplay = onStart;
       audio.onended = done;
       audio.onpause = () => {
@@ -479,6 +501,10 @@ export class PiperWasmBackend implements SpeechBackend {
         cleanup();
         reject(new Error("Audio playback error"));
       };
+      audio.src = url;
+      audio.preservesPitch = true;
+      audio.defaultPlaybackRate = rate;
+      audio.playbackRate = rate;
       void audio.play().catch((err: unknown) => {
         if (settled) return;
         settled = true;
@@ -490,10 +516,10 @@ export class PiperWasmBackend implements SpeechBackend {
 
   stop(): void {
     this.#aborted = true;
-    if (this.#activeAudio !== undefined) {
-      this.#activeAudio.pause();
-      this.#activeAudio = undefined;
+    if (this.#audio !== undefined) {
+      this.#audio.pause();
     }
+    this.#abortCurrent?.();
     if (this.#activeUrl !== undefined) {
       URL.revokeObjectURL(this.#activeUrl);
       this.#activeUrl = undefined;
@@ -524,11 +550,14 @@ export function splitSentences(text: string, lang: string): string[] {
     .filter((part) => part !== "");
 }
 
-/** Selectors ignored when extracting readable text from a block. */
+/** Selectors ignored when extracting readable prose from a block (tables, figures/captions, options, controls, feedback). */
 const IGNORED_SELECTOR = [
   ".explainer-read-btn",
   ".explainer-feedback-add",
   ".block-credit",
+  ".block-table",
+  ".block-figure",
+  ".block-code",
   ".explainer-island",
   ".explainer-worked-intro",
   ".explainer-worked",
@@ -536,7 +565,31 @@ const IGNORED_SELECTOR = [
   ".explainer-diff-chip",
   ".explainer-diff-label",
   ".explainer-task-number",
+  ".question-option",
+  ".question-number",
+  ".question-pairs",
+  ".question-feedback",
+  ".question-feedback-row",
+  ".question-reveal",
   ".question-actions",
+  ".explainer-selftest-options",
+  ".explainer-selftest-option",
+  ".explainer-selftest-feedback",
+  ".explainer-selftest-answer",
+  ".explainer-language-static",
+  ".explainer-language-live",
+  ".explainer-speaking-items",
+  ".explainer-speaking-live",
+  ".explainer-open-live",
+  "table",
+  "figure",
+  "figcaption",
+  "pre",
+  "input",
+  "select",
+  "textarea",
+  "button",
+  "option",
   "script",
   "style",
   "template",
@@ -547,22 +600,8 @@ const IGNORED_SELECTOR = [
   '[aria-hidden="true"]',
 ].join(",");
 
-/** Block-level tags that separate readable parts (paragraphs, list items, headings, definitions, captions). */
-const PART_TAGS = new Set([
-  "P",
-  "LI",
-  "DT",
-  "DD",
-  "H1",
-  "H2",
-  "H3",
-  "H4",
-  "H5",
-  "H6",
-  "FIGCAPTION",
-  "LEGEND",
-  "SUMMARY",
-]);
+/** Block-level tags that separate readable prose parts (paragraphs, list items, headings, definitions, prompts). */
+const PART_TAGS = new Set(["P", "LI", "DT", "DD", "H1", "H2", "H3", "H4", "H5", "H6", "LEGEND", "SUMMARY"]);
 
 /** One readable part of a block: the DOM element (for optional highlight fallback) and its spoken sentences. */
 export interface SpeechPart {
@@ -571,14 +610,14 @@ export interface SpeechPart {
   sentences: string[];
 }
 
-/** Whether `element` or any ancestor up to `boundary` should be skipped when reading aloud. */
+/** Whether `element` should be skipped when reading aloud. */
 function isIgnored(element: Element): boolean {
   return element.matches(IGNORED_SELECTOR);
 }
 
 /**
- * Extracts spoken text from `node`, replacing `<math data-speech="…">` with its build-time spoken words and skipping
- * UI controls, hidden elements, credits, and closed `<details>` bodies (so solutions/hints are not spoiled).
+ * Extracts spoken prose from `node`, replacing `<math data-speech="…">` with its build-time spoken words and skipping
+ * tables, figures/captions, answer options, UI controls, hidden elements, credits, and closed `<details>` elements.
  */
 export function extractNodeText(node: Node): string {
   if (node.nodeType === 3 /* TEXT_NODE */) return node.textContent ?? "";
@@ -591,10 +630,7 @@ export function extractNodeText(node: Node): string {
     return text === "" ? "" : ` ${text} `;
   }
   if (element.tagName === "BR") return " ";
-  if (element.tagName === "DETAILS" && !(element as HTMLDetailsElement).open) {
-    const summary = element.querySelector(":scope > summary");
-    return summary ? extractNodeText(summary) : "";
-  }
+  if (element.tagName === "DETAILS" && !(element as HTMLDetailsElement).open) return "";
   let out = "";
   for (const child of element.childNodes) {
     const piece = extractNodeText(child);
@@ -615,18 +651,14 @@ export function extractNodeText(node: Node): string {
 }
 
 /**
- * Extracts ordered readable parts (and their sentences) from `root`. Each leaf block-level element (`p`, `li`, `dd`,
- * `figcaption`, `h2`–`h6`, `legend`, `dt`) becomes a part so optional highlighting can follow along cleanly.
+ * Extracts ordered readable prose parts (and their sentences) from `root`. Each leaf block-level element (`p`, `li`,
+ * `dd`, `h2`–`h6`, `legend`, `dt`) becomes a part so optional highlighting can follow along cleanly.
  */
 export function extractSpeechParts(root: Element, lang: string): SpeechPart[] {
   const parts: SpeechPart[] = [];
   const collect = (element: Element): void => {
     if (isIgnored(element)) return;
-    if (element.tagName === "DETAILS" && !(element as HTMLDetailsElement).open) {
-      const summary = element.querySelector(":scope > summary");
-      if (summary) collect(summary);
-      return;
-    }
+    if (element.tagName === "DETAILS" && !(element as HTMLDetailsElement).open) return;
     if (element.tagName.toLowerCase() === "math") {
       const text = extractNodeText(element).replace(/\s+/g, " ").trim();
       if (text !== "") parts.push({ element, text, sentences: splitSentences(text, lang) });
@@ -643,7 +675,6 @@ export function extractSpeechParts(root: Element, lang: string): SpeechPart[] {
           child.tagName === "OL" ||
           child.tagName === "DL" ||
           child.tagName === "BLOCKQUOTE" ||
-          child.tagName === "FIGURE" ||
           child.tagName === "FIELDSET" ||
           child.tagName === "DETAILS" ||
           child.tagName === "ARTICLE"),
@@ -668,7 +699,7 @@ export function extractSpeechParts(root: Element, lang: string): SpeechPart[] {
   return parts;
 }
 
-/** Finds a DOM `Range` matching `sentence` inside `element` for the CSS Custom Highlight API, if it is plain text. */
+/** Finds a DOM `Range` matching `sentence` inside `element` for the CSS Custom Highlight API, normalizing whitespace. */
 export function findSentenceRange(
   root: Document,
   element: Element,
@@ -678,27 +709,40 @@ export function findSentenceRange(
   const needle = sentence.replace(/\s+/g, " ").trim();
   if (needle === "") return undefined;
   const walker = root.createTreeWalker(element, 4 /* NodeFilter.SHOW_TEXT */);
-  const nodes: { node: Text; start: number; end: number }[] = [];
-  let combined = "";
+  const charMap: { node: Text; offset: number }[] = [];
+  let normalized = "";
+  let inSpace = false;
   let current = walker.nextNode();
   while (current !== null) {
     const parent = current.parentElement;
     if (parent !== null && parent.closest(IGNORED_SELECTOR) === null && parent.closest("math") === null) {
-      const raw = current.textContent ?? "";
-      const start = combined.length;
-      combined += raw;
-      nodes.push({ node: current as Text, start, end: combined.length });
+      const textNode = current as Text;
+      const raw = textNode.textContent ?? "";
+      for (let i = 0; i < raw.length; i += 1) {
+        const ch = raw[i]!;
+        if (/\s/.test(ch)) {
+          if (!inSpace && normalized.length > 0) {
+            normalized += " ";
+            charMap.push({ node: textNode, offset: i });
+            inSpace = true;
+          }
+        } else {
+          normalized += ch;
+          charMap.push({ node: textNode, offset: i });
+          inSpace = false;
+        }
+      }
     }
     current = walker.nextNode();
   }
-  const index = combined.indexOf(needle, fromOffset);
+  const index = normalized.indexOf(needle, fromOffset);
   if (index < 0) return undefined;
   const endIndex = index + needle.length;
-  const startEntry = nodes.find((entry) => index >= entry.start && index < entry.end);
-  const endEntry = nodes.find((entry) => endIndex > entry.start && endIndex <= entry.end);
+  const startEntry = charMap[index];
+  const endEntry = charMap[endIndex - 1];
   if (!startEntry || !endEntry) return undefined;
   const range = root.createRange();
-  range.setStart(startEntry.node, index - startEntry.start);
-  range.setEnd(endEntry.node, endIndex - endEntry.start);
+  range.setStart(startEntry.node, startEntry.offset);
+  range.setEnd(endEntry.node, endEntry.offset + 1);
   return { range, nextOffset: endIndex };
 }

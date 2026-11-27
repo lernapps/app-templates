@@ -17,6 +17,7 @@ import {
   PIPER_BASE_URL,
   piperDownloadSizeMb,
   piperVoiceFor,
+  PiperWasmBackend,
   READ_ALOUD_TEMPOS,
   speechLocale,
   splitSentences,
@@ -60,15 +61,13 @@ describe("read-aloud settings", () => {
 });
 
 describe("readable block types", () => {
-  test("includes prose, captions, definitions, boxes, formulas and exercises", () => {
+  test("includes prose, definitions, boxes, formulas and exercises", () => {
     for (const type of [
       "text",
       "definition",
       "quote",
       "note",
       "example",
-      "figure",
-      "labelled-figure",
       "timeline",
       "formula",
       "self-test",
@@ -82,10 +81,13 @@ describe("readable block types", () => {
     expect(CONTAINER_BLOCK_TYPES.has("example")).toBe(true);
   });
 
-  test("excludes code, video, vocabulary, table, vue-component and missing types", () => {
+  test("excludes code, video, vocabulary, table, figure, labelled-figure, vue-component and missing types", () => {
     for (const type of NON_READABLE_BLOCK_TYPES) {
       expect(isReadableBlockType(type), type).toBe(false);
     }
+    expect(isReadableBlockType("figure")).toBe(false);
+    expect(isReadableBlockType("labelled-figure")).toBe(false);
+    expect(isReadableBlockType("table")).toBe(false);
     expect(isReadableBlockType(undefined)).toBe(false);
     expect(isReadableBlockType("")).toBe(false);
   });
@@ -228,5 +230,53 @@ describe("WebSpeechBackend iOS Safari compatibility", () => {
     spoken[1]?.onend?.();
     await done;
     expect(started).toEqual([0, 1]);
+  });
+});
+
+describe("PiperWasmBackend audio element reuse", () => {
+  test("unlocks a single HTMLAudioElement synchronously inside speakAll before any await", async () => {
+    const created: FakeAudio[] = [];
+    class FakeAudio {
+      src = "";
+      preservesPitch = false;
+      defaultPlaybackRate = 1;
+      playbackRate = 1;
+      playCalls: string[] = [];
+      onplay: (() => void) | null = null;
+      onended: (() => void) | null = null;
+      onpause: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor() {
+        created.push(this);
+      }
+      play(): Promise<void> {
+        this.playCalls.push(this.src);
+        return Promise.resolve();
+      }
+      pause(): void {}
+    }
+
+    const origAudio = globalThis.Audio;
+    (globalThis as unknown as { Audio: typeof FakeAudio }).Audio = FakeAudio;
+    try {
+      const fakeWindow = {
+        caches: {
+          open: () => Promise.resolve({ match: () => Promise.resolve(undefined) }),
+          has: () => Promise.resolve(false),
+        },
+        fetch: () => Promise.resolve(new Response()),
+        location: { href: "https://lernapps.net/app-templates/explainer/", pathname: "/app-templates/explainer/" },
+      } as unknown as Window;
+
+      const backend = new PiperWasmBackend(fakeWindow);
+      // speakAll unlocks one Audio synchronously before awaiting CacheStorage (which rejects here as model is absent)
+      const promise = backend.speakAll(["Erster Satz.", "Zweiter Satz."], { lang: "de", rate: 1 });
+      expect(created).toHaveLength(1);
+      expect(created[0]?.playCalls).toHaveLength(1);
+      expect(created[0]?.playCalls[0]).toMatch(/^data:audio\/wav;base64,/);
+      await expect(promise).rejects.toThrow("Piper voice model is not downloaded.");
+    } finally {
+      (globalThis as unknown as { Audio: typeof Audio }).Audio = origAudio;
+    }
   });
 });
