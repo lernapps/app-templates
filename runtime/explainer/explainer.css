@@ -5,18 +5,38 @@
 @import "../shared/blocks/blocks.css";
 @import "../shared/questions/questions.css";
 
-/* the explainer's own colours: the boxes */
+/* the explainer's own colours: Proposal C ("Struktur & Fokus") aligned with lernapps.net */
 :root {
-  --explainer-example: #ecfdf3;
-  --explainer-note: #fff7e0;
-  --explainer-done: #15803d;
+  --explainer-workspace: #f1f5f9;
+  --explainer-sheet: #ffffff;
+  --explainer-shadow: 0 1px 3px rgb(15 23 42 / 0.06);
+  --explainer-example: #f6fefb;
+  --explainer-example-accent: #0d9488;
+  --explainer-note: #fffdf5;
+  --explainer-note-accent: #f59e0b;
+  --explainer-def-accent: #64748b;
+  --explainer-exercise-bg: #f8fbff;
+  --explainer-exercise-border: #93c5fd;
+  --explainer-exercise-head-bg: #dbeafe;
+  --explainer-exercise-head-fg: #1e3a8a;
+  --explainer-done: #059669;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --explainer-example: #12261b;
-    --explainer-note: #2b2512;
-    --explainer-done: #4ade80;
+    --explainer-workspace: #0b1120;
+    --explainer-sheet: #111827;
+    --explainer-shadow: 0 2px 10px rgb(0 0 0 / 0.35);
+    --explainer-example: #0c2624;
+    --explainer-example-accent: #14b8a6;
+    --explainer-note: #261f10;
+    --explainer-note-accent: #d97706;
+    --explainer-def-accent: #94a3b8;
+    --explainer-exercise-bg: #132038;
+    --explainer-exercise-border: #2563eb;
+    --explainer-exercise-head-bg: #1e3a8a;
+    --explainer-exercise-head-fg: #dbeafe;
+    --explainer-done: #34d399;
     --explainer-hl-keyword: #e0a3ff;
     --explainer-hl-string: #8fe0ac;
     --explainer-hl-number: #ffb77a;
@@ -55,7 +75,9 @@
 
 .explainer h1 {
   font-size: 1.875rem;
+  font-weight: 800;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 /* A long compound word in a heading ("Instrumentenfamilien") breaks rather than widening the page at 360 px: hyphenated
@@ -71,13 +93,16 @@
 .explainer h3,
 .explainer h4 {
   line-height: 1.25;
+  letter-spacing: -0.015em;
   scroll-margin-top: 1rem;
 }
 
 .explainer-toc {
   margin: 1rem 0;
-  padding: 0.5rem 1rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--page-border-soft);
   border-left: 4px solid var(--page-accent);
+  border-radius: 0.5rem;
   background: var(--page-surface);
 }
 
@@ -89,7 +114,7 @@
 .explainer-timeline {
   margin: 1rem 0;
   padding-left: 1.25rem;
-  border-left: 3px solid var(--page-border);
+  border-left: 3px solid var(--page-border-soft);
   list-style: none;
 }
 
@@ -112,39 +137,56 @@
 }
 
 .explainer-definition {
-  margin: 1rem 0;
+  margin: 1.35rem 0;
+  padding: 0.95rem 1.2rem;
+  background: var(--page-surface);
+  border: 1px solid var(--page-border-soft);
+  border-left: 3px solid var(--explainer-def-accent);
+  border-radius: 0.5rem;
 }
 
 .explainer-definition dt {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .explainer-definition dd {
-  margin-left: 1rem;
+  margin: 0.25rem 0 0;
 }
 
 .explainer-definition dd p:first-child {
-  margin-top: 0.25rem;
+  margin-top: 0;
+}
+
+.explainer-definition dd p:last-child {
+  margin-bottom: 0;
 }
 
 .explainer-box {
-  margin: 1.25rem 0;
-  padding: 0.25rem 1rem;
-  border: 1px solid var(--page-border);
+  margin: 1.4rem 0;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid var(--page-border-soft);
+  border-left-width: 4px;
   border-radius: 0.5rem;
 }
 
 .explainer-example {
   background: var(--explainer-example);
+  border-left-color: var(--explainer-example-accent);
 }
 
 .explainer-note {
   background: var(--explainer-note);
+  border-left-color: var(--explainer-note-accent);
 }
 
 .explainer-box-title {
-  margin: 0.75rem 0 0.5rem;
+  margin: 0 0 0.45rem;
   font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.explainer-box > p:last-child {
+  margin-bottom: 0;
 }
 
 .explainer-pages li,
@@ -563,23 +605,24 @@
   display: none;
 }
 
-/* A content page's title with way A beside it, right-aligned on a wide screen; on a narrow one way A goes below the
-   title at full width, and so does the unfolded box */
+/* A content page's title with way A beside it, always pinned right so long headings wrap on the left;
+   only an unfolded settings box or a failed copy status expands to full width below */
 .explainer-title-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem 1rem;
-  margin: 0 0 1.5rem;
+  margin: 0 0 1.75rem;
 }
 
 .explainer-title-row > h1 {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
   margin: 0;
 }
 
 .explainer-title-row > .explainer-tutor-page {
+  flex: none;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -636,23 +679,12 @@
 }
 
 @media (max-width: 40rem) {
-  .explainer-title-row > .explainer-tutor-page {
-    flex-basis: 100%;
-    align-items: stretch;
-    margin: 0;
-  }
-
   .explainer-tutor-bar[data-done] .explainer-tutor-go-done {
     display: none;
   }
 
   .explainer-tutor-bar[data-done] .explainer-tutor-go-text {
     display: inline;
-  }
-
-  .explainer-tutor-bar .explainer-tutor-go {
-    width: 100%;
-    justify-content: center;
   }
 }
 
@@ -836,17 +868,17 @@ button.explainer-help:focus-visible {
 
 /* Usability: sections and exercises must be told apart at a glance. */
 
-/* A section starts with a rule and room; a subsection is lighter */
+/* A section starts with a soft hairline and generous breathing room; a subsection is lighter */
 .explainer > section.explainer-section,
 .explainer-main > section.explainer-section {
-  margin-top: 2.5rem;
-  padding-top: 0.5rem;
-  border-top: 2px solid var(--page-border);
+  margin-top: 2.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--page-border-soft);
 }
 
 .explainer section.explainer-section > h2 {
-  margin: 0.75rem 0 0.75rem;
-  font-size: 1.5rem;
+  margin: 0.5rem 0 1rem;
+  font-size: 1.45rem;
 }
 
 .explainer section.explainer-section section.explainer-section {
@@ -855,31 +887,51 @@ button.explainer-help:focus-visible {
   border-top: 0;
 }
 
-.explainer section.explainer-section section.explainer-section > h3 {
-  padding-left: 0.6rem;
-  border-left: 4px solid var(--page-accent);
-  font-size: 1.2rem;
+/* Extra breathing room when a subsection heading follows directly after its parent heading */
+.explainer section.explainer-section > h2 + section.explainer-section {
+  margin-top: 1.35rem;
 }
 
-/* An exercise is a card of its own with a label on top, apart from the explanation around it; an exercise component
-   too (not in a self-assessment, which has its own frame) */
+.explainer section.explainer-section section.explainer-section > h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.65rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.explainer section.explainer-section section.explainer-section > h3::before {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--page-accent);
+}
+
+/* An exercise is a calm focus card of its own with a soft blue header, apart from the explanation around it;
+   an exercise component too (not in a self-assessment, which has its own frame) */
 .explainer-exercise,
 .explainer-component[data-exercise]:not([data-assessment]) {
-  padding: 0 1rem 1rem;
-  border: 2px solid var(--page-accent);
-  border-radius: 0.75rem;
-  background: var(--page-background);
+  margin: 1.6rem 0 1.25rem;
+  padding: 0 1.25rem 1.25rem;
+  border: 1.5px solid var(--explainer-exercise-border);
+  border-radius: 0.875rem;
+  background: var(--explainer-exercise-bg);
+  box-shadow: var(--explainer-shadow);
 }
 
 .explainer-exercise-label {
-  margin: 0 -1rem 1rem;
-  padding: 0.4rem 1rem;
-  border-radius: 0.5rem 0.5rem 0 0;
-  background: var(--page-accent);
-  color: var(--page-on-accent);
-  font-size: 0.9375rem;
+  margin: 0 -1.25rem 1.1rem;
+  padding: 0.55rem 1.25rem;
+  border-bottom: 1px solid var(--page-border-soft);
+  border-radius: 0.75rem 0.75rem 0 0;
+  background: var(--explainer-exercise-head-bg);
+  color: var(--explainer-exercise-head-fg);
+  font-size: 0.8125rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -901,10 +953,11 @@ button.explainer-help:focus-visible {
 
 /* The solution is the part of an exercise one looks for: its own colour, a label that says what is behind it */
 .explainer-exercise details.explainer-solution {
-  margin: 0.75rem 0;
-  padding: 0.25rem 0.75rem;
-  border: 1px solid var(--page-right);
-  border-left-width: 5px;
+  margin: 0.85rem 0;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--page-border-soft);
+  border-left: 4px solid var(--page-right);
+  border-radius: 0.5rem;
   background: var(--page-right-background);
   color: var(--page-right);
 }
@@ -3465,7 +3518,7 @@ body:has(.explainer-diff-banner) .explainer-progress {
 .explainer-nav-footer {
   margin: 0.75rem 0 0;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--page-border);
+  border-top: 1px solid var(--page-border-soft);
 }
 
 @media (max-width: 63.999rem) {
@@ -3478,36 +3531,31 @@ body:has(.explainer-diff-banner) .explainer-progress {
   }
 }
 
-@media (min-width: 64rem) {
-  .explainer-layout {
-    max-width: 64rem;
-    display: grid;
-    grid-template-columns: 16.5rem minmax(0, 1fr);
-    gap: 2rem;
-    align-items: start;
-    padding: 1rem 1rem 0;
+@media (min-width: 48rem) {
+  body:has(.explainer-layout) {
+    background: var(--explainer-workspace);
   }
 
-  .explainer-layout:has(.explainer-nav:not([open])) {
-    grid-template-columns: auto minmax(0, 1fr);
+  .explainer-layout {
+    padding: 1rem 1rem 2rem;
   }
 
   .explainer-sidebar {
-    position: sticky;
-    top: 1rem;
-    padding: 0;
-    max-height: calc(100vh - 2rem);
-    overflow-y: auto;
+    padding: 0 0 0.75rem;
   }
 
-  body:has(.explainer-diff-bar) .explainer-sidebar {
-    top: 4.5rem;
-    max-height: calc(100vh - 5.5rem);
+  .explainer-nav {
+    background: var(--explainer-sheet);
+    border-color: var(--page-border-soft);
+    box-shadow: var(--explainer-shadow);
   }
 
   .explainer-content {
-    min-width: 0;
-    max-width: var(--page-max-width, 44rem);
+    background: var(--explainer-sheet);
+    border: 1px solid var(--page-border-soft);
+    border-radius: 0.875rem;
+    padding: 1.75rem 2rem 2rem;
+    box-shadow: var(--explainer-shadow);
   }
 
   .explainer-content > .explainer-breadcrumbs,
@@ -3518,6 +3566,39 @@ body:has(.explainer-diff-banner) .explainer-progress {
     padding-left: 0;
     padding-right: 0;
     max-width: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .explainer-layout {
+    max-width: 66rem;
+    display: grid;
+    grid-template-columns: 16.5rem minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+    padding: 1.5rem 1.5rem 2.5rem;
+  }
+
+  .explainer-layout:has(.explainer-nav:not([open])) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .explainer-sidebar {
+    position: sticky;
+    top: 1.25rem;
+    padding: 0;
+    max-height: calc(100vh - 2.5rem);
+    overflow-y: auto;
+  }
+
+  body:has(.explainer-diff-bar) .explainer-sidebar {
+    top: 4.5rem;
+    max-height: calc(100vh - 5.5rem);
+  }
+
+  .explainer-content {
+    min-width: 0;
+    max-width: 46rem;
   }
 
   .explainer-content > .explainer-breadcrumbs {
@@ -3536,9 +3617,9 @@ body:has(.explainer-diff-banner) .explainer-progress {
   align-items: center;
   justify-content: space-between;
   gap: 0.25rem 0.75rem;
-  margin: 1rem 0 1.25rem;
+  margin: 1rem 0 1.65rem;
   padding: 0;
-  border-bottom: 1px solid var(--page-border);
+  border-bottom: 1px solid var(--page-border-soft);
   background: transparent;
 }
 
@@ -3602,14 +3683,14 @@ body:has(.explainer-diff-banner) .explainer-progress {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin: 1.5rem 0 1rem;
+  margin: 1.75rem 0 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--page-border);
+  border-top: 1px solid var(--page-border-soft);
 }
 
 .explainer-step-prev,
 .explainer-step-next {
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
 }
 
 .explainer-step-prev {
@@ -3640,6 +3721,21 @@ body:has(.explainer-diff-banner) .explainer-progress {
 
   main.explainer > section.explainer-section[hidden] {
     display: block;
+  }
+
+  .explainer-definition,
+  .explainer-box {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .explainer-exercise,
+  .explainer-component[data-exercise]:not([data-assessment]) {
+    padding: 0 0.9rem 0.95rem;
+  }
+
+  .explainer-exercise-label {
+    margin: 0 -0.9rem 0.9rem;
+    padding: 0.5rem 0.9rem;
   }
 }
 

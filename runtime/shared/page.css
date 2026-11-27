@@ -2,15 +2,16 @@
    at 360 px with contrast for WCAG 2.1 AA in the light and the dark scheme, the reset, the body, links, the header with
    the language switch and the footer. An app that needs a wider frame sets --page-max-width in its own :root rule. */
 :root {
-  --page-text: #1a1a1a;
-  --page-muted: #4a4a4a;
+  --page-text: #0f172a;
+  --page-muted: #475569;
   --page-background: #ffffff;
-  --page-surface: #f4f5f7;
-  --page-border: #8a8f98;
+  --page-surface: #f8fafc;
+  --page-border: #64748b;
+  --page-border-soft: #e2e8f0;
   --page-accent: #1d4ed8;
   --page-on-accent: #ffffff;
-  --page-right: #14532d;
-  --page-right-background: #dcfce7;
+  --page-right: #065f46;
+  --page-right-background: #ecfdf5;
   --page-wrong: #7f1d1d;
   --page-wrong-background: #fee2e2;
   color-scheme: light dark;
@@ -18,15 +19,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --page-text: #ececec;
-    --page-muted: #b8bcc4;
-    --page-background: #121316;
-    --page-surface: #1d1f24;
-    --page-border: #7d838d;
-    --page-accent: #8ab4ff;
-    --page-on-accent: #0b1020;
-    --page-right: #bbf7d0;
-    --page-right-background: #143522;
+    --page-text: #f8fafc;
+    --page-muted: #94a3b8;
+    --page-background: #0f172a;
+    --page-surface: #1e293b;
+    --page-border: #94a3b8;
+    --page-border-soft: #1f2937;
+    --page-accent: #60a5fa;
+    --page-on-accent: #0b1120;
+    --page-right: #a7f3d0;
+    --page-right-background: #064e3b;
     --page-wrong: #fecaca;
     --page-wrong-background: #3f1515;
   }
@@ -48,7 +50,7 @@ body {
   color: var(--page-text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 1.0625rem;
-  line-height: 1.55;
+  line-height: 1.65;
 }
 
 a {
