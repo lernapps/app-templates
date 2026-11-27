@@ -2231,23 +2231,38 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
 
     const multiSection = (app.pages["de"] ?? []).find((candidate) => candidate.sections.length >= 2);
     if (multiSection !== undefined) {
-      test("the section stepper shows one section at a time, follows anchors and toggles all sections", async ({
+      test("the section stepper shows one section at a time on desktop, scrolls on mobile, and updates the progress bar", async ({
         page,
       }) => {
         await page.goto(`./${multiSection.url}`);
         const sections = page.locator("main.explainer > section.explainer-section");
-        await expect(sections.nth(0)).toBeVisible();
-        await expect(sections.nth(1)).toBeHidden();
-        await page.locator("main .explainer-step-next").click();
-        await expect(sections.nth(0)).toBeHidden();
-        await expect(sections.nth(1)).toBeVisible();
-        await page.locator("main .explainer-stepper-step").first().click();
-        await expect(sections.nth(0)).toBeVisible();
-        await expect(sections.nth(1)).toBeHidden();
-        await page.locator("main .explainer-stepper-all").click();
-        await expect(sections.nth(0)).toBeVisible();
-        await expect(sections.nth(1)).toBeVisible();
-        // opening with a hash jumps straight to that section
+        const progress = page.locator(".explainer-progress");
+        const wide = (page.viewportSize()?.width ?? 1280) >= 1024;
+        if (wide) {
+          await expect(sections.nth(0)).toBeVisible();
+          await expect(sections.nth(1)).toBeHidden();
+          await expect(progress).toHaveAttribute("aria-valuenow", "1");
+          await page.locator("main .explainer-step-next").click();
+          await expect(sections.nth(0)).toBeHidden();
+          await expect(sections.nth(1)).toBeVisible();
+          await expect(progress).toHaveAttribute("aria-valuenow", "2");
+          await page.locator("main .explainer-stepper-step").first().click();
+          await expect(sections.nth(0)).toBeVisible();
+          await expect(sections.nth(1)).toBeHidden();
+          await page.locator("main .explainer-stepper-all").click();
+          await expect(sections.nth(0)).toBeVisible();
+          await expect(sections.nth(1)).toBeVisible();
+        } else {
+          // mobile starts expanded for natural vertical scrolling, and scrolling advances the progress bar
+          await expect(sections.nth(0)).toBeVisible();
+          await expect(sections.nth(1)).toBeVisible();
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+          await expect(progress.locator(".explainer-progress-fill")).toHaveAttribute("style", /width:\s*100%/);
+          await page.locator("main .explainer-stepper-all").click();
+          await expect(sections.nth(0)).toBeVisible();
+          await expect(sections.nth(1)).toBeHidden();
+        }
+        // opening with a hash jumps straight to that section on both desktop and mobile
         const secondHeading = sections.nth(1).locator(":scope > h2");
         const secondId = await secondHeading.getAttribute("id");
         if (secondId) {

@@ -1040,8 +1040,38 @@ function startStepper(root: Document): void {
     return found >= 0 ? found : undefined;
   };
 
-  let active = stepForHash(root.location.hash) ?? 0;
-  let showAll = false;
+  const isDesktop = () => typeof window !== "undefined" && window.matchMedia("(min-width: 64rem)").matches;
+  const hashStep = stepForHash(root.location.hash);
+  let active = hashStep ?? 0;
+  // Desktop starts stepped; narrow viewports start expanded for natural vertical scrolling unless opened via hash
+  let showAll = !isDesktop() && hashStep === undefined;
+
+  const progressBar = root.querySelector<HTMLElement>(".explainer-progress");
+  const progressFill = progressBar?.querySelector<HTMLElement>(".explainer-progress-fill");
+
+  const updateProgress = () => {
+    if (!progressBar || !progressFill) return;
+    progressBar.setAttribute("aria-valuemax", String(sections.length));
+    if (!showAll) {
+      const pct = Math.round(((active + 1) / sections.length) * 100);
+      progressBar.setAttribute("aria-valuenow", String(active + 1));
+      progressFill.style.width = `${pct}%`;
+      return;
+    }
+    if (typeof window === "undefined") return;
+    const maxScroll = Math.max(root.documentElement.scrollHeight - window.innerHeight, 0);
+    const minPct = Math.round((1 / sections.length) * 100);
+    const scrollPct = maxScroll <= 0 ? 100 : Math.round((window.scrollY / maxScroll) * 100);
+    const pct = Math.min(100, Math.max(minPct, scrollPct));
+    let currentSection = 0;
+    const threshold = window.innerHeight * 0.4;
+    for (let i = 0; i < sections.length; i++) {
+      const rect = sections[i]?.getBoundingClientRect();
+      if (rect && rect.top <= threshold) currentSection = i;
+    }
+    progressBar.setAttribute("aria-valuenow", String(currentSection + 1));
+    progressFill.style.width = `${pct}%`;
+  };
 
   const render = () => {
     allButton.setAttribute("aria-pressed", String(showAll));
@@ -1062,6 +1092,7 @@ function startStepper(root: Document): void {
       nextButton.hidden = nextTitle === undefined;
       if (nextTitle !== undefined) nextButton.textContent = `${message(lang, "stepperNext", { title: nextTitle })} →`;
     }
+    updateProgress();
   };
 
   const showStep = (index: number, focus: boolean) => {
@@ -1075,12 +1106,19 @@ function startStepper(root: Document): void {
     }
   };
 
-  // Internal hash links and hash changes jump directly to the section holding the target
+  // Internal hash links, hash changes, and viewport scrolling (when all sections are shown)
   if (typeof window !== "undefined") {
     window.addEventListener("hashchange", () => {
       const target = stepForHash(root.location.hash);
       if (target !== undefined) showStep(target, false);
     });
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (showAll) updateProgress();
+      },
+      { passive: true },
+    );
   }
   main.addEventListener("click", (event) => {
     const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#"]');

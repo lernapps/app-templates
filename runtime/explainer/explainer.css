@@ -3303,8 +3303,11 @@ html.explainer-diff-off .explainer-section[data-diff] {
   font-size: 0.9375rem;
 }
 
-/* Thin static progress bar at the top of content pages */
+/* Thin progress bar at the top of content pages (static without JS; section/scroll-driven with JS) */
 .explainer-progress {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   width: 100%;
   height: 0.25rem;
   background: var(--page-surface);
@@ -3314,6 +3317,12 @@ html.explainer-diff-off .explainer-section[data-diff] {
   display: block;
   height: 100%;
   background: var(--page-accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .explainer-progress-fill {
+    transition: width 0.2s ease;
+  }
 }
 
 /* Content page layout: folded mobile menu (< 64rem) -> left sidebar on desktop (>= 64rem) */
