@@ -696,7 +696,9 @@ function main(context: Context): string {
               const summary = chapter.summary === undefined ? "" : context.markdown(chapter.summary);
               const chapterAssessment = assessmentOf(site, chapter.id);
               const offer =
-                chapterAssessment === undefined ? "" : assessmentOffer(assessmentContext(context), chapterAssessment);
+                chapterAssessment === undefined
+                  ? ""
+                  : `<p class="explainer-chapter-assessment"><a href="${context.to(chapterAssessment.local)}">${plain(context.t("assessmentTitle"))}</a></p>`;
               const open = index === 0 ? " open" : "";
               return `<li><details class="explainer-chapter-group"${open}><summary class="explainer-chapter-summary"><span class="explainer-chapter-title">${context.text(chapter.title)}</span></summary><div class="explainer-chapter-body">${summary}${offer}${pageList(context, chapter.pages)}</div></details></li>`;
             })

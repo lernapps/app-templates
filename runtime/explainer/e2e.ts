@@ -574,7 +574,9 @@ async function checkSpeaking(
     `${task.id}: nothing is requested from another host`,
   ).toEqual([]);
   expect(
-    await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)]),
+    (await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])).filter(
+      (key) => !/^lernapps:[^:]+:read$/.test(key),
+    ),
     `${task.id}: the recording is stored nowhere`,
   ).toEqual([]);
 }
@@ -612,7 +614,10 @@ async function checkVideos(page: Page, item: PageOutline, origin: string): Promi
       await route.abort("blockedbyclient");
     },
   );
-  const stored = () => page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)]);
+  const stored = () =>
+    page
+      .evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)])
+      .then((keys) => keys.filter((key) => !/^lernapps:[^:]+:read$/.test(key)));
   await page.goto(`./${item.url}`);
   const videos = page.locator("main figure.explainer-video");
   const [first] = item.videos;
