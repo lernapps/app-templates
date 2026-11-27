@@ -791,6 +791,8 @@ export function startExplainer(root: Document = document): void {
   startAudio(root);
   startFeedback(root);
   startDiff(root);
+  startSidebar(root);
+  startReadProgress(root);
   startAssessment(root, {
     chosen: (storage, ways) => new WayChoice(storage, ways).get(),
     needs: chosenNeeds,
@@ -868,3 +870,86 @@ const shortened = (text: string): string => {
   const line = text.replace(/\s+/g, " ").trim();
   return line.length <= ANSWER_IN_LINE ? line : `${line.slice(0, ANSWER_IN_LINE)} …`;
 };
+
+const READ_KEY = "read";
+
+/** Opens the learning-path sidebar by default on wide screens; mobile stays folded and focus mode remains toggleable. */
+function startSidebar(root: Document): void {
+  const nav = root.querySelector<HTMLDetailsElement>("details.explainer-nav");
+  if (!nav) return;
+  if (typeof window !== "undefined" && window.matchMedia("(min-width: 64rem)").matches) {
+    nav.open = true;
+  }
+}
+
+/**
+ * Tracks read lessons in localStorage only once the last exercise on a page scrolls into the viewport.
+ * Marks read links in the navigation and upgrades the start page CTA to "Weiterlernen" when progress exists.
+ */
+function startReadProgress(root: Document): void {
+  const main = root.querySelector<HTMLElement>("main.explainer[data-storage]");
+  if (!main) return;
+  const storageName = main.dataset["storage"];
+  if (!storageName) return;
+  const storage = createStorage(storageName);
+  const isStringArray = (value: unknown): value is string[] =>
+    Array.isArray(value) && value.every((item) => typeof item === "string");
+  const readList = (): string[] => storage.load(READ_KEY, isStringArray) ?? [];
+  const applyMarks = (read: ReadonlySet<string>) => {
+    if (read.size === 0) return;
+    for (const link of root.querySelectorAll<HTMLAnchorElement>("a[data-page-key]")) {
+      const key = link.dataset["pageKey"];
+      if (key !== undefined && read.has(key)) link.classList.add("explainer-nav-read");
+    }
+    const cta = root.querySelector<HTMLAnchorElement>("a.explainer-start-cta");
+    const template = cta?.dataset["continueTemplate"];
+    if (cta && template) {
+      const candidates = [
+        ...root.querySelectorAll<HTMLAnchorElement>(
+          ".explainer-contents li:not(.explainer-page-recap) a[data-page-key]",
+        ),
+      ];
+      const next = candidates.find((link) => {
+        const key = link.dataset["pageKey"];
+        return key !== undefined && !read.has(key);
+      });
+      if (next) {
+        const href = next.getAttribute("href");
+        const title = next.textContent?.trim() ?? "";
+        if (href && title) {
+          cta.setAttribute("href", href);
+          cta.textContent = template.replace("{title}", title);
+        }
+      }
+    }
+  };
+
+  const initial = new Set(readList());
+  applyMarks(initial);
+
+  const pageKey = main.dataset["pageKey"];
+  if (!pageKey || initial.has(pageKey) || typeof IntersectionObserver === "undefined") return;
+  const exercises = main.querySelectorAll<HTMLElement>(".explainer-exercise, .explainer-component[data-exercise]");
+  const lastExercise = exercises[exercises.length - 1];
+  if (!lastExercise) return;
+
+  const startObserving = () => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        const updated = new Set(readList());
+        if (!updated.has(pageKey)) {
+          updated.add(pageKey);
+          storage.save(READ_KEY, [...updated]);
+        }
+        applyMarks(updated);
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(lastExercise);
+  };
+  if (typeof window !== "undefined") {
+    window.addEventListener("scroll", startObserving, { once: true, passive: true });
+  }
+}

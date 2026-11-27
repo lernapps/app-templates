@@ -3227,3 +3227,264 @@ html.explainer-diff-off .explainer-section[data-diff] {
     font-size: 1.125rem;
   }
 }
+
+/* ── Streamlined start page & learning-path navigation ── */
+
+.explainer-start-actions {
+  margin: 1rem 0 1.5rem;
+}
+
+.explainer-start-cta {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.explainer-start-cta:hover {
+  opacity: 0.92;
+}
+
+.explainer-chapters {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.explainer-chapters > li {
+  margin: 0;
+}
+
+.explainer-chapter-group {
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+  overflow: hidden;
+}
+
+.explainer-chapter-summary {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.explainer-chapter-summary::-webkit-details-marker {
+  display: none;
+}
+
+.explainer-chapter-summary::after {
+  content: "▸";
+  color: var(--page-muted);
+  flex: 0 0 auto;
+}
+
+.explainer-chapter-group[open] > .explainer-chapter-summary::after {
+  content: "▾";
+}
+
+.explainer-chapter-body {
+  padding: 0.25rem 1rem 0.75rem;
+  border-top: 1px solid var(--page-border);
+}
+
+.explainer-page-recap {
+  opacity: 0.85;
+  font-size: 0.9375rem;
+}
+
+/* Thin static progress bar at the top of content pages */
+.explainer-progress {
+  width: 100%;
+  height: 0.25rem;
+  background: var(--page-surface);
+}
+
+.explainer-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--page-accent);
+}
+
+/* Content page layout: folded mobile menu (< 64rem) -> left sidebar on desktop (>= 64rem) */
+.explainer-layout {
+  max-width: var(--page-max-width, 44rem);
+  margin: 0 auto;
+}
+
+.explainer-sidebar {
+  padding: 0.5rem 1rem 0;
+}
+
+.explainer-nav {
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+}
+
+.explainer-nav-toggle {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.explainer-nav-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.explainer-nav-toggle::after {
+  content: "▾";
+  color: var(--page-muted);
+}
+
+.explainer-nav[open] > .explainer-nav-toggle::after {
+  content: "▴";
+}
+
+.explainer-nav-body {
+  padding: 0.5rem 0.75rem 0.75rem;
+  border-top: 1px solid var(--page-border);
+  font-size: 0.875rem;
+}
+
+.explainer-nav-overview {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.explainer-nav-chapters {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.explainer-nav-chapter > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.2rem 0;
+  overflow-wrap: anywhere;
+}
+
+.explainer-nav-pages {
+  list-style: none;
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  margin: 0;
+  border-left: 2px solid var(--page-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.explainer-nav-pages a {
+  display: block;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.explainer-nav-pages a:hover {
+  text-decoration: underline;
+}
+
+.explainer-nav-pages a[aria-current="page"] {
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  font-weight: 600;
+}
+
+.explainer-nav-recap a {
+  color: var(--page-muted);
+  font-style: italic;
+}
+
+.explainer-nav-read::after {
+  content: " ✓";
+  color: var(--explainer-done);
+  font-weight: 700;
+}
+
+.explainer-nav-pages a[aria-current="page"].explainer-nav-read::after {
+  color: var(--page-on-accent);
+}
+
+.explainer-nav-footer {
+  margin: 0.75rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--page-border);
+}
+
+@media (max-width: 63.999rem) {
+  .explainer-content > .explainer-breadcrumbs {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .explainer-layout {
+    max-width: 64rem;
+    display: grid;
+    grid-template-columns: 16.5rem minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+    padding: 1rem 1rem 0;
+  }
+
+  .explainer-layout:has(.explainer-nav:not([open])) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .explainer-sidebar {
+    position: sticky;
+    top: 1rem;
+    padding: 0;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  body:has(.explainer-diff-bar) .explainer-sidebar {
+    top: 4.5rem;
+    max-height: calc(100vh - 5.5rem);
+  }
+
+  .explainer-content {
+    min-width: 0;
+    max-width: var(--page-max-width, 44rem);
+  }
+
+  .explainer-content > .explainer-breadcrumbs,
+  .explainer-content > .explainer,
+  .explainer-content > .explainer-pager {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+    max-width: none;
+  }
+
+  .explainer-content > .explainer-breadcrumbs {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--page-muted);
+  }
+}

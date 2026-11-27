@@ -29,7 +29,7 @@ test("the template builds: a start page without script, and the app page with th
   const app = read(root, "app/index.html");
   // the heading line: the title as the h1, and the slot, hidden until an app fills it
   expect(app).toContain(
-    '<div class="interactive-title"><h1>Buchstaben tippen</h1><div class="interactive-title-slot" hidden></div></div>',
+    '<div class="interactive-title"><h1>Buchstaben tippen</h1><div class="interactive-title-slot" hidden></div><a class="interactive-howto-link" href="../">So geht\'s</a></div>',
   );
   expect(app.match(/<h1>/g)).toHaveLength(1);
   // one language: no header, and no link with the app's name anywhere in the frame (the title is the h1)

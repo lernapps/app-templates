@@ -555,9 +555,73 @@ function pageList(context: Context, pages: readonly NonNullable<Route["page"]>[]
       // a recap page repeats competencies the app does not practise: marked, so that no one takes it for the app's own
       const recap =
         page.recap === undefined ? "" : ` <span class="explainer-recap-note">(${plain(context.t("recapNote"))})</span>`;
-      return `<li><a href="${context.to(`${page.chapter}/${page.id}/`)}">${context.text(page.title)}</a>${recap}${description}</li>`;
+      const cls = page.recap === undefined ? "" : ' class="explainer-page-recap"';
+      const key = `${page.chapter}/${page.id}`;
+      return `<li${cls}><a href="${context.to(`${key}/`)}" data-page-key="${plain(key)}">${context.text(page.title)}</a>${recap}${description}</li>`;
     })
     .join("")}</ol>`;
+}
+
+/** The first learning page of the app: the first page that is not a recap, or the very first page if all are recaps. */
+function firstContentPage(site: Site): NonNullable<Route["page"]> | undefined {
+  const all = contentPages(site);
+  return all.find((page) => page.recap === undefined) ?? all[0];
+}
+
+/** Thin progress bar at the top of a content page, computed statically from the page's place in the app. */
+function lessonProgress(context: Context): string {
+  const { route, site } = context;
+  if (route.kind !== "page" || route.page === undefined) return "";
+  const pages = contentPages(site);
+  if (pages.length < 2) return "";
+  const index = pages.indexOf(route.page);
+  if (index < 0) return "";
+  const pct = Math.round(((index + 1) / pages.length) * 100);
+  const label = context.t("lessonProgress", { current: String(index + 1), total: String(pages.length) });
+  return `<div class="explainer-progress" role="progressbar" aria-valuenow="${index + 1}" aria-valuemin="1" aria-valuemax="${pages.length}" aria-label="${plain(label)}"><span class="explainer-progress-fill" style="width: ${pct}%"></span></div>`;
+}
+
+/** Learning-path navigation beside a content page (desktop sidebar) or folded above it (mobile), complete without JS. */
+function sidebarNav(context: Context): string {
+  const { route, site } = context;
+  if (route.kind !== "page" || route.page === undefined) return "";
+  const all = contentPages(site);
+  if (all.length < 2) return "";
+  const renderItems = (pages: readonly NonNullable<Route["page"]>[]) =>
+    `<ul class="explainer-nav-pages">${pages
+      .map((page) => {
+        const key = `${page.chapter}/${page.id}`;
+        const current = page === route.page ? ' aria-current="page"' : "";
+        const cls = page.recap === undefined ? "" : ' class="explainer-nav-recap"';
+        return `<li${cls}><a href="${context.to(`${key}/`)}" data-page-key="${plain(key)}"${current}>${context.text(page.title)}</a></li>`;
+      })
+      .join("")}</ul>`;
+  const tree = hiddenChapter(site)
+    ? renderItems(site.chapters[0]?.pages ?? [])
+    : `<ol class="explainer-nav-chapters">${site.chapters
+        .map((chapter) => {
+          const open = chapter === route.chapter ? " open" : "";
+          return `<li><details class="explainer-nav-chapter"${open}><summary>${context.text(chapter.title)}</summary>${renderItems(chapter.pages)}</details></li>`;
+        })
+        .join("")}</ol>`;
+  const glossary =
+    terms(site).length === 0
+      ? ""
+      : `<p class="explainer-nav-footer"><a href="${context.to("glossar/")}">${plain(context.t("glossary"))}</a></p>`;
+  return [
+    `<aside class="explainer-sidebar">`,
+    `<details class="explainer-nav">`,
+    `<summary class="explainer-nav-toggle">${plain(context.t("contents"))}</summary>`,
+    `<nav class="explainer-nav-body" aria-label="${plain(context.t("navLabel"))}">`,
+    `<p class="explainer-nav-overview"><a href="${context.to("")}">← ${plain(context.t("overview"))}</a></p>`,
+    tree,
+    glossary,
+    `</nav>`,
+    `</details>`,
+    `</aside>`,
+  ]
+    .filter((part) => part !== "")
+    .join("\n");
 }
 
 /** The page "Medienübersicht": the images, audio files and videos of the app, each with its credit and where it is used. */
@@ -620,12 +684,23 @@ function main(context: Context): string {
   const title = `<h1>${plain(route.title)}</h1>`;
   switch (route.kind) {
     case "start": {
+      const first = firstContentPage(site);
+      const startCta =
+        first === undefined
+          ? ""
+          : `<div class="explainer-start-actions"><a class="explainer-start-cta" href="${context.to(`${first.chapter}/${first.id}/`)}" data-continue-template="${plain(context.t("continueLearning", { title: "{title}" }))}">${plain(context.t("startLearning", { title: inLanguage(first.title, context.lang) }))}</a></div>`;
       const contents = hiddenChapter(site)
         ? pageList(context, site.chapters[0]?.pages ?? [])
         : `<ol class="explainer-chapters">${site.chapters
-            .map((chapter) => {
+            .map((chapter, index) => {
               const summary = chapter.summary === undefined ? "" : context.markdown(chapter.summary);
-              return `<li><a class="explainer-chapter-link" href="${context.to(`${chapter.id}/`)}">${context.text(chapter.title)}</a>${summary}${pageList(context, chapter.pages)}</li>`;
+              const chapterAssessment = assessmentOf(site, chapter.id);
+              const offer =
+                chapterAssessment === undefined
+                  ? ""
+                  : `<p class="explainer-chapter-assessment"><a href="${context.to(chapterAssessment.local)}">${plain(context.t("assessmentTitle"))}</a></p>`;
+              const open = index === 0 ? " open" : "";
+              return `<li><details class="explainer-chapter-group"${open}><summary class="explainer-chapter-summary"><span class="explainer-chapter-title">${context.text(chapter.title)}</span></summary><div class="explainer-chapter-body">${summary}${offer}${pageList(context, chapter.pages)}</div></details></li>`;
             })
             .join("")}</ol>`;
       const glossary =
@@ -647,6 +722,7 @@ function main(context: Context): string {
       return [
         title,
         `<div class="explainer-intro">${context.markdown(site.app.intro)}</div>`,
+        startCta,
         assessment === undefined ? "" : assessmentOffer(assessmentContext(context), assessment),
         `<nav class="explainer-contents" aria-labelledby="inhalt"><h2 id="inhalt">${plain(context.t("contents"))}</h2>${contents}</nav>`,
         glossary,
@@ -1235,16 +1311,27 @@ export function renderPage(
 ): RenderedPage {
   const context = new Context(site, route, islands, descriptions, diff);
   const content = main(context);
+  const storageAttr = ` data-storage="${plain(site.storage ?? "explainer")}"`;
+  const pageKeyAttr =
+    route.kind === "page" && route.page !== undefined
+      ? ` data-page-key="${plain(`${route.page.chapter}/${route.page.id}`)}"`
+      : "";
+  const taskStartAttr = site.app.tasks?.start === "first" ? ' data-task-start="first"' : "";
+  const mainHtml = `<main class="explainer" id="inhalt-der-seite"${taskStartAttr}${storageAttr}${pageKeyAttr}>\n${content}\n</main>`;
+  const sidebar = sidebarNav(context);
+  const crumbs = breadcrumbs(context);
+  const pageNav = pager(context);
+  const layout =
+    sidebar === ""
+      ? [crumbs, mainHtml, pageNav].filter((part) => part !== "").join("\n")
+      : `<div class="explainer-layout">\n${sidebar}\n<div class="explainer-content">\n${[crumbs, mainHtml, pageNav].filter((part) => part !== "").join("\n")}\n</div>\n</div>`;
   const body = [
     ...diffChrome(context),
+    lessonProgress(context),
     header(context),
-    breadcrumbs(context),
     // where an exercise with task numbers starts without a number in the address (tasks.ts startNumber)
-    `<main class="explainer" id="inhalt-der-seite"${site.app.tasks?.start === "first" ? ' data-task-start="first"' : ""}>`,
-    content,
-    `</main>`,
+    layout,
     feedbackPanel(context),
-    pager(context),
     footer(context),
   ]
     .filter((part) => part !== "")

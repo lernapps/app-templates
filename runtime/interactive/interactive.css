@@ -48,6 +48,12 @@
   flex: 0 0 auto;
 }
 
+.interactive-howto-link {
+  flex: 0 0 auto;
+  font-size: 0.9375rem;
+  color: var(--page-muted);
+}
+
 .interactive h2 {
   line-height: 1.25;
   scroll-margin-top: 1rem;
