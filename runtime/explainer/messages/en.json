@@ -414,5 +414,11 @@
   "diffGhostPage": "Show the content of the removed page",
   "diffNoChanges": "This version changes nothing against the base.",
   "diffField": "Setting",
-  "diffFields": "Changed settings"
+  "diffFields": "Changed settings",
+  "readAloudRegion": "Read-aloud mode",
+  "readAloudMode": "Read-aloud mode",
+  "readAloudHighlight": "Highlight while reading",
+  "readAloudPlay": "Read aloud",
+  "readAloudStop": "Stop reading",
+  "readAloudError": "Reading aloud did not work on this device."
 }

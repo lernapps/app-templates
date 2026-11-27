@@ -3,8 +3,11 @@
 // so that structure comes only from section blocks and the heading levels from the nesting. Raw HTML is a problem
 // too. Rendered at build time; formulas become MathML.
 import { Marked, type Token, type Tokens } from "marked";
-import { formulaProblem, renderFormula } from "./formula.ts";
+import { FORMULA, formulaProblem, renderFormula } from "./formula.ts";
+import { renderSpokenFormula } from "./speech.ts";
 import { escape } from "../html.ts";
+
+export { FORMULA };
 
 /** A problem in a text, `line` lines below its first. */
 export interface TextProblem {
@@ -28,6 +31,9 @@ interface MathToken extends Tokens.Generic {
 /** Where a link leads from the page being rendered; set for each render. */
 let resolveLink: (href: string) => string = (href) => href;
 
+/** The page language for spoken formula annotations; set for each render. */
+let renderLang: string | undefined;
+
 const marked = new Marked({
   gfm: true,
   breaks: false,
@@ -44,7 +50,8 @@ const marked = new Marked({
         return match === null ? undefined : { type: "math", raw: match[0], tex: match[1] ?? "" };
       },
       renderer(token: Tokens.Generic) {
-        return renderFormula(String(token["tex"]), false);
+        const tex = String(token["tex"]);
+        return renderLang === undefined ? renderFormula(tex, false) : renderSpokenFormula(tex, false, renderLang);
       },
     },
   ],
@@ -144,28 +151,39 @@ export function inspect(source: string): Inspection {
 }
 
 /** A text in restricted Markdown as HTML; links to pages of the app go through `resolve`. */
-export function renderMarkdown(source: string, resolve: (href: string) => string): string {
+export function renderMarkdown(source: string, resolve: (href: string) => string, lang?: string): string {
   resolveLink = resolve;
-  return marked.parse(source, { async: false }).trim();
+  renderLang = lang;
+  try {
+    return marked.parse(source, { async: false }).trim();
+  } finally {
+    renderLang = undefined;
+  }
 }
 
 /** A short text in restricted Markdown as HTML without a paragraph around it, e.g. a table cell or a caption. */
-export function renderInline(source: string, resolve: (href: string) => string): string {
+export function renderInline(source: string, resolve: (href: string) => string, lang?: string): string {
   resolveLink = resolve;
-  return marked.parseInline(source, { async: false }).trim();
+  renderLang = lang;
+  try {
+    return marked.parseInline(source, { async: false }).trim();
+  } finally {
+    renderLang = undefined;
+  }
 }
 
 /** A plain text as HTML. */
 export const plain = escape;
 
-export const FORMULA = /\$((?:\\.|[^\\$\n])+?)\$/g;
-
 /** A plain text as HTML in which only $…$ is a formula (MathML); everything else stays text, as in a quiz. */
-export function renderWithFormulas(text: string): string {
+export function renderWithFormulas(text: string, lang?: string): string {
   let html = "";
   let from = 0;
   for (const match of text.matchAll(FORMULA)) {
-    html += escape(text.slice(from, match.index)) + renderFormula(match[1] ?? "", false);
+    const tex = match[1] ?? "";
+    html +=
+      escape(text.slice(from, match.index)) +
+      (lang === undefined ? renderFormula(tex, false) : renderSpokenFormula(tex, false, lang));
     from = match.index + match[0].length;
   }
   return html + escape(text.slice(from));

@@ -5,7 +5,7 @@
 // blocks.css.
 import { escape } from "../html.ts";
 import { inLanguage, localeOf, textsIn, type Language, type Text } from "../languages.ts";
-import { renderFormula } from "../text/formula.ts";
+import { renderSpokenFormula } from "../text/speech.ts";
 import { renderInline, renderMarkdown } from "../text/markdown.ts";
 import { isUrl } from "../text/check.ts";
 import { markerOf, type Credit, type MaterialBlock } from "./block.ts";
@@ -80,13 +80,13 @@ function renderBlock(block: MaterialBlock<Text>, context: MaterialContext): stri
   const { lang } = context;
   const resolve = context.resolve ?? ((href: string) => href);
   const plain = (text: Text) => escape(inLanguage(text, lang));
-  const markdown = (text: Text) => renderMarkdown(inLanguage(text, lang), resolve);
-  const inline = (text: Text) => renderInline(inLanguage(text, lang), resolve);
+  const markdown = (text: Text) => renderMarkdown(inLanguage(text, lang), resolve, lang);
+  const inline = (text: Text) => renderInline(inLanguage(text, lang), resolve, lang);
   switch (block.type) {
     case "text":
       return `<div class="block-text">${markdown(block.text)}</div>`;
     case "formula":
-      return `<div class="block-formula">${renderFormula(inLanguage(block.formula, lang), true)}</div>`;
+      return `<div class="block-formula">${renderSpokenFormula(inLanguage(block.formula, lang), true, lang)}</div>`;
     case "figure": {
       const alt = inLanguage(block.alt, lang);
       const image = block.image === undefined ? undefined : inLanguage(block.image, lang);

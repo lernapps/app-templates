@@ -3662,3 +3662,136 @@ body:has(.explainer-diff-banner) .explainer-progress {
     display: none !important;
   }
 }
+
+/* Generic read-aloud mode (dec-explainer-read-aloud): compact toolbar above page content, per-block play buttons while
+   active, and optional sentence/part highlighting with WCAG 2.1 AA contrast in light and dark schemes. */
+.explainer-read-aloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+.explainer-read-aloud-toggle,
+.explainer-read-aloud-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.4rem;
+  background: var(--page-surface);
+  color: var(--page-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.explainer-read-aloud-toggle[aria-pressed="true"] {
+  background: var(--page-accent);
+  border-color: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-read-aloud-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.explainer-read-aloud-controls[hidden] {
+  display: none;
+}
+
+.explainer-read-aloud-speed {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.explainer-read-aloud-speed button {
+  min-height: 2.25rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.35rem;
+  background: var(--page-background);
+  color: var(--page-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.explainer-read-aloud-speed button[aria-pressed="true"] {
+  background: var(--page-accent);
+  border-color: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-read-aloud-highlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  cursor: pointer;
+}
+
+.explainer-read-aloud-status {
+  color: var(--page-wrong);
+  font-size: 0.875rem;
+}
+
+.explainer-read-aloud-on .explainer-block:has(> .explainer-read-btn),
+.explainer-read-aloud-on .explainer-intro:has(> .explainer-read-btn),
+.explainer-read-aloud-on .explainer-chapter-summary:has(> .explainer-read-btn),
+.explainer-read-aloud-on .explainer-glossary > div:has(> .explainer-read-btn) {
+  position: relative;
+  padding-right: 2.75rem;
+}
+
+.explainer-read-btn {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--page-border);
+  border-radius: 0.4rem;
+  background: var(--page-surface);
+  color: var(--page-text);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.explainer-read-btn[data-playing="true"] {
+  background: var(--page-accent);
+  border-color: var(--page-accent);
+  color: var(--page-on-accent);
+}
+
+.explainer-reading {
+  outline: 2px solid var(--page-accent);
+  outline-offset: 0.25rem;
+  border-radius: 0.35rem;
+}
+
+.explainer-reading-part {
+  background: color-mix(in srgb, var(--page-accent) 15%, transparent);
+  border-radius: 0.2rem;
+}
+
+::highlight(explainer-read-aloud) {
+  background-color: #fef08a;
+  color: #1a1a1a;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::highlight(explainer-read-aloud) {
+    background-color: #854d0e;
+    color: #ffffff;
+  }
+}

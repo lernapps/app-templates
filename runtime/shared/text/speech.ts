@@ -4,9 +4,9 @@
 // of the runtime once, here, so that speaking a formula in any of them is then synchronous.
 // @ts-expect-error speech-rule-engine ships no types; the part this file uses is typed below (drop this line if it does)
 import untyped from "speech-rule-engine";
+import { escape } from "../html.ts";
 import { isLanguage, LANGUAGES } from "../languages.ts";
-import { renderFormula } from "./formula.ts";
-import { FORMULA } from "./markdown.ts";
+import { FORMULA, renderFormula } from "./formula.ts";
 
 /** The part of Speech Rule Engine that this file uses. */
 interface Engine {
@@ -26,6 +26,16 @@ export function speakFormula(tex: string, lang: string): string {
   // the rules of every language are loaded: switching to one takes effect at once
   void SRE.setupEngine({ locale: isLanguage(lang) ? lang : "de", ...SPEECH });
   return SRE.toSpeech(renderFormula(tex, false)).replace(/\s+/g, " ").trim();
+}
+
+/**
+ * The formula `tex` as MathML, carrying its spoken words in `data-speech` so client read-aloud can speak inline and
+ * display formulas in `lang` without shipping a formula-to-speech engine to the browser.
+ */
+export function renderSpokenFormula(tex: string, display: boolean, lang: string): string {
+  const mathml = renderFormula(tex, display);
+  const spoken = speakFormula(tex, lang);
+  return spoken === "" ? mathml : mathml.replace("<math", `<math data-speech="${escape(spoken)}"`);
 }
 
 /**

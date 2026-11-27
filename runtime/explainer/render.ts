@@ -143,10 +143,10 @@ class Context {
   /** Where a link inside a text leads: /<chapter>/<page>/#<section> within this language's tree. */
   readonly resolve = (href: string): string => this.to(href.replace(/^\//, ""));
   markdown(text: Text): string {
-    return renderMarkdown(inLanguage(text, this.lang), this.resolve);
+    return renderMarkdown(inLanguage(text, this.lang), this.resolve, this.lang);
   }
   inline(text: Text): string {
-    return renderInline(inLanguage(text, this.lang), this.resolve);
+    return renderInline(inLanguage(text, this.lang), this.resolve, this.lang);
   }
 }
 

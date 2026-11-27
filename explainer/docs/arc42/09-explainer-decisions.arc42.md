@@ -581,3 +581,26 @@ date: 2026-11-26
 addresses: qg-understandable, qg-accessibility, qg-checkable
 :::
 ```
+
+## Generic Read-Aloud Mode for Readable Blocks
+
+Children with reading difficulties benefit from hearing explanations and tasks read aloud while following along. So the
+explainer offers a global read-aloud mode across all explainers on the device (`createSettings`), hidden without
+JavaScript or browser speech synthesis. When switched on, every block with readable text (`text`, `definition`, `quote`,
+`note`/`example` as one unit, `figure`/`labelled-figure` captions and legends, `timeline`, `formula`, `self-test` and
+exercises) gets a play button, with speed controls (`0.75×`, `1×`, `1.25×`) and optional read-along highlighting via the
+CSS Custom Highlight API (with an element-class fallback so the text DOM stays untouched). Formulas carry their spoken
+words from the build (`data-speech` via Speech Rule Engine), and read-aloud pauses `<audio>` players and stops when one
+starts. An exchangeable `SpeechBackend` interface starts with the browser's `speechSynthesis` (no server, no download,
+no AI voice marking needed) while keeping room for a local WASM voice later. Rejected: pre-generated MP3s for every text
+block (storage and maintenance per text edit); a server-side TTS API (`con-frontend-only`, `con-apps-collect-nothing`).
+
+```arc42
+:::decision
+id: dec-explainer-read-aloud
+title: A global read-aloud mode speaks readable blocks via an exchangeable speech backend, starting with speechSynthesis
+status: accepted
+date: 2026-11-27
+addresses: qg-accessibility, qg-explainer-readable-without-js, con-frontend-only, con-no-request-before-click, con-state-on-device
+:::
+```

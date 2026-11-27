@@ -69,6 +69,7 @@ import { startVocabulary } from "./vocabulary.ts";
 import { startAssessment } from "./assessment-client.ts";
 import { startFeedback } from "./feedback-client.ts";
 import { startDiff } from "./diff-client.ts";
+import { startReadAloud } from "./read-aloud-client.ts";
 
 /** Makes a generated exercise live: a task from a seed, checked by the shared questions, and "Neue Aufgabe". */
 function startGenerated(
@@ -822,6 +823,7 @@ export function startExplainer(root: Document = document): void {
   startVocabulary(root);
   startSelfTests(root);
   startAudio(root);
+  startReadAloud(root);
   startFeedback(root);
   startDiff(root);
   startSidebar(root);

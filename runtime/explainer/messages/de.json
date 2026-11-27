@@ -414,5 +414,11 @@
   "diffGhostPage": "Inhalt der gelöschten Seite anzeigen",
   "diffNoChanges": "Diese Version ändert nichts gegenüber der Basis.",
   "diffField": "Angabe",
-  "diffFields": "Geänderte Angaben"
+  "diffFields": "Geänderte Angaben",
+  "readAloudRegion": "Vorlese-Modus",
+  "readAloudMode": "Vorlese-Modus",
+  "readAloudHighlight": "Mitlesen hervorheben",
+  "readAloudPlay": "Vorlesen",
+  "readAloudStop": "Vorlesen stoppen",
+  "readAloudError": "Vorlesen hat auf diesem Gerät nicht geklappt."
 }
