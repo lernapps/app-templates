@@ -3438,9 +3438,9 @@ html.explainer-diff-off .explainer-section[data-diff] {
     max-width: 64rem;
     display: grid;
     grid-template-columns: 16.5rem minmax(0, 1fr);
-    gap: 1.5rem;
+    gap: 2rem;
     align-items: start;
-    padding: 0 1rem;
+    padding: 1rem 1rem 0;
   }
 
   .explainer-layout:has(.explainer-nav:not([open])) {
@@ -3455,9 +3455,30 @@ html.explainer-diff-off .explainer-section[data-diff] {
     overflow-y: auto;
   }
 
-  .explainer-layout > .explainer {
-    margin: 0;
-    padding: 0;
+  body:has(.explainer-diff-bar) .explainer-sidebar {
+    top: 4.5rem;
+    max-height: calc(100vh - 5.5rem);
+  }
+
+  .explainer-content {
+    min-width: 0;
     max-width: var(--page-max-width, 44rem);
+  }
+
+  .explainer-content > .explainer-breadcrumbs,
+  .explainer-content > .explainer,
+  .explainer-content > .explainer-pager {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+    max-width: none;
+  }
+
+  .explainer-content > .explainer-breadcrumbs {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--page-muted);
   }
 }

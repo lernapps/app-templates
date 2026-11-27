@@ -1319,16 +1319,19 @@ export function renderPage(
   const taskStartAttr = site.app.tasks?.start === "first" ? ' data-task-start="first"' : "";
   const mainHtml = `<main class="explainer" id="inhalt-der-seite"${taskStartAttr}${storageAttr}${pageKeyAttr}>\n${content}\n</main>`;
   const sidebar = sidebarNav(context);
-  const layout = sidebar === "" ? mainHtml : `<div class="explainer-layout">\n${sidebar}\n${mainHtml}\n</div>`;
+  const crumbs = breadcrumbs(context);
+  const pageNav = pager(context);
+  const layout =
+    sidebar === ""
+      ? [crumbs, mainHtml, pageNav].filter((part) => part !== "").join("\n")
+      : `<div class="explainer-layout">\n${sidebar}\n<div class="explainer-content">\n${[crumbs, mainHtml, pageNav].filter((part) => part !== "").join("\n")}\n</div>\n</div>`;
   const body = [
     ...diffChrome(context),
     lessonProgress(context),
     header(context),
-    breadcrumbs(context),
     // where an exercise with task numbers starts without a number in the address (tasks.ts startNumber)
     layout,
     feedbackPanel(context),
-    pager(context),
     footer(context),
   ]
     .filter((part) => part !== "")
