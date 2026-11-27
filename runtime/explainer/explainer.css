@@ -3663,24 +3663,94 @@ body:has(.explainer-diff-banner) .explainer-progress {
   }
 }
 
-/* Generic read-aloud mode (dec-explainer-read-aloud): compact toolbar above page content, per-block play buttons while
-   active, and optional sentence/part highlighting with WCAG 2.1 AA contrast in light and dark schemes. */
-.explainer-read-aloud {
+/* Generic read-aloud mode (dec-explainer-read-aloud): start-page activation section mirroring KI-Tutor, compact
+   configuration dialog with 2-option engine selector and bottom activation toggle, and per-block play buttons while
+   active. Content pages stay untouched when read-aloud is off. WCAG 2.1 AA in light and dark schemes. */
+.explainer-read-aloud-about {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--page-border);
+}
+
+.explainer-read-aloud-choice {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 0.75rem;
-  margin: 0 0 1rem;
+  gap: 0.5rem;
+}
+
+.explainer-read-aloud-choice[hidden],
+.explainer-read-aloud-hint[hidden] {
+  display: none;
+}
+
+.explainer-read-aloud-choose {
+  min-height: 2.5rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.4rem;
+  background: var(--page-background);
+  color: var(--page-text);
+  font: inherit;
+}
+
+.explainer-read-aloud-config-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.4rem;
+  background: var(--page-surface);
+  color: var(--page-text);
+  cursor: pointer;
+}
+
+.explainer-read-aloud-hint {
+  color: var(--page-muted);
   font-size: 0.9rem;
 }
 
-.explainer-read-aloud-toggle,
-.explainer-read-aloud-stop {
+dialog.explainer-read-aloud-dialog {
+  max-width: 28rem;
+  width: calc(100% - 1.5rem);
+  padding: 1.25rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.75rem;
+  background: var(--page-background);
+  color: var(--page-text);
+}
+
+dialog.explainer-read-aloud-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.explainer-read-aloud-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.explainer-read-aloud-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.explainer-read-aloud-dialog-head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.explainer-read-aloud-dialog-close {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  min-height: 2.25rem;
-  padding: 0.3rem 0.7rem;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
   border: 1px solid var(--page-border);
   border-radius: 0.4rem;
   background: var(--page-surface);
@@ -3689,21 +3759,116 @@ body:has(.explainer-diff-banner) .explainer-progress {
   cursor: pointer;
 }
 
-.explainer-read-aloud-toggle[aria-pressed="true"] {
+.explainer-read-aloud-engine {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+}
+
+.explainer-read-aloud-engine-btn {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.6rem;
+  border: none;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--page-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.explainer-read-aloud-engine-btn[aria-checked="true"] {
   background: var(--page-accent);
-  border-color: var(--page-accent);
   color: var(--page-on-accent);
 }
 
-.explainer-read-aloud-controls {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
+.explainer-read-aloud-device-info,
+.explainer-read-aloud-piper-info {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+  font-size: 0.875rem;
 }
 
-.explainer-read-aloud-controls[hidden] {
+.explainer-read-aloud-device-info[hidden],
+.explainer-read-aloud-piper-info[hidden] {
   display: none;
+}
+
+.explainer-read-aloud-piper-info p {
+  margin: 0 0 0.5rem;
+}
+
+.explainer-read-aloud-piper-info p:last-child {
+  margin-bottom: 0;
+}
+
+.explainer-read-aloud-piper-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.explainer-read-aloud-download {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--page-accent);
+  border-radius: 0.4rem;
+  background: var(--page-accent);
+  color: var(--page-on-accent);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.explainer-read-aloud-download:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.explainer-read-aloud-delete {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.4rem;
+  background: var(--page-background);
+  color: var(--page-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.explainer-read-aloud-progress {
+  width: 100%;
+  height: 0.5rem;
+}
+
+.explainer-read-aloud-download-status {
+  color: var(--page-muted);
+  font-size: 0.85rem;
+}
+
+.explainer-read-aloud-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--page-border);
+  font-size: 0.9rem;
+}
+
+.explainer-read-aloud-option-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .explainer-read-aloud-speed {
@@ -3711,34 +3876,73 @@ body:has(.explainer-diff-banner) .explainer-progress {
   gap: 0.25rem;
 }
 
-.explainer-read-aloud-speed button {
-  min-height: 2.25rem;
-  padding: 0.25rem 0.55rem;
+.explainer-read-aloud-rate {
+  min-height: 2.1rem;
+  padding: 0.2rem 0.55rem;
   border: 1px solid var(--page-border);
   border-radius: 0.35rem;
   background: var(--page-background);
   color: var(--page-text);
   font: inherit;
+  font-size: 0.875rem;
   cursor: pointer;
 }
 
-.explainer-read-aloud-speed button[aria-pressed="true"] {
+.explainer-read-aloud-rate[aria-pressed="true"] {
   background: var(--page-accent);
   border-color: var(--page-accent);
   color: var(--page-on-accent);
 }
 
-.explainer-read-aloud-highlight {
-  display: inline-flex;
+.explainer-read-aloud-where {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 0.875rem;
+}
+
+.explainer-read-aloud-where legend {
+  padding: 0;
+  margin-bottom: 0.3rem;
+  color: var(--page-muted);
+}
+
+.explainer-read-aloud-enable-box {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--page-border);
+}
+
+.explainer-read-aloud-enable-row {
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  min-height: 2.25rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--page-border);
+  border-radius: 0.5rem;
+  background: var(--page-surface);
+  font-weight: 600;
   cursor: pointer;
 }
 
-.explainer-read-aloud-status {
-  color: var(--page-wrong);
-  font-size: 0.875rem;
+.explainer-read-aloud-enable-row.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.explainer-read-aloud-enable {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--page-accent);
+}
+
+.explainer-read-aloud-enable-hint {
+  margin: 0.4rem 0 0;
+  color: var(--page-muted);
+  font-size: 0.85rem;
 }
 
 .explainer-read-aloud-on .explainer-block:has(> .explainer-read-btn),

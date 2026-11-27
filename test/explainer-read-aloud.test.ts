@@ -11,7 +11,10 @@ import {
   isReadableBlockType,
   isReadAloudSettings,
   NON_READABLE_BLOCK_TYPES,
+  normalizeReadAloudSettings,
   pickVoice,
+  piperDownloadSizeMb,
+  piperVoiceFor,
   READ_ALOUD_TEMPOS,
   speechLocale,
   splitSentences,
@@ -23,16 +26,30 @@ import { renderInline, renderMarkdown, renderWithFormulas } from "../runtime/sha
 import { renderSpokenFormula } from "../runtime/shared/text/speech.ts";
 
 describe("read-aloud settings", () => {
-  test("accepts valid settings and rejects malformed values", () => {
+  test("accepts valid settings, legacy entries without engine, and rejects malformed values", () => {
     expect(isReadAloudSettings(DEFAULT_READ_ALOUD_SETTINGS)).toBe(true);
-    expect(isReadAloudSettings({ enabled: true, highlight: true, rate: 0.75 })).toBe(true);
+    expect(isReadAloudSettings({ enabled: true, engine: "piper", highlight: true, rate: 0.75 })).toBe(true);
     expect(isReadAloudSettings({ enabled: true, highlight: false, rate: 1.25 })).toBe(true);
+    expect(normalizeReadAloudSettings({ enabled: true, highlight: false, rate: 1.25 })).toEqual({
+      enabled: true,
+      engine: "device",
+      highlight: false,
+      rate: 1.25,
+    });
     expect(isReadAloudSettings(null)).toBe(false);
     expect(isReadAloudSettings("on")).toBe(false);
+    expect(isReadAloudSettings({ enabled: true, engine: "cloud", highlight: false, rate: 1 })).toBe(false);
     expect(isReadAloudSettings({ enabled: true, highlight: false, rate: 0 })).toBe(false);
     expect(isReadAloudSettings({ enabled: true, highlight: false, rate: 3 })).toBe(false);
     expect(isReadAloudSettings({ enabled: "yes", highlight: false, rate: 1 })).toBe(false);
     expect(READ_ALOUD_TEMPOS).toEqual([0.75, 1, 1.25]);
+  });
+
+  test("maps languages to pinned Piper voices (Thorsten medium for German, Alba medium for English)", () => {
+    expect(piperVoiceFor("de").id).toBe("de_DE-thorsten-medium");
+    expect(piperVoiceFor("en").id).toBe("en_GB-alba-medium");
+    expect(piperVoiceFor("fr").id).toBe("de_DE-thorsten-medium");
+    expect(piperDownloadSizeMb("de")).toBe(80);
   });
 });
 
@@ -97,7 +114,7 @@ describe("voice selection", () => {
   });
 });
 
-describe("spoken formula annotations at build time", () => {
+describe("spoken formula annotations and start-page read-aloud markup", () => {
   test("adds data-speech to display and inline formulas when a language is given", () => {
     const display = renderSpokenFormula("2^7", true, "de");
     expect(display).toContain("<math data-speech=");
@@ -116,16 +133,27 @@ describe("spoken formula annotations at build time", () => {
     expect(renderWithFormulas("Berechne $2^7$.")).not.toContain("data-speech=");
   });
 
-  test("rendered explainer pages include data-speech on MathML formulas", () => {
+  test("rendered explainer pages include data-speech on MathML formulas and start page has read-aloud section & dialog template", () => {
     const root = mkdtempSync(join(tmpdir(), "explainer-read-aloud-"));
     cpSync(join(import.meta.dirname, "fixtures/explainer-all-blocks"), join(root, "src"), { recursive: true });
     const site = loadSite(root, 0);
-    const contentRoutes = routes(site).filter((route) => route.kind === "page");
+    const allRoutes = routes(site);
+    const startDe = allRoutes.find((route) => route.kind === "start" && route.lang === "de");
+    expect(startDe).toBeDefined();
+    const startHtml = renderPage(site, startDe!).body;
+    expect(startHtml).toContain('class="explainer-read-aloud-about"');
+    expect(startHtml).toContain('class="explainer-read-aloud-dialog-template"');
+    expect(startHtml).toContain("Thorsten (Deutsch)");
+    expect(startHtml).toContain("80 MB");
+    expect(startHtml).toContain('class="explainer-read-aloud-enable"');
+
+    const contentRoutes = allRoutes.filter((route) => route.kind === "page");
     const bodies = contentRoutes.map((route) => renderPage(site, route).body);
     const withMath = bodies.filter((html) => html.includes("<math"));
     expect(withMath.length).toBeGreaterThan(0);
     for (const html of withMath) {
       expect(html).toContain("<math data-speech=");
+      expect(html).not.toContain('class="explainer-read-aloud-about"');
     }
   });
 });

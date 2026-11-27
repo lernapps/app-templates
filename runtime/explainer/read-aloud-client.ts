@@ -1,19 +1,26 @@
-// Client-side generic read-aloud mode for explainers (dec-explainer-read-aloud): adds a global toggle bar when the
-// speech backend is available, persists settings across all explainers on the device (createSettings), attaches a
-// compact read button to every readable block when active, supports optional sentence/part highlighting without
-// mutating the block's text DOM, coordinates with <audio> players, and stops cleanly on Escape or navigation.
-import { createSettings } from "@lernapps/tooling/storage";
+// Client-side generic read-aloud mode for explainers (dec-explainer-read-aloud):
+// - On the start page: reveals the "Vorlesen" voice selector and gear button (mirroring the AI tutor section),
+//   hydrates the configuration <dialog> from its <template> with the 2-option engine selector (device vs. local Piper
+//   AI voice), download/delete controls (~80 MB one-time CacheStorage download from /assets/tts/), AI-voice disclosure,
+//   tempo, optional highlighting, scope (all explainers vs. this app), and the bottom activation toggle (disabled with
+//   an explanatory note while the Piper model is not yet downloaded).
+// - On content pages: keeps the calm lesson header (#226) completely untouched (no top toolbar or header button).
+//   While read-aloud is enabled, attaches a compact play/stop button to every readable block, supports optional
+//   sentence/part highlighting without mutating the text DOM, coordinates with <audio> players, and stops on Escape.
+import { createSettings, type SettingScope } from "@lernapps/tooling/storage";
 import { message } from "./messages.ts";
 import {
   CONTAINER_BLOCK_TYPES,
-  DEFAULT_READ_ALOUD_SETTINGS,
   extractSpeechParts,
   findSentenceRange,
   isReadableBlockType,
   isReadAloudSettings,
+  normalizeReadAloudSettings,
+  piperDownloadSizeMb,
+  PiperWasmBackend,
   READ_ALOUD_KEY,
-  READ_ALOUD_TEMPOS,
   WebSpeechBackend,
+  type ReadAloudEngine,
   type ReadAloudSettings,
   type SpeechBackend,
 } from "./read-aloud.ts";
@@ -62,12 +69,6 @@ export function readableTargets(main: HTMLElement): HTMLElement[] {
   return targets;
 }
 
-/** Formats a tempo factor in the page's language (e.g. "0,75×" in German, "0.75×" in English). */
-function formatTempo(rate: number, lang: string): string {
-  const text = String(rate);
-  return `${lang.startsWith("de") ? text.replace(".", ",") : text}×`;
-}
-
 /** Registry interface for the optional CSS Custom Highlight API. */
 interface HighlightRegistry {
   set(name: string, highlight: unknown): void;
@@ -100,87 +101,38 @@ function highlightSentence(root: Document, partElement: Element, sentence: strin
   return fromOffset;
 }
 
+/** Optional backends injected for testing. */
+export interface ReadAloudBackends {
+  device?: SpeechBackend;
+  piper?: PiperWasmBackend;
+}
+
 /** Starts the generic read-aloud mode on the explainer page in `root`. */
-export function startReadAloud(
-  root: Document = document,
-  backend: SpeechBackend = new WebSpeechBackend(root.defaultView ?? undefined),
-): void {
-  if (!backend.available()) return;
+export function startReadAloud(root: Document = document, backends: ReadAloudBackends = {}): void {
+  const win = root.defaultView ?? undefined;
+  const deviceBackend: SpeechBackend = backends.device ?? new WebSpeechBackend(win);
+  const piperBackend: PiperWasmBackend = backends.piper ?? new PiperWasmBackend(win);
+  if (!deviceBackend.available() && !piperBackend.available()) return;
+
   const main = root.querySelector<HTMLElement>("main.explainer");
   if (!main) return;
 
   const lang = root.documentElement.lang || "de";
   const storageName = main.dataset["storage"] ?? ARCHETYPE;
   const settingsStore = createSettings(storageName, ARCHETYPE);
-  const stored = settingsStore.load(READ_ALOUD_KEY, isReadAloudSettings)?.value;
-  let state: ReadAloudSettings = stored ? { ...stored } : { ...DEFAULT_READ_ALOUD_SETTINGS };
+  const stored = settingsStore.load(READ_ALOUD_KEY, isReadAloudSettings);
+  let state: ReadAloudSettings = normalizeReadAloudSettings(stored?.value);
+  let scope: SettingScope = stored?.scope === "app" ? "app" : "archetype";
+  let piperDownloaded = false;
+  let downloading = false;
 
   let runId = 0;
   let activeTarget: HTMLElement | undefined;
   let activeButton: HTMLButtonElement | undefined;
-
-  // Global read-aloud toolbar
-  const bar = root.createElement("div");
-  bar.className = "explainer-read-aloud";
-  bar.setAttribute("role", "region");
-  bar.setAttribute("aria-label", message(lang, "readAloudRegion"));
-
-  const toggle = root.createElement("button");
-  toggle.type = "button";
-  toggle.className = "explainer-read-aloud-toggle";
-  toggle.innerHTML = `${SPEAKER_ICON}<span>${message(lang, "readAloudMode")}</span>`;
-
-  const controls = root.createElement("div");
-  controls.className = "explainer-read-aloud-controls";
-
-  const speedGroup = root.createElement("div");
-  speedGroup.className = "explainer-read-aloud-speed";
-  speedGroup.setAttribute("role", "group");
-  speedGroup.setAttribute("aria-label", message(lang, "audioSpeed"));
-
-  const speedButtons: HTMLButtonElement[] = [];
-  for (const rate of READ_ALOUD_TEMPOS) {
-    const button = root.createElement("button");
-    button.type = "button";
-    button.dataset["rate"] = String(rate);
-    button.textContent = formatTempo(rate, lang);
-    button.addEventListener("click", () => {
-      state = { ...state, rate };
-      saveState();
-      syncBar();
-    });
-    speedButtons.push(button);
-    speedGroup.append(button);
-  }
-
-  const highlightLabel = root.createElement("label");
-  highlightLabel.className = "explainer-read-aloud-highlight";
-  const highlightInput = root.createElement("input");
-  highlightInput.type = "checkbox";
-  highlightInput.addEventListener("change", () => {
-    state = { ...state, highlight: highlightInput.checked };
-    saveState();
-    if (!state.highlight) clearHighlight(root);
-  });
-  highlightLabel.append(highlightInput, " ", message(lang, "readAloudHighlight"));
-
-  const stopButton = root.createElement("button");
-  stopButton.type = "button";
-  stopButton.className = "explainer-read-aloud-stop";
-  stopButton.innerHTML = `${STOP_ICON}<span>${message(lang, "readAloudStop")}</span>`;
-  stopButton.hidden = true;
-
-  const status = root.createElement("span");
-  status.className = "explainer-read-aloud-status";
-  status.setAttribute("role", "status");
-  status.setAttribute("aria-live", "polite");
-
-  controls.append(speedGroup, highlightLabel, stopButton);
-  bar.append(toggle, controls, status);
-  main.prepend(bar);
+  let activeBackend: SpeechBackend | undefined;
 
   const saveState = () => {
-    settingsStore.save(READ_ALOUD_KEY, state, "archetype");
+    settingsStore.save(READ_ALOUD_KEY, state, scope);
   };
 
   const setButtonPlaying = (button: HTMLButtonElement, playing: boolean) => {
@@ -194,13 +146,18 @@ export function startReadAloud(
 
   const stop = () => {
     runId += 1;
-    backend.stop();
+    activeBackend?.stop();
+    activeBackend = undefined;
     clearHighlight(root);
     if (activeTarget) activeTarget.classList.remove("explainer-reading");
     if (activeButton) setButtonPlaying(activeButton, false);
     activeTarget = undefined;
     activeButton = undefined;
-    stopButton.hidden = true;
+  };
+
+  const pickBackend = (): SpeechBackend => {
+    if (state.engine === "piper" && piperDownloaded && piperBackend.available()) return piperBackend;
+    return deviceBackend;
   };
 
   const readTarget = (target: HTMLElement, button: HTMLButtonElement) => {
@@ -209,7 +166,6 @@ export function startReadAloud(
       return;
     }
     if (activeTarget !== undefined) stop();
-    status.textContent = "";
     const parts = extractSpeechParts(target, lang);
     const entries: { element: Element; sentence: string }[] = [];
     for (const part of parts) {
@@ -222,12 +178,13 @@ export function startReadAloud(
       if (!audio.paused) audio.pause();
     }
 
+    const backend = pickBackend();
     const currentRun = ++runId;
     activeTarget = target;
     activeButton = button;
+    activeBackend = backend;
     target.classList.add("explainer-reading");
     setButtonPlaying(button, true);
-    stopButton.hidden = false;
 
     const offsets = new WeakMap<Element, number>();
     const onSegment = (index: number) => {
@@ -242,7 +199,7 @@ export function startReadAloud(
       }
     };
 
-    // Call speakAll synchronously within the click handler so iOS Safari preserves the user gesture for all sentences
+    // Call speakAll synchronously inside the click handler so iOS Safari preserves the user gesture
     void backend
       .speakAll(
         entries.map((entry) => entry.sentence),
@@ -250,9 +207,7 @@ export function startReadAloud(
         onSegment,
       )
       .catch(() => {
-        if (currentRun === runId) {
-          status.textContent = message(lang, "readAloudError");
-        }
+        // Keep the UI clean on playback error; button resets in finally
       })
       .finally(() => {
         if (currentRun === runId) {
@@ -261,7 +216,7 @@ export function startReadAloud(
           setButtonPlaying(button, false);
           activeTarget = undefined;
           activeButton = undefined;
-          stopButton.hidden = true;
+          activeBackend = undefined;
         }
       });
   };
@@ -286,29 +241,198 @@ export function startReadAloud(
     for (const button of main.querySelectorAll(".explainer-read-btn")) button.remove();
   };
 
-  const syncBar = () => {
-    toggle.setAttribute("aria-pressed", String(state.enabled));
-    controls.hidden = !state.enabled;
-    highlightInput.checked = state.highlight;
+  const syncBlocks = () => {
+    root.documentElement.classList.toggle("explainer-read-aloud-on", state.enabled);
+    if (state.enabled) attachButtons();
+    else {
+      stop();
+      removeButtons();
+    }
+  };
+
+  // Start page section & configuration dialog (present only on the start page)
+  const template = root.querySelector<HTMLTemplateElement>("template.explainer-read-aloud-dialog-template");
+  template?.replaceWith(root.importNode(template.content, true));
+
+  const select = root.querySelector<HTMLSelectElement>("select.explainer-read-aloud-choose");
+  const choiceBox = select?.closest<HTMLElement>(".explainer-read-aloud-choice");
+  const openBtn = root.querySelector<HTMLButtonElement>("button.explainer-read-aloud-config-open");
+  const startHint = root.querySelector<HTMLElement>(".explainer-read-aloud-hint");
+  const dialog = root.querySelector<HTMLDialogElement>("dialog.explainer-read-aloud-dialog");
+
+  const engineButtons = dialog
+    ? [...dialog.querySelectorAll<HTMLButtonElement>(".explainer-read-aloud-engine-btn")]
+    : [];
+  const deviceInfo = dialog?.querySelector<HTMLElement>(".explainer-read-aloud-device-info") ?? null;
+  const piperInfo = dialog?.querySelector<HTMLElement>(".explainer-read-aloud-piper-info") ?? null;
+  const downloadBtn = dialog?.querySelector<HTMLButtonElement>(".explainer-read-aloud-download") ?? null;
+  const deleteBtn = dialog?.querySelector<HTMLButtonElement>(".explainer-read-aloud-delete") ?? null;
+  const progressEl = dialog?.querySelector<HTMLProgressElement>(".explainer-read-aloud-progress") ?? null;
+  const downloadStatus = dialog?.querySelector<HTMLElement>(".explainer-read-aloud-download-status") ?? null;
+  const speedButtons = dialog ? [...dialog.querySelectorAll<HTMLButtonElement>(".explainer-read-aloud-rate")] : [];
+  const highlightInput = dialog?.querySelector<HTMLInputElement>(".explainer-read-aloud-highlight") ?? null;
+  const scopeInputs = dialog ? [...dialog.querySelectorAll<HTMLInputElement>(".explainer-read-aloud-scope")] : [];
+  const enableToggle = dialog?.querySelector<HTMLInputElement>(".explainer-read-aloud-enable") ?? null;
+  const enableRow = enableToggle?.closest<HTMLElement>(".explainer-read-aloud-enable-row") ?? null;
+  const enableHint = dialog?.querySelector<HTMLElement>(".explainer-read-aloud-enable-hint") ?? null;
+
+  const size = String(piperDownloadSizeMb(lang));
+
+  const syncStartAndDialog = () => {
+    if (select) {
+      select.value = !state.enabled ? "off" : state.engine;
+    }
+    if (startHint) {
+      const text = !state.enabled
+        ? ""
+        : message(lang, state.engine === "piper" ? "readAloudHintPiper" : "readAloudHintDevice");
+      startHint.textContent = text;
+      startHint.hidden = text === "";
+    }
+    for (const button of engineButtons) {
+      const selected = button.dataset["engine"] === state.engine;
+      button.setAttribute("aria-checked", String(selected));
+    }
+    if (deviceInfo) deviceInfo.hidden = state.engine !== "device";
+    if (piperInfo) piperInfo.hidden = state.engine !== "piper";
+    if (downloadBtn) {
+      downloadBtn.disabled = piperDownloaded || downloading || !piperBackend.available();
+      if (!downloading) {
+        downloadBtn.textContent = piperDownloaded
+          ? message(lang, "readAloudDownloaded")
+          : message(lang, "readAloudDownload", { size });
+      }
+    }
+    if (deleteBtn) deleteBtn.hidden = !piperDownloaded || downloading;
     for (const button of speedButtons) {
       button.setAttribute("aria-pressed", String(Number(button.dataset["rate"]) === state.rate));
     }
-    root.documentElement.classList.toggle("explainer-read-aloud-on", state.enabled);
+    if (highlightInput) highlightInput.checked = state.highlight;
+    for (const input of scopeInputs) input.checked = input.value === scope;
+
+    const blocked = state.engine === "piper" && !piperDownloaded;
+    if (enableToggle) {
+      enableToggle.disabled = blocked;
+      enableToggle.checked = !blocked && state.enabled;
+    }
+    enableRow?.classList.toggle("is-disabled", blocked);
+    if (enableHint) {
+      enableHint.textContent = message(
+        lang,
+        blocked ? "readAloudEnableHintBlocked" : state.enabled ? "readAloudEnableHintOn" : "readAloudEnableHintOff",
+      );
+    }
   };
 
-  toggle.addEventListener("click", () => {
-    state = { ...state, enabled: !state.enabled };
-    saveState();
-    if (!state.enabled) {
-      stop();
-      removeButtons();
-    } else {
-      attachButtons();
+  if (choiceBox) choiceBox.hidden = false;
+
+  select?.addEventListener("change", () => {
+    const value = select.value;
+    if (value === "off") {
+      state = { ...state, enabled: false };
+      saveState();
+    } else if (value === "device") {
+      state = { ...state, engine: "device", enabled: true };
+      saveState();
+    } else if (value === "piper") {
+      state = { ...state, engine: "piper", enabled: piperDownloaded };
+      if (piperDownloaded) saveState();
+      else dialog?.showModal();
     }
-    syncBar();
+    syncStartAndDialog();
+    syncBlocks();
   });
 
-  stopButton.addEventListener("click", stop);
+  openBtn?.addEventListener("click", () => {
+    syncStartAndDialog();
+    dialog?.showModal();
+  });
+
+  for (const button of engineButtons) {
+    button.addEventListener("click", () => {
+      const next = button.dataset["engine"] as ReadAloudEngine;
+      const enabled = next === "piper" && !piperDownloaded ? false : state.enabled;
+      state = { ...state, engine: next, enabled };
+      saveState();
+      syncStartAndDialog();
+      syncBlocks();
+    });
+  }
+
+  for (const button of speedButtons) {
+    button.addEventListener("click", () => {
+      state = { ...state, rate: Number(button.dataset["rate"]) || 1 };
+      saveState();
+      syncStartAndDialog();
+    });
+  }
+
+  highlightInput?.addEventListener("change", () => {
+    state = { ...state, highlight: highlightInput.checked };
+    saveState();
+    if (!state.highlight) clearHighlight(root);
+    syncStartAndDialog();
+  });
+
+  for (const input of scopeInputs) {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      scope = input.value === "app" ? "app" : "archetype";
+      saveState();
+      syncStartAndDialog();
+    });
+  }
+
+  enableToggle?.addEventListener("change", () => {
+    if (enableToggle.disabled) return;
+    state = { ...state, enabled: enableToggle.checked };
+    saveState();
+    syncStartAndDialog();
+    syncBlocks();
+  });
+
+  downloadBtn?.addEventListener("click", () => {
+    if (downloading || piperDownloaded) return;
+    downloading = true;
+    if (progressEl) {
+      progressEl.value = 0;
+      progressEl.hidden = false;
+    }
+    if (downloadStatus) downloadStatus.textContent = message(lang, "readAloudDownloading", { percent: "0" });
+    syncStartAndDialog();
+    void piperBackend
+      .download(lang, ({ percent }) => {
+        if (progressEl) progressEl.value = percent;
+        if (downloadStatus)
+          downloadStatus.textContent = message(lang, "readAloudDownloading", { percent: String(percent) });
+      })
+      .then(() => {
+        downloading = false;
+        piperDownloaded = true;
+        if (progressEl) progressEl.hidden = true;
+        if (downloadStatus) downloadStatus.textContent = message(lang, "readAloudDownloadDone");
+        syncStartAndDialog();
+      })
+      .catch(() => {
+        downloading = false;
+        if (progressEl) progressEl.hidden = true;
+        if (downloadStatus) downloadStatus.textContent = message(lang, "readAloudDownloadFailed");
+        syncStartAndDialog();
+      });
+  });
+
+  deleteBtn?.addEventListener("click", () => {
+    void piperBackend.remove(lang).then(() => {
+      piperDownloaded = false;
+      if (state.engine === "piper") {
+        state = { ...state, enabled: false };
+        saveState();
+      }
+      if (downloadStatus) downloadStatus.textContent = message(lang, "readAloudDeleted");
+      syncStartAndDialog();
+      syncBlocks();
+    });
+  });
 
   // Dynamic generated exercises replace their inner DOM on SHOWN_EVENT: keep buttons synced
   root.addEventListener(SHOWN_EVENT, () => {
@@ -329,8 +453,16 @@ export function startReadAloud(
     if (event.key === "Escape" && activeTarget !== undefined) stop();
   });
 
-  root.defaultView?.addEventListener("pagehide", stop);
+  win?.addEventListener("pagehide", stop);
 
-  syncBar();
-  if (state.enabled) attachButtons();
+  syncStartAndDialog();
+  syncBlocks();
+
+  // Check local CacheStorage (no network) to reflect whether the Piper model is already on this device
+  if (piperBackend.available()) {
+    void piperBackend.isDownloaded(lang).then((cached) => {
+      piperDownloaded = cached;
+      syncStartAndDialog();
+    });
+  }
 }
