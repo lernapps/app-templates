@@ -3303,14 +3303,20 @@ html.explainer-diff-off .explainer-section[data-diff] {
   font-size: 0.9375rem;
 }
 
-/* Thin progress bar at the top of content pages (static without JS; section/scroll-driven with JS) */
+/* Thin progress bar pinned to the top of content pages (static without JS; section/scroll-driven with JS) */
 .explainer-progress {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 20;
+  left: 0;
+  right: 0;
+  z-index: 40;
   width: 100%;
-  height: 0.25rem;
+  height: 0.375rem;
   background: var(--page-surface);
+}
+
+body:has(.explainer-diff-banner) .explainer-progress {
+  position: static;
 }
 
 .explainer-progress-fill {

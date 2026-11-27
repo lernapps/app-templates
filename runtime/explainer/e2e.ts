@@ -2237,7 +2237,7 @@ function explainerSuite(root: string, part: "content" | "runtime"): void {
         await page.goto(`./${multiSection.url}`);
         const sections = page.locator("main.explainer > section.explainer-section");
         const progress = page.locator(".explainer-progress");
-        const wide = (page.viewportSize()?.width ?? 1280) >= 1024;
+        const wide = (page.viewportSize()?.width ?? 1280) >= 768;
         if (wide) {
           await expect(sections.nth(0)).toBeVisible();
           await expect(sections.nth(1)).toBeHidden();

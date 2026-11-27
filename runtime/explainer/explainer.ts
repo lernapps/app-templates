@@ -962,7 +962,7 @@ function startReadProgress(root: Document): void {
 function startStepper(root: Document): void {
   const main = root.querySelector<HTMLElement>("main.explainer[data-page-key]");
   if (!main) return;
-  if (root.querySelector(".explainer-diff-bar")) return;
+  if (root.querySelector("main [data-diff]")) return;
   if (new URLSearchParams(root.location.search).has("feedback")) return;
   const sections = [...main.querySelectorAll<HTMLElement>(":scope > section.explainer-section")];
   if (sections.length < 2) return;
@@ -1040,7 +1040,7 @@ function startStepper(root: Document): void {
     return found >= 0 ? found : undefined;
   };
 
-  const isDesktop = () => typeof window !== "undefined" && window.matchMedia("(min-width: 64rem)").matches;
+  const isDesktop = () => typeof window !== "undefined" && window.matchMedia("(min-width: 48rem)").matches;
   const hashStep = stepForHash(root.location.hash);
   let active = hashStep ?? 0;
   // Desktop starts stepped; narrow viewports start expanded for natural vertical scrolling unless opened via hash
