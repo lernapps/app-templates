@@ -734,15 +734,7 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       await expect(feedback).toBeInViewport();
       await expect(check, `${component.name}: "Prüfen" waits for another answer`).toBeDisabled();
       await expect(element.locator(".question-feedback"), "one feedback").toHaveCount(1);
-      // the answer changes: "Prüfen" is ready again; "Richtig!" goes, as it held only for the answer checked, and a
-      // wrong answer's feedback stays, as the hint to correct it
       const said = await feedback.textContent();
-      await element.evaluate(emitAnswer, example.answer);
-      await expect(check, `${component.name}: "Prüfen" is ready for the changed answer`).toBeEnabled();
-      if (kind === "accepted") {
-        await expect(feedback, `${component.name}: "Richtig!" goes once the answer changes`).toHaveText("");
-      } else
-        await expect(feedback, `${component.name}: the reason stays while the answer changes`).toHaveText(said ?? "");
       // the solution of the task shown, as its describe states it: after the right answer at once, after a wrong one
       // on "Lösung zeigen", with the focus (#209)
       const solution = element.locator(":scope > .explainer-component-solution");
@@ -758,6 +750,23 @@ async function checkComponents(page: Page, item: PageOutline): Promise<void> {
       }
       await expect(solution, `${component.name}: the solution after the ${kind} example`).toBeVisible();
       expect((await solution.locator(".explainer-component-solution-text").textContent())?.trim()).not.toBe("");
+      // the answer changes: "Prüfen" is ready again; "Richtig!" and the solution go, as they held only for the answer
+      // checked, and a wrong answer's feedback stays, as the hint to correct it, with "Lösung zeigen" again
+      await element.evaluate(emitAnswer, example.answer);
+      await expect(check, `${component.name}: "Prüfen" is ready for the changed answer`).toBeEnabled();
+      await expect(solution, `${component.name}: the solution goes once the answer changes`).toBeHidden();
+      if (kind === "accepted") {
+        await expect(feedback, `${component.name}: "Richtig!" goes once the answer changes`).toHaveText("");
+        await expect(solve, `${component.name}: no "Lösung zeigen" without a wrong answer`).toBeHidden();
+      } else {
+        await expect(feedback, `${component.name}: the reason stays while the answer changes`).toHaveText(said ?? "");
+        await expect(solve, `${component.name}: "Lösung zeigen" again after the change`).toBeVisible();
+      }
+      // checked again, the feedback and the solution of that answer show again
+      await check.click();
+      await expect(feedback).toBeFocused();
+      if (kind === "accepted")
+        await expect(solution, `${component.name}: the solution after checking again`).toBeVisible();
     }
     await checkTaskNumber(page, item, component);
   }
