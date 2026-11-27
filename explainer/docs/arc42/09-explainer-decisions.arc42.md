@@ -589,7 +589,7 @@ the AI tutor section on the start page, the explainer offers a read-aloud sectio
 button opening a configuration dialog (kept in a `<template>` until JavaScript runs). The dialog explains the two
 local speech backends—the device's own `speechSynthesis` (instant, no download) and a local Piper/WASM AI voice
 (`de_DE-thorsten-medium` for German, `en_GB-alba-medium` for English; ~80 MB one-time same-origin download from
-`/assets/tts/` into `CacheStorage`, shared across all apps on the origin)—including the transparent disclosure that a
+`/app-templates/assets/tts/` into `CacheStorage`, shared across all apps on the origin)—including the transparent disclosure that a
 spoken "KI-Stimme" announcement is intentionally omitted during playback so learners are not interrupted. At the bottom
 of the dialog sits the activation toggle (disabled with an explanation until the AI model is fully downloaded), along
 with speed (`0.75×`, `1×`, `1.25×`), optional read-along highlighting (`CSS.highlights` with an element-class fallback)

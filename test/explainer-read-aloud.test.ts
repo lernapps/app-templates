@@ -8,11 +8,13 @@ import { loadSite } from "../runtime/explainer/load.ts";
 import {
   CONTAINER_BLOCK_TYPES,
   DEFAULT_READ_ALOUD_SETTINGS,
+  defaultPiperBaseUrl,
   isReadableBlockType,
   isReadAloudSettings,
   NON_READABLE_BLOCK_TYPES,
   normalizeReadAloudSettings,
   pickVoice,
+  PIPER_BASE_URL,
   piperDownloadSizeMb,
   piperVoiceFor,
   READ_ALOUD_TEMPOS,
@@ -50,6 +52,10 @@ describe("read-aloud settings", () => {
     expect(piperVoiceFor("en").id).toBe("en_GB-alba-medium");
     expect(piperVoiceFor("fr").id).toBe("de_DE-thorsten-medium");
     expect(piperDownloadSizeMb("de")).toBe(80);
+    expect(defaultPiperBaseUrl("/prozentrechnung/")).toBe(PIPER_BASE_URL);
+    expect(defaultPiperBaseUrl("/app-templates/pr-preview/pr-225/explainer/")).toBe(
+      "/app-templates/pr-preview/pr-225/assets/tts/",
+    );
   });
 });
 

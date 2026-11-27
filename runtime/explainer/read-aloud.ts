@@ -68,8 +68,18 @@ export interface PiperVoiceSpec {
 /** CacheStorage bucket shared across all apps on the same origin (e.g. `lernapps.net`). */
 export const PIPER_CACHE_NAME = "lernapps-tts-v1";
 
-/** Default same-origin path where static Piper runtime and voice models live. */
-export const PIPER_BASE_URL = "/assets/tts/";
+/** Default same-origin path where static Piper runtime and voice models live (published by app-templates). */
+export const PIPER_BASE_URL = "/app-templates/assets/tts/";
+
+/**
+ * Resolves the Piper asset base URL for `pathname`: inside a PR preview of `app-templates` it points to that preview's
+ * own `/assets/tts/` copy so new voices and runtime updates can be tested before merge; everywhere else on `lernapps.net`
+ * it points to the shared `/app-templates/assets/tts/`.
+ */
+export function defaultPiperBaseUrl(pathname: string | undefined): string {
+  const preview = /^(\/app-templates\/pr-preview\/pr-\d+\/)/.exec(pathname ?? "");
+  return preview?.[1] ? `${preview[1]}assets/tts/` : PIPER_BASE_URL;
+}
 
 /** Approximate size in MB of the shared Piper WASM + ONNX runtime. */
 export const PIPER_ENGINE_SIZE_MB = 17;
@@ -298,7 +308,10 @@ export class PiperWasmBackend implements SpeechBackend {
   #aborted = false;
   #runtimePromise: Promise<PiperRuntimeModule> | undefined;
 
-  constructor(win: Window | undefined = typeof window === "undefined" ? undefined : window, baseUrl = PIPER_BASE_URL) {
+  constructor(
+    win: Window | undefined = typeof window === "undefined" ? undefined : window,
+    baseUrl = defaultPiperBaseUrl(win?.location?.pathname),
+  ) {
     this.#win = win;
     this.#baseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   }
